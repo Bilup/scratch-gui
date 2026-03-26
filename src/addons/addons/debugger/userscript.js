@@ -288,7 +288,7 @@ export default async function ({addon, console, msg}) {
 
         debuggerWindow = WindowManager.createWindow({
             id: 'debugger',
-            title: 'Debugger',
+            title: msg('window-title'),
             width: 600,
             height: 400,
             minWidth: 400,
@@ -369,12 +369,12 @@ export default async function ({addon, console, msg}) {
         tabListElement = Object.assign(document.createElement('ul'), {
             'className': 'sa-debugger-tabs',
             'role': 'tablist',
-            'aria-label': 'Debugger tabs'
+            'aria-label': msg('tabs-aria-label')
         });
         buttonContainerElement = Object.assign(document.createElement('div'), {
             'className': 'sa-debugger-header-buttons',
             'role': 'toolbar',
-            'aria-label': 'Debugger controls'
+            'aria-label': msg('controls-aria-label')
         });
         tabContentContainer = Object.assign(document.createElement('div'), {
             className: 'sa-debugger-tab-content',
@@ -400,7 +400,7 @@ export default async function ({addon, console, msg}) {
             'draggable': false,
             'role': 'button',
             'tabIndex': 0,
-            'aria-label': description || text || 'Button'
+            'aria-label': description || text || msg('button')
         });
         if (description) {
             button.title = description;
@@ -423,7 +423,7 @@ export default async function ({addon, console, msg}) {
         }
 
         const textElement = Object.assign(document.createElement('span'), {
-            textContent: text || 'Button'
+            textContent: text || msg('button')
         });
         button.appendChild(iconElement);
         button.appendChild(textElement);
@@ -452,7 +452,7 @@ export default async function ({addon, console, msg}) {
         const tab = document.createElement('li');
         tab.setAttribute('role', 'tab');
         tab.setAttribute('tabindex', '0');
-        tab.setAttribute('aria-label', text || 'Tab');
+        tab.setAttribute('aria-label', text || msg('tab'));
 
         const iconElement = Object.assign(document.createElement('span'), {
             className: 'sa-debugger-icon'
@@ -471,7 +471,7 @@ export default async function ({addon, console, msg}) {
         }
 
         const textElement = Object.assign(document.createElement('span'), {
-            textContent: text || 'Tab'
+            textContent: text || msg('tab')
         });
         tab.appendChild(iconElement);
         tab.appendChild(textElement);
@@ -853,7 +853,7 @@ export default async function ({addon, console, msg}) {
     }
 
     // Expose toggle function globally for menu access
-    window.__mistwarpDebuggerToggle = toggleDebuggerInterface;
+    window.__bilupDebuggerToggle = toggleDebuggerInterface;
 
     const ogGreenFlag = vm.runtime.greenFlag;
     vm.runtime.greenFlag = function (...args) {

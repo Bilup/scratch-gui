@@ -12,8 +12,6 @@ export default async function ({ addon, console, msg }) {
     let loopBlockCount = 0;
     let eventBlockCount = 0;
     let longestScript = 0;
-    let costumeCount = 0;
-    let soundCount = 0;
     
     let sprites = new Set(vm.runtime.targets.map((i) => i.sprite.blocks._blocks));
     
@@ -51,14 +49,6 @@ export default async function ({ addon, console, msg }) {
       });
     });
     
-    // Count costumes and sounds from all targets
-    vm.runtime.targets.forEach(target => {
-      if (target.sprite) {
-        costumeCount += target.sprite.costumes.length;
-        soundCount += target.sprite.sounds.length;
-      }
-    });
-    
     const averageDepth = scriptCount > 0 ? totalDepth / scriptCount : 0;
     const complexityScore = calculateComplexityScore({
       blockCount,
@@ -82,8 +72,6 @@ export default async function ({ addon, console, msg }) {
       conditionalBlockCount,
       loopBlockCount,
       eventBlockCount,
-      costumeCount,
-      soundCount,
       complexityScore,
       blockTypeCount
     };
@@ -196,8 +184,6 @@ export default async function ({ addon, console, msg }) {
             <div><strong>${msg('total-blocks')}:</strong> ${metrics.blockCount}</div>
             <div><strong>${msg('total-scripts')}:</strong> ${metrics.scriptCount}</div>
             <div><strong>${msg('total-sprites')}:</strong> ${metrics.spriteCount}</div>
-            <div><strong>${msg('total-costumes')}:</strong> ${metrics.costumeCount}</div>
-            <div><strong>${msg('total-sounds')}:</strong> ${metrics.soundCount}</div>
           </div>
         </div>
         
@@ -209,7 +195,7 @@ export default async function ({ addon, console, msg }) {
             </div>
             <div><strong>${msg('max-nesting')}:</strong> ${metrics.maxDepth}</div>
             <div><strong>${msg('avg-nesting')}:</strong> ${metrics.averageDepth}</div>
-            <div><strong>${msg('longest-script')}:</strong> ${metrics.longestScript} blocks</div>
+            <div><strong>${msg('longest-script')}:</strong> ${metrics.longestScript} ${msg('blocks-unit')}</div>
           </div>
         </div>
       </div>
@@ -289,27 +275,11 @@ export default async function ({ addon, console, msg }) {
         
         const updateDisplay = () => {
           const metrics = getProjectComplexity();
-          const parts = [];
-          
-          const hideBlocks = addon.settings.get('hide_block_count');
-          const showCostumes = addon.settings.get('show_costume_count');
-          const showSounds = addon.settings.get('show_sound_count');
-          const showComplexity = addon.settings.get('show_complexity_score');
-          
-          if (!hideBlocks) {
-            parts.push(msg("blocks", { num: metrics.blockCount }));
+          if (addon.settings.get('show_complexity_score')) {
+            display.innerText = `${msg("blocks", { num: metrics.blockCount })} (${msg("complexity-short")}: ${metrics.complexityScore})`;
+          } else {
+            display.innerText = msg("blocks", { num: metrics.blockCount });
           }
-          
-          if (showCostumes) parts.push(msg("costumes", { num: metrics.costumeCount }));
-          if (showSounds) parts.push(msg("sounds", { num: metrics.soundCount }));
-          
-          let displayText = parts.join(', ');
-          
-          if (showComplexity) {
-            displayText += ` (${msg("complexity-short")}: ${metrics.complexityScore})`;
-          }
-          
-          display.innerText = displayText;
         };
         
         updateDisplay();

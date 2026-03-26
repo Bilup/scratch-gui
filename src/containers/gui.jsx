@@ -59,7 +59,7 @@ import GUIComponent from '../components/gui/gui.jsx';
 import {setIsScratchDesktop} from '../lib/utils/isScratchDesktop.js';
 import TWFullScreenResizerHOC from '../lib/components/tw-fullscreen-resizer-hoc.jsx';
 import TWThemeManagerHOC from './tw-theme-manager-hoc.jsx';
-import {initialize as initializeShortcuts} from
+import {initialize as initializeShortcuts, updateShortcuts} from
     '../lib/shortcuts/event-router.js';
 
 const {RequestMetadata, setMetadata, unsetMetadata} = storage.scratchFetch;
@@ -107,7 +107,16 @@ class GUI extends React.Component {
                     );
                 },
                 setFullScreen: () => {
-                    this.props.onSetFullScreen(!this.props.isFullScreen);
+                    // Toggle browser fullscreen (F11 style), not stage fullscreen
+                    if (!document.fullscreenElement) {
+                        document.documentElement.requestFullscreen().catch(e => {
+                            console.warn('Failed to enter fullscreen:', e);
+                        });
+                    } else {
+                        document.exitFullscreen().catch(e => {
+                            console.warn('Failed to exit fullscreen:', e);
+                        });
+                    }
                 }
             }
         );
@@ -124,14 +133,14 @@ class GUI extends React.Component {
             // At this time the project view in www doesn't need to know when a project is unloaded
 
             // Log total loading time
-            if (window.MISTWARP_LOAD_START_TIME) {
-                const totalLoadTime = Date.now() - window.MISTWARP_LOAD_START_TIME;
-                console.log(`🚀 MistWarp project loaded in ${totalLoadTime}ms (${(totalLoadTime / 1000).toFixed(2)}s)`);
+            if (window.BILUP_LOAD_START_TIME) {
+                const totalLoadTime = Date.now() - window.BILUP_LOAD_START_TIME;
+                console.log(`🚀 Bilup project loaded in ${totalLoadTime}ms (${(totalLoadTime / 1000).toFixed(2)}s)`);
 
                 // Also use Performance API if available
                 if (window.performance && window.performance.mark && window.performance.measure) {
-                    window.performance.mark('mistwarp-load-end');
-                    window.performance.measure('mistwarp-total-load', 'mistwarp-load-start', 'mistwarp-load-end');
+                    window.performance.mark('bilup-load-end');
+                    window.performance.measure('bilup-total-load', 'bilup-load-start', 'bilup-load-end');
                 }
             }
 
@@ -147,6 +156,11 @@ class GUI extends React.Component {
                     serviceInstance.syncCurrentCostume();
                 }
             }
+        }
+
+        // Update shortcuts when customShortcuts change
+        if (prevProps.customShortcuts !== this.props.customShortcuts) {
+            updateShortcuts(this.props.customShortcuts);
         }
     }
     render () {
@@ -219,7 +233,8 @@ GUI.propTypes = {
     projectId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     telemetryModalVisible: PropTypes.bool,
     vm: PropTypes.instanceOf(VM).isRequired,
-    activeTabIndex: PropTypes.number
+    activeTabIndex: PropTypes.number,
+    customShortcuts: PropTypes.object
 };
 
 GUI.defaultProps = {
@@ -267,7 +282,8 @@ const mapStateToProps = state => {
         unknownPlatformModalVisible: state.scratchGui.modals.unknownPlatformModal,
         invalidProjectModalVisible: state.scratchGui.modals.invalidProjectModal,
         gitModalVisible: state.scratchGui.modals.gitModal,
-        vm: state.scratchGui.vm
+        vm: state.scratchGui.vm,
+        customShortcuts: state.scratchGui.shortcuts.customShortcuts
     };
 };
 

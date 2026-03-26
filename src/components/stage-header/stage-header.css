@@ -48,7 +48,7 @@
 .stage-size-row > *, .unselect-wrapper {
     /* Use a white background so semi-transparent selection states look correct */
     background-color: $ui-white;
-    border-radius: 10px;
+    border-radius: 5px;
 }
 
 [dir="ltr"] .stage-size-toggle-group,
@@ -64,7 +64,7 @@
 .stage-button {
     display: block;
     border: 1px solid $ui-black-transparent;
-    border-radius: 10px;
+    border-radius: 5px;
     width: calc(2rem + 2px);
     height: calc(2rem + 2px);
     background: $ui-white;

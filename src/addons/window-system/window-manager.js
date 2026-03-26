@@ -356,7 +356,7 @@ class AddonWindow {
         const minVisiblePixels = 50;
         const minX = -(this.width - minVisiblePixels);
         const maxX = window.innerWidth - minVisiblePixels;
-        const minY = -this.height;
+        const minY = 0;
         const maxY = window.innerHeight - minVisiblePixels;
         
         this.x = Math.max(minX, Math.min(newX, maxX));

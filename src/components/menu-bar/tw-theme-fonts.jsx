@@ -11,6 +11,7 @@ import {setTheme} from '../../reducers/theme.js';
 import {applyTheme} from '../../lib/themes/themePersistance.js';
 import {loadGoogleFont, isGoogleFont} from '../../lib/themes/google-fonts.js';
 import openMWFontsWindow from '../../lib/mw/open-mw-fonts-window.js';
+import WindowManager from '../../addons/window-system/window-manager';
 
 import styles from './settings-menu.css';
 
@@ -96,13 +97,17 @@ class FontsThemeMenu extends React.Component {
     };
 
     handleOpenFontsWindow = () => {
-        openMWFontsWindow({
-            vm: this.props.vm,
-            store: this.context.store,
-            locale: this.props.locale,
-            messages: this.props.messages
-        });
-        this.props.onCloseSettingsMenu();
+        if (WindowManager && typeof WindowManager.createWindow === 'function') {
+            openMWFontsWindow({
+                vm: this.props.vm,
+                store: this.context.store,
+                locale: this.props.locale,
+                messages: this.props.messages
+            });
+            this.props.onCloseSettingsMenu();
+        } else {
+            console.warn('Window manager not available');
+        }
     };
 
     render () {

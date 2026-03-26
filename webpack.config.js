@@ -195,7 +195,7 @@ module.exports = [
                 chunks: ['editor'],
                 template: 'src/playground/index.ejs',
                 filename: 'editor.html',
-                title: `${APP_NAME} - Enhance Your Scratch Experience`,
+                title: `${APP_NAME} - Refactoring freedom`,
                 isEditor: true,
                 ...htmlWebpackPluginCommon
             }),
@@ -203,14 +203,14 @@ module.exports = [
                 chunks: ['player'],
                 template: 'src/playground/index.ejs',
                 filename: 'index.html',
-                title: `${APP_NAME} - Enhance Your Scratch Experience`,
+                title: `${APP_NAME} - Refactoring freedom`,
                 ...htmlWebpackPluginCommon
             }),
             new HtmlWebpackPlugin({
                 chunks: ['fullscreen'],
                 template: 'src/playground/index.ejs',
                 filename: 'fullscreen.html',
-                title: `${APP_NAME} - Enhance Your Scratch Experience`,
+                title: `${APP_NAME} - Refactoring freedom`,
                 ...htmlWebpackPluginCommon
             }),
             new HtmlWebpackPlugin({

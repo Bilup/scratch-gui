@@ -89,8 +89,8 @@ export const getDefaultShortcuts = () => [
         key: 'F11',
         defaultKey: 'F11',
         category: SHORTCUT_CATEGORIES.VIEW,
-        actionType: 'vm',
-        action: 'setCompilerOptions',
+        actionType: 'callback',
+        action: 'setFullScreen',
         params: [],
         label: 'Toggle Fullscreen'
     },

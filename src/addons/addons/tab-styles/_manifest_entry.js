@@ -3,15 +3,27 @@ const manifest = {
   "editorOnly": true,
   "name": "Tab Styles",
   "description": "Change the appearance of the editor tabs to look like other mods.",
-  "tags": ["editor", "MistWarp", "Theme"],
+  "tags": ["editor", "MistWarp", "theme"],
   "credits": [
     {
         "name": "Mistium",
         "url": "https://mistium.com"
+    },
+    {
+        "name": "RyaninCn11",
+        "url": "https://github.com/RyaninCn11"
     }
   ],
   "dynamicDisable": true,
   "userstyles": [
+    {
+      "url": "bilup.css",
+      "if": {
+        "settings": {
+          "tab_style": "bilup"
+        }
+      }
+    },
     {
       "url": "turbowarp.css",
       "if": {
@@ -53,8 +65,8 @@ const manifest = {
       "type": "select",
       "potentialValues": [
         {
-            "name": "MistWarp",
-            "id": "mistwarp"
+            "name": "Bilup",
+            "id": "bilup"
         },
         {
             "name": "TurboWarp",
@@ -65,7 +77,7 @@ const manifest = {
             "id": "scratchbox"
         }
       ],
-      "default": "MistWarp"
+      "default": "Bilup"
     },
     {
       "dynamic": true,

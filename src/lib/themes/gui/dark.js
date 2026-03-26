@@ -1,6 +1,10 @@
 import icon from '!!raw-loader!../icons/dark.svg';
 
-const name = 'Dark';
+const name = {
+    defaultMessage: 'Dark',
+    description: 'Label for the dark GUI theme',
+    id: 'tw.theme.gui.dark'
+};
 
 const guiColors = {
     'color-scheme': 'dark',

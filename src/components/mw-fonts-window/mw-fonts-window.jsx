@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import React from 'react';
-import {FormattedMessage} from 'react-intl';
+import {FormattedMessage, injectIntl, intlShape} from 'react-intl';
 import {connect} from 'react-redux';
 import classNames from 'classnames';
 
@@ -20,8 +20,6 @@ import localFontsStyles from '../tw-fonts-modal/fonts-modal.css';
 import AddSystemFont from '../tw-fonts-modal/add-system-font.jsx';
 import AddCustomFont from '../tw-fonts-modal/add-custom-font.jsx';
 import ManageFont from '../tw-fonts-modal/manage-font.jsx';
-import systemIcon from '../tw-fonts-modal/system.svg';
-import customIcon from '../tw-fonts-modal/custom.svg';
 
 const getFontFamily = font => (typeof font === 'string' ? font : font.family);
 
@@ -313,11 +311,8 @@ class MWFontsWindow extends React.Component {
                         className={localFontsStyles.openButton}
                         onClick={() => this.setState({localScreen: 'system'})}
                     >
-                        <img
+                        <div
                             className={classNames(localFontsStyles.openButtonImage, localFontsStyles.systemImage)}
-                            src={systemIcon}
-                            alt=""
-                            draggable={false}
                         />
                         <div className={localFontsStyles.openButtonText}>
                             <div className={localFontsStyles.openButtonTextMain}><FormattedMessage
@@ -334,11 +329,8 @@ class MWFontsWindow extends React.Component {
                         className={localFontsStyles.openButton}
                         onClick={() => this.setState({localScreen: 'custom'})}
                     >
-                        <img
+                        <div
                             className={classNames(localFontsStyles.openButtonImage, localFontsStyles.customImage)}
-                            src={customIcon}
-                            alt=""
-                            draggable={false}
                         />
                         <div className={localFontsStyles.openButtonText}>
                             <div className={localFontsStyles.openButtonTextMain}><FormattedMessage
@@ -435,7 +427,11 @@ class MWFontsWindow extends React.Component {
                         <input
                             type="text"
                             className={styles.fontInput}
-                            placeholder="Search Google Fonts..."
+                            placeholder={this.props.intl.formatMessage({
+                                defaultMessage: 'Search Google Fonts...',
+                                description: 'Placeholder text for Google Fonts search input',
+                                id: 'tw.fonts.googleFontsSearch'
+                            })}
                             value={this.state.googleFontInput}
                             onChange={this.handleGoogleFontInputChange}
                             onKeyDown={this.handleGoogleInputKeyDown}
@@ -457,7 +453,11 @@ class MWFontsWindow extends React.Component {
                         <input
                             type="text"
                             className={styles.fontInput}
-                            placeholder="Enter font name..."
+                            placeholder={this.props.intl.formatMessage({
+                                defaultMessage: 'Enter font name...',
+                                description: 'Placeholder text for local font search input',
+                                id: 'mw.fonts.systemFontSearch'
+                            })}
                             value={this.state.systemFontInput}
                             onChange={this.handleSystemFontInputChange}
                             onKeyDown={this.handleSystemInputKeyDown}
@@ -485,6 +485,7 @@ class MWFontsWindow extends React.Component {
 }
 
 MWFontsWindow.propTypes = {
+    intl: intlShape.isRequired,
     onChangeTheme: PropTypes.func.isRequired,
     theme: PropTypes.instanceOf(Theme),
     vm: PropTypes.object
@@ -502,4 +503,4 @@ const mapDispatchToProps = dispatch => ({
     }
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(MWFontsWindow);
+export default injectIntl(connect(mapStateToProps, mapDispatchToProps)(MWFontsWindow));

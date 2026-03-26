@@ -9,7 +9,7 @@ export default async function ({ addon, console, msg }) {
   function createStepButton() {
     const button = document.createElement('img');
     button.className = 'frame-stepper-button';
-    button.title = 'Step one frame';
+    button.title = msg('step-one-frame');
     button.src = addon.self.getResource("/step.svg") /* rewritten by pull.js */;
     button.draggable = false;
     button.style.cssText = `

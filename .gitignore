@@ -5,6 +5,9 @@
 /node_modules
 npm-*
 
+# bun
+bun.lock
+
 # Testing
 /.nyc_output
 /coverage
@@ -23,6 +26,7 @@ npm-*
 
 # Downloaded during "npm install"
 /static/microbit
+/static/penguinmod
 
 # for act
 .secrets

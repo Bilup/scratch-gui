@@ -55,7 +55,7 @@ class MWProjectThemeModal extends React.Component {
         this.persistDontAskAgainIfNeeded();
 
         try {
-            const payload = this.props.mistwarpTheme;
+            const payload = this.props.bilupTheme;
             if (payload && payload.kind === 'custom' && payload.data) {
                 const theme = CustomTheme.import(payload.data);
                 this.props.onSetTheme(theme);
@@ -93,7 +93,7 @@ class MWProjectThemeModal extends React.Component {
 
 MWProjectThemeModal.propTypes = {
     visible: PropTypes.bool,
-    mistwarpTheme: PropTypes.any,
+    bilupTheme: PropTypes.any,
     promptKey: PropTypes.string,
     dontAskAgain: PropTypes.bool,
     onDontAskAgainChange: PropTypes.func,
@@ -103,7 +103,7 @@ MWProjectThemeModal.propTypes = {
 
 const mapStateToProps = state => ({
     visible: state.scratchGui.mwProjectTheme.visible,
-    mistwarpTheme: state.scratchGui.mwProjectTheme.mistwarpTheme,
+    bilupTheme: state.scratchGui.mwProjectTheme.bilupTheme,
     promptKey: state.scratchGui.mwProjectTheme.promptKey,
     dontAskAgain: state.scratchGui.mwProjectTheme.dontAskAgain
 });

@@ -1,7 +1,11 @@
 import WindowManager from './window-manager';
 
-const showAlert = (message, options = {}) => new Promise(resolve => {
-    const title = options.title || 'Alert';
+const showAlert = (intl, message, options = {}) => new Promise(resolve => {
+    const title = options.title || intl.formatMessage({
+        defaultMessage: 'Alert',
+        description: 'Title of the alert window',
+        id: 'tw.alertWindowTitle'
+    });
     const width = options.width || 420;
     const height = options.height || 160;
 

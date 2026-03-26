@@ -717,9 +717,7 @@ class TokenTypeBlock extends TokenType {
             break;
         }
       }
-      if (fullTokenProvider) {
-        this.fullTokenProviders.push(fullTokenProvider);
-      }
+      if(fullTokenProvider) this.fullTokenProviders.push(fullTokenProvider);
     }
 
     /**

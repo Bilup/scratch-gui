@@ -141,7 +141,7 @@ import {
     FilePen, PencilRuler, TriangleAlert, Info, Shuffle,
     FilePlusCorner, Upload, RefreshCcw, ClockPlus, Package, FileInput,
     Save, ArchiveRestore, UserPen, Cloud, Settings, PackagePlus, Puzzle,
-    Bookmark, GitBranch, FileCog, Bug, Database, Undo, Redo, Handshake, Sparkles, Wrench, Keyboard, Send
+    Bookmark, GitBranch, FileCog, Bug, Database, Undo, Redo, Handshake, Sparkles, Wrench, Keyboard
 } from 'lucide-react';
 
 import sharedMessages from '../../lib/constants/shared-messages';
@@ -323,7 +323,7 @@ class MenuBar extends React.Component {
         this.startAutosaveCountdown();
 
         // Prevent the legacy addon from also injecting a bookmarks menu.
-        window.__mistwarpNativeWorkspaceBookmarks = true;
+        window.__bilupNativeWorkspaceBookmarks = true;
 
         this.loadWorkspaceBookmarksFromProject();
         if (this.props.vm && this.props.vm.runtime) {
@@ -1592,16 +1592,6 @@ class MenuBar extends React.Component {
                                         />
                                     </MenuItem>
                                 </MenuSection>
-                                <MenuSection>
-                                    <MenuItemLink href="https://originchats.mistium.com?server=chats.mistium.com">
-                                        <Send />
-                                        <FormattedMessage
-                                            defaultMessage="originChats"
-                                            description="Menu bar item to join originChats"
-                                            id="tw.menuBar.joinDiscord"
-                                        />
-                                    </MenuItemLink>
-                                </MenuSection>
                             </MenuBarMenu>
                         </MenuLabel>
                         {this.props.isTotallyNormal && (
@@ -1695,12 +1685,12 @@ class MenuBar extends React.Component {
                                         />
                                     </MenuItem>
                                 </MenuSection>
-                                {window.__mistwarpDebuggerToggle || window.__mistwarpVariableManagerToggle ? (
+                                {window.__bilupDebuggerToggle || window.__bilupVariableManagerToggle ? (
                                     <MenuSection>
-                                        {window.__mistwarpDebuggerToggle && (
+                                        {window.__bilupDebuggerToggle && (
                                             <MenuItem
                                                 onClick={() => {
-                                                    window.__mistwarpDebuggerToggle();
+                                                    window.__bilupDebuggerToggle();
                                                     this.props.onRequestCloseTools();
                                                 }}
                                             >
@@ -1712,10 +1702,10 @@ class MenuBar extends React.Component {
                                                 />
                                             </MenuItem>
                                         )}
-                                        {window.__mistwarpVariableManagerToggle && (
+                                        {window.__bilupVariableManagerToggle && (
                                             <MenuItem
                                                 onClick={() => {
-                                                    window.__mistwarpVariableManagerToggle();
+                                                    window.__bilupVariableManagerToggle();
                                                     this.props.onRequestCloseTools();
                                                 }}
                                             >
@@ -1730,27 +1720,27 @@ class MenuBar extends React.Component {
                                     </MenuSection>
                                 ) : null}
                                 <MenuSection>
-                                    <MenuItem
-                                        onClick={() => {
-                                            this.props.onRequestCloseTools();
-                                            this.props.onOpenExtensionLibrary();
-                                        }}
-                                        shortcut={formatShortcutDisplay('Ctrl+.')}
-                                    >
-                                        <PackagePlus />
-                                        <FormattedMessage
-                                            defaultMessage="Add Extension"
-                                            description="Menu bar item for adding or importing extensions"
-                                            id="tw.menuBar.extensions.addImport"
-                                        />
-                                    </MenuItem>
-                                    <MenuItem
-                                        onClick={() => {
-                                            this.props.onRequestCloseTools();
-                                            this.props.onOpenExtensionManagerModal();
-                                        }}
-                                        shortcut={formatShortcutDisplay('Ctrl+Alt+E')}
-                                    >
+                                     <MenuItem
+                                         onClick={() => {
+                                             this.props.onRequestCloseTools();
+                                             this.props.onOpenExtensionLibrary();
+                                         }}
+                                         shortcut={formatShortcutDisplay('Ctrl+.')}
+                                     >
+                                         <PackagePlus />
+                                         <FormattedMessage
+                                             defaultMessage="Add Extension"
+                                             description="Menu bar item for adding or importing extensions"
+                                             id="tw.menuBar.extensions.addImport"
+                                         />
+                                     </MenuItem>
+                                     <MenuItem
+                                         onClick={() => {
+                                             this.props.onRequestCloseTools();
+                                             this.props.onOpenExtensionManagerModal();
+                                         }}
+                                         shortcut={formatShortcutDisplay('Ctrl+Alt+E')}
+                                     >
                                         <FileCog />
                                         <FormattedMessage
                                             defaultMessage="Manage Extensions"

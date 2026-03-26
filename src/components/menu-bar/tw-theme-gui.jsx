@@ -32,14 +32,9 @@ const ThemeMenuItem = props => {
             <div className={styles.option}>
                 <span className={classNames(styles.check, {[styles.selected]: props.isSelected}, styles.checkText)}>✓</span>
                 <ThemeIcon id={props.id} />
-                <span className={props.name}>
+                <span className={styles.name}>
                     <FormattedMessage
-                        defaultMessage="{theme}"
-                        description="Label for theme option"
-                        id="tw.theme.option"
-                        values={{
-                            theme: props.name
-                        }}
+                        {...props.name}
                     />
                 </span>
             </div>
@@ -80,15 +75,21 @@ const GuiThemeMenu = ({
             place={isRtl ? 'left' : 'right'}
             className={styles.submenu}
         >
-            {Object.entries(Theme.defaults).map(([themeId, t]) => (
-                <ThemeMenuItem
-                    key={themeId}
-                    id={themeId}
-                    name={t.name || t.gui}
-                    isSelected={theme.gui === themeId}
-                    onClick={() => onChangeTheme(theme.set('gui', themeId))}
-                />
-            ))}
+            {Object.entries(Theme.defaults).map(([themeId, t]) => {
+                const themeName = (typeof t.name === 'object' && t.name.id) ? t.name : {
+                    defaultMessage: t.gui,
+                    id: `tw.theme.gui.${t.gui}`
+                };
+                return (
+                    <ThemeMenuItem
+                        key={themeId}
+                        id={themeId}
+                        name={themeName}
+                        isSelected={theme.gui === themeId}
+                        onClick={() => onChangeTheme(theme.set('gui', themeId))}
+                    />
+                );
+            })}
         </Submenu>
     </MenuItem>
 );

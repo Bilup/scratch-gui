@@ -24,7 +24,7 @@ const MODAL_PREFERENCES = 'preferencesModal';
 const MODAL_SIMPLE_DIALOG = 'simpleDialog';
 const MODAL_ONBOARDING = 'onboardingModal';
 const MODAL_SHORTCUT_MANAGER = 'shortcutManagerModal';
-const MODAL_WARPTHEME = 'warpthemeModal';
+const MODAL_WARPTHEME = 'bilmeModal';
 
 const initialState = {
     [MODAL_BACKDROP_LIBRARY]: false,
@@ -152,7 +152,7 @@ const openOnboardingModal = function () {
 const openShortcutManagerModal = function () {
     return openModal(MODAL_SHORTCUT_MANAGER);
 };
-const openWarpThemeModal = function () {
+const openBilmeModal = function () {
     return openModal(MODAL_WARPTHEME);
 };
 const openSimpleDialog = function (dialogConfig) {
@@ -227,7 +227,7 @@ const closeOnboardingModal = function () {
 const closeShortcutManagerModal = function () {
     return closeModal(MODAL_SHORTCUT_MANAGER);
 };
-const closeWarpThemeModal = function () {
+const closeBilmeModal = function () {
     return closeModal(MODAL_WARPTHEME);
 };
 export {
@@ -256,7 +256,7 @@ export {
     openPreferencesModal,
     openOnboardingModal,
     openShortcutManagerModal,
-    openWarpThemeModal,
+    openBilmeModal,
     openSimpleDialog,
     closeBackdropLibrary,
     closeCostumeLibrary,
@@ -280,5 +280,5 @@ export {
     closePreferencesModal,
     closeOnboardingModal,
     closeShortcutManagerModal,
-    closeWarpThemeModal
+    closeBilmeModal
 };

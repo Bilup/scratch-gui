@@ -128,8 +128,8 @@ class CollaborationService {
         }, 30000);
 
         this.peerConfig = {
-            host: 'collab_warp.mistium.com',
-            port: 443,
+            host: 'collab.bilup.org',
+            key: 'bilup',
             path: '/',
             secure: true,
             config: {

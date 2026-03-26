@@ -7,7 +7,15 @@ import styles from './shortcut-manager.css';
 
 const ShortcutCategory = ({
     category,
-    shortcuts
+    shortcuts,
+    onEditShortcut,
+    editingShortcutId,
+    editingKey,
+    onKeyInput,
+    onSaveShortcut,
+    onCancelEdit,
+    conflictError,
+    intl
 }) => (
     <div className={styles.category}>
         <h3 className={styles.categoryTitle}>{category}</h3>
@@ -16,6 +24,14 @@ const ShortcutCategory = ({
                 <ShortcutItem
                     key={shortcut.id}
                     shortcut={shortcut}
+                    onEditShortcut={onEditShortcut}
+                    editingShortcutId={editingShortcutId}
+                    editingKey={editingKey}
+                    onKeyInput={onKeyInput}
+                    onSaveShortcut={onSaveShortcut}
+                    onCancelEdit={onCancelEdit}
+                    conflictError={conflictError}
+                    intl={intl}
                 />
             ))}
         </div>
@@ -29,7 +45,17 @@ ShortcutCategory.propTypes = {
         key: PropTypes.string,
         defaultKey: PropTypes.string,
         label: PropTypes.string
-    })).isRequired
+    })).isRequired,
+    onEditShortcut: PropTypes.func,
+    editingShortcutId: PropTypes.string,
+    editingKey: PropTypes.string,
+    onKeyInput: PropTypes.func,
+    onSaveShortcut: PropTypes.func,
+    onCancelEdit: PropTypes.func,
+    conflictError: PropTypes.string,
+    intl: PropTypes.shape({
+        formatMessage: PropTypes.func
+    }).isRequired
 };
 
 export default ShortcutCategory;

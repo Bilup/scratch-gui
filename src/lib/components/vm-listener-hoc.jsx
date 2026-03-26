@@ -52,9 +52,9 @@ const hashString = str => {
     return (hash >>> 0).toString(16);
 };
 
-const computePromptKey = mistwarpTheme => {
+const computePromptKey = bilupTheme => {
     try {
-        return hashString(JSON.stringify(mistwarpTheme));
+        return hashString(JSON.stringify(bilupTheme));
     } catch (e) {
         return null;
     }
@@ -167,15 +167,15 @@ const vmListenerHOC = function (WrappedComponent) {
             if (!runtime || typeof runtime.getStoredProjectOptions !== 'function') return;
 
             const stored = runtime.getStoredProjectOptions();
-            if (!stored || !stored.mistwarpTheme) return;
+            if (!stored || !stored.bilupTheme) return;
 
-            const promptKey = computePromptKey(stored.mistwarpTheme);
+            const promptKey = computePromptKey(stored.bilupTheme);
             if (!promptKey) return;
 
             const ignored = readIgnoreMap();
             if (ignored[promptKey]) return;
 
-            this.props.onOpenProjectThemePrompt(stored.mistwarpTheme, promptKey);
+            this.props.onOpenProjectThemePrompt(stored.bilupTheme, promptKey);
         }
         handleCloudDataUpdate (hasCloudVariables) {
             if (this.props.hasCloudVariables !== hasCloudVariables) {
@@ -383,8 +383,8 @@ const vmListenerHOC = function (WrappedComponent) {
         onStageSizeChanged: (width, height) => dispatch(setCustomStageSize(width, height)),
         onCompileError: errors => dispatch(addCompileError(errors)),
         onClearCompileErrors: () => dispatch(clearCompileErrors()),
-        onOpenProjectThemePrompt: (mistwarpTheme, promptKey) => dispatch(
-            openProjectThemePrompt(mistwarpTheme, promptKey)
+        onOpenProjectThemePrompt: (bilupTheme, promptKey) => dispatch(
+            openProjectThemePrompt(bilupTheme, promptKey)
         ),
         onShowExtensionAlert: data => {
             dispatch(showExtensionAlert(data));

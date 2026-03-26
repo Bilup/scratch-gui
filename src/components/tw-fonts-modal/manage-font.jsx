@@ -13,7 +13,7 @@ const messages = defineMessages({
         // eslint-disable-next-line max-len
         defaultMessage: 'Are you sure you want to delete "{font}"? Any vector costumes will use the fallback font instead.',
         description: 'Part of font management modal. {font} is replaced with the name of a font like "Arial"',
-        id: 'tw.fonts.delete'
+        id: 'tw.fonts.deleteConfirm'
     }
 });
 
@@ -78,7 +78,11 @@ class ManageFont extends React.Component {
                         >
                             <img
                                 src={exportIcon}
-                                alt="Export"
+                                alt={this.props.intl.formatMessage({
+                                    defaultMessage: 'Export',
+                                    description: 'Part of font management modal',
+                                    id: 'tw.fonts.export'
+                                })}
                                 draggable={false}
                             />
                         </button>
@@ -90,7 +94,11 @@ class ManageFont extends React.Component {
                     >
                         <img
                             src={deleteIcon}
-                            alt="Delete"
+                            alt={this.props.intl.formatMessage({
+                                defaultMessage: 'Delete',
+                                description: 'Part of font management modal',
+                                id: 'tw.fonts.delete'
+                            })}
                             draggable={false}
                         />
                     </button>

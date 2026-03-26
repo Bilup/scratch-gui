@@ -6,10 +6,13 @@ import {defineMessages, intlShape, injectIntl, FormattedMessage} from 'react-int
 import Box from '../box/box.jsx';
 import ActionMenu from '../action-menu/action-menu.jsx';
 import styles from './stage-selector.css';
-import {isRtl} from '@turbowarp/scratch-l10n';
+import {isRtl} from '@bilup/scratch-l10n';
 
 import backdropIcon from '../action-menu/icon--backdrop.svg';
-import {Upload, Paintbrush, Sparkles, Search} from 'lucide-react';
+import fileUploadIcon from '../action-menu/icon--file-upload.svg';
+import paintIcon from '../action-menu/icon--paint.svg';
+import surpriseIcon from '../action-menu/icon--surprise.svg';
+import searchIcon from '../action-menu/icon--search.svg';
 
 const messages = defineMessages({
     addBackdropFromLibrary: {
@@ -98,7 +101,7 @@ const StageSelector = props => {
                 moreButtons={[
                     {
                         title: intl.formatMessage(messages.addBackdropFromFile),
-                        img: Upload,
+                        img: fileUploadIcon,
                         onClick: onBackdropFileUploadClick,
                         fileAccept: '.svg, .png, .bmp, .jpg, .jpeg, .jfif, .webp, .gif',
                         fileChange: onBackdropFileUpload,
@@ -106,16 +109,16 @@ const StageSelector = props => {
                         fileMultiple: true
                     }, {
                         title: intl.formatMessage(messages.addBackdropFromSurprise),
-                        img: Sparkles,
+                        img: surpriseIcon,
                         onClick: onSurpriseBackdropClick
 
                     }, {
                         title: intl.formatMessage(messages.addBackdropFromPaint),
-                        img: Paintbrush,
+                        img: paintIcon,
                         onClick: onEmptyBackdropClick
                     }, {
                         title: intl.formatMessage(messages.addBackdropFromLibrary),
-                        img: Search,
+                        img: searchIcon,
                         onClick: onNewBackdropClick
                     }
                 ]}

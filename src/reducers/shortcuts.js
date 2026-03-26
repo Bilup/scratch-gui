@@ -26,11 +26,19 @@ const reducer = function (state, action) {
     
     switch (action.type) {
     case SET_SHORTCUT:
+        const updatedShortcuts = {
+            ...state.customShortcuts,
+            [action.shortcutId]: action.key
+        };
+        
+        try {
+            localStorage.setItem('tw:shortcuts', JSON.stringify(updatedShortcuts));
+        } catch (e) {
+            console.warn('Failed to save shortcuts:', e);
+        }
+        
         return Object.assign({}, state, {
-            customShortcuts: {
-                ...state.customShortcuts,
-                [action.shortcutId]: action.key
-            }
+            customShortcuts: updatedShortcuts
         });
     case RESET_SHORTCUT:
         const newCustomShortcuts = {...state.customShortcuts};

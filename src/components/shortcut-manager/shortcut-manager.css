@@ -183,6 +183,83 @@
     opacity: 0.8;
 }
 
+.editButton {
+    background: none;
+    border: none;
+    color: $text-primary;
+    opacity: 0.6;
+    font-size: 0.7rem;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.1s;
+}
+
+.editButton:hover {
+    opacity: 1;
+    background: $ui-black-transparent;
+}
+
+.shortcutEdit {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-end;
+}
+
+.shortcutInput {
+    background: $ui-primary;
+    border: 1px solid $ui-black-transparent;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 0.7rem;
+    font-family: monospace;
+    min-width: 120px;
+    text-align: center;
+}
+
+.errorMessage {
+    color: #ff6b6b;
+    font-size: 0.65rem;
+    margin-top: -4px;
+}
+
+.editButtons {
+    display: flex;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+.saveButton {
+    background: $looks-secondary;
+    color: $ui-primary;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 0.7rem;
+    cursor: pointer;
+    transition: background-color 0.1s;
+}
+
+.saveButton:hover {
+    background: $looks-tertiary;
+}
+
+.cancelButton {
+    background: $ui-tertiary;
+    color: $text-primary;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 0.7rem;
+    cursor: pointer;
+    transition: background-color 0.1s;
+}
+
+.cancelButton:hover {
+    background: $ui-black-transparent;
+}
+
 .resetIcon,
 .editIcon {
     cursor: pointer;
@@ -261,15 +338,6 @@
 .editorButton:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-}
-
-.saveButton {
-    background: $looks-secondary;
-    color: $ui-primary;
-}
-
-.saveButton:hover {
-    background: $looks-tertiary;
 }
 
 .editorHint {

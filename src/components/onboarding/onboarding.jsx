@@ -1,51 +1,140 @@
 import PropTypes from 'prop-types';
 import React, {Component, createRef} from 'react';
 import ReactDOM from 'react-dom';
+import {defineMessages, injectIntl, intlShape} from 'react-intl';
 import WindowManager from '../../addons/window-system/window-manager.js';
 import {Search, Maximize2, Palette, Sparkles, Hand, CheckCheck} from 'lucide-react';
 
 import './onboarding.css';
 
+const messages = defineMessages({
+    windowTitle: {
+        defaultMessage: 'Bilup Tutorial',
+        description: 'Title of the onboarding tutorial window',
+        id: 'onboarding.windowTitle'
+    },
+    step1Title: {
+        defaultMessage: 'Welcome to Bilup!',
+        description: 'Title of the first onboarding step',
+        id: 'onboarding.step1.title'
+    },
+    step1Content: {
+        defaultMessage: 'Follow this short tour to discover the powerful features that make Bilup special.',
+        description: 'Content of the first onboarding step',
+        id: 'onboarding.step1.content'
+    },
+    step2Title: {
+        defaultMessage: 'Find Anything',
+        description: 'Title of the second onboarding step',
+        id: 'onboarding.step2.title'
+    },
+    step2Content: {
+        defaultMessage: "Use the search bar to quickly find blocks, variables, broadcasts, and text content within your sprite's code.",
+        description: 'Content of the second onboarding step',
+        id: 'onboarding.step2.content'
+    },
+    step3Title: {
+        defaultMessage: 'Window Manager',
+        description: 'Title of the third onboarding step',
+        id: 'onboarding.step3.title'
+    },
+    step3Content: {
+        defaultMessage: "Bilup's window manager gives you unparalleled multitasking power. Drag windows anywhere, resize them to your liking, or keep them always-on-top when you need them.",
+        description: 'Content of the third onboarding step',
+        id: 'onboarding.step3.content'
+    },
+    step4Title: {
+        defaultMessage: 'Resize Panels',
+        description: 'Title of the fourth onboarding step',
+        id: 'onboarding.step4.title'
+    },
+    step4Content: {
+        defaultMessage: 'Drag the resize handles to adjust the size of your workspace. Customize the stage, backpack, and block palette to fit your needs.',
+        description: 'Content of the fourth onboarding step',
+        id: 'onboarding.step4.content'
+    },
+    step5Title: {
+        defaultMessage: 'Personalize Your Experience',
+        description: 'Title of the fifth onboarding step',
+        id: 'onboarding.step5.title'
+    },
+    step5Content: {
+        defaultMessage: 'Choose from beautiful themes, accent colors, wallpapers, and custom fonts in Settings. Make Bilup yours.',
+        description: 'Content of the fifth onboarding step',
+        id: 'onboarding.step5.content'
+    },
+    step6Title: {
+        defaultMessage: "You're All Set!",
+        description: 'Title of the sixth onboarding step',
+        id: 'onboarding.step6.title'
+    },
+    step6Content: {
+        defaultMessage: 'You can access this tutorial anytime from the Edit menu. Now go create something amazing!',
+        description: 'Content of the sixth onboarding step',
+        id: 'onboarding.step6.content'
+    },
+    nextButton: {
+        defaultMessage: 'Next',
+        description: 'Next button in onboarding',
+        id: 'onboarding.next'
+    },
+    startCreatingButton: {
+        defaultMessage: 'Start Creating',
+        description: 'Start creating button in onboarding',
+        id: 'onboarding.startCreating'
+    },
+    skipTutorial: {
+        defaultMessage: 'Skip tutorial',
+        description: 'Skip tutorial link',
+        id: 'onboarding.skipTutorial'
+    },
+    replayTutorial: {
+        defaultMessage: 'Replay Tutorial',
+        description: 'Replay tutorial button',
+        id: 'onboarding.replayTutorial'
+    }
+});
+
 const TUTORIAL_STEPS = [
     {
-        title: 'Welcome to MistWarp!',
-        content: 'Follow this short tour to discover the powerful features that make MistWarp special.',
+        titleKey: 'step1Title',
+        contentKey: 'step1Content',
         icon: Sparkles,
         selector: null,
         position: 'center'
     },
     {
-        title: 'Find Anything',
-        content: 'Use the search bar to quickly find blocks, variables, broadcasts, and text content within your sprite\'s code.',
+        titleKey: 'step2Title',
+        contentKey: 'step2Content',
         icon: Search,
         selector: '.sa-find-dropdown',
         position: 'bottom'
     },
     {
-        title: 'Window Manager',
-        content: 'MistWarp\'s window manager gives you unparalleled multitasking power. Drag windows anywhere, resize them to your liking, or keep them always-on-top when you need them.',
+        titleKey: 'step3Title',
+        contentKey: 'step3Content',
         icon: Maximize2,
         selector: null,
         position: 'center',
         optional: true
     },
     {
-        title: 'Resize Panels',
-        content: 'Drag the resize handles to adjust the size of your workspace. Customize the stage, backpack, and block palette to fit your needs.',
+        titleKey: 'step4Title',
+        contentKey: 'step4Content',
         icon: Hand,
         selector: '.stagePaneResizer',
         position: 'right'
     },
     {
-        title: 'Personalize Your Experience',
-        content: 'Choose from beautiful themes, accent colors, wallpapers, and custom fonts in Settings. Make MistWarp yours.',
+        titleKey: 'step5Title',
+        contentKey: 'step5Content',
         icon: Palette,
         selector: null,
         position: 'bottom'
     },
     {
-        title: 'You\'re All Set!',
-        content: 'You can access this tutorial anytime from the Edit menu. Now go create something amazing!',
+        titleKey: 'step6Title',
+        contentKey: 'step6Content',
         icon: CheckCheck,
         selector: null,
         position: 'center'
@@ -101,9 +190,11 @@ class OnboardingTutorial extends Component {
             return;
         }
 
+        const {intl} = this.props;
+
         this.onboardingWindow = WindowManager.createWindow({
             id: 'onboarding-tutorial',
-            title: 'MistWarp Tutorial',
+            title: intl.formatMessage(messages.windowTitle),
             width: 340,
             height: 380,
             minWidth: 300,
@@ -224,7 +315,7 @@ class OnboardingTutorial extends Component {
     renderContent () {
         if (!this.contentContainer) return null;
 
-        const {step, onNext, onPrev} = this.props;
+        const {intl, step, onNext, onPrev} = this.props;
         const currentStep = TUTORIAL_STEPS[step];
         if (!currentStep) return null;
 
@@ -239,11 +330,11 @@ class OnboardingTutorial extends Component {
                 </div>
 
                 <h3 className="mw-onboarding-title">
-                    {currentStep.title}
+                    {intl.formatMessage(messages[currentStep.titleKey])}
                 </h3>
 
                 <p className="mw-onboarding-description">
-                    {currentStep.content}
+                    {intl.formatMessage(messages[currentStep.contentKey])}
                 </p>
 
                 <div className="mw-onboarding-steps">
@@ -276,7 +367,7 @@ class OnboardingTutorial extends Component {
                             }
                         }}
                     >
-                        {isLastStep ? 'Start Creating' : 'Next '}
+                        {isLastStep ? intl.formatMessage(messages.startCreatingButton) : `${intl.formatMessage(messages.nextButton)} `}
                         {!isLastStep && '→'}
                     </button>
                 </div>
@@ -289,7 +380,7 @@ class OnboardingTutorial extends Component {
                             this.handleClose();
                         }}
                     >
-                        {'Skip tutorial'}
+                        {intl.formatMessage(messages.skipTutorial)}
                     </div>
                 )}
 
@@ -310,7 +401,7 @@ class OnboardingTutorial extends Component {
                             setTimeout(() => this.openWindow(), 100);
                         }}
                     >
-                        {'↻ Replay Tutorial'}
+                        {`↻ ${intl.formatMessage(messages.replayTutorial)}`}
                     </button>
                 )}
             </div>
@@ -326,6 +417,7 @@ class OnboardingTutorial extends Component {
 }
 
 OnboardingTutorial.propTypes = {
+    intl: intlShape.isRequired,
     visible: PropTypes.bool.isRequired,
     step: PropTypes.number.isRequired,
     onClose: PropTypes.func.isRequired,
@@ -334,4 +426,4 @@ OnboardingTutorial.propTypes = {
     openSettingsMenu: PropTypes.func
 };
 
-export default OnboardingTutorial;
+export default injectIntl(OnboardingTutorial);

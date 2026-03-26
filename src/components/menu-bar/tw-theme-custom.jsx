@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import React from 'react';
-import {FormattedMessage, IntlProvider} from 'react-intl';
+import {FormattedMessage, IntlProvider, injectIntl, intlShape} from 'react-intl';
 import {connect, Provider} from 'react-redux';
 
 import {MenuItem, Submenu} from '../menu/menu.jsx';
@@ -58,7 +58,8 @@ const startDrag = (index, e, dragging, setGradientColors, previewRef) => {
 
 // Self-contained gradient creator/editor components so dialogs continue to
 // function independently of the parent menu component's mounted state.
-const GradientCreatorApp = props => {
+const GradientCreatorApp = injectIntl(props => {
+    const {intl} = props;
     const [name, setName] = React.useState(props.initialName || '');
     const [description, setDescription] = React.useState(props.initialDescription || '');
     const [gradientColors, setGradientColors] = React.useState(props.initialGradientColors || [
@@ -75,6 +76,17 @@ const GradientCreatorApp = props => {
     const previewRef = React.useRef(null);
     const dragging = React.useRef({index: null, rect: null});
 
+    const presetNameToKey = {
+        'Sunset': 'tw.customThemes.preset.sunset',
+        'Ocean': 'tw.customThemes.preset.ocean',
+        'Forest': 'tw.customThemes.preset.forest',
+        'Purple Rain': 'tw.customThemes.preset.purpleRain',
+        'Fire': 'tw.customThemes.preset.fire',
+        'Aurora': 'tw.customThemes.preset.aurora',
+        'Space': 'tw.customThemes.preset.space',
+        'Cherry': 'tw.customThemes.preset.cherry'
+    };
+
     const handlePreview = async () => {
         if (isPreviewActive) {
             setIsPreviewActive(false);
@@ -85,7 +97,7 @@ const GradientCreatorApp = props => {
         }
 
         if (!name.trim()) {
-            await showAlert('Please enter a theme name first');
+            await showAlert(intl.formatMessage({defaultMessage: 'Please enter a theme name first', id: 'tw.customThemes.error.themeNameRequired'}));
             return;
         }
 
@@ -186,7 +198,10 @@ const GradientCreatorApp = props => {
                                 type="text"
                                 value={name}
                                 onChange={e => setName(e.target.value)}
-                                placeholder="My Gradient Theme"
+                                placeholder={intl.formatMessage({
+                                    defaultMessage: 'My Gradient Theme',
+                                    id: 'tw.customThemes.placeholder.gradientName'
+                                })}
                                 className={styles.gradientInput}
                                 maxLength={50}
                             />
@@ -201,7 +216,7 @@ const GradientCreatorApp = props => {
                             <textarea
                                 value={description}
                                 onChange={e => setDescription(e.target.value)}
-                                placeholder="Describe your gradient theme..."
+                                placeholder={intl.formatMessage({defaultMessage: 'A custom gradient theme', id: 'tw.customThemes.placeholder.gradientDescription'})}
                                 className={styles.gradientTextarea}
                                 maxLength={200}
                                 rows={2}
@@ -233,7 +248,12 @@ const GradientCreatorApp = props => {
                                             position: (i / (preset.colors.length - 1)) * 100
                                         })), preset.direction)}}
                                     />
-                                    <span className={styles.presetName}>{preset.name}</span>
+                                    <span className={styles.presetName}>
+                                        {intl.formatMessage({
+                                            defaultMessage: preset.name,
+                                            id: presetNameToKey[preset.name] || preset.name
+                                        })}
+                                    </span>
                                 </button>
                             ))}
                         </div>
@@ -489,7 +509,7 @@ const GradientCreatorApp = props => {
             </div>
         </div>
     );
-};
+});
 
 GradientCreatorApp.propTypes = {
     initialName: PropTypes.string,
@@ -502,10 +522,12 @@ GradientCreatorApp.propTypes = {
     initialPrimaryColor: PropTypes.string,
     onCancel: PropTypes.func,
     onCreate: PropTypes.func,
-    onPreview: PropTypes.func
+    onPreview: PropTypes.func,
+    intl: intlShape.isRequired
 };
 
-const GradientEditorApp = props => {
+const GradientEditorApp = injectIntl(props => {
+    const {intl} = props;
     const [name, setName] = React.useState(props.initialName || '');
     const [description, setDescription] = React.useState(props.initialDescription || '');
     const [gradientColors, setGradientColors] = React.useState(props.initialGradientColors || [
@@ -520,6 +542,17 @@ const GradientEditorApp = props => {
     const previewRef = React.useRef(null);
     const dragging = React.useRef({index: null, rect: null});
 
+    const presetNameToKey = {
+        'Sunset': 'tw.customThemes.preset.sunset',
+        'Ocean': 'tw.customThemes.preset.ocean',
+        'Forest': 'tw.customThemes.preset.forest',
+        'Purple Rain': 'tw.customThemes.preset.purpleRain',
+        'Fire': 'tw.customThemes.preset.fire',
+        'Aurora': 'tw.customThemes.preset.aurora',
+        'Space': 'tw.customThemes.preset.space',
+        'Cherry': 'tw.customThemes.preset.cherry'
+    };
+
     const handlePreview = async () => {
         if (isPreviewActive) {
             setIsPreviewActive(false);
@@ -530,7 +563,7 @@ const GradientEditorApp = props => {
         }
 
         if (!name.trim()) {
-            await showAlert('Please enter a theme name first');
+            await showAlert(intl.formatMessage({defaultMessage: 'Please enter a theme name first', id: 'tw.customThemes.error.themeNameRequired'}));
             return;
         }
 
@@ -616,7 +649,10 @@ const GradientEditorApp = props => {
                                 type="text"
                                 value={name}
                                 onChange={e => setName(e.target.value)}
-                                placeholder="My Gradient Theme"
+                                placeholder={intl.formatMessage({
+                                    defaultMessage: 'My Gradient Theme',
+                                    id: 'tw.customThemes.placeholder.gradientName'
+                                })}
                                 className={styles.gradientInput}
                                 maxLength={50}
                             />
@@ -631,7 +667,7 @@ const GradientEditorApp = props => {
                             <textarea
                                 value={description}
                                 onChange={e => setDescription(e.target.value)}
-                                placeholder="Describe your gradient theme..."
+                                placeholder={intl.formatMessage({defaultMessage: 'A custom gradient theme', id: 'tw.customThemes.placeholder.gradientDescription'})}
                                 className={styles.gradientTextarea}
                                 maxLength={200}
                                 rows={2}
@@ -889,7 +925,7 @@ const GradientEditorApp = props => {
             </div>
         </div>
     );
-};
+});
 
 GradientEditorApp.propTypes = {
     initialName: PropTypes.string,
@@ -902,7 +938,8 @@ GradientEditorApp.propTypes = {
     initialPrimaryColor: PropTypes.string,
     onCancel: PropTypes.func,
     onUpdate: PropTypes.func,
-    onPreview: PropTypes.func
+    onPreview: PropTypes.func,
+    intl: intlShape.isRequired
 };
 
 class CustomThemeMenu extends React.Component {
@@ -1093,7 +1130,11 @@ class CustomThemeMenu extends React.Component {
 
         this.createThemeWindow = WindowManager.createWindow({
             id: 'tw-create-theme-window',
-            title: 'Create Custom Theme',
+            title: this.props.intl.formatMessage({
+                defaultMessage: 'Create Custom Theme',
+                description: 'Title of the create custom theme window',
+                id: 'tw.customTheme.createWindowTitle'
+            }),
             width: 520,
             height: 360,
             minWidth: 420,
@@ -1153,7 +1194,11 @@ class CustomThemeMenu extends React.Component {
 
         this.gradientCreatorWindow = WindowManager.createWindow({
             id: 'tw-gradient-creator-window',
-            title: 'Create Gradient Theme',
+            title: this.props.intl.formatMessage({
+                defaultMessage: 'Create Gradient Theme',
+                description: 'Title of the create gradient theme window',
+                id: 'tw.customTheme.createGradientWindowTitle'
+            }),
             width: 900,
             height: 680,
             minWidth: 680,
@@ -1247,7 +1292,11 @@ class CustomThemeMenu extends React.Component {
 
         this.gradientEditorWindow = WindowManager.createWindow({
             id: `tw-gradient-editor-${themeUuid}`,
-            title: 'Edit Gradient Theme',
+            title: this.props.intl.formatMessage({
+                defaultMessage: 'Edit Gradient Theme',
+                description: 'Title of the edit gradient theme window',
+                id: 'tw.customTheme.editGradientWindowTitle'
+            }),
             width: 800,
             height: 640,
             minWidth: 600,
@@ -1340,7 +1389,11 @@ class CustomThemeMenu extends React.Component {
         const {theme} = this.props;
         
         if (!createName.trim()) {
-            await showAlert('Theme name is required');
+            await showAlert(this.props.intl.formatMessage({
+                defaultMessage: 'Theme name is required',
+                description: 'Error message when theme name is empty',
+                id: 'tw.customThemes.error.themeNameRequired'
+            }));
             return;
         }
 
@@ -1362,7 +1415,11 @@ class CustomThemeMenu extends React.Component {
             this.props.onChangeTheme(customTheme);
             return true;
         } catch (error) {
-            await showAlert(`Failed to create theme: ${error.message}`);
+            await showAlert(this.props.intl.formatMessage({
+                defaultMessage: 'Failed to create theme: {errorMessage}',
+                description: 'Error message when theme creation fails',
+                id: 'tw.customThemes.error.themeCreationFailed'
+            }, {errorMessage: error.message}));
         }
     };
 
@@ -1372,7 +1429,11 @@ class CustomThemeMenu extends React.Component {
         const theme = this.props.theme;
 
         if (!createName.trim()) {
-            await showAlert('Theme name is required');
+            await showAlert(this.props.intl.formatMessage({
+                defaultMessage: 'Theme name is required',
+                description: 'Error message when theme name is empty',
+                id: 'tw.customThemes.error.themeNameRequired'
+            }));
             return;
         }
 
@@ -1409,7 +1470,11 @@ class CustomThemeMenu extends React.Component {
             this.props.onChangeTheme(customTheme);
             return true;
         } catch (error) {
-            await showAlert(`Failed to create gradient theme: ${error.message}`);
+            await showAlert(this.props.intl.formatMessage({
+                defaultMessage: 'Failed to create gradient theme: {errorMessage}',
+                description: 'Error message when gradient theme creation fails',
+                id: 'tw.customThemes.error.gradientThemeCreationFailed'
+            }, {errorMessage: error.message}));
         }
     };
 
@@ -1474,7 +1539,11 @@ class CustomThemeMenu extends React.Component {
                     selectedPreset: presetName
                 });
             } else {
-                await showAlert('Gradient preset not found');
+                await showAlert(this.props.intl.formatMessage({
+                    defaultMessage: 'Gradient preset not found',
+                    description: 'Error message when selected gradient preset is not available',
+                    id: 'tw.customThemes.error.gradientPresetNotFound'
+                }));
             }
         } catch (error) {
             console.warn('Failed to load preset:', error);
@@ -1487,7 +1556,11 @@ class CustomThemeMenu extends React.Component {
             const theme = customThemeManager.getTheme(themeUuid);
             
             if (!gradientInfo || !theme) {
-                await showAlert('Could not load gradient information for this theme');
+                await showAlert(this.props.intl.formatMessage({
+                    defaultMessage: 'Could not load gradient information for this theme',
+                    description: 'Error message when gradient information cannot be loaded for a theme',
+                    id: 'tw.customThemes.error.gradientInfoLoadFailed'
+                }));
                 return;
             }
 
@@ -1503,7 +1576,11 @@ class CustomThemeMenu extends React.Component {
                 if (this._isMounted) this.openGradientEditorWindow(themeUuid);
             });
         } catch (error) {
-            await showAlert(`Failed to load gradient theme: ${error.message}`);
+            await showAlert(this.props.intl.formatMessage({
+                defaultMessage: 'Failed to load gradient theme: {errorMessage}',
+                description: 'Error message when gradient theme loading fails',
+                id: 'tw.customThemes.error.gradientThemeLoadFailed'
+            }, {errorMessage: error.message}));
         }
     };
 
@@ -1513,12 +1590,20 @@ class CustomThemeMenu extends React.Component {
         const createDescription = typeof description === 'string' ? description : (this.state.createDescription || '');
 
         if (!editingThemeUuid) {
-            await showAlert('No theme selected for editing');
+            await showAlert(this.props.intl.formatMessage({
+                defaultMessage: 'No theme selected for editing',
+                description: 'Error message when no theme is selected for editing',
+                id: 'tw.customThemes.error.noThemeSelectedForEditing'
+            }));
             return;
         }
 
         if (!createName.trim()) {
-            await showAlert('Theme name is required');
+            await showAlert(this.props.intl.formatMessage({
+                defaultMessage: 'Theme name is required',
+                description: 'Error message when theme name is not provided',
+                id: 'tw.customThemes.error.themeNameRequired'
+            }));
             return;
         }
 
@@ -1575,12 +1660,20 @@ class CustomThemeMenu extends React.Component {
                 this.props.onChangeTheme(customThemeManager.getTheme(editingThemeUuid));
             }
         } catch (error) {
-            await showAlert(`Failed to update gradient theme: ${error.message}`);
+            await showAlert(this.props.intl.formatMessage({
+                defaultMessage: 'Failed to update gradient theme: {errorMessage}',
+                description: 'Error message when gradient theme update fails',
+                id: 'tw.customThemes.error.gradientThemeUpdateFailed'
+            }, {errorMessage: error.message}));
         }
     };
 
     handleDeleteTheme = async (themeUuid, themeName) => {
-        if (confirm(`Are you sure you want to delete the theme "${themeName}"?`)) {
+        if (confirm(this.props.intl.formatMessage({
+            defaultMessage: 'Are you sure you want to delete the theme "{themeName}"?',
+            description: 'Confirmation prompt when deleting a custom theme',
+            id: 'tw.customThemes.confirmDeleteTheme'
+        }, {themeName}))) {
             try {
                 customThemeManager.removeTheme(themeUuid);
                 this.safeSetState({
@@ -1635,14 +1728,18 @@ class CustomThemeMenu extends React.Component {
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = `mistwarp-themes-${new Date().toISOString()
+            link.download = `bilup-themes-${new Date().toISOString()
                 .split('T')[0]}.json`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
         } catch (error) {
-            await showAlert(`Failed to export themes: ${error.message}`);
+            await showAlert(this.props.intl.formatMessage({
+                defaultMessage: 'Failed to export themes: {errorMessage}',
+                description: 'Error message when theme export fails',
+                id: 'tw.customThemes.error.themeExportFailed'
+            }, {errorMessage: error.message}));
         }
     };
 
@@ -1652,7 +1749,7 @@ class CustomThemeMenu extends React.Component {
                 version: '2.0',
                 timestamp: Date.now(),
                 themes: [theme.export()],
-                platform: 'MistWarp'
+                platform: 'Bilup'
             };
             const blob = new Blob([JSON.stringify(exportData, null, 2)], {
                 type: 'application/json'
@@ -1666,7 +1763,11 @@ class CustomThemeMenu extends React.Component {
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
         } catch (error) {
-            await showAlert(`Failed to export theme: ${error.message}`);
+            await showAlert(this.props.intl.formatMessage({
+                defaultMessage: 'Failed to export theme: {errorMessage}',
+                description: 'Error message when theme export fails',
+                id: 'tw.customThemes.error.themeExportFailed'
+            }, {errorMessage: error.message}));
         }
     };
 
@@ -1681,13 +1782,29 @@ class CustomThemeMenu extends React.Component {
                 const data = JSON.parse(e.target.result);
                 const results = customThemeManager.importThemes(data, false);
                 
-                let message = `Import complete!\n`;
-                message += `Imported: ${results.imported} themes\n`;
+                let message = this.props.intl.formatMessage({
+                    defaultMessage: 'Import complete!\n',
+                    description: 'Message when theme import completes successfully',
+                    id: 'tw.customThemes.import.success.importComplete'
+                });
+                message += this.props.intl.formatMessage({
+                    defaultMessage: 'Imported: {imported} themes\n',
+                    description: 'Message when theme import completes successfully',
+                    id: 'tw.customThemes.import.success.importedThemes'
+                }, {imported: results.imported});
                 if (results.skipped > 0) {
-                    message += `Skipped: ${results.skipped} themes (already exist)\n`;
+                    message += this.props.intl.formatMessage({
+                        defaultMessage: 'Skipped: {skipped} themes (already exist)\n',
+                        description: 'Message when some themes are skipped due to existing duplicates',
+                        id: 'tw.customThemes.import.error.themeAlreadyExists'
+                    }, {skipped: results.skipped});
                 }
                 if (results.errors.length > 0) {
-                    message += `Errors: ${results.errors.length}\n${results.errors.join('\n')}`;
+                    message += this.props.intl.formatMessage({
+                        defaultMessage: 'Errors: {errorsCount}\n{errorMessages}',
+                        description: 'Error message when theme import fails',
+                        id: 'tw.customThemes.import.error.themeImportFailed'
+                    }, {errorsCount: results.errors.length, errorMessages: results.errors.join('\n')});
                 }
                 
                 await showAlert(message);
@@ -1695,7 +1812,11 @@ class CustomThemeMenu extends React.Component {
                     customThemes: customThemeManager.getAllThemes()
                 });
             } catch (error) {
-                await showAlert(`Failed to import themes: ${error.message}`);
+                await showAlert(this.props.intl.formatMessage({
+                    defaultMessage: 'Failed to import themes: {errorMessage}',
+                    description: 'Error message when theme import fails',
+                    id: 'tw.customThemes.error.themeImportFailed'
+                }, {errorMessage: error.message}));
             } finally {
                 if (this._activeFileReader === reader) {
                     this._activeFileReader = null;
@@ -1730,7 +1851,10 @@ class CustomThemeMenu extends React.Component {
                         name="createName"
                         type="text"
                         defaultValue={this.state.createName}
-                        placeholder="My Custom Theme"
+                        placeholder={this.props.intl.formatMessage({
+                            defaultMessage: 'My Custom Theme',
+                            id: 'tw.customThemes.placeholder.themeName'
+                        })}
                         maxLength={50}
                     />
                 </div>
@@ -1744,7 +1868,10 @@ class CustomThemeMenu extends React.Component {
                     <textarea
                         name="createDescription"
                         defaultValue={this.state.createDescription}
-                        placeholder="A custom theme based on current settings"
+                        placeholder={this.props.intl.formatMessage({
+                            defaultMessage: 'A custom theme based on current settings',
+                            id: 'tw.customThemes.placeholder.themeDescription'
+                        })}
                         maxLength={200}
                         rows={3}
                     />
@@ -1963,6 +2090,7 @@ class CustomThemeMenu extends React.Component {
 }
 
 CustomThemeMenu.propTypes = {
+    intl: intlShape.isRequired,
     isRtl: PropTypes.bool,
     onChangeTheme: PropTypes.func,
     theme: PropTypes.instanceOf(Theme),
@@ -1989,7 +2117,7 @@ const mapDispatchToProps = dispatch => ({
     }
 });
 
-export default connect(
+export default injectIntl(connect(
     mapStateToProps,
     mapDispatchToProps
-)(CustomThemeMenu);
+)(CustomThemeMenu));

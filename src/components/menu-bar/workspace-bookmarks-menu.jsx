@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import React, {useCallback, useMemo, useState} from 'react';
-import {FormattedMessage, intlShape} from 'react-intl';
+import {FormattedMessage, defineMessages, intlShape} from 'react-intl';
 
 import {
     Download,
@@ -17,6 +17,14 @@ const ICON_SIZE = 16;
 const CARET_SIZE = 12;
 
 import {MenuItem, MenuSection} from '../menu/menu.jsx';
+
+const messages = defineMessages({
+    bookmarkDefaultCategory: {
+        id: 'tw.menuBar.bookmarkDefaultCategory',
+        defaultMessage: 'General',
+        description: 'Default category name for workspace bookmarks'
+    }
+});
 
 import styles from './workspace-bookmarks-menu.css';
 
@@ -46,7 +54,8 @@ const WorkspaceBookmarksMenu = props => {
         onToggleCategoryCollapsed,
         onExport,
         onImport,
-        onClearAll
+        onClearAll,
+        intl
     } = props;
 
     const [searchTerm, setSearchTerm] = useState('');
@@ -80,7 +89,7 @@ const WorkspaceBookmarksMenu = props => {
         if (!enableCategories) return null;
         const byCategory = new Map();
         for (const bookmark of filtered) {
-            const category = bookmark.category || 'General';
+            const category = bookmark.category || intl.formatMessage(messages.bookmarkDefaultCategory);
             if (!byCategory.has(category)) byCategory.set(category, []);
             byCategory.get(category).push(bookmark);
         }

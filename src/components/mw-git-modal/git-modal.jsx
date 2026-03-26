@@ -1,17 +1,29 @@
 import PropTypes from 'prop-types';
 import React from 'react';
-import {defineMessages, FormattedMessage, injectIntl, intlShape} from 'react-intl';
+import { defineMessages, FormattedMessage, injectIntl, intlShape } from 'react-intl';
 import {
     Check,
     CirclePlus,
     Download,
     RefreshCcw,
     RotateCcw,
-    Trash
+    Trash,
+    Share2,
+    ArrowDown
 } from 'lucide-react';
 
 import Box from '../box/box.jsx';
 import Modal from '../../containers/windowed-modal.jsx';
+import {
+    setFormatMessage as setGitFormatMessage,
+    setIntl as setGitIntl
+} from '../../lib/git/browser-git.js';
+
+import {
+    setFormatMessage as setWTFormatMessage,
+    setIntl as setWTIntl
+} from '../../lib/git/project-working-tree.js';
+
 
 import styles from './git-modal.css';
 
@@ -80,6 +92,51 @@ const messages = defineMessages({
         defaultMessage: 'Merge',
         description: 'Apply merge button',
         id: 'mw.gitModal.merge.apply'
+    },
+    newBranchPlaceholder: {
+        defaultMessage: 'new-branch',
+        description: 'New branch name input placeholder',
+        id: 'mw.gitModal.newBranchPlaceholder'
+    },
+    authorNamePlaceholder: {
+        defaultMessage: 'Name',
+        description: 'Author name input placeholder',
+        id: 'mw.gitModal.authorNamePlaceholder'
+    },
+    authorEmailPlaceholder: {
+        defaultMessage: 'email@example.com',
+        description: 'Author email input placeholder',
+        id: 'mw.gitModal.authorEmailPlaceholder'
+    },
+    remoteNamePlaceholder: {
+        defaultMessage: 'Remote name (e.g., origin)',
+        description: 'Remote name input placeholder',
+        id: 'mw.gitModal.remoteNamePlaceholder'
+    },
+    remoteUrlPlaceholder: {
+        defaultMessage: 'https://github.com/user/repo.git',
+        description: 'Remote URL input placeholder',
+        id: 'mw.gitModal.remoteUrlPlaceholder'
+    },
+    usernamePlaceholder: {
+        defaultMessage: 'Username',
+        description: 'Username input placeholder',
+        id: 'mw.gitModal.usernamePlaceholder'
+    },
+    tokenPlaceholder: {
+        defaultMessage: 'Personal Access Token / Password',
+        description: 'Personal access token input placeholder',
+        id: 'mw.gitModal.tokenPlaceholder'
+    },
+    selectRemotePlaceholder: {
+        defaultMessage: 'Select remote',
+        description: 'Select remote dropdown placeholder',
+        id: 'mw.gitModal.selectRemotePlaceholder'
+    },
+    selectBranchPlaceholder: {
+        defaultMessage: 'Select branch',
+        description: 'Select branch dropdown placeholder',
+        id: 'mw.gitModal.selectBranchPlaceholder'
     }
 });
 
@@ -89,14 +146,31 @@ const GitModalComponent = props => {
     const [deleteConfirmAction, setDeleteConfirmAction] = React.useState(null);
     const [pendingDeleteBranchRef, setPendingDeleteBranchRef] = React.useState(null);
 
+    // Initialize formatMessage and intl object for browser-git.js & project-working-tree.js
+    React.useEffect(() => {
+    if (props.intl) {
+        // browser-git.js
+        setGitFormatMessage(props.intl.formatMessage);
+        setGitIntl(props.intl);
+
+        // project-working-tree.js
+        setWTFormatMessage(props.intl.formatMessage);
+        setWTIntl(props.intl);
+    }
+}, [props.intl]);
+
     const handleRestoreCommit = props.onRestoreCommit;
     const handleDownloadCommit = props.onDownloadCommit;
     const handleDeleteCurrentBranch = props.onDeleteBranch;
 
     const handleDeleteRepoClick = () => {
         setDeleteConfirmMessage(
-            'Delete this Git repository?\n\nThis removes the repo from this browser session/storage. ' +
-            'If you want to keep history, save the project first so git.json is embedded in the SB3.'
+            props.intl.formatMessage({
+                defaultMessage: 'Delete this Git repository?\n\nThis removes the repo from this browser session/storage. ' +
+            'If you want to keep history, save the project first so git.json is embedded in the SB3.',
+                description: 'Delete repository confirmation message',
+                id: 'mw.gitModal.deleteRepo.confirmMessage'
+            })
         );
         setDeleteConfirmAction(() => props.onDeleteRepo);
         setShowDeleteConfirm(true);
@@ -106,7 +180,13 @@ const GitModalComponent = props => {
         const ref = e && e.currentTarget ? e.currentTarget.dataset.ref : null;
         if (!ref) return;
         setPendingDeleteBranchRef(ref);
-        setDeleteConfirmMessage(`Delete branch "${ref}"?\n\nThis action cannot be undone.`);
+        setDeleteConfirmMessage(
+            props.intl.formatMessage({
+                defaultMessage: 'Delete branch "{ref}"?\n\nThis action cannot be undone.',
+                description: 'Delete branch confirmation message',
+                id: 'mw.gitModal.deleteBranch.confirmMessage'
+            }, { ref })
+        );
         setDeleteConfirmAction(() => () => handleDeleteCurrentBranch(ref));
         setShowDeleteConfirm(true);
     };
@@ -152,7 +232,7 @@ const GitModalComponent = props => {
                             <div className={styles.progressBar}>
                                 <div
                                     className={styles.progressBarFill}
-                                    style={{width: `${Math.max(0, Math.min(100, percent))}%`}}
+                                    style={{ width: `${Math.max(0, Math.min(100, percent))}%` }}
                                 />
                             </div>
                         )}
@@ -232,7 +312,7 @@ const GitModalComponent = props => {
                                     className={styles.textInput}
                                     value={props.newBranchName}
                                     onChange={props.onChangeNewBranchName}
-                                    placeholder="new-branch"
+                                    placeholder={props.intl.formatMessage(messages.newBranchPlaceholder)}
                                     disabled={props.busy}
                                 />
                                 <button
@@ -278,14 +358,14 @@ const GitModalComponent = props => {
                                     className={styles.textInput}
                                     value={props.authorName}
                                     onChange={props.onChangeAuthorName}
-                                    placeholder="Name"
+                                    placeholder={props.intl.formatMessage(messages.authorNamePlaceholder)}
                                     disabled={props.busy}
                                 />
                                 <input
                                     className={styles.textInput}
                                     value={props.authorEmail}
                                     onChange={props.onChangeAuthorEmail}
-                                    placeholder="email@example.com"
+                                    placeholder={props.intl.formatMessage(messages.authorEmailPlaceholder)}
                                     disabled={props.busy}
                                 />
                             </Box>
@@ -306,7 +386,11 @@ const GitModalComponent = props => {
                                     className={styles.textInput}
                                     value={props.commitMessage}
                                     onChange={props.onChangeCommitMessage}
-                                    placeholder="Commit message"
+                                    placeholder={props.intl.formatMessage({
+                                        defaultMessage: 'Commit message',
+                                        description: 'Placeholder for commit message input',
+                                        id: 'mw.gitModal.commitMessagePlaceholder'
+                                    })}
                                     disabled={props.busy}
                                 />
                                 <button
@@ -396,6 +480,172 @@ const GitModalComponent = props => {
                                 )}
                             </Box>
                         </Box>
+                    
+                        {/* Remote Repositories Section */}
+                        <Box className={styles.section}>
+                            <Box className={styles.sectionHeader}>
+                                <span className={styles.sectionTitle}>
+                                    <FormattedMessage
+                                        defaultMessage="Remotes"
+                                        description="Remote repositories section label"
+                                        id="mw.gitModal.remotes"
+                                    />
+                                </span>
+                            </Box>
+                            
+                            {/* Add Remote */}
+                            <Box className={`${styles.row} ${styles.rowWrap}`}>
+                                <input
+                                    className={styles.textInput}
+                                    value={props.remoteName || ''}
+                                    onChange={props.onChangeRemoteName}
+                                    placeholder={props.intl.formatMessage(messages.remoteNamePlaceholder)}
+                                    disabled={props.busy}
+                                />
+                                <input
+                                    className={styles.textInput}
+                                    value={props.remoteUrl || ''}
+                                    onChange={props.onChangeRemoteUrl}
+                                    placeholder={props.intl.formatMessage(messages.remoteUrlPlaceholder)}
+                                    disabled={props.busy}
+                                />
+                                <button
+                                    className={styles.button}
+                                    onClick={props.onAddRemote}
+                                    disabled={props.busy || !props.remoteName || !props.remoteUrl}
+                                >
+                                    <CirclePlus size={16} />
+                                    <FormattedMessage
+                                        defaultMessage="Add"
+                                        description="Add remote button"
+                                        id="mw.gitModal.addRemote"
+                                    />
+                                </button>
+                            </Box>
+                            
+                            {/* Remote List */}
+                            {props.remotes && props.remotes.length > 0 ? (
+                                <Box className={styles.remoteList}>
+                                    {props.remotes.map(remote => (
+                                        <Box key={remote.name} className={styles.remoteItem}>
+                                            <span className={styles.remoteName}>{remote.name}</span>
+                                            <span className={styles.remoteUrl}>{remote.url}</span>
+                                            <button
+                                                className={`${styles.button} ${styles.smallButton} ${styles.dangerButton}`}
+                                                onClick={() => props.onRemoveRemote(remote.name)}
+                                                disabled={props.busy}
+                                            >
+                                                <Trash size={14} />
+                                            </button>
+                                        </Box>
+                                    ))}
+                                </Box>
+                            ) : null}
+                            
+                            {/* Push Section */}
+                            {props.remotes && props.remotes.length > 0 ? (
+                                <React.Fragment>
+                                    <Box className={styles.subSection}>
+                                        <Box className={styles.subSectionHeader}>
+                                            <span className={styles.subSectionTitle}>
+                                                <FormattedMessage
+                                                    defaultMessage="Push"
+                                                    description="Push section label"
+                                                    id="mw.gitModal.push"
+                                                />
+                                            </span>
+                                        </Box>
+                                        
+                                        {/* Authentication */}
+                                        <Box className={styles.authHelp}>
+                                            <FormattedMessage
+                                                defaultMessage="Note: Authentication requires the Git server to support CORS. GitHub requires a Personal Access Token."
+                                                description="Authentication help text"
+                                                id="mw.gitModal.authHelp"
+                                            />
+                                        </Box>
+                                        <Box className={`${styles.row} ${styles.rowWrap}`}>
+                                            <input
+                                                className={styles.textInput}
+                                                value={props.authUsername || ''}
+                                                onChange={props.onChangeAuthUsername}
+                                                placeholder={props.intl.formatMessage(messages.usernamePlaceholder)}
+                                                disabled={props.busy}
+                                            />
+                                            <input
+                                                className={styles.textInput}
+                                                value={props.authToken || ''}
+                                                onChange={props.onChangeAuthToken}
+                                                placeholder={props.intl.formatMessage(messages.tokenPlaceholder)}
+                                                type="password"
+                                                disabled={props.busy}
+                                            />
+                                        </Box>
+                                        <Box className={`${styles.row} ${styles.rowWrap}`}>
+                                            <div className={styles.checkboxWrapper}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={props.disableCorsProxy}
+                                                    onChange={props.onChangeDisableCorsProxy}
+                                                    disabled={props.busy}
+                                                    id="disableCorsProxy"
+                                                    className={styles.checkboxInput}
+                                                />
+                                                <label htmlFor="disableCorsProxy" className={styles.checkboxLabel}>
+                                                    <FormattedMessage
+                                                        defaultMessage="Disable CORS proxy (may be required for authentication)"
+                                                        description="Disable CORS proxy checkbox label"
+                                                        id="mw.gitModal.disableCorsProxy"
+                                                    />
+                                                </label>
+                                            </div>
+                                        </Box>
+                                        
+                                        {/* Push Controls */}
+                                        <Box className={`${styles.row} ${styles.rowWrap}`}>
+                                            <select
+                                                className={styles.select}
+                                                value={props.pushRemote || ''}
+                                                onChange={props.onChangePushRemote}
+                                                disabled={props.busy}
+                                            >
+                                                <option value="">{props.intl.formatMessage(messages.selectRemotePlaceholder)}</option>
+                                                {props.remotes.map(remote => (
+                                                    <option key={remote.name} value={remote.name}>
+                                                        {remote.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            <select
+                                                className={styles.select}
+                                                value={props.pushBranch || ''}
+                                                onChange={props.onChangePushBranch}
+                                                disabled={props.busy}
+                                            >
+                                                <option value="">{props.intl.formatMessage(messages.selectBranchPlaceholder)}</option>
+                                                {props.branches.map(branch => (
+                                                    <option key={branch} value={branch}>
+                                                        {branch}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            <button
+                                                className={styles.primaryButton}
+                                                onClick={props.onPush}
+                                                disabled={props.busy || !props.pushRemote || !props.pushBranch}
+                                            >
+                                                <Share2 size={16} />
+                                                <FormattedMessage
+                                                    defaultMessage="Push"
+                                                    description="Push button"
+                                                    id="mw.gitModal.pushButton"
+                                                />
+                                            </button>
+                                        </Box>
+                                    </Box>
+                                </React.Fragment>
+                            ) : null}
+                        </Box>
                     </React.Fragment>
                 ) : (
                     <Box className={styles.section}>
@@ -431,7 +681,7 @@ const GitModalComponent = props => {
                         </Box>
                     </Box>
                 )}
-                
+
                 {showDeleteConfirm && (
                     <Box className={styles.confirmDialog}>
                         <Box className={styles.confirmDialogContent}>
@@ -451,8 +701,8 @@ const GitModalComponent = props => {
                                 >
                                     <FormattedMessage
                                         defaultMessage="Cancel"
-                                        description="Cancel button"
-                                        id="gui.prompt.cancelDelete"
+                                        description="Button in prompt for cancelling the dialog"
+                                        id="gui.prompt.cancel"
                                     />
                                 </button>
                                 <button
@@ -509,7 +759,29 @@ GitModalComponent.propTypes = {
     onDownloadCommit: PropTypes.func.isRequired,
     onDeleteBranch: PropTypes.func.isRequired,
     onDeleteRepo: PropTypes.func.isRequired,
-    onClose: PropTypes.func.isRequired
+    onClose: PropTypes.func.isRequired,
+    // Remote repository props
+    remotes: PropTypes.arrayOf(PropTypes.shape({
+        name: PropTypes.string.isRequired,
+        url: PropTypes.string.isRequired
+    })).isRequired,
+    remoteName: PropTypes.string.isRequired,
+    remoteUrl: PropTypes.string.isRequired,
+    pushRemote: PropTypes.string.isRequired,
+    pushBranch: PropTypes.string.isRequired,
+    authUsername: PropTypes.string.isRequired,
+    authToken: PropTypes.string.isRequired,
+    disableCorsProxy: PropTypes.bool.isRequired,
+    onAddRemote: PropTypes.func.isRequired,
+    onRemoveRemote: PropTypes.func.isRequired,
+    onPush: PropTypes.func.isRequired,
+    onChangeRemoteName: PropTypes.func.isRequired,
+    onChangeRemoteUrl: PropTypes.func.isRequired,
+    onChangePushRemote: PropTypes.func.isRequired,
+    onChangePushBranch: PropTypes.func.isRequired,
+    onChangeAuthUsername: PropTypes.func.isRequired,
+    onChangeAuthToken: PropTypes.func.isRequired,
+    onChangeDisableCorsProxy: PropTypes.func.isRequired
 };
 
 GitModalComponent.defaultProps = {
@@ -520,7 +792,26 @@ GitModalComponent.defaultProps = {
     graphBranches: [],
     graphNodes: [],
     branchColors: {},
-    graphBranchLogs: []
+    graphBranchLogs: [],
+    // Remote repository defaults
+    remotes: [],
+    remoteName: '',
+    remoteUrl: '',
+    pushRemote: '',
+    pushBranch: '',
+    authUsername: '',
+    authToken: '',
+    disableCorsProxy: false,
+    onAddRemote: () => {},
+    onRemoveRemote: () => {},
+    onPush: () => {},
+    onChangeRemoteName: () => {},
+    onChangeRemoteUrl: () => {},
+    onChangePushRemote: () => {},
+    onChangePushBranch: () => {},
+    onChangeAuthUsername: () => {},
+    onChangeAuthToken: () => {},
+    onChangeDisableCorsProxy: () => {}
 };
 
 export default injectIntl(GitModalComponent);

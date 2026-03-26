@@ -1,6 +1,10 @@
 import icon from '!!raw-loader!../icons/light.svg';
 
-const name = 'Light';
+const name = {
+    defaultMessage: 'Light',
+    description: 'Label for the light GUI theme',
+    id: 'tw.theme.gui.light'
+};
 
 const guiColors = {
     'color-scheme': 'light',

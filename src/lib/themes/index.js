@@ -105,8 +105,7 @@ class Theme {
             {},
             ACCENT_MAP[this.accent].guiColors,
             GUI_MAP[this.gui].guiColors,
-            BLOCKS_MAP[this.blocks].colors,
-            {'looks-secondary': '#d399e5'}
+            BLOCKS_MAP[this.blocks].colors
         );
     }
 

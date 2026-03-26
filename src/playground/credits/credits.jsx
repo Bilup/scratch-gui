@@ -52,30 +52,6 @@ UserList.propTypes = {
     users: PropTypes.arrayOf(PropTypes.object)
 };
 
-const projects = {
-    TurboWarp: {base: null},
-    MistWarp: {base: 'TurboWarp'}
-};
-
-const links = {
-    TurboWarp: 'https://turbowarp.org/',
-    MistWarp: 'https://warp.mistium.org/'
-};
-
-const getBaseChain = name => {
-    const chain = [];
-    let current = projects[name]?.base;
-
-    while (current) {
-        chain.push(current);
-        current = projects[current]?.base;
-    }
-
-    return chain;
-};
-
-const chain = getBaseChain(APP_NAME);
-
 const Credits = () => (
     <main className={styles.main}>
         <header className={styles.headerContainer}>
@@ -84,32 +60,19 @@ const Credits = () => (
             </h1>
         </header>
         <section>
-            <h2>The {APP_NAME} Team</h2>
-            <UserList users={UserData.team} />
-        </section>
-        <section>
             <p>
                 The {APP_NAME} project is made possible by the work of many volunteers.
             </p>
         </section>
-        <section>
-            <h2>Forks and Code Usage</h2>
-            {chain.map((base, i) => {
-                const subject = i === 0 ? APP_NAME : chain[i - 1];
-
-                return (
-                    <p key={base}>
-                        {subject} is based on <a href={links[base]}>{base}</a>.
-                    </p>
-                );
-            })}
-            <p>
-                Scratch Paint is forked from <a href="https://penguinmod.com">Penguinmod</a>.
-            </p>
-            <p>
-                {APP_NAME} uses some extension manager improvements from <a href="https://nitrobolt.org">NitroBolt</a>.
-            </p>
-        </section>
+        {APP_NAME !== 'TurboWarp' && (
+            // Be kind and considerate. Don't remove this :)
+            <section>
+                <h2>TurboWarp</h2>
+                <p>
+                    {APP_NAME} is based on <a href="https://turbowarp.org/">TurboWarp</a>.
+                </p>
+            </section>
+        )}
         <section>
             <h2>Scratch</h2>
             <p>
@@ -129,25 +92,22 @@ const Credits = () => (
             <h2>Addons</h2>
             <UserList users={UserData.addonDevelopers} />
         </section>
-        <section>
-            <h2>TurboWarp Extension Gallery</h2>
+        {/* <section>
+            <h2>Bilup Extension Gallery</h2>
             <UserList users={UserData.extensionDevelopers} />
-        </section>
+        </section> */}
         <section>
             <h2>Documentation</h2>
             <UserList users={UserData.docs} />
         </section>
         <section>
             <h2>Translators</h2>
-            <p>
-                More than 100 people have helped translate {APP_NAME} and its addons into many languages
-                &mdash; far more than we could hope to list here.
-            </p>
+            <UserList users={UserData.translators} />
         </section>
         <section>
             <p>
                 <i>
-                    Individual contributors are listed in no particular order.
+                    Individual contributors and organizations are listed in no particular order.
                     The order is randomized each visit.
                 </i>
             </p>

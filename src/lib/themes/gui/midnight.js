@@ -1,6 +1,10 @@
 import icon from '!!raw-loader!../icons/midnight.svg';
 
-const name = 'Midnight';
+const name = {
+    defaultMessage: 'Midnight',
+    description: 'Label for the midnight GUI theme',
+    id: 'tw.theme.gui.midnight'
+};
 
 const guiColors = {
     'color-scheme': 'dark',

@@ -114,7 +114,7 @@ class UnwrappedSetting extends React.Component {
         }));
     }
     render () {
-        const {primary, secondary, help, slug, intl} = this.props;
+        const {active, primary, secondary, help, slug, intl} = this.props;
         const {helpVisible} = this.state;
 
         return (
@@ -251,6 +251,20 @@ const settingDefinitions = {
         },
         slug: 'remove-misc-limits'
     },
+    disableCompiler: {
+        label: {
+            defaultMessage: 'Disable Compiler',
+            description: 'Disable Compiler setting',
+            id: 'tw.settingsModal.disableCompiler'
+        },
+        help: {
+            // eslint-disable-next-line max-len
+            defaultMessage: 'Disables the {APP_NAME} compiler. You may want to enable this while editing projects so that scripts update immediately. Otherwise, you should never enable this.',
+            description: 'Disable Compiler help',
+            id: 'tw.settingsModal.disableCompilerHelp'
+        },
+        slug: 'disable-compiler'
+    },
     warpTimer: {
         label: {
             defaultMessage: 'Warp Timer',
@@ -321,6 +335,36 @@ const RemoveMiscLimits = createBooleanSetting('RemoveMiscLimits', settingDefinit
 const WarpTimer = createBooleanSetting('WarpTimer', settingDefinitions.warpTimer);
 const CaseSensitiveLists = createBooleanSetting('CaseSensitiveLists', settingDefinitions.caseSensitiveLists);
 const RealLayerIndexes = createBooleanSetting('RealLayerIndexes', settingDefinitions.realLayerIndexes);
+
+const DisableCompiler = props => (
+    <BooleanSetting
+        {...props}
+        label={
+            <FormattedMessage
+                defaultMessage="Disable Compiler"
+                description="Disable Compiler setting"
+                id="tw.settingsModal.disableCompiler"
+            />
+        }
+        help={
+            <FormattedMessage
+                // eslint-disable-next-line max-len
+                defaultMessage="Disables the {APP_NAME} compiler. You may want to enable this while editing projects so that scripts update immediately. Otherwise, you should never enable this."
+                description="Disable Compiler help"
+                id="tw.settingsModal.disableCompilerHelp"
+                values={{
+                    APP_NAME
+                }}
+            />
+        }
+        slug="disable-compiler"
+    />
+);
+
+DisableCompiler.propTypes = {
+    value: PropTypes.bool,
+    onChange: PropTypes.func.isRequired
+};
 
 const CustomFPS = ({framerate, onChange, onCustomizeFramerate}) => (
     <BooleanSetting
@@ -478,9 +522,12 @@ const StoreProjectOptions = ({
             <p>
                 <FormattedMessage
                     // eslint-disable-next-line max-len
-                    defaultMessage='When enabled, clicking "Store settings in project" will also store the current MistWarp theme so it can be applied when this project is loaded.'
+                    defaultMessage='When enabled, clicking "Store settings in project" will also store the current {APP_NAME} theme so it can be applied when this project is loaded.'
                     description="Help text for the store theme in project checkbox"
                     id="mw.settingsModal.storeThemeInProjectHelp"
+                    values={{
+                        APP_NAME
+                    }}
                 />
             </p>
         </div>
@@ -551,6 +598,13 @@ const pageConfigurations = {
                         props: props => ({
                             value: props.removeLimits,
                             onChange: props.onRemoveLimitsChange
+                        })
+                    },
+                    {
+                        component: DisableCompiler,
+                        props: props => ({
+                            value: props.disableCompiler,
+                            onChange: props.onDisableCompilerChange
                         })
                     }
                 ]
@@ -695,8 +749,6 @@ class SettingsModalComponent extends React.Component {
                 onRequestClose={this.props.onClose}
                 contentLabel={intl.formatMessage(messages.title)}
                 id="settingsModal"
-                width={880}
-                height={550}
             >
                 <Box className={styles.sidebarLayout}>
                     <div className={styles.sidebar}>
@@ -745,6 +797,8 @@ SettingsModalComponent.propTypes = {
     onRemoveLimitsChange: PropTypes.func,
     warpTimer: PropTypes.bool,
     onWarpTimerChange: PropTypes.func,
+    disableCompiler: PropTypes.bool,
+    onDisableCompilerChange: PropTypes.func,
     caseSensitiveLists: PropTypes.bool,
     onCaseSensitiveListsChange: PropTypes.func,
     realLayerIndexes: PropTypes.bool,

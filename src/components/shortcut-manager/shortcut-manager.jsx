@@ -6,8 +6,9 @@ import {connect} from 'react-redux';
 import {defineMessages, FormattedMessage, injectIntl} from 'react-intl';
 import {Search, X, Keyboard} from 'lucide-react';
 
-import {getDefaultShortcuts, getCategoryLabel} from '../../lib/shortcuts/registry.js';
+import {getDefaultShortcuts} from '../../lib/shortcuts/registry.js';
 import {closeShortcutManagerModal} from '../../reducers/modals';
+import {setShortcut} from '../../reducers/shortcuts';
 
 import WindowedModal from '../../containers/windowed-modal.jsx';
 import Input from '../forms/input.jsx';
@@ -31,6 +32,31 @@ const messages = defineMessages({
         description: 'Message when no shortcuts match search',
         id: 'shortcut-manager.noResults'
     },
+    edit: {
+        defaultMessage: 'Edit',
+        description: 'Button to edit a shortcut',
+        id: 'shortcut-manager.edit'
+    },
+    save: {
+        defaultMessage: 'Save',
+        description: 'Button to save a shortcut',
+        id: 'shortcut-manager.save'
+    },
+    cancel: {
+        defaultMessage: 'Cancel',
+        description: 'Button to cancel editing a shortcut',
+        id: 'shortcut-manager.cancel'
+    },
+    pressNewShortcut: {
+        defaultMessage: 'Press new shortcut',
+        description: 'Placeholder text for shortcut input',
+        id: 'shortcut-manager.pressNewShortcut'
+    },
+    shortcutConflict: {
+        defaultMessage: 'This shortcut is already in use',
+        description: 'Error message when shortcut conflicts',
+        id: 'shortcut-manager.shortcutConflict'
+    },
     categories: {
         defaultMessage: 'Categories',
         description: 'Label for categories sidebar',
@@ -40,6 +66,181 @@ const messages = defineMessages({
         defaultMessage: 'All Shortcuts',
         description: 'Label for showing all shortcuts',
         id: 'shortcut-manager.allShortcuts'
+    },
+    categoryFile: {
+        defaultMessage: 'File',
+        description: 'Shortcut category name',
+        id: 'shortcut.category.file'
+    },
+    categoryEdit: {
+        defaultMessage: 'Edit',
+        description: 'Shortcut category name',
+        id: 'shortcut.category.edit'
+    },
+    categoryView: {
+        defaultMessage: 'View',
+        description: 'Shortcut category name',
+        id: 'shortcut.category.view'
+    },
+    categoryProjectControls: {
+        defaultMessage: 'Project Controls',
+        description: 'Shortcut category name',
+        id: 'shortcut.category.projectControls'
+    },
+    categoryEditorNavigation: {
+        defaultMessage: 'Editor Navigation',
+        description: 'Shortcut category name',
+        id: 'shortcut.category.editorNavigation'
+    },
+    categoryLibraryAccess: {
+        defaultMessage: 'Library Access',
+        description: 'Shortcut category name',
+        id: 'shortcut.category.libraryAccess'
+    },
+    categorySpriteManagement: {
+        defaultMessage: 'Sprite Management',
+        description: 'Shortcut category name',
+        id: 'shortcut.category.spriteManagement'
+    },
+    categoryWindowManagement: {
+        defaultMessage: 'Windows',
+        description: 'Shortcut category name',
+        id: 'shortcut.category.windowManagement'
+    },
+    save: {
+        defaultMessage: 'Save',
+        description: 'Shortcut label',
+        id: 'shortcut.save'
+    },
+    saveAsCopy: {
+        defaultMessage: 'Save As Copy',
+        description: 'Shortcut label',
+        id: 'shortcut.saveAsCopy'
+    },
+    loadFromComputer: {
+        defaultMessage: 'Load from Computer',
+        description: 'Shortcut label',
+        id: 'shortcut.loadFromComputer'
+    },
+    packageProject: {
+        defaultMessage: 'Package Project',
+        description: 'Shortcut label',
+        id: 'shortcut.packageProject'
+    },
+    restorePoints: {
+        defaultMessage: 'Restore Points',
+        description: 'Shortcut label',
+        id: 'shortcut.restorePoints'
+    },
+    settings: {
+        defaultMessage: 'Settings',
+        description: 'Shortcut label',
+        id: 'shortcut.settings'
+    },
+    fullScreen: {
+        defaultMessage: 'Toggle Fullscreen',
+        description: 'Shortcut label',
+        id: 'shortcut.fullScreen'
+    },
+    blocksTab: {
+        defaultMessage: 'Blocks Tab',
+        description: 'Shortcut label',
+        id: 'shortcut.blocksTab'
+    },
+    costumesTab: {
+        defaultMessage: 'Costumes Tab',
+        description: 'Shortcut label',
+        id: 'shortcut.costumesTab'
+    },
+    soundsTab: {
+        defaultMessage: 'Sounds Tab',
+        description: 'Shortcut label',
+        id: 'shortcut.soundsTab'
+    },
+    greenFlag: {
+        defaultMessage: 'Start Project (Green Flag)',
+        description: 'Shortcut label',
+        id: 'shortcut.greenFlag'
+    },
+    stopAll: {
+        defaultMessage: 'Stop All',
+        description: 'Shortcut label',
+        id: 'shortcut.stopAll'
+    },
+    spriteLibrary: {
+        defaultMessage: 'Open Sprite Library',
+        description: 'Shortcut label',
+        id: 'shortcut.spriteLibrary'
+    },
+    costumeLibrary: {
+        defaultMessage: 'Open Costume Library',
+        description: 'Shortcut label',
+        id: 'shortcut.costumeLibrary'
+    },
+    soundLibrary: {
+        defaultMessage: 'Open Sound Library',
+        description: 'Shortcut label',
+        id: 'shortcut.soundLibrary'
+    },
+    extensionLibrary: {
+        defaultMessage: 'Open Extension Library',
+        description: 'Shortcut label',
+        id: 'shortcut.extensionLibrary'
+    },
+    extensionManager: {
+        defaultMessage: 'Extension Manager',
+        description: 'Shortcut label',
+        id: 'shortcut.extensionManager'
+    },
+    duplicateSprite: {
+        defaultMessage: 'Duplicate Sprite',
+        description: 'Shortcut label',
+        id: 'shortcut.duplicateSprite'
+    },
+    toggleBackpack: {
+        defaultMessage: 'Toggle Backpack',
+        description: 'Shortcut label',
+        id: 'shortcut.toggleBackpack'
+    },
+    deleteSprite: {
+        defaultMessage: 'Delete Sprite',
+        description: 'Shortcut label',
+        id: 'shortcut.deleteSprite'
+    },
+    stageFullScreen: {
+        defaultMessage: 'Toggle Stage Fullscreen',
+        description: 'Shortcut label',
+        id: 'shortcut.stageFullScreen'
+    },
+    undo: {
+        defaultMessage: 'Undo',
+        description: 'Shortcut label',
+        id: 'shortcut.undo'
+    },
+    redo: {
+        defaultMessage: 'Redo',
+        description: 'Shortcut label',
+        id: 'shortcut.redo'
+    },
+    copy: {
+        defaultMessage: 'Copy',
+        description: 'Shortcut label',
+        id: 'shortcut.copy'
+    },
+    paste: {
+        defaultMessage: 'Paste',
+        description: 'Shortcut label',
+        id: 'shortcut.paste'
+    },
+    cut: {
+        defaultMessage: 'Cut',
+        description: 'Shortcut label',
+        id: 'shortcut.cut'
+    },
+    closeWindow: {
+        defaultMessage: 'Close Window',
+        description: 'Shortcut label',
+        id: 'shortcut.closeWindow'
     }
 });
 
@@ -53,12 +254,20 @@ class ShortcutManager extends React.Component {
             'handleAllCategoriesClick',
             'handleSelectCategory',
             'renderCategory',
-            'renderCategoryGroup'
+            'renderCategoryGroup',
+            'handleEditShortcut',
+            'handleKeyInput',
+            'handleSaveShortcut',
+            'handleCancelEdit',
+            'checkShortcutConflict'
         ]);
 
         this.state = {
             searchQuery: '',
-            selectedCategory: null
+            selectedCategory: null,
+            editingShortcutId: null,
+            editingKey: '',
+            conflictError: null
         };
     }
 
@@ -88,15 +297,51 @@ class ShortcutManager extends React.Component {
     getAllShortcuts () {
         const defaultShortcuts = getDefaultShortcuts();
         const customShortcuts = this.props.customShortcuts || {};
+        const {intl} = this.props;
+
+        const shortcutMessages = {
+            'save': messages.save,
+            'saveAsCopy': messages.saveAsCopy,
+            'loadFromComputer': messages.loadFromComputer,
+            'packageProject': messages.packageProject,
+            'restorePoints': messages.restorePoints,
+            'settings': messages.settings,
+            'fullScreen': messages.fullScreen,
+            'blocksTab': messages.blocksTab,
+            'costumesTab': messages.costumesTab,
+            'soundsTab': messages.soundsTab,
+            'greenFlag': messages.greenFlag,
+            'stopAll': messages.stopAll,
+            'spriteLibrary': messages.spriteLibrary,
+            'costumeLibrary': messages.costumeLibrary,
+            'soundLibrary': messages.soundLibrary,
+            'extensionLibrary': messages.extensionLibrary,
+            'extensionManager': messages.extensionManager,
+            'duplicateSprite': messages.duplicateSprite,
+            'toggleBackpack': messages.toggleBackpack,
+            'deleteSprite': messages.deleteSprite,
+            'stageFullScreen': messages.stageFullScreen,
+            'undo': messages.undo,
+            'redo': messages.redo,
+            'copy': messages.copy,
+            'paste': messages.paste,
+            'cut': messages.cut,
+            'closeWindow': messages.closeWindow
+        };
 
         return defaultShortcuts.map(shortcut => {
+            const label = intl.formatMessage(shortcutMessages[shortcut.id]);
             if (customShortcuts[shortcut.id]) {
                 return {
                     ...shortcut,
-                    key: customShortcuts[shortcut.id]
+                    key: customShortcuts[shortcut.id],
+                    label
                 };
             }
-            return shortcut;
+            return {
+                ...shortcut,
+                label
+            };
         });
     }
 
@@ -120,11 +365,23 @@ class ShortcutManager extends React.Component {
     getCategoriesWithCounts () {
         const allShortcuts = this.getAllShortcuts();
         const categories = {};
+        const {intl} = this.props;
+
+        const categoryMessages = {
+            'file': messages.categoryFile,
+            'edit': messages.categoryEdit,
+            'view': messages.categoryView,
+            'projectControls': messages.categoryProjectControls,
+            'editorNavigation': messages.categoryEditorNavigation,
+            'libraryAccess': messages.categoryLibraryAccess,
+            'spriteManagement': messages.categorySpriteManagement,
+            'windowManagement': messages.categoryWindowManagement
+        };
 
         allShortcuts.forEach(shortcut => {
             if (!categories[shortcut.category]) {
                 categories[shortcut.category] = {
-                    label: getCategoryLabel(shortcut.category),
+                    label: intl.formatMessage(categoryMessages[shortcut.category]),
                     count: 0
                 };
             }
@@ -154,13 +411,100 @@ class ShortcutManager extends React.Component {
     }
 
     renderCategoryGroup ([categoryId, categoryShortcuts]) {
+        const {intl} = this.props;
+        
+        const categoryMessages = {
+            'file': messages.categoryFile,
+            'edit': messages.categoryEdit,
+            'view': messages.categoryView,
+            'projectControls': messages.categoryProjectControls,
+            'editorNavigation': messages.categoryEditorNavigation,
+            'libraryAccess': messages.categoryLibraryAccess,
+            'spriteManagement': messages.categorySpriteManagement,
+            'windowManagement': messages.categoryWindowManagement
+        };
+
         return (
             <ShortcutCategory
                 key={categoryId}
-                category={getCategoryLabel(categoryId)}
+                category={intl.formatMessage(categoryMessages[categoryId])}
                 shortcuts={categoryShortcuts}
+                onEditShortcut={this.handleEditShortcut}
+                editingShortcutId={this.state.editingShortcutId}
+                editingKey={this.state.editingKey}
+                onKeyInput={this.handleKeyInput}
+                onSaveShortcut={this.handleSaveShortcut}
+                onCancelEdit={this.handleCancelEdit}
+                conflictError={this.state.conflictError}
+                intl={intl}
             />
         );
+    }
+
+    // Start editing a shortcut
+    handleEditShortcut (shortcutId, currentKey) {
+        this.setState({
+            editingShortcutId: shortcutId,
+            editingKey: currentKey,
+            conflictError: null
+        });
+    }
+
+    // Handle key input for the new shortcut
+    handleKeyInput (e) {
+        e.preventDefault();
+        
+        // Get the key combination
+        let key = '';
+        if (e.ctrlKey) key += 'Ctrl+';
+        if (e.altKey) key += 'Alt+';
+        if (e.shiftKey) key += 'Shift+';
+        
+        // Get the actual key pressed
+        const keyCode = e.keyCode || e.which;
+        const keyName = e.key;
+        
+        // Only add valid keys (not modifier keys)
+        if (keyName && !['Control', 'Alt', 'Shift', 'Meta'].includes(keyName)) {
+            key += keyName.toUpperCase();
+            this.setState({editingKey: key});
+        }
+    }
+
+    // Check if the new shortcut conflicts with existing ones
+    checkShortcutConflict (newKey, currentShortcutId) {
+        const allShortcuts = this.getAllShortcuts();
+        return allShortcuts.some(shortcut => 
+            shortcut.id !== currentShortcutId && shortcut.key === newKey
+        );
+    }
+
+    // Save the new shortcut
+    handleSaveShortcut () {
+        const {editingShortcutId, editingKey} = this.state;
+        
+        // Check for conflicts
+        if (this.checkShortcutConflict(editingKey, editingShortcutId)) {
+            this.setState({conflictError: true});
+            return;
+        }
+        
+        // Save the shortcut
+        this.props.updateCustomShortcut(editingShortcutId, editingKey);
+        this.setState({
+            editingShortcutId: null,
+            editingKey: '',
+            conflictError: null
+        });
+    }
+
+    // Cancel editing
+    handleCancelEdit () {
+        this.setState({
+            editingShortcutId: null,
+            editingKey: '',
+            conflictError: null
+        });
     }
 
     render () {
@@ -271,7 +615,8 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = dispatch => ({
-    onRequestClose: () => dispatch(closeShortcutManagerModal())
+    onRequestClose: () => dispatch(closeShortcutManagerModal()),
+    updateCustomShortcut: (shortcutId, key) => dispatch(setShortcut(shortcutId, key))
 });
 
 export default injectIntl(connect(

@@ -2,6 +2,7 @@ import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 import {connect} from 'react-redux';
 import {compose} from 'redux';
+import {injectIntl} from 'react-intl';
 
 import CollaborationModal from '../components/collaboration-modal/collaboration-modal.jsx';
 import CollaborationService from '../lib/collaboration-service.js';
@@ -149,7 +150,14 @@ class CollaborationContainer extends Component {
 
         } catch (error) {
             console.error('Failed to join room:', error);
-            this.props.onSetError(error.message || 'Failed to join room');
+            this.props.onSetError(
+                error.message ||
+                this.props.intl.formatMessage({
+                    id: 'gui.collaboration.joinFailed',
+                    defaultMessage: 'Failed to join room',
+                    description: 'Error message when joining room fails'
+                })
+            );
             throw error;
         }
     }
@@ -174,7 +182,14 @@ class CollaborationContainer extends Component {
 
         } catch (error) {
             console.error('Failed to create room:', error);
-            this.props.onSetError(error.message || 'Failed to create room');
+            this.props.onSetError(
+                error.message ||
+                this.props.intl.formatMessage({
+                    id: 'gui.collaboration.createFailed',
+                    defaultMessage: 'Failed to create room',
+                    description: 'Error message when creating room fails'
+                })
+            );
             throw error;
         }
     }
@@ -227,7 +242,14 @@ class CollaborationContainer extends Component {
     handleUserLeft (user) {
         console.log('User left:', user);
         const username = user.username || user.id || 'A user';
-        NotificationSystem.info(`${username} disconnected`, 3000);
+        NotificationSystem.info(
+            this.props.intl.formatMessage({
+                id: 'gui.collaboration.userDisconnected',
+                defaultMessage: '{username} disconnected',
+                description: 'Notification when a user disconnects'
+            }, {username}),
+            3000
+        );
         this.updateUsersList();
     }
 
@@ -239,11 +261,48 @@ class CollaborationContainer extends Component {
     handleConnectionFailed (data) {
         console.log('Connection failed:', data.error);
 
+        let errorMessage = data.error;
+
+        if (typeof data.error === 'object' && data.error.code) {
+            const {code, roomId, attempts} = data.error;
+            const {intl} = this.props;
+
+            switch (code) {
+                case 'CONNECTION_TIMEOUT':
+                    errorMessage = intl.formatMessage({
+                        id: 'tw.collaboration.error.connectionTimeout',
+                        defaultMessage: 'Connection to room "{roomId}" timed out. Host may not be available.',
+                        description: 'Error message when connection to room times out'
+                    }, {roomId});
+                    break;
+                case 'HOST_UNAVAILABLE':
+                    errorMessage = intl.formatMessage({
+                        id: 'tw.collaboration.error.hostUnavailable',
+                        defaultMessage: 'Could not connect to host. Room "{roomId}" may not exist or host may be offline.',
+                        description: 'Error message when host is unavailable'
+                    }, {roomId});
+                    break;
+                case 'ICE_CONNECTION_FAILED':
+                    errorMessage = intl.formatMessage({
+                        id: 'tw.collaboration.error.iceConnectionFailed',
+                        defaultMessage: 'ICE connection failed after {attempts} attempts. This may be a network issue.',
+                        description: 'Error message when ICE connection fails'
+                    }, {attempts});
+                    break;
+                default:
+                    errorMessage = intl.formatMessage({
+                        id: 'tw.collaboration.error.unknown',
+                        defaultMessage: 'Connection failed: {error}',
+                        description: 'Generic connection error message'
+                    }, {error: JSON.stringify(data.error)});
+            }
+        }
+
         // Immediately clear connection state and show error
         this.props.onSetConnected(false);
         this.props.onSetRoomId(null);
         this.props.onSetUsers([]);
-        this.props.onSetError(data.error);
+        this.props.onSetError(errorMessage);
     }
 
     handleUsernameChanged (user) {
@@ -270,7 +329,13 @@ class CollaborationContainer extends Component {
         this.props.onSetUsers([]);
 
         // Set a specific kick message AFTER clearing the room state
-        this.props.onSetError('You have been removed from the collaboration room by the host.');
+        this.props.onSetError(
+            this.props.intl.formatMessage({
+                id: 'gui.collaboration.kickedFromRoom',
+                defaultMessage: 'You have been removed from the collaboration room by the host.',
+                description: 'Error message when kicked from room'
+            })
+        );
     }
 
     handleHostLeft () {
@@ -278,9 +343,22 @@ class CollaborationContainer extends Component {
         this.props.onSetRoomId(null);
         this.props.onSetUsers([]);
 
-        NotificationSystem.warning('The host has left the collaboration room. The room has been closed.', 5000);
+        NotificationSystem.warning(
+            this.props.intl.formatMessage({
+                id: 'gui.collaboration.hostLeft',
+                defaultMessage: 'The host has left the collaboration room. The room has been closed.',
+                description: 'Notification when host leaves'
+            }),
+            5000
+        );
 
-        this.props.onSetError('The host has left the collaboration room. The room has been closed.');
+        this.props.onSetError(
+            this.props.intl.formatMessage({
+                id: 'gui.collaboration.hostLeft',
+                defaultMessage: 'The host has left the collaboration room. The room has been closed.',
+                description: 'Error message when host leaves'
+            })
+        );
     }
 
     handleConnectedToHost () {
@@ -306,7 +384,14 @@ class CollaborationContainer extends Component {
     handleDisconnected () {
         console.log('Disconnected from collaboration');
 
-        NotificationSystem.info('Disconnected from collaboration room', 3000);
+        NotificationSystem.info(
+            this.props.intl.formatMessage({
+                id: 'gui.collaboration.disconnected',
+                defaultMessage: 'Disconnected from collaboration room',
+                description: 'Notification when disconnected'
+            }),
+            3000
+        );
 
         this.clearWaitingOverlay();
 
@@ -335,7 +420,14 @@ class CollaborationContainer extends Component {
             await this.collaborationService.approveJoinRequest(requesterId, requesterUsername);
         } catch (error) {
             console.error('Failed to approve join request:', error);
-            this.props.onSetError(error.message || 'Failed to approve join request');
+            this.props.onSetError(
+                error.message ||
+                this.props.intl.formatMessage({
+                    id: 'gui.collaboration.approveFailed',
+                    defaultMessage: 'Failed to approve join request',
+                    description: 'Error message when approving join request fails'
+                })
+            );
             throw error;
         }
     }
@@ -345,7 +437,14 @@ class CollaborationContainer extends Component {
             await this.collaborationService.denyJoinRequest(requesterId);
         } catch (error) {
             console.error('Failed to deny join request:', error);
-            this.props.onSetError(error.message || 'Failed to deny join request');
+            this.props.onSetError(
+                error.message ||
+                this.props.intl.formatMessage({
+                    id: 'gui.collaboration.denyFailed',
+                    defaultMessage: 'Failed to deny join request',
+                    description: 'Error message when denying join request fails'
+                })
+            );
             throw error;
         }
     }
@@ -372,7 +471,14 @@ class CollaborationContainer extends Component {
 
     handleJoinDenied (data) {
         console.log('Join request denied:', data);
-        this.props.onSetError(data || 'Your join request was denied');
+        this.props.onSetError(
+            data ||
+            this.props.intl.formatMessage({
+                id: 'gui.collaboration.joinDenied',
+                defaultMessage: 'Your join request was denied',
+                description: 'Error message when join request is denied'
+            })
+        );
         this.props.onSetConnected(false);
         this.props.onSetRoomId(null);
     }
@@ -383,7 +489,14 @@ class CollaborationContainer extends Component {
             this.props.onSetRoomPrivacy(newPrivacy);
         } catch (error) {
             console.error('Failed to change room privacy:', error);
-            this.props.onSetError(error.message || 'Failed to change room privacy');
+            this.props.onSetError(
+                error.message ||
+                this.props.intl.formatMessage({
+                    id: 'gui.collaboration.changePrivacyFailed',
+                    defaultMessage: 'Failed to change room privacy',
+                    description: 'Error message when changing room privacy fails'
+                })
+            );
             throw error;
         }
     }
@@ -423,12 +536,26 @@ class CollaborationContainer extends Component {
     }
 
     handleProjectSyncDownloadError () {
-        NotificationSystem.error('Failed to download project from host', 5000);
+        NotificationSystem.error(
+            this.props.intl.formatMessage({
+                id: 'gui.collaboration.downloadFailed',
+                defaultMessage: 'Failed to download project from host',
+                description: 'Error notification when project download fails'
+            }),
+            5000
+        );
         this.props.onSetCollabLoading(false);
     }
 
     handleHostLoadingStart () {
-        this.props.onSetCollabLoading(true, 'Waiting for host to load project...');
+        this.props.onSetCollabLoading(
+            true,
+            this.props.intl.formatMessage({
+                id: 'gui.collaboration.waitingForHost',
+                defaultMessage: 'Waiting for host to load project...',
+                description: 'Loading message when waiting for host'
+            })
+        );
         this.props.onSetHostLoadingProgress(0);
     }
 
@@ -466,13 +593,22 @@ class CollaborationContainer extends Component {
             `;
 
             const message = document.createElement('div');
-            message.textContent = data.message || 'Waiting for host...';
+            message.textContent = data.message ||
+                this.props.intl.formatMessage({
+                    id: 'gui.collaboration.waitingForHost',
+                    defaultMessage: 'Waiting for host...',
+                    description: 'Waiting overlay message'
+                });
             message.style.fontSize = '24px';
             message.style.fontWeight = 'bold';
 
             // Add a spinner or similar
             const subtext = document.createElement('div');
-            subtext.textContent = 'Synchronizing with all clients...';
+            subtext.textContent = this.props.intl.formatMessage({
+                id: 'gui.collaboration.synchronizing',
+                defaultMessage: 'Synchronizing with all clients...',
+                description: 'Waiting overlay subtext'
+            });
             subtext.style.marginTop = '10px';
             subtext.style.opacity = '0.7';
 
@@ -570,5 +706,6 @@ const mapDispatchToProps = dispatch => ({
 });
 
 export default compose(
+    injectIntl,
     connect(mapStateToProps, mapDispatchToProps)
 )(CollaborationContainer);

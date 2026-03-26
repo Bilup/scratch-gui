@@ -9,10 +9,11 @@ import WindowManager from '../../addons/window-system/window-manager';
 let mwFontsWindow = null;
 let mwFontsContainer = null;
 
-const openMWFontsWindow = ({store, locale, messages}) => {
+const openMWFontsWindow = ({vm, store, locale, messages}) => {
     const wm = WindowManager;
     if (!wm || typeof wm.createWindow !== 'function') {
-        throw new Error('Window manager not available on vm.wm');
+        console.warn('Window manager not available');
+        return;
     }
 
     if (mwFontsWindow) {
@@ -20,12 +21,14 @@ const openMWFontsWindow = ({store, locale, messages}) => {
         return;
     }
 
+    const windowTitle = messages && messages['mw.fonts.windowTitle'] || 'Fonts';
+
     mwFontsContainer = document.createElement('div');
     mwFontsContainer.style.cssText = 'height: 100%; display: flex; flex-direction: column; min-height: 0;';
 
     mwFontsWindow = wm.createWindow({
         id: 'mw-fonts-window',
-        title: 'Fonts',
+        title: windowTitle,
         width: 520,
         height: 650,
         minWidth: 420,

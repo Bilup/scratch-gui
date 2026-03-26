@@ -1,4 +1,4 @@
-scratch-gui modified for use in [MistWarp](https://warp.mistium.com/)
+scratch-gui modified for use in [Bilup](https://www.bilup.org/)
 
 ## Setup
 

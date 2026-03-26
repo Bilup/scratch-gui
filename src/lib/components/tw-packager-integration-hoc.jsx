@@ -1,29 +1,30 @@
 import React from 'react';
-import {connect} from 'react-redux';
+import { connect } from 'react-redux';
+import { injectIntl } from 'react-intl';
 import PropTypes from 'prop-types';
 import log from '../utils/log';
-import {getIsShowingProject} from '../../reducers/project-state';
+import { getIsShowingProject } from '../../reducers/project-state';
 import windowManager from '../../addons/window-system/window-manager';
 
-const PACKAGER_URL = 'https://packager.warp.mistium.com';
+const PACKAGER_URL = 'https://packager.bilup.org';
 const PACKAGER_ORIGIN = PACKAGER_URL;
 
 let packagerWindow = null;
 
 const PackagerIntegrationHOC = function (WrappedComponent) {
     class PackagerIntegrationComponent extends React.Component {
-        constructor (props) {
+        constructor(props) {
             super(props);
             this.handleClickPackager = this.handleClickPackager.bind(this);
             this.handleMessage = this.handleMessage.bind(this);
         }
-        componentDidMount () {
+        componentDidMount() {
             window.addEventListener('message', this.handleMessage);
         }
-        componentWillUnmount () {
+        componentWillUnmount() {
             window.removeEventListener('message', this.handleMessage);
         }
-        handleClickPackager () {
+        handleClickPackager() {
             if (!this.props.canOpenPackager) {
                 return;
             }
@@ -34,7 +35,11 @@ const PackagerIntegrationHOC = function (WrappedComponent) {
             }
 
             packagerWindow = windowManager.createWindow({
-                title: 'Packager',
+                title: this.props.intl.formatMessage({
+                    defaultMessage: 'Packager',
+                    description: 'Title of the packager window',
+                    id: 'tw.packager.title'
+                }),
                 width: 700,
                 height: 700,
                 minWidth: 600,
@@ -60,7 +65,7 @@ const PackagerIntegrationHOC = function (WrappedComponent) {
             container.appendChild(iframe);
             packagerWindow.show();
         }
-        handleMessage (e) {
+        handleMessage(e) {
             if (e.origin !== PACKAGER_ORIGIN) {
                 return;
             }
@@ -101,7 +106,7 @@ const PackagerIntegrationHOC = function (WrappedComponent) {
                     }, e.origin);
                 });
         }
-        render () {
+        render() {
             const {
                 /* eslint-disable no-unused-vars */
                 canOpenPackager,
@@ -132,7 +137,7 @@ const PackagerIntegrationHOC = function (WrappedComponent) {
     return connect(
         mapStateToProps,
         mapDispatchToProps
-    )(PackagerIntegrationComponent);
+    )(injectIntl(PackagerIntegrationComponent));
 };
 
 export {

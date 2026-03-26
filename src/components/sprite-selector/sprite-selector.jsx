@@ -7,13 +7,15 @@ import SpriteInfo from '../../containers/sprite-info.jsx';
 import SpriteList from './sprite-list.jsx';
 import ActionMenu from '../action-menu/action-menu.jsx';
 import {STAGE_DISPLAY_SIZES} from '../../lib/constants/layout-constants';
-import {isRtl} from '@turbowarp/scratch-l10n';
+import {isRtl} from '@bilup/scratch-l10n';
 
 import styles from './sprite-selector.css';
 
 import spriteIcon from '../action-menu/icon--sprite.svg';
-
-import {Upload, Paintbrush, Sparkles, Search} from 'lucide-react';
+import fileUploadIcon from '../action-menu/icon--file-upload.svg';
+import paintIcon from '../action-menu/icon--paint.svg';
+import surpriseIcon from '../action-menu/icon--surprise.svg';
+import searchIcon from '../action-menu/icon--search.svg';
 
 const messages = defineMessages({
     addSpriteFromLibrary: {
@@ -116,7 +118,7 @@ const SpriteSelectorComponent = function (props) {
                 moreButtons={[
                     {
                         title: intl.formatMessage(messages.addSpriteFromFile),
-                        img: Upload,
+                        img: fileUploadIcon,
                         onClick: onFileUploadClick,
                         fileAccept: '.svg, .png, .bmp, .jpg, .jpeg, .jfif, .webp, .sprite2, .sprite3, .gif',
                         fileChange: onSpriteUpload,
@@ -124,15 +126,15 @@ const SpriteSelectorComponent = function (props) {
                         fileMultiple: true
                     }, {
                         title: intl.formatMessage(messages.addSpriteFromSurprise),
-                        img: Sparkles,
+                        img: surpriseIcon,
                         onClick: onSurpriseSpriteClick // TODO need real function for this
                     }, {
                         title: intl.formatMessage(messages.addSpriteFromPaint),
-                        img: Paintbrush,
+                        img: paintIcon,
                         onClick: onPaintSpriteClick // TODO need real function for this
                     }, {
                         title: intl.formatMessage(messages.addSpriteFromLibrary),
-                        img: Search,
+                        img: searchIcon,
                         onClick: onNewSpriteClick
                     }
                 ]}

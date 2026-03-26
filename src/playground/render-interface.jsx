@@ -103,50 +103,52 @@ const navigateToAddon = addonId => {
     }
 };
 
-const handleClickAddonSettings = addonId => {
-    if (!windowManager) {
-        // Fall back to original behavior if window manager isn't available
-        const path = process.env.ROUTING_STYLE === 'wildcard' ? 'addons' : 'addons.html';
-        const url = `${process.env.ROOT}${path}${typeof addonId === 'string' ? `#${addonId}` : ''}`;
-        window.open(url);
-        return;
-    }
-    
-    // If window already exists, focus it and navigate to addon if specified
-    if (settingsWindow && settingsWindow.isVisible) {
-        settingsWindow.bringToFront();
-        if (typeof addonId === 'string') {
-            navigateToAddon(addonId);
-        }
-        return;
-    }
-    
-    // Create new settings window
-    settingsWindow = windowManager.createWindow({
-        title: 'Addon Settings',
-        width: 900,
-        height: 700,
-        minWidth: 600,
-        minHeight: 400,
-        x: Math.max(50, (window.innerWidth - 900) / 2),
-        y: Math.max(50, (window.innerHeight - 700) / 2),
-        onClose: () => {
-            settingsWindow = null;
-        }
-    });
-    
-    createSettingsContent(addonId);
-    settingsWindow.show();
-};
-
 // Make the function available globally for addon integration
 if (typeof window !== 'undefined') {
-    window.handleClickAddonSettings = handleClickAddonSettings;
+    window.handleClickAddonSettings = addonId => {
+        if (!windowManager) {
+            // Fall back to original behavior if window manager isn't available
+            const path = process.env.ROUTING_STYLE === 'wildcard' ? 'addons' : 'addons.html';
+            const url = `${process.env.ROOT}${path}${typeof addonId === 'string' ? `#${addonId}` : ''}`;
+            window.open(url);
+            return;
+        }
+        
+        // If window already exists, focus it and navigate to addon if specified
+        if (settingsWindow && settingsWindow.isVisible) {
+            settingsWindow.bringToFront();
+            if (typeof addonId === 'string') {
+                navigateToAddon(addonId);
+            }
+            return;
+        }
+        
+        // Create new settings window
+        settingsWindow = windowManager.createWindow({
+            title: this.props.intl.formatMessage({
+                defaultMessage: 'Addons',
+                description: 'Title of the addons window',
+                id: 'tw.addons.title'
+            }),
+            width: 900,
+            height: 700,
+            minWidth: 600,
+            minHeight: 400,
+            x: Math.max(50, (window.innerWidth - 900) / 2),
+            y: Math.max(50, (window.innerHeight - 700) / 2),
+            onClose: () => {
+                settingsWindow = null;
+            }
+        });
+        
+        createSettingsContent(addonId);
+        settingsWindow.show();
+    };
 }
 
 const messages = defineMessages({
     defaultTitle: {
-        defaultMessage: 'Scratch, Supercharged',
+        defaultMessage: 'Run Scratch projects faster',
         description: 'Title of homepage',
         id: 'tw.guiDefaultTitle'
     }
@@ -215,34 +217,34 @@ const Footer = () => (
                             id="tw.footer.credits"
                         />
                     </a>
-                    <a href="https://patreon.com/Mistium">
+                    {/**<a href="https://patreon.com/Mistium">
                         <FormattedMessage
                             defaultMessage="Donate"
                             description="Donation link in footer"
                             id="tw.footer.donate"
                         />
-                    </a>
+                    </a>**/}
                 </div>
                 <div className={styles.footerSection}>
-                    <a href="https://packager.warp.mistium.com/">
+                    <a href="https://packager.bilup.org/">
                         {/* Do not translate */}
-                        {'MistWarp Packager'}
+                        {'Bilup Packager'}
                     </a>
-                    <a href="https://docs.warp.mistium.com/embedding">
+                    <a href="https://docs.bilup.org/embedding">
                         <FormattedMessage
                             defaultMessage="Embedding"
                             description="Link in footer to embedding documentation for embedding link"
                             id="tw.footer.embed"
                         />
                     </a>
-                    <a href="https://docs.warp.mistium.com/url-parameters">
+                    <a href="https://docs.bilup.org/url-parameters">
                         <FormattedMessage
                             defaultMessage="URL Parameters"
                             description="Link in footer to URL parameters documentation"
                             id="tw.footer.parameters"
                         />
                     </a>
-                    <a href="https://docs.warp.mistium.com">
+                    <a href="https://docs.bilup.org">
                         <FormattedMessage
                             defaultMessage="Documentation"
                             description="Link in footer to additional documentation"
@@ -295,6 +297,46 @@ class Interface extends React.Component {
             document.title = `${title} - ${APP_NAME}`;
         }
     }
+
+    handleClickAddonSettings = addonId => {
+        if (!windowManager) {
+            // Fall back to original behavior if window manager isn't available
+            const path = process.env.ROUTING_STYLE === 'wildcard' ? 'addons' : 'addons.html';
+            const url = `${process.env.ROOT}${path}${typeof addonId === 'string' ? `#${addonId}` : ''}`;
+            window.open(url);
+            return;
+        }
+        
+        // If window already exists, focus it and navigate to addon if specified
+        if (settingsWindow && settingsWindow.isVisible) {
+            settingsWindow.bringToFront();
+            if (typeof addonId === 'string') {
+                navigateToAddon(addonId);
+            }
+            return;
+        }
+        
+        // Create new settings window
+        settingsWindow = windowManager.createWindow({
+            title: this.props.intl.formatMessage({
+                defaultMessage: 'Addons',
+                description: 'Title of the addons window',
+                id: 'tw.addons.title'
+            }),
+            width: 900,
+            height: 700,
+            minWidth: 600,
+            minHeight: 400,
+            x: Math.max(50, (window.innerWidth - 900) / 2),
+            y: Math.max(50, (window.innerHeight - 700) / 2),
+            onClose: () => {
+                settingsWindow = null;
+            }
+        });
+        
+        createSettingsContent(addonId);
+        settingsWindow.show();
+    }
     render () {
         const {
             /* eslint-disable no-unused-vars */
@@ -326,7 +368,7 @@ class Interface extends React.Component {
                             canManageFiles
                             canChangeTheme
                             enableSeeInside
-                            onClickAddonSettings={handleClickAddonSettings}
+                            onClickAddonSettings={this.handleClickAddonSettings}
                         />
                     </div>
                 ) : null}
@@ -338,7 +380,7 @@ class Interface extends React.Component {
                     }) : null}
                 >
                     <GUI
-                        onClickAddonSettings={handleClickAddonSettings}
+                        onClickAddonSettings={this.handleClickAddonSettings}
                         onUpdateProjectTitle={this.handleUpdateProjectTitle}
                         backpackVisible
                         backpackHost="_local_"
@@ -372,11 +414,11 @@ class Interface extends React.Component {
                                             values={{
                                                 link: (
                                                     <a
-                                                        href="https://docs.warp.mistium.com/unshared-projects"
+                                                        href="https://docs.bilup.org/unshared-projects"
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                     >
-                                                        {'https://docs.warp.mistium.com/unshared-projects'}
+                                                        {'https://docs.bilup.org/unshared-projects'}
                                                     </a>
                                                 )
                                             }}
@@ -418,7 +460,7 @@ class Interface extends React.Component {
                                 <p>
                                     <FormattedMessage
                                         // eslint-disable-next-line max-len
-                                        defaultMessage="{APP_NAME} is a Scratch mod that compiles projects to JavaScript to make them run really fast. Try it out by inputting a project ID or URL above or choosing a featured project below."
+                                        defaultMessage="{APP_NAME} is a Scratch mod that compiles projects to JavaScript to make them run really fast. Try it out by inputting a project ID or URL above."
                                         description="Description of TurboWarp on the homepage"
                                         id="tw.home.description"
                                         values={{
@@ -426,9 +468,6 @@ class Interface extends React.Component {
                                         }}
                                     />
                                 </p>
-                            </div>
-                            <div className={styles.section}>
-                                <FeaturedProjects studio="50866201" />
                             </div>
                         </React.Fragment>
                     ) : null}

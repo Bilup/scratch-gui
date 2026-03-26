@@ -82,7 +82,7 @@ export default async function createMemoryTab({ debug, addon, console, msg }) {
   const variableDataCard = createInfoCard({
     title: msg("memory-variable-data-total"),
     value: "0",
-    unit: " chars",
+    unit: msg("memory-variable-char-unit"),
     className: "sa-memory-variable-data",
   });
 

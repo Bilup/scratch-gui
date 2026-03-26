@@ -73,17 +73,17 @@ export default async function ({addon, console, msg}) {
     searchIcon.innerHTML = SEARCH_ICON;
 
     const searchBox = document.createElement('input');
-    searchBox.placeholder = 'Search...';
+    searchBox.placeholder = msg('search');
     searchBox.className = 'sa-var-manager-searchbox';
     searchBox.type = 'text';
-    searchBox.setAttribute('aria-label', 'Search variables and lists');
+    searchBox.setAttribute('aria-label', msg('search-aria'));
 
     const clearSearchBtn = document.createElement('button');
     clearSearchBtn.className = 'sa-var-manager-clear-search';
     clearSearchBtn.innerHTML = X_ICON;
-    clearSearchBtn.title = 'Clear search';
+    clearSearchBtn.title = msg('clear-search');
     clearSearchBtn.style.display = 'none';
-    clearSearchBtn.setAttribute('aria-label', 'Clear search');
+    clearSearchBtn.setAttribute('aria-label', msg('clear-search'));
 
     searchWrapper.appendChild(searchIcon);
     searchWrapper.appendChild(searchBox);
@@ -98,7 +98,7 @@ export default async function ({addon, console, msg}) {
         tab.className = 'sa-var-manager-filter-tab';
         tab.dataset.filter = filter;
         tab.innerHTML = `${icon}<span>${label}</span><span class="sa-var-manager-filter-count">0</span>`;
-        tab.setAttribute('aria-label', `Filter by ${label}`);
+        tab.setAttribute('aria-label', msg('filter-by', {label}));
         tab.setAttribute('role', 'button');
         tab.setAttribute('tabindex', '0');
 
@@ -114,10 +114,10 @@ export default async function ({addon, console, msg}) {
         return tab;
     };
 
-    const allFilterTab = createFilterTab('all', FILTER_ALL_ICON, 'All');
-    const varFilterTab = createFilterTab('variables', FILTER_VAR_ICON, 'Vars');
-    const listFilterTab = createFilterTab('lists', FILTER_LIST_ICON, 'Lists');
-    const cloudFilterTab = createFilterTab('cloud', FILTER_CLOUD_ICON, 'Cloud');
+    const allFilterTab = createFilterTab('all', FILTER_ALL_ICON, msg('filter-all'));
+    const varFilterTab = createFilterTab('variables', FILTER_VAR_ICON, msg('filter-variables'));
+    const listFilterTab = createFilterTab('lists', FILTER_LIST_ICON, msg('filter-lists'));
+    const cloudFilterTab = createFilterTab('cloud', FILTER_CLOUD_ICON, msg('filter-cloud'));
 
     filterTabs.append(allFilterTab, varFilterTab, listFilterTab, cloudFilterTab);
 
@@ -154,8 +154,8 @@ export default async function ({addon, console, msg}) {
     emptyState.className = 'sa-var-manager-empty';
     emptyState.innerHTML = `
         <div class="sa-var-manager-empty-icon">${EMPTY_ICON}</div>
-        <div class="sa-var-manager-empty-text">No variables found</div>
-        <div class="sa-var-manager-empty-subtext">Try clearing your search or filters</div>
+        <div class="sa-var-manager-empty-text">${msg('no-variables')}</div>
+        <div class="sa-var-manager-empty-subtext">${msg('clear-filters')}</div>
     `;
     emptyState.style.display = 'none';
     content.appendChild(emptyState);
@@ -166,7 +166,7 @@ export default async function ({addon, console, msg}) {
     localSection.innerHTML = `
         <div class="sa-var-manager-section-header">
             ${SPRITE_ICON}
-            <span>For this Sprite</span>
+            <span>${msg('local-section')}</span>
             <span class="sa-var-manager-section-count">0</span>
         </div>
         <div class="sa-var-manager-list"></div>
@@ -182,7 +182,7 @@ export default async function ({addon, console, msg}) {
     globalSection.innerHTML = `
         <div class="sa-var-manager-section-header">
             ${STAGE_ICON}
-            <span>For All Sprites</span>
+            <span>${msg('global-section')}</span>
             <span class="sa-var-manager-section-count">0</span>
         </div>
         <div class="sa-var-manager-list"></div>
@@ -341,7 +341,7 @@ export default async function ({addon, console, msg}) {
             const nameInput = document.createElement('input');
             nameInput.className = 'sa-var-manager-name-input';
             nameInput.value = this.name;
-            nameInput.setAttribute('aria-label', `${this.type} name`);
+            nameInput.setAttribute('aria-label', this.type === 'list' ? msg('list-name') : msg('variable-name'));
             this.nameInput = nameInput;
 
             const badges = document.createElement('div');
@@ -351,7 +351,7 @@ export default async function ({addon, console, msg}) {
                 const listBadge = document.createElement('div');
                 listBadge.className = 'sa-var-manager-badge';
                 listBadge.dataset.badge = 'list';
-                listBadge.innerHTML = `${LIST_ICON}<span>List</span>`;
+                listBadge.innerHTML = `${LIST_ICON}<span>${msg('list-badge')}</span>`;
                 badges.appendChild(listBadge);
             }
 
@@ -359,7 +359,7 @@ export default async function ({addon, console, msg}) {
                 const cloudBadge = document.createElement('div');
                 cloudBadge.className = 'sa-var-manager-badge';
                 cloudBadge.dataset.badge = 'cloud';
-                cloudBadge.innerHTML = `${CLOUD_ICON}<span>Cloud</span>`;
+                cloudBadge.innerHTML = `${CLOUD_ICON}<span>${msg('cloud-badge')}</span>`;
                 badges.appendChild(cloudBadge);
             }
 
@@ -375,7 +375,7 @@ export default async function ({addon, console, msg}) {
 
             const tooBig = document.createElement('button');
             tooBig.className = 'sa-var-manager-too-big';
-            tooBig.textContent = 'Variable too large to display';
+            tooBig.textContent = msg('variable-too-large');
             tooBig.addEventListener('click', () => {
                 this.ignoreTooBig = true;
                 this.updateValue(true);
@@ -466,7 +466,11 @@ export default async function ({addon, console, msg}) {
                 this.nameInput.select();
             });
 
-            this.nameInput.addEventListener('blur', onNameBlur);
+            this.nameInput.addEventListener('blur', () => {
+                onNameBlur();
+                preventUpdate = false;
+                manager.classList.remove('freeze');
+            });
 
             // Value input handling
             const onValueBlur = () => {
@@ -523,7 +527,11 @@ export default async function ({addon, console, msg}) {
                 }
             });
 
-            this.input.addEventListener('blur', onValueBlur);
+            this.input.addEventListener('blur', () => {
+                onValueBlur();
+                preventUpdate = false;
+                manager.classList.remove('freeze');
+            });
 
             this.input.addEventListener('touchstart', (e) => {
                 e.stopPropagation();
@@ -658,7 +666,7 @@ export default async function ({addon, console, msg}) {
 
         variableManagerWindow = WindowManager.createWindow({
             id: 'variable-manager',
-            title: msg('variables'),
+            title: msg('variables-manager'),
             width: 650,
             height: 600,
             minWidth: 500,
@@ -783,7 +791,7 @@ export default async function ({addon, console, msg}) {
     });
 
     // Expose toggle function
-    window.__mistwarpVariableManagerToggle = toggleVariableManager;
+    window.__bilupVariableManagerToggle = toggleVariableManager;
 
     // Create button
     const buttonOuter = document.createElement('div');

@@ -1,5 +1,5 @@
 /**
- * Custom theme management for Mistwarp
+ * Custom theme management for Bilup
  * Handles creation, storage, and management of user-defined themes including custom gradients and accents
  */
 
@@ -1085,7 +1085,7 @@ class CustomThemeManager {
         const themes = this.getAllThemes().map(theme => theme.export());
         return {
             version: '2.0',
-            platform: 'MistWarp',
+            platform: 'Bilup',
             timestamp: Date.now(),
             themes: themes
         };
@@ -1178,7 +1178,7 @@ class CustomThemeManager {
 
         let themesToImport;
         if (data && Array.isArray(data.themes)) {
-            themesToImport = data.themes.map(t => ({kind: 'mistwarp', data: t}));
+            themesToImport = data.themes.map(t => ({kind: 'bilup', data: t}));
         } else if (Array.isArray(data) && data.every(looksLikeNitroboltTheme)) {
             themesToImport = data.map(t => ({kind: 'nitrobolt', data: t}));
         } else if (looksLikeNitroboltTheme(data)) {
@@ -1195,7 +1195,7 @@ class CustomThemeManager {
 
         for (const entry of themesToImport) {
             try {
-                const theme = entry.kind === 'mistwarp' ?
+                const theme = entry.kind === 'bilup' ?
                     CustomTheme.import(entry.data) :
                     importNitroboltTheme(entry.data);
 

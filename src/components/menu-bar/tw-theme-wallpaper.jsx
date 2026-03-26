@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import React from 'react';
-import {FormattedMessage} from 'react-intl';
+import {FormattedMessage, injectIntl, intlShape} from 'react-intl';
 import {connect} from 'react-redux';
 
 import ChevronDown from './ChevronDown.jsx';
@@ -62,7 +62,6 @@ const WallpaperMenuItem = ({url, isSelected, onClick, onRemove}) => (
                     }}
                 >
                     <Trash
-                        size={14}
                         className={styles.removeWallpaperIcon}
                         style={{margin: '0'}}
                         size={20}
@@ -80,7 +79,7 @@ WallpaperMenuItem.propTypes = {
     onRemove: PropTypes.func
 };
 
-const WallpaperInputForm = ({onSubmit, onOpacityChange, onDarknessChange, onGridVisibilityChange, currentOpacity, currentDarkness, currentGridVisible}) => {
+const WallpaperInputForm = injectIntl(({intl, onSubmit, onOpacityChange, onDarknessChange, onGridVisibilityChange, currentOpacity, currentDarkness, currentGridVisible}) => {
     const [url, setUrl] = React.useState('');
     const [opacity, setOpacity] = React.useState(currentOpacity);
     const [darkness, setDarkness] = React.useState(currentDarkness);
@@ -124,7 +123,11 @@ const WallpaperInputForm = ({onSubmit, onOpacityChange, onDarknessChange, onGrid
             >
                 <input
                     type="url"
-                    placeholder="Enter image URL..."
+                    placeholder={intl.formatMessage({
+                        defaultMessage: 'Enter image URL...',
+                        description: 'Placeholder for wallpaper URL input',
+                        id: 'tw.wallpaper.urlPlaceholder'
+                    })}
                     value={url}
                     onChange={e => setUrl(e.target.value)}
                     onClick={e => e.stopPropagation()}
@@ -270,9 +273,10 @@ const WallpaperInputForm = ({onSubmit, onOpacityChange, onDarknessChange, onGrid
             </div>
         </div>
     );
-};
+});
 
 WallpaperInputForm.propTypes = {
+    intl: intlShape.isRequired,
     onSubmit: PropTypes.func,
     onOpacityChange: PropTypes.func,
     onDarknessChange: PropTypes.func,
@@ -282,7 +286,8 @@ WallpaperInputForm.propTypes = {
     currentGridVisible: PropTypes.bool
 };
 
-const WallpaperMenu = ({
+const WallpaperMenu = injectIntl(({
+    intl,
     isOpen,
     isRtl,
     onChangeTheme,
@@ -403,9 +408,10 @@ const WallpaperMenu = ({
             </Submenu>
         </MenuItem>
     );
-};
+});
 
 WallpaperMenu.propTypes = {
+    intl: intlShape.isRequired,
     isOpen: PropTypes.bool,
     isRtl: PropTypes.bool,
     onChangeTheme: PropTypes.func,

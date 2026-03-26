@@ -42,7 +42,7 @@ const implementGuiAPI = Scratch => {
         // Expose the window manager on the VM for addons/integration.
         wm: WindowManager,
 
-        // Expose MistWarp's browser git integration on the VM.
+        // Expose Bilup's browser git integration on the VM.
         git: BrowserGit
     };
 };

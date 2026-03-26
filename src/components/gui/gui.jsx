@@ -45,7 +45,7 @@ import TWInvalidProjectModal from '../../containers/tw-invalid-project-modal.jsx
 import TWGitModal from '../../containers/mw-git-modal.jsx';
 import MWExtensionManagerModal from '../../containers/mw-extension-manager-modal.jsx';
 import MWProjectThemeModal from '../../containers/mw-project-theme-modal.jsx';
-import WarpThemeModal from '../../containers/mw-warptheme-modal.jsx';
+import BilmeModal from '../../containers/bl-bilme-modal.jsx';
 import ShortcutManager from '../shortcut-manager/shortcut-manager.jsx';
 import SimpleDialog from '../../containers/simple-dialog.jsx';
 import AddonHooks from '../../addons/hooks.js';
@@ -526,10 +526,10 @@ const GUIComponent = props => {
             <NotificationsProvider />
             <TWSecurityManager securityManager={securityManager} />
             <TWRestorePointManager />
-<MWExtensionManagerModal />
-                <MWProjectThemeModal />
-                <WarpThemeModal />
-                <ShortcutManager visible={shortcutManagerModalVisible} />
+            <MWExtensionManagerModal />
+            <MWProjectThemeModal />
+            <BilmeModal />
+            <ShortcutManager visible={shortcutManagerModalVisible} />
             {usernameModalVisible && <TWUsernameModal visible={usernameModalVisible} />}
             {settingsModalVisible && (
                 <TWSettingsModal

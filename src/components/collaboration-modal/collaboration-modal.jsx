@@ -568,8 +568,19 @@ class CollaborationModal extends Component {
                         <AlertTriangle size={20} />
                     </div>
                     <div className={styles.bannerContent}>
-                        <strong>{'Alpha Warning:'}</strong>
-                        {'This feature is in early development. Your projects may get corrupted or broken. Use at your own risk.'}
+                        <strong>
+                            <FormattedMessage
+                                defaultMessage="Alpha Warning:"
+                                description="Alpha warning label"
+                                id="gui.collaboration.alphaWarningLabel"
+                            />
+                        </strong>
+                        {' '}
+                        <FormattedMessage
+                            defaultMessage="This feature is in early development. Your projects may get corrupted or broken. Use at your own risk."
+                            description="Alpha warning message"
+                            id="gui.collaboration.alphaWarningMessage"
+                        />
                     </div>
                 </div>
 
@@ -622,7 +633,11 @@ class CollaborationModal extends Component {
                             </label>
                             <BufferedInput
                                 className={styles.input}
-                                placeholder="Enter room ID..."
+                                placeholder={this.props.intl.formatMessage({
+                                    id: 'gui.collaboration.roomIdPlaceholder',
+                                    defaultMessage: 'Enter room ID...',
+                                    description: 'Placeholder for room ID input'
+                                })}
                                 value={this.state.roomId}
                                 onSubmit={this.handleRoomIdChange}
                             />
@@ -687,7 +702,19 @@ class CollaborationModal extends Component {
                         <AlertTriangle size={20} />
                     </div>
                     <div className={styles.bannerContent}>
-                        <strong>Alpha Warning:</strong> This feature is in early development. Your projects may get corrupted or broken. Use at your own risk.
+                        <strong>
+                            <FormattedMessage
+                                defaultMessage="Alpha Warning:"
+                                description="Alpha warning label"
+                                id="gui.collaboration.alphaWarningLabel"
+                            />
+                        </strong>
+                        {' '}
+                        <FormattedMessage
+                            defaultMessage="This feature is in early development. Your projects may get corrupted or broken. Use at your own risk."
+                            description="Alpha warning message"
+                            id="gui.collaboration.alphaWarningMessage"
+                        />
                     </div>
                 </div>
                 <div className={styles.connecting}>
@@ -726,7 +753,19 @@ class CollaborationModal extends Component {
                         <AlertTriangle size={20} />
                     </div>
                     <div className={styles.bannerContent}>
-                        <strong>Alpha Warning:</strong> This feature is in early development. Your projects may get corrupted or broken. Use at your own risk.
+                        <strong>
+                            <FormattedMessage
+                                defaultMessage="Alpha Warning:"
+                                description="Alpha warning label"
+                                id="gui.collaboration.alphaWarningLabel"
+                            />
+                        </strong>
+                        {' '}
+                        <FormattedMessage
+                            defaultMessage="This feature is in early development. Your projects may get corrupted or broken. Use at your own risk."
+                            description="Alpha warning message"
+                            id="gui.collaboration.alphaWarningMessage"
+                        />
                     </div>
                 </div>
 
@@ -998,7 +1037,19 @@ class CollaborationModal extends Component {
                         <AlertTriangle size={20} />
                     </div>
                     <div className={styles.bannerContent}>
-                        <strong>Alpha Warning:</strong> This feature is in early development. Your projects may get corrupted or broken. Use at your own risk.
+                        <strong>
+                            <FormattedMessage
+                                defaultMessage="Alpha Warning:"
+                                description="Alpha warning label"
+                                id="gui.collaboration.alphaWarningLabel"
+                            />
+                        </strong>
+                        {' '}
+                        <FormattedMessage
+                            defaultMessage="This feature is in early development. Your projects may get corrupted or broken. Use at your own risk."
+                            description="Alpha warning message"
+                            id="gui.collaboration.alphaWarningMessage"
+                        />
                     </div>
                 </div>
                 <div className={styles.header}>
@@ -1069,7 +1120,11 @@ class CollaborationModal extends Component {
                 visible={this.props.visible}
                 className={styles.modalContent}
                 onRequestClose={this.props.onRequestClose}
-                contentLabel="Live Collaboration"
+                contentLabel={this.props.intl.formatMessage({
+                    id: 'gui.collaboration.title',
+                    defaultMessage: 'Live Collaboration',
+                    description: 'Title for collaboration modal'
+                })}
                 id="collaborationModal"
                 width={600}
                 height={720}
