@@ -1,0 +1,114 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+      - run: npm run test
+      # Save dist as artifact
+      - name: Upload static/microbit
+        uses: actions/upload-artifact@v4
+        with:
+          name: static-microbit
+          path: static/microbit
+      - name: Upload static/penguinmod
+        uses: actions/upload-artifact@v4
+        with:
+          name: static-penguinmod
+          path: static/penguinmod
+      # Temp: Save package-lock.json
+      #- name: Upload package-lock.json
+      #  uses: actions/upload-artifact@v4
+      #  with:
+      #    name: package-lock.json
+      #    path: package-lock.json
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+
+    if: >
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/develop'
+
+    steps:
+    - name: Checkout repo (with push access)
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        persist-credentials: true
+
+    - name: Download static/microbit
+      uses: actions/download-artifact@v4
+      with:
+        name: static-microbit
+        path: static/microbit
+    - name: Download static/penguinmod
+      uses: actions/download-artifact@v4
+      with:
+        name: static-penguinmod
+        path: static/penguinmod
+    # Temp: Download package-lock.json
+    #- name: Download package-lock.json
+    #  uses: actions/download-artifact@v4
+    #  with:
+    #    name: package-lock.json
+    #    path: package-lock.json
+
+    - name: Deploy to develop-builds
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+        # Backup static directories
+        rm -rf /tmp/static
+        mkdir -p /tmp/static
+        cp -r static/microbit /tmp/static/
+        cp -r static/penguinmod /tmp/static/
+
+        # Fetch all branches
+        git fetch origin
+
+        # Checkout or create develop-builds based on develop
+        if git show-ref --verify --quiet refs/remotes/origin/develop-builds; then
+          git checkout develop-builds
+          git pull origin develop-builds
+        else
+          git checkout -b develop-builds origin/develop
+        fi
+
+        # Sync code with develop
+        git merge origin/develop --no-edit
+
+        # Replace static directories
+        rm -rf static/microbit static/penguinmod
+        mkdir -p static/microbit static/penguinmod
+        cp -r /tmp/static/microbit/* static/microbit/
+        cp -r /tmp/static/penguinmod/* static/penguinmod/
+
+        # Force add static directories (ignore .gitignore)
+        git add -f static/microbit static/penguinmod
+
+        # Commit if changed
+        git commit -m "chore: update static directories from develop" || echo "No changes"
+
+        # Push
+        git push origin develop-builds
