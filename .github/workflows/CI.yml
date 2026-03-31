@@ -22,16 +22,14 @@ jobs:
       - run: npm ci
       - run: npm run build
       # Save dist as artifact
-      - name: Upload static/microbit
+      - name: Upload dist
         uses: actions/upload-artifact@v4
         with:
-          name: static-microbit
-          path: static/microbit
-      - name: Upload static/penguinmod
-        uses: actions/upload-artifact@v4
-        with:
-          name: static-penguinmod
-          path: static/penguinmod
+          name: dist
+          path: |
+            static/microbit
+            static/penguinmod
+            src/generated
       # Temp: Save package-lock.json
       #- name: Upload package-lock.json
       #  uses: actions/upload-artifact@v4
@@ -54,16 +52,12 @@ jobs:
         fetch-depth: 0
         persist-credentials: true
 
-    - name: Download static/microbit
+    - name: Download dist
       uses: actions/download-artifact@v4
       with:
-        name: static-microbit
-        path: static/microbit
-    - name: Download static/penguinmod
-      uses: actions/download-artifact@v4
-      with:
-        name: static-penguinmod
-        path: static/penguinmod
+        name: dist
+        path: .
+
     # Temp: Download package-lock.json
     #- name: Download package-lock.json
     #  uses: actions/download-artifact@v4
@@ -76,11 +70,12 @@ jobs:
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-        # Backup static directories
-        rm -rf /tmp/static
-        mkdir -p /tmp/static
+        # Backup downloaded directories
+        rm -rf /tmp/static /tmp/src
+        mkdir -p /tmp/static /tmp/src
         cp -r static/microbit /tmp/static/
         cp -r static/penguinmod /tmp/static/
+        cp -r src/generated /tmp/src/
 
         # Fetch all branches
         git fetch origin
@@ -96,17 +91,18 @@ jobs:
         # Sync code with develop
         git merge origin/develop --no-edit
 
-        # Replace static directories
-        rm -rf static/microbit static/penguinmod
-        mkdir -p static/microbit static/penguinmod
+        # Replace directories
+        rm -rf static/microbit static/penguinmod src/generated
+        mkdir -p static/microbit static/penguinmod src/generated
         cp -r /tmp/static/microbit/* static/microbit/
         cp -r /tmp/static/penguinmod/* static/penguinmod/
+        cp -r /tmp/src/generated/* src/generated/
 
-        # Force add static directories (ignore .gitignore)
-        git add -f static/microbit static/penguinmod
+        # Force add directories (ignore .gitignore)
+        git add -f static/microbit static/penguinmod src/generated
 
         # Commit if changed
-        git commit -m "chore: update static directories from develop" || echo "No changes"
+        git commit -m "chore: update build artifacts from develop" || echo "No changes"
 
         # Push
         git push origin develop-builds
