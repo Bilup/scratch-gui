@@ -3,6 +3,25 @@ import BlockInstance from '../../lib/find-bar/BlockInstance';
 import Carousel from './Carousel';
 import {getReactInternalKey} from './dom-utils';
 
+const normalizeType = type => {
+    const upper = type.toUpperCase();
+    if (upper.startsWith('OPERATOR'))  return 'OPERATORS' + upper.slice(8);
+    if (upper === 'SOUND_SETEFFECTTO') return 'SOUND_SETEFFECTO';
+    const controlMap = {
+        'CONTROL_WAIT_UNTIL': 'CONTROL_WAITUNTIL',
+        'CONTROL_REPEAT_UNTIL': 'CONTROL_REPEATUNTIL',
+        'CONTROL_FOR_EACH': 'CONTROL_FOREACH',
+        'CONTROL_START_AS_CLONE': 'CONTROL_STARTASCLONE',
+        'CONTROL_CREATE_CLONE_OF': 'CONTROL_CREATECLONEOF',
+        'CONTROL_DELETE_THIS_CLONE': 'CONTROL_DELETETHISCLONE',
+        'CONTROL_INCR_COUNTER': 'CONTROL_INCRCOUNTER',
+        'CONTROL_CLEAR_COUNTER': 'CONTROL_CLEARCOUNTER',
+        'CONTROL_ALL_AT_ONCE': 'CONTROL_ALLATONCE'
+    };
+    if (controlMap[upper]) return controlMap[upper];
+    return upper;
+};
+
 const normalizeMessagePlaceholders = text => String(text).replace(/%\d+/g, '()');
 
 export default class Dropdown {
@@ -103,8 +122,13 @@ export default class Dropdown {
         const item = document.createElement('li');
         item.innerText = proc.procCode;
         item.data = proc;
-        const name = proc.procCode.toUpperCase();
-        item.displayName = normalizeMessagePlaceholders(
+        const name = normalizeType(proc.procCode);
+        if (name == 'CONTROL_IF_ELSE') {
+            item.displayName = normalizeMessagePlaceholders(
+                normalizeMessagePlaceholders(messagesList[0]["CONTROL_IF"] || messagesList[1]["CONTROL_IF"]) + " %2 " + normalizeMessagePlaceholders(messagesList[0]["CONTROL_ELSE"] || messagesList[1]["CONTROL_ELSE"]) + " %3 "
+            );
+        } else
+            item.displayName = normalizeMessagePlaceholders(
             messagesList[0][name] || messagesList[1][name] || proc.procCode
         );
 

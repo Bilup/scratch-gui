@@ -75,6 +75,14 @@ const setProjectIdMetadata = projectId => {
 };
 
 class GUI extends React.Component {
+    constructor (props) {
+        super(props);
+        this.state = {
+            enableStageResize: localStorage.getItem('mw:enable-stage-resize') !== 'false'
+        };
+        this.handleStorageChange = this.handleStorageChange.bind(this);
+    }
+
     componentDidMount () {
         setIsScratchDesktop(this.props.isScratchDesktop);
         this.props.onStorageInit(storage);
@@ -120,7 +128,24 @@ class GUI extends React.Component {
                 }
             }
         );
+
+        // 监听localStorage变化
+        window.addEventListener('storage', this.handleStorageChange);
     }
+
+    componentWillUnmount () {
+        window.removeEventListener('storage', this.handleStorageChange);
+    }
+
+    handleStorageChange () {
+        try {
+            const newValue = localStorage.getItem('mw:enable-stage-resize') === 'true';
+            this.setState({enableStageResize: newValue});
+        } catch (e) {
+            // ignore
+        }
+    }
+
     componentDidUpdate (prevProps) {
         if (this.props.projectId !== prevProps.projectId) {
             if (this.props.projectId !== null) {
@@ -201,6 +226,7 @@ class GUI extends React.Component {
         return (
             <GUIComponent
                 loading={fetchingProject || isLoading || loadingStateVisible}
+                enableStageResize={this.state.enableStageResize}
                 {...componentProps}
             >
                 {children}

@@ -254,6 +254,7 @@ export default async function ({ addon, console, msg }) {
   const addLiveBlockCount = async () => {
     if (vm.editingTarget) {
       let handler = null;
+      let isLoading = false;
       while (true) {
         const topBar = await addon.tab.waitForElement("[class^='menu-bar_main-menu']", {
           markAsSeen: true,
@@ -292,17 +293,31 @@ export default async function ({ addon, console, msg }) {
           display.style.backgroundColor = 'transparent';
         });
         
-        let debounce; // debouncing values because of the way 'PROJECT_CHANGED' works
+        let debounce;
         if (handler) {
           vm.off("PROJECT_CHANGED", handler);
           vm.runtime.off("PROJECT_LOADED", handler);
         }
         handler = async () => {
+          if (isLoading) return;
           clearTimeout(debounce);
           debounce = setTimeout(updateDisplay, 1000);
         };
         vm.on("PROJECT_CHANGED", handler);
-        vm.runtime.on("PROJECT_LOADED", handler);
+        vm.runtime.on("PROJECT_LOADED", () => {
+          isLoading = false;
+          updateDisplay();
+        });
+        
+        if (addon.tab.redux) {
+          addon.tab.redux.addEventListener("statechanged", (e) => {
+            const actionType = e.detail.action.type;
+            if (actionType.startsWith("scratch-gui/project-state/") && 
+                (actionType.includes("LOADING") || actionType.includes("START"))) {
+              isLoading = true;
+            }
+          });
+        }
       }
     } else {
       let timeout = setTimeout(function () {

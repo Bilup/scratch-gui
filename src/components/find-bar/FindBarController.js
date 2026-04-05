@@ -2,15 +2,49 @@ import BlockItem from '../../lib/find-bar/BlockItem';
 
 import Dropdown from './Dropdown';
 
+const normalizeType = type => {
+    const upper = type.toUpperCase();
+    if (upper.startsWith('OPERATOR'))  return 'OPERATORS' + upper.slice(8);
+    if (upper === 'SOUND_SETEFFECTTO') return 'SOUND_SETEFFECTO';
+    const controlMap = {
+        'CONTROL_WAIT_UNTIL': 'CONTROL_WAITUNTIL',
+        'CONTROL_REPEAT_UNTIL': 'CONTROL_REPEATUNTIL',
+        'CONTROL_FOR_EACH': 'CONTROL_FOREACH',
+        'CONTROL_START_AS_CLONE': 'CONTROL_STARTASCLONE',
+        'CONTROL_CREATE_CLONE_OF': 'CONTROL_CREATECLONEOF',
+        'CONTROL_DELETE_THIS_CLONE': 'CONTROL_DELETETHISCLONE',
+        'CONTROL_INCR_COUNTER': 'CONTROL_INCRCOUNTER',
+        'CONTROL_CLEAR_COUNTER': 'CONTROL_CLEARCOUNTER',
+        'CONTROL_ALL_AT_ONCE': 'CONTROL_ALLATONCE'
+    };
+    if (controlMap[upper]) return controlMap[upper];
+    return upper;
+};
+
 const getMessages = (ScratchBlocks, blockJson) => [
     ScratchBlocks.Msg,
     Object.fromEntries(
-        blockJson.flatMap(b => (b ? [[b.type.toUpperCase(), `${b.type.split('_', 1)[0]}: ${b.message0}`]] : []))
+        blockJson.flatMap(b => {
+            if (!b) return [];
+            const normalizedType = normalizeType(b.type);
+            const messages = [];
+            let i = 0;
+            while (b[`message${i}`] !== undefined) {
+                messages.push(b[`message${i}`]);
+                i++;
+            }
+            if (messages.length === 0) return [];
+            return [[normalizedType, `${b.type.split('_', 1)[0]}: ${messages.join(' ')}`]];
+        })
     )
 ];
 
 const getColours = blockJson => Object.fromEntries(
-    blockJson.flatMap(b => (b ? [[b.type.toUpperCase(), b.colour]] : []))
+    blockJson.flatMap(b => {
+        if (!b) return [];
+        const normalizedType = normalizeType(b.type);
+        return [[normalizedType, b.colour]];
+    })
 );
 
 export default class FindBarController {
@@ -622,14 +656,8 @@ export default class FindBarController {
             let desc = '';
             for (const fieldRow of fields.fieldRow) {
                 desc = desc ? `${desc} ` : '';
-                if (
-                    fieldRow instanceof this.ScratchBlocks.FieldImage &&
-                    fieldRow.src_.endsWith('green-flag.svg')
-                ) {
-                    desc += this.msgAny('/_general/blocks/green-flag');
-                } else {
-                    desc += fieldRow.getText();
-                }
+                if (fieldRow.src_ === "static/blocks-media/default/green-flag.svg") desc += this.msgAny('_general/blocks/green-flag');
+                else desc += fieldRow.getText();
             }
             return desc;
         };

@@ -25,7 +25,8 @@ class UsernameModal extends React.Component {
             debugMode: localStorage.getItem('mw:debug-mode') === 'true',
             showFPSCounter: localStorage.getItem('mw:show-fps-counter') === 'true',
             viewCompiledMode: localStorage.getItem('mw:view-compiled-mode') === 'true',
-            storeThemeInProject: localStorage.getItem('mw:store-theme-in-project') === 'true'
+            storeThemeInProject: localStorage.getItem('mw:store-theme-in-project') === 'true',
+            enableStageResize: localStorage.getItem('mw:enable-stage-resize') !== 'false'
         };
 
         bindAll(this, [
@@ -48,7 +49,8 @@ class UsernameModal extends React.Component {
             'handleDebugModeChange',
             'handleShowFPSCounterChange',
             'handleViewCompiledModeChange',
-            'handleStoreThemeInProjectChange'
+            'handleStoreThemeInProjectChange',
+            'handleEnableStageResizeChange'
         ]);
     }
 
@@ -200,6 +202,15 @@ class UsernameModal extends React.Component {
             // ignore
         }
     }
+
+    handleEnableStageResizeChange (e) {
+        this.setState({enableStageResize: e.target.checked});
+        try {
+            localStorage.setItem('mw:enable-stage-resize', e.target.checked);
+        } catch (err) {
+            // ignore
+        }
+    }
     render () {
         const {
             /* eslint-disable no-unused-vars */
@@ -236,11 +247,13 @@ class UsernameModal extends React.Component {
                 onShowFPSCounterChange={this.handleShowFPSCounterChange}
                 onViewCompiledModeChange={this.handleViewCompiledModeChange}
                 onStoreThemeInProjectChange={this.handleStoreThemeInProjectChange}
+                onEnableStageResizeChange={this.handleEnableStageResizeChange}
                 optimizeAnimations={this.state.optimizeAnimations}
                 debugMode={this.state.debugMode}
                 showFPSCounter={this.state.showFPSCounter}
                 viewCompiledMode={this.state.viewCompiledMode}
                 storeThemeInProject={this.state.storeThemeInProject}
+                enableStageResize={this.state.enableStageResize}
                 theme={this.props.theme}
                 {...props}
             />

@@ -131,6 +131,41 @@ const GUIComponent = props => {
         }
     }, []);
 
+    const [enableStageResize, setEnableStageResize] = useState(() => {
+        // 优先使用props传递的值，如果没有则从localStorage读取
+        if (props.enableStageResize !== undefined) {
+            return props.enableStageResize;
+        }
+        try {
+            return localStorage.getItem('mw:enable-stage-resize') !== 'false';
+        } catch (e) {
+            return true;
+        }
+    });
+
+    // 当props变化时更新状态
+    useEffect(() => {
+        if (props.enableStageResize !== undefined) {
+            setEnableStageResize(props.enableStageResize);
+        }
+    }, [props.enableStageResize]);
+
+    useEffect(() => {
+        const handleStorageChange = () => {
+            try {
+                const newValue = localStorage.getItem('mw:enable-stage-resize') === 'true';
+                // 只有当props没有提供值时才从localStorage更新
+                if (props.enableStageResize === undefined) {
+                    setEnableStageResize(newValue);
+                }
+            } catch (e) {
+                // ignore
+            }
+        };
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, [props.enableStageResize]);
+
     const editorWrapperRef = useRef(null);
     const stageAndTargetWrapperRef = useRef(null);
     const stageResizeRafRef = useRef(null);
@@ -155,6 +190,7 @@ const GUIComponent = props => {
     }, []);
 
     const measureStageContainerWidth = useCallback(() => {
+        if (!enableStageResize) return;
         if (measureRafRef.current) return;
         
         measureRafRef.current = requestAnimationFrame(() => {
@@ -183,10 +219,11 @@ const GUIComponent = props => {
                 return innerWidth;
             });
         });
-    }, [getStageBorderExtraWidth]);
+    }, [getStageBorderExtraWidth, enableStageResize]);
 
     const lastResizeWidthRef = useRef(null);
     useEffect(() => {
+        if (!enableStageResize) return;
         if (typeof stageContainerWidth !== 'number') return;
 
         const rounded = Math.round(stageContainerWidth);
@@ -199,9 +236,10 @@ const GUIComponent = props => {
             stageResizeRafRef.current = null;
             window.dispatchEvent(new Event('resize'));
         });
-    }, [stageContainerWidth]);
+    }, [stageContainerWidth, enableStageResize]);
 
     useEffect(() => {
+        if (!enableStageResize) return;
         if (props.isFullScreen) return;
         if (typeof stageContainerWidth !== 'number') return;
 
@@ -229,9 +267,10 @@ const GUIComponent = props => {
                 props.onSetStageSize(lastNonSmallStageSizeModeRef.current);
             }
         }
-    }, [stageContainerWidth, props.isFullScreen, props.onSetStageSize, props.stageSizeMode]);
+    }, [stageContainerWidth, props.isFullScreen, props.onSetStageSize, props.stageSizeMode, enableStageResize]);
 
     useEffect(() => {
+        if (!enableStageResize) return;
         measureStageContainerWidth();
         const el = stageAndTargetWrapperRef.current;
         if (!el || typeof ResizeObserver === 'undefined') return;
@@ -246,9 +285,10 @@ const GUIComponent = props => {
                 measureRafRef.current = null;
             }
         };
-    }, [measureStageContainerWidth]);
+    }, [measureStageContainerWidth, enableStageResize]);
 
     const handleStagePanelResizePointerDown = useCallback(e => {
+        if (!enableStageResize) return;
         if (typeof e.button !== 'undefined' && e.button !== 0) return;
         e.preventDefault();
 
@@ -373,7 +413,8 @@ const GUIComponent = props => {
         props.customStageSize,
         props.isFullScreen,
         props.onSetStageSize,
-        props.stageSizeMode
+        props.stageSizeMode,
+        enableStageResize
     ]);
 
     const {
@@ -559,21 +600,21 @@ const GUIComponent = props => {
         onboardingVisible
     ]);
 
-    const minDimensions = useMemo(() => ({
-        minWidth: typeof stagePanelWidth === 'number' ?
-            MIN_EDITOR_PANE_WIDTH + stagePanelWidth + 6 + 16 :
-            1024 + Math.max(0, customStageSize.width - 480),
-        minHeight: 640 + Math.max(0, customStageSize.height - 360)
-    }), [customStageSize.width, customStageSize.height, stagePanelWidth]);
+    // const minDimensions = useMemo(() => ({
+    //     minWidth: typeof stagePanelWidth === 'number' ?
+    //         MIN_EDITOR_PANE_WIDTH + stagePanelWidth + 6 + 16 :
+    //         1024 + Math.max(0, customStageSize.width - 480),
+    //     minHeight: 640 + Math.max(0, customStageSize.height - 360)
+    // }), [customStageSize.width, customStageSize.height, stagePanelWidth]);
 
     const stagePanelStyle = useMemo(() => {
-        if (!stagePanelWidth) return null;
+        if (!enableStageResize || !stagePanelWidth) return null;
         return {
             width: `${stagePanelWidth}px`,
             flexBasis: `${stagePanelWidth}px`,
             flexShrink: 0
         };
-    }, [stagePanelWidth]);
+    }, [stagePanelWidth, enableStageResize]);
 
     return (<MediaQuery minWidth={unconstrainedWidth}>{isUnconstrained => {
         const stageSize = resolveStageSize(stageSizeMode, isUnconstrained);
@@ -607,7 +648,7 @@ const GUIComponent = props => {
             <Box
                 className={styles.pageWrapper}
                 dir={isRtl ? 'rtl' : 'ltr'}
-                style={minDimensions}
+                // style={minDimensions}
                 {...componentProps}
             >
                 {alwaysEnabledModals}
@@ -716,7 +757,7 @@ const GUIComponent = props => {
                     <Box className={styles.flexWrapper}>
                         <Box
                             className={styles.editorWrapper}
-                            ref={editorWrapperRef}
+                            // ref={editorWrapperRef}
                         >
                             <NativeFindBar
                                 activeTabIndex={activeTabIndex}
@@ -820,8 +861,8 @@ const GUIComponent = props => {
 
                         <Box
                             className={styles.stagePaneResizer}
-                            onPointerDown={handleStagePanelResizePointerDown}
-                            onDoubleClick={handleStagePanelResizeDoubleClick}
+                            onPointerDown={enableStageResize ? handleStagePanelResizePointerDown : undefined}
+                            onDoubleClick={enableStageResize ? handleStagePanelResizeDoubleClick : undefined}
                             role="separator"
                             aria-orientation="vertical"
                             tabIndex={-1}
@@ -830,7 +871,7 @@ const GUIComponent = props => {
                         <Box
                             className={classNames(styles.stageAndTargetWrapper, styles[stageSize])}
                             ref={stageAndTargetWrapperRef}
-                            style={stagePanelStyle}
+                            style={enableStageResize ? stagePanelStyle : undefined}
                         >
                             <StageWrapper
                                 isFullScreen={isFullScreen}

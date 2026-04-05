@@ -402,6 +402,8 @@
         "mw.settings.experimental": "实验性",
         "mw.settingsModal.storeThemeInProject": "在作品中保存主题",
         "mw.settingsModal.storeThemeInProjectHelp": "启用后，点击“将设置存储到项目中”时，也会同时保存当前的 {APP_NAME} 主题，以便在加载该项目时自动应用。",
+        "mw.settingsModal.enableStageResize": "启用舞台调整大小",
+        "mw.settingsModal.enableStageResizeHelp": "启用舞台调整大小功能，允许您拖动调整舞台面板的大小。（需要刷新）",
         "tw.addonSettings.title": "插件设置",
         "tw.extensionManager.title": "扩展管理器",
         "tw.extensionManager.delete": "删除",

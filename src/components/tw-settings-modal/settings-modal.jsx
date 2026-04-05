@@ -304,6 +304,18 @@ const settingDefinitions = {
             description: 'Real Layer Indexes help',
             id: 'tw.settingsModal.realLayerIndexesHelp'
         }
+    },
+    enableStageResize: {
+        label: {
+            defaultMessage: 'Enable Stage Resize',
+            description: 'Enable Stage Resize setting',
+            id: 'mw.settingsModal.enableStageResize'
+        },
+        help: {
+            defaultMessage: 'Enables the stage resize feature, allowing you to drag to resize the stage panel.(Refreshing required)',
+            description: 'Enable Stage Resize setting help',
+            id: 'mw.settingsModal.enableStageResizeHelp'
+        }
     }
 };
 
@@ -335,6 +347,7 @@ const RemoveMiscLimits = createBooleanSetting('RemoveMiscLimits', settingDefinit
 const WarpTimer = createBooleanSetting('WarpTimer', settingDefinitions.warpTimer);
 const CaseSensitiveLists = createBooleanSetting('CaseSensitiveLists', settingDefinitions.caseSensitiveLists);
 const RealLayerIndexes = createBooleanSetting('RealLayerIndexes', settingDefinitions.realLayerIndexes);
+const EnableStageResize = createBooleanSetting('EnableStageResize', settingDefinitions.enableStageResize);
 
 const DisableCompiler = props => (
     <BooleanSetting
@@ -643,6 +656,13 @@ const pageConfigurations = {
                         props: props => ({
                             value: props.caseSensitiveLists,
                             onChange: props.onCaseSensitiveListsChange
+                        })
+                    },
+                    {
+                        component: EnableStageResize,
+                        props: props => ({
+                            value: props.enableStageResize,
+                            onChange: props.onEnableStageResizeChange
                         })
                     }
                 ]

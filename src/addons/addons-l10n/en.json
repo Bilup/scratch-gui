@@ -1,7 +1,7 @@
 {
   "_general/blocks/anticlockwise": "anti-clockwise",
   "_general/blocks/clockwise": "clockwise",
-  "_general/blocks/green-flag": "flag",
+  "_general/blocks/green-flag": "green flag",
   "editor-devtools/clean-plus": "Clean up Blocks +",
   "editor-devtools/clean-up-detached": "Clean up detached scripts",
   "editor-devtools/copy-all": "Copy All",
