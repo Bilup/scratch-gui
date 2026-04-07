@@ -63,21 +63,21 @@ const applyThemeFonts = async fonts => {
     newFontStyleElement.id = 'theme-fonts';
     newFontStyleElement.textContent = `
         /* Theme Fonts - High Priority Overrides */
-        * {
+        *:not([class^="paint-editor_text-area_"]) {
             font-family: ${fontFamily} !important;
         }
         
         /* Specific targets for better coverage */
         body, html, 
         .gui, .blocklySvg,
-        [class*="gui_"],
-        [class*="menu-bar_"],
-        [class*="settings-menu_"],
-        [class*="blocklyText"],
-        .blocklyText,
-        .blocklyHtmlInput,
-        button, input, textarea, select,
-        .menu-bar, .menu-item {
+        [class*="gui_"]:not([class^="paint-editor_text-area_"),
+        [class*="menu-bar_"]:not([class^="paint-editor_text-area_"),
+        [class*="settings-menu_"]:not([class^="paint-editor_text-area_"),
+        [class*="blocklyText"]:not([class^="paint-editor_text-area_"),
+        .blocklyText:not([class^="paint-editor_text-area_"),
+        .blocklyHtmlInput:not([class^="paint-editor_text-area_"),
+        button:not([class^="paint-editor_text-area_"), input:not([class^="paint-editor_text-area_"), textarea:not([class^="paint-editor_text-area_"), select:not([class^="paint-editor_text-area_"),
+        .menu-bar:not([class^="paint-editor_text-area_"), .menu-item:not([class^="paint-editor_text-area_"]) {
             font-family: ${fontFamily} !important;
         }
         
