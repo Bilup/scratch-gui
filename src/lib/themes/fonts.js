@@ -62,10 +62,6 @@ const applyThemeFonts = async fonts => {
     const newFontStyleElement = document.createElement('style');
     newFontStyleElement.id = 'theme-fonts';
     newFontStyleElement.textContent = `
-        /* Theme Fonts - High Priority Overrides */
-        *:not([class^="paint-editor_text-area_"]) {
-            font-family: ${fontFamily} !important;
-        }
         
         /* Specific targets for better coverage */
         body, html, 

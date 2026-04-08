@@ -428,7 +428,7 @@ export const galleryLoading = {
             id="tw.extensionGallery.loading"
         />
     ),
-    tags: ['tw'],
+    tags: ['tw', 'bilup', 'penguinmod', 'sharkpools', 'mistium'],
     featured: true
 };
 
@@ -443,18 +443,17 @@ export const galleryMore = {
             }}
         />
     ),
-    href: 'https://extensions.turbowarp.org/',
     extensionId: 'gallery',
     iconURL: galleryIcon,
     description: (
         <FormattedMessage
             // eslint-disable-next-line max-len
-            defaultMessage="Including extensions from TurboWarp, Mistium, SharkPool and PenguinMod."
+            defaultMessage="Including extensions from TurboWarp, Mistium, SharkPool, PenguinMod, and Bilup."
             description="Appears after the extension list from the gallery was loaded successfully"
             id="tw.extensionGallery.more"
         />
     ),
-    tags: ['tw'],
+    tags: ['tw', 'bilup', 'penguinmod', 'sharkpools', 'mistium'],
     featured: true
 };
 
@@ -480,6 +479,6 @@ export const galleryError = {
             id="tw.extensionGallery.error"
         />
     ),
-    tags: ['tw'],
+    tags: ['tw', 'bilup', 'penguinmod', 'sharkpools', 'mistium'],
     featured: true
 };

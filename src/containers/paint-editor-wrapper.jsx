@@ -23,10 +23,10 @@ class PaintEditorWrapper extends React.Component {
             fonts: this.props.vm.runtime.fontManager.getFonts()
         };
     }
-    componentDidMount () {
+    componentDidMount() {
         this.props.vm.runtime.fontManager.on('change', this.handleUpdateFonts);
     }
-    shouldComponentUpdate (nextProps, nextState) {
+    shouldComponentUpdate(nextProps, nextState) {
         return this.props.imageId !== nextProps.imageId ||
             this.props.rtl !== nextProps.rtl ||
             this.props.name !== nextProps.name ||
@@ -34,10 +34,10 @@ class PaintEditorWrapper extends React.Component {
             this.props.customStageSize !== nextProps.customStageSize ||
             this.state.fonts !== nextState.fonts;
     }
-    componentWillUnmount () {
+    componentWillUnmount() {
         this.props.vm.runtime.fontManager.off('change', this.handleUpdateFonts);
     }
-    handleUpdateFonts () {
+    handleUpdateFonts() {
         this.setState({
             fonts: this.props.vm.runtime.fontManager.getFonts()
         });

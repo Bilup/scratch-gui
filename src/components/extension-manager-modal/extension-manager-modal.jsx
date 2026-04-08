@@ -16,6 +16,21 @@ const messages = defineMessages({
         defaultMessage: 'Extension Manager',
         description: 'Title of modal that appears when opening the Extension Manager',
         id: 'tw.extensionManager.title'
+    },
+    noExtensionsLoaded: {
+        defaultMessage: 'No extensions loaded',
+        description: 'Text shown when no extensions are loaded',
+        id: 'tw.extensionManager.noExtensionsLoaded'
+    },
+    oneExtensionLoaded: {
+        defaultMessage: '1 loaded extension',
+        description: 'Text shown when one extension is loaded',
+        id: 'tw.extensionManager.oneExtensionLoaded'
+    },
+    multipleExtensionsLoaded: {
+        defaultMessage: '{count} loaded extensions',
+        description: 'Text shown when multiple extensions are loaded',
+        id: 'tw.extensionManager.multipleExtensionsLoaded'
     }
 });
 
@@ -106,10 +121,10 @@ const ExtensionManagerModal = props => {
     }, [loadedExtensions]);
 
     const loadedAmountText = useMemo(() => {
-        if (loadedExtensions.length === 0) return 'No extensions loaded';
-        if (loadedExtensions.length === 1) return '1 loaded extension';
-        return `${loadedExtensions.length} loaded extensions`;
-    }, [loadedExtensions]);
+        if (loadedExtensions.length === 0) return props.intl.formatMessage(messages.noExtensionsLoaded);
+        if (loadedExtensions.length === 1) return props.intl.formatMessage(messages.oneExtensionLoaded);
+        return props.intl.formatMessage(messages.multipleExtensionsLoaded, {count: loadedExtensions.length});
+    }, [loadedExtensions, props.intl]);
 
     const removeExtension = useCallback(async extensionId => {
         const em = props.vm?.extensionManager;

@@ -721,7 +721,7 @@ export default class FindBarController {
                 const fieldRow = input.fieldRow;
                 if (!fieldRow) continue;
                 for (const field of fieldRow) {
-                    if (!isTextInputField(field)) continue;
+                    //if (!isTextInputField(field)) continue;
                     const text = String(field.getText()).trim();
                     if (text) values.push(text);
                 }

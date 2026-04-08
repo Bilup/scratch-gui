@@ -48,6 +48,7 @@ const fetchLibrary = async () => {
     let mistiumExtensions = [];
     let sharkpoolsExtensions = [];
     let penguinmodExtensions = [];
+    let bilupExtensions = [];
 
     try {
         const twRes = await fetch('https://extensions.turbowarp.org/generated-metadata/extensions-v0.json');
@@ -252,7 +253,53 @@ const fetchLibrary = async () => {
         console.warn('Failed to load PenguinMod extensions:', error);
     }
 
-    return [...twExtensions, ...mistiumExtensions, ...sharkpoolsExtensions, ...penguinmodExtensions];
+    try {
+        const bilupRes = await fetch('https://extensions.bilup.org/generated-metadata/extensions-v0.json');
+        if (!bilupRes.ok) {
+            console.warn(`Bilup extensions: HTTP status ${bilupRes.status}`);
+        } else {
+            const bilupData = await bilupRes.json();
+            bilupExtensions = bilupData.extensions.map(extension => ({
+                name: extension.name,
+                nameTranslations: extension.nameTranslations || {},
+                description: extension.description,
+                descriptionTranslations: extension.descriptionTranslations || {},
+                extensionId: extension.id,
+                extensionURL: `https://extensions.bilup.org/${extension.slug}.js`,
+                iconURL: `https://extensions.bilup.org/${extension.image || 'images/unknown.svg'}`,
+                tags: ['bilup'],
+                credits: [
+                    ...(extension.by || []),
+                    ...(extension.original || [])
+                ].map(credit => {
+                    if (credit.link) {
+                        return (
+                            <a
+                                href={credit.link}
+                                target="_blank"
+                                rel="noreferrer"
+                                key={credit.name}
+                            >
+                                {credit.name}
+                            </a>
+                        );
+                    }
+                    return credit.name;
+                }),
+                docsURI: extension.docs ? `https://extensions.bilup.org/${extension.slug}` : null,
+                samples: extension.samples ? extension.samples.map(sample => ({
+                    href: `${process.env.ROOT}editor?project_url=https://extensions.bilup.org/samples/${encodeURIComponent(sample)}.sb3`,
+                    text: sample
+                })) : null,
+                incompatibleWithScratch: true,
+                featured: true
+            }));
+        }
+    } catch (error) {
+        console.warn('Failed to load Bilup extensions:', error);
+    }
+
+    return [...twExtensions, ...mistiumExtensions, ...sharkpoolsExtensions, ...penguinmodExtensions, ...bilupExtensions];
 };
 
 class ExtensionLibrary extends React.PureComponent {

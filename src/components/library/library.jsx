@@ -334,11 +334,7 @@ class LibraryComponent extends React.Component {
                                     insetIconURL={dataItem.insetIconURL}
                                     internetConnectionRequired={dataItem.internetConnectionRequired}
                                     isPlaying={this.state.playingItem === index}
-                                    key={dataItem.key || (
-                                        typeof dataItem.name === 'string' ?
-                                            dataItem.name :
-                                            dataItem.rawURL
-                                    )}
+                                    key={`${dataItem.key || (typeof dataItem.name === 'string' ? dataItem.name : dataItem.rawURL || 'unknown')}-${index}`}
                                     name={dataItem.name}
                                     credits={dataItem.credits}
                                     samples={dataItem.samples}
