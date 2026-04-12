@@ -769,6 +769,8 @@ class SettingsModalComponent extends React.Component {
                 onRequestClose={this.props.onClose}
                 contentLabel={intl.formatMessage(messages.title)}
                 id="settingsModal"
+                width={880}
+                height={550}
             >
                 <Box className={styles.sidebarLayout}>
                     <div className={styles.sidebar}>

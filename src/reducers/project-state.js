@@ -295,7 +295,7 @@ const reducer = function (state, action) {
         }
         return state;
     case START_MANUAL_UPDATING:
-        if (state.loadingState === LoadingState.SHOWING_WITH_ID) {
+        if ([LoadingState.SHOWING_WITH_ID, LoadingState.SHOWING_WITHOUT_ID].includes(state.loadingState)) {
             return Object.assign({}, state, {
                 loadingState: LoadingState.MANUAL_UPDATING
             });
@@ -309,14 +309,14 @@ const reducer = function (state, action) {
         }
         return state;
     case START_UPDATING_BEFORE_CREATING_COPY:
-        if (state.loadingState === LoadingState.SHOWING_WITH_ID) {
+        if ([LoadingState.SHOWING_WITH_ID, LoadingState.SHOWING_WITHOUT_ID].includes(state.loadingState)) {
             return Object.assign({}, state, {
                 loadingState: LoadingState.UPDATING_BEFORE_COPY
             });
         }
         return state;
     case START_UPDATING_BEFORE_CREATING_NEW:
-        if (state.loadingState === LoadingState.SHOWING_WITH_ID) {
+        if ([LoadingState.SHOWING_WITH_ID, LoadingState.SHOWING_WITHOUT_ID].includes(state.loadingState)) {
             return Object.assign({}, state, {
                 loadingState: LoadingState.UPDATING_BEFORE_NEW
             });

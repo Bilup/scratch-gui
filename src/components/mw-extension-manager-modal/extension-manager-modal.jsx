@@ -46,6 +46,7 @@ const ExtensionManagerModal = props => {
     const [dragIndex, setDragIndex] = useState(null);
 
     const [blockIconURIs, setBlockIconURIs] = useState({});
+    const [extensionColors, setExtensionColors] = useState({});
 
     const extensionLibraryById = useMemo(() => new Map(extensionLibrary.map(i => [i.extensionId, i])), []);
 
@@ -60,6 +61,10 @@ const ExtensionManagerModal = props => {
         if (libraryItem) return libraryItem.name;
         return extensionId;
     }, [extensionLibraryById, props.vm]);
+
+    const getExtensionColor = useCallback(extensionId => {
+        return extensionColors[extensionId] || null;
+    }, [extensionColors]);
 
     const readExtensionIds = useCallback(() => {
         const map = props.vm?.extensionManager?._loadedExtensions;
@@ -81,8 +86,7 @@ const ExtensionManagerModal = props => {
 
         let cancelled = false;
         const idsToFetch = extensionIds.filter(id => (
-            !extensionLibraryById.has(id) &&
-            !blockIconURIs[id] &&
+            !extensionColors[id] &&
             map.has(id)
         ));
         if (idsToFetch.length === 0) return;
@@ -92,8 +96,12 @@ const ExtensionManagerModal = props => {
             centralDispatch.call(serviceName, 'getInfo')
                 .then(info => {
                     const uri = info && info.blockIconURI;
-                    if (!uri || cancelled) return;
+                    const color = info && info.color1;
+                    if (!uri && !color || cancelled) return;
                     setBlockIconURIs(prev => (prev[id] ? prev : {...prev, [id]: uri}));
+                    if (color) {
+                        setExtensionColors(prev => ({...prev, [id]: color}));
+                    }
                 })
                 .catch(() => {
                     // ignore
@@ -261,42 +269,46 @@ const ExtensionManagerModal = props => {
             <Box className={styles.body}>
                 <p className={styles.loadedAmount}>{loadedAmountText}</p>
 
-                {extensionIds.map((extensionId, index) => (
-                    <div
-                        className={styles.extensionCard}
-                        key={extensionId}
-                        draggable={props.draggable}
-                        data-index={index}
-                        onDragStart={handleDragStart}
-                        onDragEnd={handleDragEnd}
-                        onDragOver={handleDragOver}
-                        onDrop={handleDrop}
-                    >
-                        <div className={styles.extensionInfo}>
-                            {getExtensionIconURL(extensionId) ? (
-                                <img
-                                    className={styles.extensionIcon}
-                                    src={getExtensionIconURL(extensionId)}
-                                    alt=""
-                                    aria-hidden="true"
-                                    draggable={false}
-                                />
-                            ) : null}
-                            <p className={styles.extensionName}>{getExtensionName(extensionId)}</p>
-                        </div>
+                {extensionIds.map((extensionId, index) => {
+                    const extensionColor = getExtensionColor(extensionId);
+                    return (
+                        <div
+                            className={styles.extensionCard}
+                            key={extensionId}
+                            draggable={props.draggable}
+                            data-index={index}
+                            onDragStart={handleDragStart}
+                            onDragEnd={handleDragEnd}
+                            onDragOver={handleDragOver}
+                            onDrop={handleDrop}
+                            style={extensionColor ? {borderLeft: `4px solid ${extensionColor}`} : {borderLeft: `4px solid #0fbd8c`}}
+                        >
+                            <div className={styles.extensionInfo}>
+                                {getExtensionIconURL(extensionId) ? (
+                                    <img
+                                        className={styles.extensionIcon}
+                                        src={getExtensionIconURL(extensionId)}
+                                        alt=""
+                                        aria-hidden="true"
+                                        draggable={false}
+                                    />
+                                ) : null}
+                                <p className={styles.extensionName}>{getExtensionName(extensionId)}</p>
+                            </div>
 
-                        <FancyCheckbox
-                            className={styles.checkboxOption}
-                            checked={selected.includes(extensionId)}
-                            onChange={updateSelection}
-                            value={extensionId}
-                            draggable={false}
-                            onClick={stopDragAndClickBubbling}
-                            onMouseDown={stopDragAndClickBubbling}
-                            onDragStart={stopDragAndClickBubbling}
-                        />
-                    </div>
-                ))}
+                            <FancyCheckbox
+                                className={styles.checkboxOption}
+                                checked={selected.includes(extensionId)}
+                                onChange={updateSelection}
+                                value={extensionId}
+                                draggable={false}
+                                onClick={stopDragAndClickBubbling}
+                                onMouseDown={stopDragAndClickBubbling}
+                                onDragStart={stopDragAndClickBubbling}
+                            />
+                        </div>
+                    );
+                })}
 
                 {extensionIds.length > 0 ? (
                     <Box className={styles.multiSelectRow}>

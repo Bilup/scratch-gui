@@ -85,7 +85,8 @@ const MenuBarHOC = function (WrappedComponent) {
         projectChanged: state.scratchGui.projectChanged,
         toastVisible: state.scratchGui.toast && state.scratchGui.toast.visible,
         toastMessage: state.scratchGui.toast && state.scratchGui.toast.message,
-        toastType: state.scratchGui.toast && state.scratchGui.toast.type
+        toastType: state.scratchGui.toast && state.scratchGui.toast.type,
+        customShortcuts: state.scratchGui.shortcuts.customShortcuts
     });
     const mapDispatchToProps = dispatch => ({
         openSimpleDialog: config => dispatch(openSimpleDialog(config)),

@@ -162,10 +162,13 @@ const findMatchingShortcut = keyCombo => shortcuts.find(shortcut => {
 });
 
 const executeReduxAction = shortcut => {
+    console.log('Executing Redux action:', shortcut.action);
+    console.log('Dispatch object:', dispatch);
     if (!dispatch) return;
     
     const actionMap = {
         requestNewProject: () => {
+            console.log('Executing requestNewProject');
             if (dispatch.requestNewProject) {
                 dispatch.requestNewProject(false);
             } else {
@@ -173,20 +176,29 @@ const executeReduxAction = shortcut => {
             }
         },
         manualUpdateProject: () => {
-            if (dispatch.manualUpdateProject) {
-                dispatch.manualUpdateProject();
+            console.log('Executing manualUpdateProject');
+            console.log('Callbacks object:', callbacks);
+            console.log('Dispatch object:', dispatch);
+            if (callbacks.saveProject) {
+                console.log('Using callbacks.saveProject instead of manualUpdateProject');
+                callbacks.saveProject();
             } else {
-                console.warn('manualUpdateProject not available in dispatch');
+                console.warn('saveProject not available in callbacks');
             }
         },
         saveProjectAsCopy: () => {
-            if (dispatch.saveProjectAsCopy) {
-                dispatch.saveProjectAsCopy();
+            console.log('Executing saveProjectAsCopy');
+            console.log('Callbacks object:', callbacks);
+            console.log('Dispatch object:', dispatch);
+            if (callbacks.saveProjectAsCopy) {
+                console.log('Using callbacks.saveProjectAsCopy instead of dispatch.saveProjectAsCopy');
+                callbacks.saveProjectAsCopy();
             } else {
-                console.warn('saveProjectAsCopy not available in dispatch');
+                console.warn('saveProjectAsCopy not available in callbacks');
             }
         },
         openSettingsModal: () => {
+            console.log('Executing openSettingsModal');
             if (dispatch.openSettingsModal) {
                 dispatch.openSettingsModal();
             } else {
@@ -194,6 +206,7 @@ const executeReduxAction = shortcut => {
             }
         },
         activateTab: () => {
+            console.log('Executing activateTab');
             if (dispatch.activateTab && shortcut.params && typeof shortcut.params[0] !== 'undefined') {
                 dispatch.activateTab(shortcut.params[0]);
             } else {
@@ -201,6 +214,7 @@ const executeReduxAction = shortcut => {
             }
         },
         openSpriteLibrary: () => {
+            console.log('Executing openSpriteLibrary');
             if (dispatch.openSpriteLibrary) {
                 dispatch.openSpriteLibrary();
             } else {
@@ -208,6 +222,7 @@ const executeReduxAction = shortcut => {
             }
         },
         openCostumeLibrary: () => {
+            console.log('Executing openCostumeLibrary');
             if (dispatch.openCostumeLibrary) {
                 dispatch.openCostumeLibrary();
             } else {
@@ -215,6 +230,7 @@ const executeReduxAction = shortcut => {
             }
         },
         openSoundLibrary: () => {
+            console.log('Executing openSoundLibrary');
             if (dispatch.openSoundLibrary) {
                 dispatch.openSoundLibrary();
             } else {
@@ -222,6 +238,7 @@ const executeReduxAction = shortcut => {
             }
         },
         openExtensionLibrary: () => {
+            console.log('Executing openExtensionLibrary');
             if (dispatch.openExtensionLibrary) {
                 dispatch.openExtensionLibrary();
             } else {
@@ -229,6 +246,7 @@ const executeReduxAction = shortcut => {
             }
         },
         openExtensionManagerModal: () => {
+            console.log('Executing openExtensionManagerModal');
             if (dispatch.openExtensionManagerModal) {
                 dispatch.openExtensionManagerModal();
             } else {
@@ -236,6 +254,7 @@ const executeReduxAction = shortcut => {
             }
         },
         openRestorePointModal: () => {
+            console.log('Executing openRestorePointModal');
             if (dispatch.openRestorePointModal) {
                 dispatch.openRestorePointModal();
             } else {
@@ -246,6 +265,7 @@ const executeReduxAction = shortcut => {
     
     const action = actionMap[shortcut.action];
     if (action) {
+        console.log('Found action in actionMap:', shortcut.action);
         action();
     } else {
         console.warn(`Unknown Redux action: ${shortcut.action}`);
@@ -403,13 +423,8 @@ const getShortcuts = () => shortcuts;
 const getCallbacks = () => callbacks;
 
 const updateCallbacks = newCallbacks => {
-    // Only update callbacks if they don't already exist
-    const updatedCallbacks = {...callbacks};
-    for (const key of Object.keys(newCallbacks)) {
-        if (!(key in updatedCallbacks) || updatedCallbacks[key] === undefined || updatedCallbacks[key] === null) {
-            updatedCallbacks[key] = newCallbacks[key];
-        }
-    }
+    // Update callbacks with new values
+    const updatedCallbacks = {...callbacks, ...newCallbacks};
     callbacks = updatedCallbacks;
 };
 
