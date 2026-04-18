@@ -4,9 +4,11 @@ import {defineMessages, injectIntl, intlShape} from 'react-intl';
 import bindAll from 'lodash.bindall';
 import {connect} from 'react-redux';
 import {closeSettingsModal} from '../reducers/modals';
+import {setCloudHost} from '../reducers/tw';
 import SettingsModalComponent from '../components/tw-settings-modal/settings-modal.jsx';
 import {defaultStageSize} from '../reducers/custom-stage-size';
 import {CustomTheme} from '../lib/themes/custom-themes.js';
+import {setSearchParams} from '../lib/utils/navigation';
 
 const messages = defineMessages({
     newFramerate: {
@@ -50,7 +52,8 @@ class UsernameModal extends React.Component {
             'handleShowFPSCounterChange',
             'handleViewCompiledModeChange',
             'handleStoreThemeInProjectChange',
-            'handleEnableStageResizeChange'
+            'handleEnableStageResizeChange',
+            'handleCloudVariableServerChange'
         ]);
     }
 
@@ -211,6 +214,17 @@ class UsernameModal extends React.Component {
             // ignore
         }
     }
+
+    handleCloudVariableServerChange (value) {
+        if (value && !value.startsWith('ws://') && !value.startsWith('wss://')) {
+            return;
+        }
+
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set('cloud_host', value);
+        setSearchParams(currentUrl.searchParams);
+        this.props.onSetCloudHost(value);
+    }
     render () {
         const {
             /* eslint-disable no-unused-vars */
@@ -248,6 +262,7 @@ class UsernameModal extends React.Component {
                 onViewCompiledModeChange={this.handleViewCompiledModeChange}
                 onStoreThemeInProjectChange={this.handleStoreThemeInProjectChange}
                 onEnableStageResizeChange={this.handleEnableStageResizeChange}
+                onCloudVariableServerChange={this.handleCloudVariableServerChange}
                 optimizeAnimations={this.state.optimizeAnimations}
                 debugMode={this.state.debugMode}
                 showFPSCounter={this.state.showFPSCounter}
@@ -307,11 +322,13 @@ const mapStateToProps = state => ({
     // Handle possible undefined value for caseSensitiveLists
     caseSensitiveLists: !!state.scratchGui.tw.runtimeOptions.caseSensitiveLists,
     realLayerIndexes: !!state.scratchGui.tw.runtimeOptions.realLayerIndexes,
-    theme: state.scratchGui.theme?.theme
+    theme: state.scratchGui.theme?.theme,
+    cloudVariableServer: state.scratchGui.tw.cloudHost
 });
 
 const mapDispatchToProps = dispatch => ({
-    onClose: () => dispatch(closeSettingsModal())
+    onClose: () => dispatch(closeSettingsModal()),
+    onSetCloudHost: cloudHost => dispatch(setCloudHost(cloudHost))
 });
 
 export default injectIntl(connect(

@@ -256,7 +256,10 @@ const setDefaultAuthor = author => {
 const repoExists = () => {
     const fs = getFs();
     const pfs = fs.promises;
-    return exists(pfs, pathJoin(REPO_DIR, '.git'));
+    console.log('[BrowserGit] repoExists checking...');
+    console.log('[BrowserGit] .git exists:', exists(pfs, pathJoin(REPO_DIR, '.git')));
+    console.log('[BrowserGit] tempGitJsonString exists:', !!tempGitJsonString);
+    return exists(pfs, pathJoin(REPO_DIR, '.git')) || !!tempGitJsonString;
 };
 
 const listFilesRecursive = async (pfs, rootDir) => {
@@ -280,6 +283,14 @@ const listFilesRecursive = async (pfs, rootDir) => {
 const exportRepoToGitJsonString = async () => {
     const fs = getFs();
     const pfs = fs.promises;
+    
+    // 检查 .git 目录是否存在
+    const gitDirExists = await exists(pfs, pathJoin(REPO_DIR, '.git'));
+    
+    // 如果 .git 目录不存在但 tempGitJsonString 存在，直接返回 tempGitJsonString
+    if (!gitDirExists && tempGitJsonString) {
+        return tempGitJsonString;
+    }
     
     if (!(await repoExists())) {
         return null;
@@ -465,6 +476,7 @@ const getRepoChanges = async vm => {
 };
 
 const getRepoStatus = async vm => {
+    console.log('[BrowserGit] getRepoStatus called');
     const fs = getFs();
     const pfs = fs.promises;
     const initialized = await exists(pfs, pathJoin(REPO_DIR, '.git'));
@@ -478,6 +490,7 @@ const getRepoStatus = async vm => {
         };
     }
 
+    console.log('[BrowserGit] .git dir exists, getting full repo status');
     const currentBranch = await git.currentBranch({fs, dir: REPO_DIR, fullname: false});
     const branches = await git.listBranches({fs, dir: REPO_DIR});
     const commits = await git.log({fs, dir: REPO_DIR, depth: 20});
@@ -858,7 +871,18 @@ const computeCommitGraph = async ({depth = 50} = {}) => {
     return {branches, nodes, branchLogs};
 };
 
-const exportRepoToGitJsonStringSync = () => tempGitJsonString || null;
+const exportRepoToGitJsonStringSync = () => {
+    // 即使仓库不存在，也返回 tempGitJsonString
+    return tempGitJsonString || null;
+};
+
+const _setTempGitJsonString = gitJsonString => {
+    tempGitJsonString = gitJsonString;
+};
+
+const getTempGitJsonString = () => {
+    return tempGitJsonString;
+};
 
 const importRepoFromGitJsonString = async gitJsonString => {
     if (!gitJsonString || typeof gitJsonString !== 'string') {
@@ -870,6 +894,15 @@ const importRepoFromGitJsonString = async gitJsonString => {
         parsed = JSON.parse(gitJsonString);
     } catch (e) {
         throw new Error(`Invalid git.json format: ${e.message}`);
+    }
+
+    // 检查 parsed 是否是字符串，如果是，可能是二次编码的结果，尝试再次解析
+    if (typeof parsed === 'string') {
+        try {
+            parsed = JSON.parse(parsed);
+        } catch (e) {
+            throw new Error(`Invalid git.json format (double-encoded): ${e.message}`);
+        }
     }
 
     if (!parsed || parsed.version !== EXPORT_VERSION || !Array.isArray(parsed.entries)) {
@@ -886,11 +919,16 @@ const importRepoFromGitJsonString = async gitJsonString => {
     // If no heads or packed-refs are present, the export is incomplete. Avoid
     // replacing the existing repo to prevent losing branch information.
     if (!hasHeadsRefs && !hasPackedRefs) {
+        // 即使跳过导入，也要更新 tempGitJsonString 为解析后的 JSON 字符串，避免二次编码
+        tempGitJsonString = JSON.stringify(parsed);
         return;
     }
 
     const fs = getFs();
     const pfs = fs.promises;
+    
+    // 保存当前的 tempGitJsonString
+    const savedGitJson = tempGitJsonString;
     
     try {
         await deleteRepo();
@@ -898,7 +936,6 @@ const importRepoFromGitJsonString = async gitJsonString => {
 
         for (const entry of parsed.entries) {
             if (!entry || typeof entry.path !== 'string' || entry.encoding !== 'base64') {
-                console.warn('Skipping invalid entry:', entry);
                 continue;
             }
             
@@ -917,6 +954,9 @@ const importRepoFromGitJsonString = async gitJsonString => {
         if (ref) {
             await git.checkout({fs, dir: REPO_DIR, ref, force: true});
         }
+        
+        // Update tempGitJsonString after successful import
+        tempGitJsonString = await exportRepoToGitJsonString();
     } catch (e) {
         // Clean up on import failure
         try {
@@ -924,6 +964,8 @@ const importRepoFromGitJsonString = async gitJsonString => {
         } catch (cleanupError) {
             console.warn('Failed to clean up after import error:', cleanupError);
         }
+        // 恢复 tempGitJsonString
+        tempGitJsonString = savedGitJson;
         throw new Error(`Failed to import repository: ${e.message}`);
     }
 };
@@ -1086,6 +1128,8 @@ export {
     computeCommitGraph,
     exportRepoToGitJsonString,
     exportRepoToGitJsonStringSync,
+    _setTempGitJsonString,
+    getTempGitJsonString,
     importRepoFromGitJsonString,
     deleteRepo,
     deleteBranch,

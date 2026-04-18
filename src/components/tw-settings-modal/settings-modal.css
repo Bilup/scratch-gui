@@ -213,6 +213,13 @@
     width: 80px;
 }
 
+.cloud-variable-server > * {
+    margin-right: 0.5rem;
+}
+.cloud-variable-server-input {
+    width: 250px;
+}
+
 .info {
     margin-bottom: 0.25rem;
 }

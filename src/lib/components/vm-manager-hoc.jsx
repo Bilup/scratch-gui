@@ -82,7 +82,10 @@ const vmManagerHOC = function (WrappedComponent) {
             const originalSaveProjectZip = vm._saveProjectZip;
             vm._saveProjectZip = (options = {}) => {
                 const zip = originalSaveProjectZip.call(vm, options);
-                zip.file('git.json', JSON.stringify(BrowserGit.exportRepoToGitJsonStringSync()));
+                const gitJson = BrowserGit.exportRepoToGitJsonStringSync();
+                if (gitJson) {
+                    zip.file('git.json', gitJson);
+                }
                 return zip;
             };
 
@@ -107,20 +110,39 @@ const vmManagerHOC = function (WrappedComponent) {
                         const zip = await JSZip.loadAsync(buffer);
                         const file = zip.file('git.json');
                         if (file) {
-                            gitJson = await file.async('string');
+                        gitJson = await file.async('string');
+                        
+                        // 检查 gitJson 是否是二次编码的 JSON 字符串
+                        try {
+                            const parsed = JSON.parse(gitJson);
+                            // 如果 parsed 是字符串，说明是二次编码的，尝试再次解析
+                            if (typeof parsed === 'string') {
+                                const reParsed = JSON.parse(parsed);
+                                gitJson = JSON.stringify(reParsed);
+                            }
+                        } catch (e) {
+                            console.warn('[VM Manager] Failed to parse git.json:', e);
                         }
+                        
+                        // 直接设置 tempGitJsonString，确保在导入后立即更新
+                        BrowserGit._setTempGitJsonString(gitJson);
+                    } else {
+                        console.log('[VM Manager] No git.json found in SB3');
+                    }
                     }
                 } catch (e) {
-                    // ignore
+                    console.warn('[VM Manager] Failed to read git.json:', e);
                 }
 
                 const result = await originalLoadProject.call(vm, data);
 
                 if (gitJson) {
                     try {
+                        console.log('[VM Manager] Calling importRepoFromGitJsonString...');
                         await BrowserGit.importRepoFromGitJsonString(gitJson);
+                        console.log('[VM Manager] importRepoFromGitJsonString completed');
                     } catch (e) {
-                        // ignore
+                        console.warn('[VM Manager] Failed to import git.json:', e);
                     }
                 }
 

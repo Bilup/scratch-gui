@@ -43,6 +43,11 @@ const messages = defineMessages({
         description: 'Settings modal section',
         id: 'tw.settingsModal.dangerZone'
     },
+    headerCloud: {
+        defaultMessage: 'Cloud Service',
+        description: 'Settings modal section',
+        id: 'tw.settingsModal.cloud'
+    },
     headerExperimental: {
         defaultMessage: 'Experimental',
         id: 'mw.settings.experimental'
@@ -491,6 +496,40 @@ CustomStageSize.propTypes = {
     onStageHeightChange: PropTypes.func
 };
 
+const CloudVariableServer = props => (
+    <Setting
+        primary={
+            <div className={classNames(styles.label, styles['cloud-variable-server'])}>
+                <FormattedMessage
+                    defaultMessage="Cloud Variable Server"
+                    description="Cloud Variable Server setting"
+                    id="tw.settingsModal.cloudVariableServer"
+                />
+                <BufferedInput
+                    value={props.cloudVariableServer}
+                    onSubmit={props.onCloudVariableServerChange}
+                    className={styles['cloud-variable-server-input']}
+                    type="text"
+                    placeholder="ws://localhost:8000"
+                />
+            </div>
+        }
+        help={
+            <FormattedMessage
+                // eslint-disable-next-line max-len
+                defaultMessage="Changes the server used for cloud variables. The URL must start with ws:// or wss://."
+                description="Cloud Variable Server setting help"
+                id="tw.settingsModal.cloudVariableServerHelp"
+            />
+        }
+    />
+);
+
+CloudVariableServer.propTypes = {
+    cloudVariableServer: PropTypes.string,
+    onCloudVariableServerChange: PropTypes.func
+};
+
 const StoreProjectOptions = ({
     onStoreProjectOptions,
     storeThemeInProject,
@@ -618,6 +657,18 @@ const pageConfigurations = {
                         props: props => ({
                             value: props.disableCompiler,
                             onChange: props.onDisableCompilerChange
+                        })
+                    }
+                ]
+            },
+            {
+                headerMessage: 'headerCloud',
+                settings: [
+                    {
+                        component: CloudVariableServer,
+                        props: props => ({
+                            cloudVariableServer: props.cloudVariableServer,
+                            onCloudVariableServerChange: props.onCloudVariableServerChange
                         })
                     }
                 ]
@@ -838,7 +889,9 @@ SettingsModalComponent.propTypes = {
     debugMode: PropTypes.bool,
     onDebugModeChange: PropTypes.func,
     showFPSCounter: PropTypes.bool,
-    onShowFPSCounterChange: PropTypes.func
+    onShowFPSCounterChange: PropTypes.func,
+    cloudVariableServer: PropTypes.string,
+    onCloudVariableServerChange: PropTypes.func
 };
 
 export default injectIntl(SettingsModalComponent);
