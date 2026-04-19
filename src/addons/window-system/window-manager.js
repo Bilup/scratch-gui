@@ -69,6 +69,8 @@ class AddonWindow {
         this.contentElement = null;
         this.isDragging = false;
         this.isResizing = false;
+        this.isTouchDragging = false;
+        this.isTouchResizing = false;
         this.dragOffset = {x: 0, y: 0};
         this.savedState = null; // For maximize/restore
         
@@ -327,6 +329,7 @@ class AddonWindow {
             if (e.target.tagName === 'BUTTON') return;
             
             this.isDragging = true;
+            this.isTouchDragging = false;
             this.bringToFront();
             
             // Get the current position of the window
@@ -344,6 +347,30 @@ class AddonWindow {
             
             e.preventDefault();
         });
+        
+        this.headerElement.addEventListener('touchstart', e => {
+            if (e.target.tagName === 'BUTTON') return;
+            if (e.touches.length !== 1) return;
+            
+            this.isDragging = true;
+            this.isTouchDragging = true;
+            this.bringToFront();
+            
+            const touch = e.touches[0];
+            const currentX = parseInt(this.element.style.left, 10) || this.x;
+            const currentY = parseInt(this.element.style.top, 10) || this.y;
+            
+            this.dragOffset = {
+                x: touch.clientX - currentX,
+                y: touch.clientY - currentY
+            };
+            
+            document.addEventListener('touchmove', this.handleTouchDrag, {passive: false});
+            document.addEventListener('touchend', this.handleTouchDragEnd);
+            document.addEventListener('touchcancel', this.handleTouchDragEnd);
+            
+            e.preventDefault();
+        }, {passive: false});
     }
     
     handleDrag = e => {
@@ -372,6 +399,39 @@ class AddonWindow {
         this.isDragging = false;
         document.removeEventListener('mousemove', this.handleDrag);
         document.removeEventListener('mouseup', this.handleDragEnd);
+    };
+    
+    handleTouchDrag = e => {
+        if (!this.isDragging || !this.isTouchDragging) return;
+        if (e.touches.length !== 1) return;
+        
+        const touch = e.touches[0];
+        const newX = touch.clientX - this.dragOffset.x;
+        const newY = touch.clientY - this.dragOffset.y;
+        
+        const minVisiblePixels = 50;
+        const minX = -(this.width - minVisiblePixels);
+        const maxX = window.innerWidth - minVisiblePixels;
+        const minY = 0;
+        const maxY = window.innerHeight - minVisiblePixels;
+        
+        this.x = Math.max(minX, Math.min(newX, maxX));
+        this.y = Math.max(minY, Math.min(newY, maxY));
+        
+        this.element.style.left = `${this.x}px`;
+        this.element.style.top = `${this.y}px`;
+        
+        this.onMove(this.x, this.y);
+        
+        e.preventDefault();
+    };
+    
+    handleTouchDragEnd = () => {
+        this.isDragging = false;
+        this.isTouchDragging = false;
+        document.removeEventListener('touchmove', this.handleTouchDrag);
+        document.removeEventListener('touchend', this.handleTouchDragEnd);
+        document.removeEventListener('touchcancel', this.handleTouchDragEnd);
     };
     
     addResizeHandles () {
@@ -470,6 +530,17 @@ class AddonWindow {
                 this.startResize(e, direction);
             });
             
+            handle.addEventListener('touchstart', e => {
+                if (e.touches.length !== 1) return;
+                e.stopPropagation();
+                this.isTouchResizing = true;
+                this.startResize(e, direction);
+                document.addEventListener('touchmove', this.handleTouchResize, {passive: false});
+                document.addEventListener('touchend', this.handleTouchResizeEnd);
+                document.addEventListener('touchcancel', this.handleTouchResizeEnd);
+                e.preventDefault();
+            }, {passive: false});
+            
             this.element.appendChild(handle);
         });
     }
@@ -480,9 +551,12 @@ class AddonWindow {
         this.bringToFront();
         
         const rect = this.element.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        
         this.resizeStart = {
-            x: e.clientX,
-            y: e.clientY,
+            x: clientX,
+            y: clientY,
             width: rect.width,
             height: rect.height,
             left: rect.left,
@@ -557,6 +631,81 @@ class AddonWindow {
         document.removeEventListener('mouseup', this.handleResizeEnd);
     };
     
+    handleTouchResize = e => {
+        if (!this.isResizing || !this.isTouchResizing) return;
+        if (e.touches.length !== 1) return;
+
+        const touch = e.touches[0];
+        const deltaX = touch.clientX - this.resizeStart.x;
+        const deltaY = touch.clientY - this.resizeStart.y;
+        const direction = this.resizeDirection;
+
+        let newWidth = this.resizeStart.width;
+        let newHeight = this.resizeStart.height;
+        let newX = this.resizeStart.left;
+        let newY = this.resizeStart.top;
+
+        if (direction.includes('e')) newWidth += deltaX;
+        if (direction.includes('w')) {
+            newWidth -= deltaX;
+            newX = this.resizeStart.left + deltaX;
+        }
+        if (direction.includes('s')) newHeight += deltaY;
+        if (direction.includes('n')) {
+            newHeight -= deltaY;
+            newY = this.resizeStart.top + deltaY;
+        }
+
+        const originalNewWidth = newWidth;
+        const originalNewHeight = newHeight;
+
+        newWidth = Math.max(this.minWidth, newWidth);
+        newHeight = Math.max(this.minHeight, newHeight);
+
+        if (this.maxWidth) newWidth = Math.min(this.maxWidth, newWidth);
+        if (this.maxHeight) newHeight = Math.min(this.maxHeight, newHeight);
+
+        if (direction.includes('w') && newWidth !== originalNewWidth) {
+            newX = this.resizeStart.left + (this.resizeStart.width - newWidth);
+        }
+        if (direction.includes('n') && newHeight !== originalNewHeight) {
+            newY = this.resizeStart.top + (this.resizeStart.height - newHeight);
+        }
+
+        const minY = getMenuBarHeight();
+        if (newY < minY) {
+            const bottom = this.resizeStart.top + this.resizeStart.height;
+            newY = minY;
+            newHeight = Math.max(this.minHeight, bottom - newY);
+            if (this.maxHeight) newHeight = Math.min(this.maxHeight, newHeight);
+            if (direction.includes('n')) {
+                newY = Math.max(minY, bottom - newHeight);
+            }
+        }
+
+        this.width = newWidth;
+        this.height = newHeight;
+        this.x = newX;
+        this.y = newY;
+
+        this.element.style.width = `${newWidth}px`;
+        this.element.style.height = `${newHeight}px`;
+        this.element.style.left = `${newX}px`;
+        this.element.style.top = `${newY}px`;
+
+        this.onResize(newWidth, newHeight);
+
+        e.preventDefault();
+    };
+
+    handleTouchResizeEnd = () => {
+        this.isResizing = false;
+        this.isTouchResizing = false;
+        document.removeEventListener('touchmove', this.handleTouchResize);
+        document.removeEventListener('touchend', this.handleTouchResizeEnd);
+        document.removeEventListener('touchcancel', this.handleTouchResizeEnd);
+    };
+
     addScrollbarStyling () {
         const newStyle = document.createElement('style');
         
