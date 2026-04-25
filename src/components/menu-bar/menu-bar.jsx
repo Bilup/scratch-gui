@@ -1377,7 +1377,7 @@ class MenuBar extends React.Component {
                                                                     <MenuItem
                                                                         // eslint-disable-next-line max-len
                                                                         onClick={this.getSaveToComputerHandler(extended.saveToLastFile)}
-                                                                        shortcut={formatShortcutDisplay(this.getShortcut('saveAs'))}
+                                                                        shortcut={formatShortcutDisplay(this.getShortcut('save'))}
                                                                     >
                                                                         <FileInput />
                                                                         <FormattedMessage
