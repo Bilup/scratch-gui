@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import Box from '../box/box.jsx';
-import {FormattedMessage} from 'react-intl';
+import { FormattedMessage } from 'react-intl';
 
 import styles from './crash-message.css';
 import reloadIcon from './reload.svg';
@@ -57,6 +57,18 @@ const CrashMessage = props => (
                     id="gui.crashMessage.reload"
                 />
             </button>
+            {props.onSaveProject && (
+                <button
+                    className={styles.saveButton}
+                    onClick={props.onSaveProject}
+                >
+                    <FormattedMessage
+                        defaultMessage="Save Project"
+                        description="Button to save project when page crashes"
+                        id="gui.crashMessage.saveProject"
+                    />
+                </button>
+            )}
         </Box>
     </div>
 );

@@ -418,6 +418,7 @@ const GUIComponent = props => {
     ]);
 
     const {
+        ur_mom,
         accountNavOpen,
         activeTabIndex,
         alertsVisible,
