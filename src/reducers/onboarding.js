@@ -3,6 +3,7 @@ const HIDE_ONBOARDING = 'scratch-gui/onboarding/HIDE_ONBOARDING';
 const NEXT_ONBOARDING_STEP = 'scratch-gui/onboarding/NEXT_ONBOARDING_STEP';
 const PREV_ONBOARDING_STEP = 'scratch-gui/onboarding/PREV_ONBOARDING_STEP';
 const SKIP_ONBOARDING = 'scratch-gui/onboarding/SKIP_ONBOARDING';
+const REPLAY_ONBOARDING = 'scratch-gui/onboarding/REPLAY_ONBOARDING';
 
 const initialState = {
     visible: false,
@@ -36,6 +37,11 @@ const reducer = function (state, action) {
     case SKIP_ONBOARDING:
         return Object.assign({}, state, {
             visible: false,
+            step: 0
+        });
+    case REPLAY_ONBOARDING:
+        return Object.assign({}, state, {
+            visible: true,
             step: 0
         });
     default:
@@ -73,6 +79,12 @@ const skipOnboarding = function () {
     };
 };
 
+const replayOnboarding = function () {
+    return {
+        type: REPLAY_ONBOARDING
+    };
+};
+
 export {
     reducer as default,
     initialState as onboardingInitialState,
@@ -80,5 +92,6 @@ export {
     hideOnboarding,
     nextOnboardingStep,
     prevOnboardingStep,
-    skipOnboarding
+    skipOnboarding,
+    replayOnboarding
 };

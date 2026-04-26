@@ -397,8 +397,7 @@ class OnboardingTutorial extends Component {
                         }}
                         onClick={() => {
                             localStorage.removeItem('mw:has-seen-onboarding');
-                            this.handleClose();
-                            setTimeout(() => this.openWindow(), 100);
+                            this.props.onReplay();
                         }}
                     >
                         {`↻ ${intl.formatMessage(messages.replayTutorial)}`}
@@ -423,6 +422,7 @@ OnboardingTutorial.propTypes = {
     onClose: PropTypes.func.isRequired,
     onNext: PropTypes.func.isRequired,
     onPrev: PropTypes.func.isRequired,
+    onReplay: PropTypes.func.isRequired,
     openSettingsMenu: PropTypes.func
 };
 

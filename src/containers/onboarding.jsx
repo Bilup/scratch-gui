@@ -3,7 +3,8 @@ import {connect} from 'react-redux';
 import {
     hideOnboarding,
     nextOnboardingStep,
-    prevOnboardingStep
+    prevOnboardingStep,
+    replayOnboarding
 } from '../reducers/onboarding';
 import {openSettingsMenu} from '../reducers/menus';
 
@@ -18,6 +19,7 @@ const mapDispatchToProps = dispatch => ({
     onClose: () => dispatch(hideOnboarding()),
     onNext: () => dispatch(nextOnboardingStep()),
     onPrev: () => dispatch(prevOnboardingStep()),
+    onReplay: () => dispatch(replayOnboarding()),
     openSettingsMenu: () => dispatch(openSettingsMenu())
 });
 

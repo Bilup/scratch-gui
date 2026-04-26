@@ -1,8 +1,36 @@
 import PropTypes from 'prop-types';
 import React from 'react';
-import {injectIntl} from 'react-intl';
+import {defineMessages, injectIntl} from 'react-intl';
 
 import styles from './shortcut-manager.css';
+
+const messages = defineMessages({
+    pressNewShortcut: {
+        defaultMessage: 'Press new shortcut',
+        description: 'Placeholder text for shortcut input',
+        id: 'shortcut-manager.pressNewShortcut'
+    },
+    shortcutConflict: {
+        defaultMessage: 'This shortcut is already in use',
+        description: 'Error message when shortcut conflicts',
+        id: 'shortcut-manager.shortcutConflict'
+    },
+    save: {
+        defaultMessage: 'Save',
+        description: 'Button to save a shortcut',
+        id: 'shortcut-manager.save'
+    },
+    cancel: {
+        defaultMessage: 'Cancel',
+        description: 'Button to cancel editing a shortcut',
+        id: 'shortcut-manager.cancel'
+    },
+    edit: {
+        defaultMessage: 'Edit',
+        description: 'Button to edit a shortcut',
+        id: 'shortcut-manager.edit'
+    }
+});
 
 const formatDisplayKey = key => {
     if (!key) return '';
@@ -37,23 +65,23 @@ const ShortcutItem = ({
                             value={editingKey}
                             onKeyDown={onKeyInput}
                             className={styles.shortcutInput}
-                            placeholder={intl.formatMessage({id: 'shortcut-manager.pressNewShortcut'})}
+                            placeholder={intl.formatMessage(messages.pressNewShortcut)}
                         />
                         {conflictError && (
-                            <div className={styles.errorMessage}>{intl.formatMessage({id: 'shortcut-manager.shortcutConflict'})}</div>
+                            <div className={styles.errorMessage}>{intl.formatMessage(messages.shortcutConflict)}</div>
                         )}
                         <div className={styles.editButtons}>
-                            <button 
+                            <button
                                 className={styles.saveButton}
                                 onClick={onSaveShortcut}
                             >
-                                {intl.formatMessage({id: 'shortcut-manager.save'})}
+                                {intl.formatMessage(messages.save)}
                             </button>
-                            <button 
+                            <button
                                 className={styles.cancelButton}
                                 onClick={onCancelEdit}
                             >
-                                {intl.formatMessage({id: 'shortcut-manager.cancel'})}
+                                {intl.formatMessage(messages.cancel)}
                             </button>
                         </div>
                     </div>
@@ -62,11 +90,11 @@ const ShortcutItem = ({
                         <span className={styles.keyDisplay}>
                             {formatDisplayKey(shortcut.key)}
                         </span>
-                        <button 
+                        <button
                             className={styles.editButton}
                             onClick={() => onEditShortcut(shortcut.id, shortcut.key)}
                         >
-                            {intl.formatMessage({id: 'shortcut-manager.edit'})}
+                            {intl.formatMessage(messages.edit)}
                         </button>
                     </div>
                 )}
