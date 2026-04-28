@@ -109,6 +109,7 @@ class CollaborationService {
         this._lastHostSyncRequestHandledAt = 0;
         this._hostSyncRequestCooldownMs = 1000;
         this._state = 'IDLE';
+        this.translations = {};
         this._cleanupInterval = setInterval(() => {
             if (this.seenEventIds.size > 100) {
                 const now = Date.now();

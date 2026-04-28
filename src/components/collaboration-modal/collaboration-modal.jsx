@@ -1,6 +1,6 @@
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import {FormattedMessage, injectIntl} from 'react-intl';
+import { FormattedMessage, injectIntl } from 'react-intl';
 import classNames from 'classnames';
 
 import Modal from '../../containers/windowed-modal.jsx';
@@ -12,14 +12,14 @@ import FancyCheckbox from '../tw-fancy-checkbox/checkbox.jsx';
 
 const BufferedInput = BufferedInputHOC(Input);
 
-import {Handshake as CollaborationIcon, User, Crown, UserMinus, Copy, AlertTriangle, PenLine} from 'lucide-react';
+import { Handshake as CollaborationIcon, User, Crown, UserMinus, Copy, AlertTriangle, PenLine } from 'lucide-react';
 
 import showAlert from '../../addons/window-system/alert';
 
 import styles from './collaboration-modal.css';
 
 class CollaborationModal extends Component {
-    constructor (props) {
+    constructor(props) {
         super(props);
 
         this.state = {
@@ -61,7 +61,7 @@ class CollaborationModal extends Component {
         this.togglePrivatePrivacy = this.togglePrivatePrivacy.bind(this);
     }
 
-    componentDidMount () {
+    componentDidMount() {
         console.log('[COLLAB MODAL] ComponentDidMount - props:', {
             roomId: this.props.roomId,
             isConnected: this.props.isConnected,
@@ -96,7 +96,7 @@ class CollaborationModal extends Component {
         }
     }
 
-    componentDidUpdate (prevProps) {
+    componentDidUpdate(prevProps) {
         if (prevProps.isConnected !== this.props.isConnected) {
             const newConnectionStep = this.props.isConnected ? 'connected' : 'join';
             this.setState({
@@ -191,7 +191,7 @@ class CollaborationModal extends Component {
                         JSON.stringify(pendingRequests) !== JSON.stringify(this.state.pendingRequests);
 
                     if (hasChanged) {
-                        this.setState({pendingRequests});
+                        this.setState({ pendingRequests });
                     }
                 }
             } catch (error) {
@@ -200,7 +200,7 @@ class CollaborationModal extends Component {
         }
     }
 
-    componentWillUnmount () {
+    componentWillUnmount() {
         if (typeof window !== 'undefined' && window.CollaborationService) {
             try {
                 const service = window.CollaborationService.getInstance();
@@ -225,7 +225,7 @@ class CollaborationModal extends Component {
         }
     }
 
-    resetToJoinScreen () {
+    resetToJoinScreen() {
         this.setState({
             connectionStep: 'join',
             isConnecting: false,
@@ -233,26 +233,26 @@ class CollaborationModal extends Component {
         });
     }
 
-    handleCancelClick () {
+    handleCancelClick() {
         this.resetToJoinScreen();
         this.props.onCancelConnection();
     }
 
-    togglePublicPrivacy () {
+    togglePublicPrivacy() {
         this.handleChangeCurrentRoomPrivacy('public');
     }
 
-    togglePrivatePrivacy () {
+    togglePrivatePrivacy() {
         this.handleChangeCurrentRoomPrivacy('private');
     }
 
-    handleRoomIdChange (roomId) {
-        this.setState({roomId});
+    handleRoomIdChange(roomId) {
+        this.setState({ roomId });
     }
 
-    async handleJoinRoom () {
+    async handleJoinRoom() {
         if (!this.state.roomId.trim()) {
-            this.setState({error: 'Please enter a room ID'});
+            this.setState({ error: 'Please enter a room ID' });
             return;
         }
 
@@ -273,7 +273,7 @@ class CollaborationModal extends Component {
         }
     }
 
-    async handleCreateRoom () {
+    async handleCreateRoom() {
         const roomCode = this.generateRoomCode();
 
         this.setState({
@@ -290,7 +290,7 @@ class CollaborationModal extends Component {
             currentUrl.searchParams.delete('username');
             window.history.replaceState(null, null, currentUrl.toString());
 
-            this.setState({roomId: roomCode});
+            this.setState({ roomId: roomCode });
 
         } catch (error) {
             this.setState({
@@ -301,7 +301,7 @@ class CollaborationModal extends Component {
         }
     }
 
-    handleLeaveRoom () {
+    handleLeaveRoom() {
         this.props.onLeaveRoom();
         this.setState({
             connectionStep: 'join',
@@ -310,11 +310,11 @@ class CollaborationModal extends Component {
         });
     }
 
-    handleKickUser (userId) {
+    handleKickUser(userId) {
         this.props.onKickUser(userId);
     }
 
-    handleCopyRoomUrl () {
+    handleCopyRoomUrl() {
         const currentUrl = new URL(window.location.href);
         currentUrl.searchParams.set('room', this.props.roomId);
         currentUrl.searchParams.delete('username');
@@ -334,7 +334,7 @@ class CollaborationModal extends Component {
         }
     }
 
-    fallbackCopyToClipboard (text) {
+    fallbackCopyToClipboard(text) {
         const textArea = document.createElement('textarea');
         textArea.value = text;
         textArea.style.position = 'fixed';
@@ -361,14 +361,14 @@ class CollaborationModal extends Component {
         }
     }
 
-    showUrlPrompt (text) {
+    showUrlPrompt(text) {
         console.log('Room URL:', text);
         showAlert(
             'Could not copy room URL to clipboard. The URL has been logged to the console for manual copying.'
         );
     }
 
-    generateRoomCode () {
+    generateRoomCode() {
         const adjectives = ['cool', 'fun', 'epic', 'wild', 'neat', 'rad', 'hot', 'ice', 'big', 'tiny'];
         const nouns = ['cat', 'dog', 'owl', 'fox', 'bee', 'ant', 'fish', 'bird', 'frog', 'duck'];
 
@@ -380,7 +380,7 @@ class CollaborationModal extends Component {
         return `${randomAdjective}-${randomNoun}-${randomNum}`;
     }
 
-    async attemptAutoJoin (roomCode, username) {
+    async attemptAutoJoin(roomCode, username) {
         console.log(`Attempting to auto-join room "${roomCode}" as "${username}"`);
 
         try {
@@ -454,7 +454,7 @@ class CollaborationModal extends Component {
     }
 
 
-    async handleApproveRequest (requesterId, requesterUsername) {
+    async handleApproveRequest(requesterId, requesterUsername) {
         try {
             await this.props.onApproveJoinRequest(requesterId, requesterUsername);
             this.setState(prevState => ({
@@ -462,11 +462,11 @@ class CollaborationModal extends Component {
             }));
         } catch (error) {
             console.error('Failed to approve join request:', error);
-            this.setState({error: 'Failed to approve join request'});
+            this.setState({ error: 'Failed to approve join request' });
         }
     }
 
-    async handleDenyRequest (requesterId) {
+    async handleDenyRequest(requesterId) {
         try {
             await this.props.onDenyJoinRequest(requesterId);
             this.setState(prevState => ({
@@ -474,11 +474,11 @@ class CollaborationModal extends Component {
             }));
         } catch (error) {
             console.error('Failed to deny join request:', error);
-            this.setState({error: 'Failed to deny join request'});
+            this.setState({ error: 'Failed to deny join request' });
         }
     }
 
-    handleCancelJoinRequest () {
+    handleCancelJoinRequest() {
         if (this.props.onCancelJoinRequest) {
             this.props.onCancelJoinRequest();
         }
@@ -501,7 +501,7 @@ class CollaborationModal extends Component {
         });
     }
 
-    handleAwaitingApproval () {
+    handleAwaitingApproval() {
         console.log('[COLLAB MODAL] Awaiting approval from host', {
             isConnected: this.props.isConnected,
             connectionStep: this.state.connectionStep
@@ -514,7 +514,7 @@ class CollaborationModal extends Component {
         });
     }
 
-    handleApprovalResolved () {
+    handleApprovalResolved() {
         console.log('[COLLAB MODAL] Approval resolved', {
             isConnected: this.props.isConnected,
             connectionStep: this.state.connectionStep
@@ -526,7 +526,7 @@ class CollaborationModal extends Component {
         });
     }
 
-    handleJoinDenied (reason) {
+    handleJoinDenied(reason) {
         console.log('[COLLAB MODAL] Join request denied:', reason);
         this.setState({
             connectionStep: 'join',
@@ -535,16 +535,16 @@ class CollaborationModal extends Component {
         });
     }
 
-    async handleChangeCurrentRoomPrivacy (newPrivacy) {
+    async handleChangeCurrentRoomPrivacy(newPrivacy) {
         try {
             await this.props.onChangeRoomPrivacy(newPrivacy);
         } catch (error) {
             console.error('Failed to change room privacy:', error);
-            this.setState({error: 'Failed to change room privacy'});
+            this.setState({ error: 'Failed to change room privacy' });
         }
     }
 
-    handleJoinRequestEvent (data) {
+    handleJoinRequestEvent(data) {
         console.log('[COLLAB MODAL] Join request event received:', data);
         if (typeof window !== 'undefined' && window.CollaborationService) {
             try {
@@ -552,7 +552,7 @@ class CollaborationModal extends Component {
                 if (service && service.getPendingJoinRequests) {
                     const pendingRequests = service.getPendingJoinRequests();
                     console.log('[COLLAB MODAL] Updated pending requests:', pendingRequests);
-                    this.setState({pendingRequests});
+                    this.setState({ pendingRequests });
                 }
             } catch (error) {
                 console.warn('Could not get pending requests:', error);
@@ -560,7 +560,7 @@ class CollaborationModal extends Component {
         }
     }
 
-    renderJoinStep () {
+    renderJoinStep() {
         return (
             <Box className={styles.content}>
                 <div className={styles.alphaBanner}>
@@ -603,7 +603,7 @@ class CollaborationModal extends Component {
                         defaultMessage="You will be known as: {username}"
                         description="Shows current username"
                         id="gui.collaboration.currentUsername"
-                        values={{username: this.props.currentUsername}}
+                        values={{ username: this.props.currentUsername }}
                     />
                     <button
                         className={styles.editUsernameButton}
@@ -694,7 +694,7 @@ class CollaborationModal extends Component {
         );
     }
 
-    renderConnectingStep () {
+    renderConnectingStep() {
         return (
             <Box className={styles.content}>
                 <div className={styles.alphaBanner}>
@@ -741,7 +741,7 @@ class CollaborationModal extends Component {
         );
     }
 
-    renderConnectedStep () {
+    renderConnectedStep() {
         const users = this.props.connectedUsers || [];
         const currentUser = users.find(user => user.id === this.props.currentUserId);
         const isHost = currentUser && currentUser.isHost;
@@ -779,7 +779,7 @@ class CollaborationModal extends Component {
                             defaultMessage="Room: {roomId}"
                             description="Connected room title"
                             id="gui.collaboration.connectedRoom"
-                            values={{roomId: this.props.roomId}}
+                            values={{ roomId: this.props.roomId }}
                         />
                     </div>
                 </div>
@@ -791,7 +791,7 @@ class CollaborationModal extends Component {
                             defaultMessage="Connected - {userCount} {userCount, plural, one {user} other {users}} online"
                             description="Connection status"
                             id="gui.collaboration.status"
-                            values={{userCount: users.length}}
+                            values={{ userCount: users.length }}
                         />
                     </div>
                 </div>
@@ -857,6 +857,13 @@ class CollaborationModal extends Component {
                             ))}
                         </div>
                     </div>
+                    <h4>
+                        <FormattedMessage
+                            defaultMessage="Press '/' to chat while collaborating"
+                            description="Chat hint"
+                            id="gui.collaboration.chatHint"
+                        />
+                    </h4>
                 </div>
 
                 {isHost && this.state.pendingRequests.length > 0 && (
@@ -868,7 +875,7 @@ class CollaborationModal extends Component {
                                     defaultMessage="Pending Join Requests ({count})"
                                     description="Pending requests section title"
                                     id="gui.collaboration.pendingRequests"
-                                    values={{count: this.state.pendingRequests.length}}
+                                    values={{ count: this.state.pendingRequests.length }}
                                 />
                             </h3>
 
@@ -1029,7 +1036,7 @@ class CollaborationModal extends Component {
         );
     }
 
-    renderPendingApprovalStep () {
+    renderPendingApprovalStep() {
         return (
             <Box className={styles.content}>
                 <div className={styles.alphaBanner}>
@@ -1096,23 +1103,23 @@ class CollaborationModal extends Component {
         );
     }
 
-    render () {
+    render() {
         let content;
         switch (this.state.connectionStep) {
-        case 'join':
-            content = this.renderJoinStep();
-            break;
-        case 'connecting':
-            content = this.renderConnectingStep();
-            break;
-        case 'connected':
-            content = this.renderConnectedStep();
-            break;
-        case 'pending-approval':
-            content = this.renderPendingApprovalStep();
-            break;
-        default:
-            content = this.renderJoinStep();
+            case 'join':
+                content = this.renderJoinStep();
+                break;
+            case 'connecting':
+                content = this.renderConnectingStep();
+                break;
+            case 'connected':
+                content = this.renderConnectedStep();
+                break;
+            case 'pending-approval':
+                content = this.renderPendingApprovalStep();
+                break;
+            default:
+                content = this.renderJoinStep();
         }
 
         return (

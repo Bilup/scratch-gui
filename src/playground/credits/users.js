@@ -33,7 +33,11 @@ const contributors = [
     {
         userID: '175630084',
         username: 'MistWarp'
-    }
+    },
+    {
+        userID: '244335609',
+        username: 'AstraEditor'
+    },
 ].map(fromHardcoded);
 
 const addonDevelopers = [

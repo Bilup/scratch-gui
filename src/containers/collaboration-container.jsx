@@ -2,11 +2,19 @@ import React, {Component} from 'react';
 import PropTypes from 'prop-types';
 import {connect} from 'react-redux';
 import {compose} from 'redux';
-import {injectIntl} from 'react-intl';
+import {defineMessages, injectIntl} from 'react-intl';
 
 import CollaborationModal from '../components/collaboration-modal/collaboration-modal.jsx';
 import CollaborationService from '../lib/collaboration-service.js';
 import NotificationSystem from '../lib/notification-manager.js';
+
+const messages = defineMessages({
+    chatPlaceholder: {
+        defaultMessage: 'Say something... (max 500 chars)',
+        description: 'Placeholder text for collaboration chat input',
+        id: 'tw.collaboration.chatPlaceholder'
+    }
+});
 
 import {
     closeCollaborationModal,
@@ -71,6 +79,11 @@ class CollaborationContainer extends Component {
         if (this.props.vm) {
             this.collaborationService.init(this.props.vm);
         }
+
+        // Set up translations for collaboration service
+        this.collaborationService.translations = {
+            chatPlaceholder: this.props.intl.formatMessage(messages.chatPlaceholder)
+        };
 
         // Set up event listeners
         this.collaborationService.on('user-joined', this.handleUserJoined);

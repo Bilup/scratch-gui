@@ -21,7 +21,7 @@ const setupCursorLayer = service => {
     const chatInput = document.createElement('input');
     chatInput.type = 'text';
     chatInput.className = 'collaboration-chat-input';
-    chatInput.placeholder = 'Say something... (max 500 chars)';
+    chatInput.placeholder = service.translations.chatPlaceholder || 'Say something... (max 500 chars)';
     chatInput.maxLength = 500;
     chatInput.style.position = 'absolute';
     chatInput.style.display = 'none';
