@@ -420,5 +420,14 @@
   "sprite-folders/duplicate": "复制",
   "sprite-folders/export": "导出",
   "sprite-folders/rename-sprite-prompt": "重命名角色：",
-  "sprite-folders/delete-sprite-confirm": "删除此角色？"
+  "sprite-folders/delete-sprite-confirm": "删除此角色？",
+  "block-pins/move_to_top": "移到顶部",
+  "block-pins/move_to_bottom": "移到底部",
+  "block-pins/organize_by_category": "按类别排序",
+  "block-pins/pin": "置顶",
+  "block-pins/unpin": "不再置顶",
+  "block-pins/unpin_all": "全部不再置顶",
+  "block-pins/no_pinned_blocks": "没有置顶的积木!",
+  "block-pins/some_pins_could_not_load": "一些置顶的积木未能加载!",
+  "block-pins/pinned": "置顶"
 }

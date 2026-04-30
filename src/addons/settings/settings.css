@@ -355,6 +355,16 @@ a:active, a:focus {
     background: #fd2b2b;
     border-color: #d81212;
 }
+.tag-astra-editor {
+    color: white;
+    background: #0099ff;
+    border-color: #005994;
+}
+.tag-poorlang {
+    color: white;
+    background: #fd2b2b;
+    border-color: #d81212;
+}
 
 /* Tag Filter Styles */
 .tag-filter {

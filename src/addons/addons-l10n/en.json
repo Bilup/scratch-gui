@@ -424,5 +424,14 @@
   "sprite-folders/duplicate": "Duplicate",
   "sprite-folders/export": "Export",
   "sprite-folders/rename-sprite-prompt": "Rename sprite:",
-  "sprite-folders/delete-sprite-confirm": "Delete this sprite?"
+  "sprite-folders/delete-sprite-confirm": "Delete this sprite?",
+  "block-pins/move_to_top": "Move to Top",
+  "block-pins/move_to_bottom": "Move to Bottom",
+  "block-pins/organize_by_category": "Orgainze by category",
+  "block-pins/pin": "Pin",
+  "block-pins/unpin": "Unpin",
+  "block-pins/unpin_all": "Unpin all",
+  "block-pins/no_pinned_blocks": "No Pinned Blocks!",
+  "block-pins/some_pins_could_not_load": "Some Pins Could Not Load!",
+  "block-pins/pinned": "Pinned"
 }

@@ -87,4 +87,9 @@ export default {
   "remove-extension-button": () => import(/* webpackChunkName: "addon-entry-remove-extension-button" */ "../addons/remove-extension-button/_runtime_entry.js"),
   "tab-styles": () => import(/* webpackChunkName: "addon-entry-tab-styles" */ "../addons/tab-styles/_runtime_entry.js"),
   "window-theme": () => import(/* webpackChunkName: "addon-entry-window-theme" */ "../addons/window-theme/_runtime_entry.js"),
+  "tw-comment-markdown-editor": () => import(/* webpackChunkName: "addon-entry-tw-comment-markdown-editor" */ "../addons/tw-comment-markdown-editor/_runtime_entry.js"),
+  "hide-menubar": () => import(/* webpackChunkName: "addon-entry-tw-hide-menubar" */ "../addons/hide-menubar/_runtime_entry.js"),
+  "toolbox-category-drag": () => import(/* webpackChunkName: "addon-entry-toolbox-category-drag" */ "../addons/toolbox-category-drag/_runtime_entry.js"),
+  "block-pins": () => import(/* webpackChunkName: "addon-entry-block-pins" */ "../addons/block-pins/_runtime_entry.js"),
+  "show-fps": () => import(/* webpackChunkName: "addon-entry-tw-show-fps" */ "../addons/show-fps/_runtime_entry.js"),
 };

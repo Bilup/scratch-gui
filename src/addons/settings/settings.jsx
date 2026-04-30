@@ -270,6 +270,16 @@ const Tags = ({manifest}) => (
                 {settingsTranslations.tagDanger}
             </span>
         )}
+        {manifest.tags.includes('astraeditor') && (
+            <span className={classNames(styles.tag, styles.tagAstraEditor)}>
+                {settingsTranslations.tagAstraEditor}
+            </span>
+        )}
+        {manifest.tags.includes('poorlang') && (
+            <span className={classNames(styles.tag, styles.tagPoorlang)}>
+                {settingsTranslations.tagPoorlang}
+            </span>
+        )}
     </span>
 );
 Tags.propTypes = {

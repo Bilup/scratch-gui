@@ -86,6 +86,11 @@ import _green_flag_order from "../addons/green-flag-order/_manifest_entry.js";
 import _remove_extension_button from "../addons/remove-extension-button/_manifest_entry.js";
 import _tab_styles from "../addons/tab-styles/_manifest_entry.js";
 import _window_theme from "../addons/window-theme/_manifest_entry.js";
+import _comment_markdown from "../addons/tw-comment-markdown-editor/_manifest_entry.js";
+import _hide_menubar from "../addons/hide-menubar/_manifest_entry.js";
+import _toolbox_category_drag from "../addons/toolbox-category-drag/_manifest_entry.js";
+import _block_pins from "../addons/block-pins/_manifest_entry.js";
+import _show_fps from "../addons/show-fps/_manifest_entry.js";
 export default {
   "cat-blocks": _cat_blocks,
   "dev-inspector": _dev_inspector,
@@ -173,5 +178,10 @@ export default {
   "green-flag-order": _green_flag_order,
   "remove-extension-button": _remove_extension_button,
   "tab-styles": _tab_styles,
-  "window-theme": _window_theme
+  "window-theme": _window_theme,
+  "tw-comment-markdown-editor": _comment_markdown,
+  "hide-menubar": _hide_menubar,
+  "toolbox-category-drag": _toolbox_category_drag,
+  "block-pins": _block_pins,
+  "show-fps": _show_fps
 };
