@@ -4,6 +4,22 @@ export default async function ({ addon, console }) {
   // 等待Blockly加载
   const Blockly = await addon.tab.traps.getBlockly();
 
+  // 加载scratchblocks库
+  let scratchblocks = window.scratchblocks;
+  if (!scratchblocks) {
+    await new Promise((resolve, reject) => {
+      // 不加载 CSS，避免影响全局样式
+      const script = document.createElement('script');
+      script.src = 'https://scratchblocks.github.io/js/scratchblocks-v3.6.4-min.js';
+      script.onload = () => {
+        scratchblocks = window.scratchblocks;
+        resolve();
+      };
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+  }
+
   // 处理注释元素的函数
   const processCommentElements = () => {
     // 如果插件被禁用，不处理任何元素
@@ -131,12 +147,111 @@ export default async function ({ addon, console }) {
     });
   };
 
+  // 获取当前Scratch语言
+  function getScratchLocale() {
+    // 硬编码使用英语
+    return 'en';
+  }
+
+  // 渲染scratchblocks代码块为图片
+  function renderScratchblocks(code, container) {
+    try {
+      const locale = getScratchLocale();
+      const doc = scratchblocks.parse(code, {
+        languages: [locale, 'en'],
+      });
+      const docView = scratchblocks.newView(doc, {
+        style: 'scratch3',
+        scale: 0.675,
+      });
+      const svg = docView.render();
+      svg.classList.add('scratchblocks-style-scratch3');
+      container.innerHTML = '';
+      container.appendChild(svg);
+    } catch (e) {
+      container.innerHTML = `<pre><code>${code}</code></pre>`;
+      console.error('scratchblocks render error:', e);
+    }
+  }
+
   // 增强的Markdown渲染函数
   function renderMarkdown(text, container) {
     // 清空容器
     container.innerHTML = '';
 
-    // 增强的Markdown渲染实现
+    // 先处理scratchblocks代码块
+    const scratchblocksRegex = /```(?:scratchblocks|scratch|sb3|sb2)\n([\s\S]*?)```/gi;
+    const scratchblocksBlocks = [];
+    let match;
+
+    // 提取所有scratchblocks代码块
+    while ((match = scratchblocksRegex.exec(text)) !== null) {
+      scratchblocksBlocks.push({
+        code: match[1].trim(),
+        index: scratchblocksBlocks.length
+      });
+    }
+
+    // 分割文本，提取所有部分（包括scratchblocks代码块和普通文本）
+    const parts = [];
+    let lastIndex = 0;
+    scratchblocksRegex.lastIndex = 0;
+
+    while ((match = scratchblocksRegex.exec(text)) !== null) {
+      // 添加匹配之前的普通文本
+      if (match.index > lastIndex) {
+        parts.push({
+          type: 'text',
+          content: text.slice(lastIndex, match.index)
+        });
+      }
+      // 添加scratchblocks代码块
+      parts.push({
+        type: 'scratchblocks',
+        code: match[1].trim()
+      });
+      lastIndex = match.index + match[0].length;
+    }
+
+    // 添加剩余的普通文本
+    if (lastIndex < text.length) {
+      parts.push({
+        type: 'text',
+        content: text.slice(lastIndex)
+      });
+    }
+
+    // 如果没有scratchblocks代码块，使用原来的渲染方式
+    if (scratchblocksBlocks.length === 0) {
+      renderMarkdownSimple(text, container);
+      return;
+    }
+
+    // 逐个处理每个部分
+    parts.forEach(part => {
+      if (part.type === 'scratchblocks') {
+        // 创建scratchblocks容器并渲染
+        const scratchblocksContainer = document.createElement('div');
+        scratchblocksContainer.className = 'scratchblocks-preview';
+        scratchblocksContainer.style.cssText = 'background: white; border-radius: 8px; padding: 12px; margin: 8px 0;';
+        renderScratchblocks(part.code, scratchblocksContainer);
+        container.appendChild(scratchblocksContainer);
+      } else {
+        // 渲染普通文本为HTML
+        const tempDiv = document.createElement('div');
+        renderMarkdownSimple(part.content, tempDiv);
+        // 移动所有子节点到主容器
+        while (tempDiv.firstChild) {
+          container.appendChild(tempDiv.firstChild);
+        }
+      }
+    });
+  }
+
+  // 简单的Markdown渲染（用于非scratchblocks内容）
+  function renderMarkdownSimple(text, container) {
+    container.innerHTML = '';
+
     let html = text
       // 引用 - 必须在其他处理之前
       .replace(/^> (.*$)/gm, '<blockquote>$1</blockquote>')
