@@ -505,5 +505,7 @@
   "block-pins/@info-checkbox-notice": "当固定带有复选框的积木时可能会出现BUG",
   "block-pins/@settings-name-autoLoadExts": "自动加载固定积木中的扩展",
   "show-fps/@description": "在舞台上方显示当前帧率（FPS）。",
-    "show-fps/@name": "显示 FPS"
+  "show-fps/@name": "显示 FPS",
+  "simple-project-analyzer/@name": "SPA 简易作品分析器",
+  "simple-project-analyzer/@description": "使用简单的算法在编辑器中分析您的作品！"
 }

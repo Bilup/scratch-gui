@@ -45,12 +45,12 @@
 }
 
 .okButton {
-    background-color: var(--ui-primary, #4d97ff);
+    background-color: var(--looks-secondary);
     color: white;
 }
 
 .okButton:hover {
-    background-color: var(--ui-primary-hover, #3b85ff);
+    background-color: color-mix(in srgb, var(--looks-secondary) 75%, black);
 }
 
 .okButton:active {

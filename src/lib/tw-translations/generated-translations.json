@@ -324,7 +324,7 @@
         "tw.workspaceBookmarks.menuLabel": "书签",
         "tw.workspaceBookmarks.maxReached": "已达到最大书签数量（{max}）",
         "tw.workspaceBookmarks.namePrompt": "书签名称：",
-        "tw.workspaceBookmarks.categoryPrompt": "类别名称（已有：{categories}）：",
+        "tw.workspaceBookmarks.categoryPrompt": "类别名称：",
         "tw.workspaceBookmarks.importSuccess": "{count} 个书签成功导入！",
         "tw.workspaceBookmarks.importFailed": "书签导入失败，请检查文件格式",
         "tw.workspaceBookmarks.clearAllConfirm": "您确定要删除所有 {count} 书签吗？此操作无法撤销。",
@@ -558,7 +558,7 @@
         "paint.sussyTool.shape.codeblockEndCap": "末端块",
         "paint.sussyTool.shape.codeblockReporter": "报告块",
         "paint.sussyTool.shape.codeblockBoolean": "布尔块",
-        "tw.menuBar.bookmarkDefaultName": "书签 {number}",
+        "tw.menuBar.bookmarkDefaultName": "书签 {index}",
         "tw.menuBar.bookmarkDefaultCategory": "常规",
         "gui.menuBar.undo": "撤销",
         "gui.menuBar.redo": "重做",
@@ -711,7 +711,11 @@
         "bl.bilme.likesCount": "{count} 个赞",
         "bl.bilme.downloadsCount": "{count} 次下载",
         "bl.bilme.applyTheme": "应用",
-        "bl.bilme.openInBilme": "在 Bilme 中打开"
-        
+        "bl.bilme.openInBilme": "在 Bilme 中打开",
+        "tw.menuBar.spa": "SPA 简易作品分析器",
+        "tw.workspaceBookmarks.nameTitle": "书签名称",
+        "tw.workspaceBookmarks.categoryTitle": "书签分类",
+        "tw.simpleDialog.ok": "确定",
+        "tw.simpleDialog.cancel": "取消"
     }
 }

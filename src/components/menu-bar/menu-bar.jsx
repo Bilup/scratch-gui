@@ -144,7 +144,8 @@ import {
     FilePen, PencilRuler, TriangleAlert, Info, Shuffle, Zap, Gauge,
     FilePlusCorner, Upload, RefreshCcw, ClockPlus, Package, FileInput,
     Save, ArchiveRestore, UserPen, Cloud, Settings, PackagePlus, Puzzle,
-    Bookmark, GitBranch, FileCog, Bug, Database, Undo, Redo, Handshake, Sparkles, Wrench, Keyboard
+    Bookmark, GitBranch, FileCog, Bug, Database, Undo, Redo, Handshake, 
+    Sparkles, Wrench, Keyboard, ChartColumn
 } from 'lucide-react';
 
 import sharedMessages from '../../lib/constants/shared-messages';
@@ -271,7 +272,7 @@ class MenuBar extends React.Component {
             autosaveTimeRemaining: 0,
             autosavePaused: false,
             workspaceBookmarks: [],
-            workspaceBookmarksCategories: ['General'],
+            workspaceBookmarksCategories: [],
             workspaceBookmarksCollapsedCategories: [],
             canUndo: true,
             canRedo: true
@@ -383,7 +384,7 @@ class MenuBar extends React.Component {
             'redo': 'redo',
             'settings': 'settings',
             'backpack': 'toggleBackpack',
-            'extensions': 'openExtensionManagerModal'
+            'extensionManager': 'extensionManager'
         };
         
         // Get the correct keyId for the shortcut registry
@@ -402,10 +403,10 @@ class MenuBar extends React.Component {
             'packageProject': 'Ctrl+P',
             'restorePoints': 'Alt+R',
             'undo': 'Ctrl+Z',
-            'redo': 'Ctrl+Shift+Z',
+            'redo': 'Ctrl+Y',
             'settings': 'Ctrl+,',
             'toggleBackpack': 'Ctrl+.',
-            'openExtensionManagerModal': 'Ctrl+Alt+E'
+            'extensionManager': 'Ctrl+E'
         };
         return defaultShortcuts[registryKeyId] || '';
     }
@@ -718,13 +719,19 @@ class MenuBar extends React.Component {
                 description: 'Prompt title for bookmark name',
                 id: 'tw.workspaceBookmarks.namePrompt'
             }),
-            `Bookmark ${this.state.workspaceBookmarks.length + 1}`
+            this.props.intl.formatMessage({
+                defaultMessage: 'Bookmark {index}',
+                description: 'Prompt default value for bookmark name',
+                id: 'tw.menuBar.bookmarkDefaultName'
+            }, { index: this.state.workspaceBookmarks.length + 1 })
         );
         if (name === null) return;
 
-        let category = 'General';
+        let category = this.props.intl.formatMessage({
+                    defaultMessage: 'General',
+                    id: 'tw.menuBar.bookmarkDefaultCategory'
+                });
         if (enableCategories) {
-            const categoryList = this.state.workspaceBookmarksCategories.join(', ');
             const categoryInput = await this.showPrompt(
                 this.props.intl.formatMessage({
                     defaultMessage: 'Bookmark Category',
@@ -734,11 +741,17 @@ class MenuBar extends React.Component {
                     defaultMessage: 'Category (existing: {categories})',
                     description: 'Prompt for bookmark category',
                     id: 'tw.workspaceBookmarks.categoryPrompt'
-                }, { categories: categoryList }),
-                'General'
+                }),
+                this.props.intl.formatMessage({
+                    defaultMessage: 'General',
+                    id: 'tw.menuBar.bookmarkDefaultCategory'
+                })
             );
             if (categoryInput === null) return;
-            category = categoryInput.trim() || 'General';
+            category = categoryInput.trim() || this.props.intl.formatMessage({
+                    defaultMessage: 'General',
+                    id: 'tw.menuBar.bookmarkDefaultCategory'
+                });
         }
 
         const bookmark = {
@@ -800,7 +813,10 @@ class MenuBar extends React.Component {
             return;
         }
 
-        let newCategory = bookmark.category || 'General';
+        let newCategory = bookmark.category || this.props.intl.formatMessage({
+                    defaultMessage: 'General',
+                    id: 'tw.menuBar.bookmarkDefaultCategory'
+                });
         if (enableCategories) {
             const categoryList = this.state.workspaceBookmarksCategories.join(', ');
             const categoryInput = await this.showPrompt(
@@ -816,7 +832,10 @@ class MenuBar extends React.Component {
                 newCategory
             );
             if (categoryInput !== null) {
-                newCategory = categoryInput.trim() || 'General';
+                newCategory = categoryInput.trim() || this.props.intl.formatMessage({
+                    defaultMessage: 'General',
+                    id: 'tw.menuBar.bookmarkDefaultCategory'
+                });;
             }
         }
 
@@ -944,7 +963,10 @@ class MenuBar extends React.Component {
         }
         this.setState({
             workspaceBookmarks: [],
-            workspaceBookmarksCategories: ['General'],
+            workspaceBookmarksCategories: [this.props.intl.formatMessage({
+                    defaultMessage: 'General',
+                    id: 'tw.menuBar.bookmarkDefaultCategory'
+                })],
             workspaceBookmarksCollapsedCategories: []
         }, () => {
             this.saveWorkspaceBookmarksToProject();
@@ -1811,6 +1833,21 @@ class MenuBar extends React.Component {
                                                 />
                                             </MenuItem>
                                         )}
+                                        {window.__bilupSPAToggle && (
+                                            <MenuItem
+                                                onClick={() => {
+                                                    window.__bilupSPAToggle();
+                                                    this.props.onRequestCloseTools();
+                                                }}
+                                            >
+                                                <ChartColumn />
+                                                <FormattedMessage
+                                                    defaultMessage="Simple Project Analyzer"
+                                                    description="Menu bar item to toggle the simple project analyzer"
+                                                    id="tw.menuBar.spa"
+                                                />
+                                            </MenuItem>
+                                        )}
                                     </MenuSection>
                                 ) : null}
                                 <MenuSection>
@@ -1833,7 +1870,7 @@ class MenuBar extends React.Component {
                                             this.props.onRequestCloseTools();
                                             this.props.onOpenExtensionManagerModal();
                                         }}
-                                        shortcut={formatShortcutDisplay(this.getShortcut('extensions'))}
+                                        shortcut={formatShortcutDisplay(this.getShortcut('extensionManager'))}
                                     >
                                         <FileCog />
                                         <FormattedMessage

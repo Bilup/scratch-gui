@@ -246,8 +246,8 @@ export const getDefaultShortcuts = () => [
     },
     {
         id: 'redo',
-        key: 'Ctrl+Shift+Z',
-        defaultKey: 'Ctrl+Shift+Z',
+        key: 'Ctrl+Y',
+        defaultKey: 'Ctrl+Y',
         category: SHORTCUT_CATEGORIES.EDIT,
         actionType: 'vm',
         action: 'postRedo',
