@@ -99,7 +99,7 @@ jobs:
         cp -r /tmp/static/microbit/* static/microbit/
         cp -r /tmp/static/penguinmod/* static/penguinmod/
         cp -r /tmp/src/generated/* src/generated/
-        cp -r /tmp/* build/
+        cp -r /tmp/build/* build/
 
         # Force add directories (ignore .gitignore)
         git add -f static/microbit static/penguinmod src/generated build
