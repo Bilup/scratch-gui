@@ -13,6 +13,10 @@ const manifest = {
         {
             name: 'NeuronPulse',
             link: 'https://github.com/NeuronPulse/tw-comment-markdown-editor/'
+        },
+        {
+            name: 'RyaninCn11',
+            link: 'https://github.com/RyaninCn11/'
         }
     ],
     userstyles: [

@@ -30,6 +30,7 @@ jobs:
             static/microbit
             static/penguinmod
             src/generated
+            build
       # Temp: Save package-lock.json
       #- name: Upload package-lock.json
       #  uses: actions/upload-artifact@v4
@@ -71,11 +72,12 @@ jobs:
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
         # Backup downloaded directories
-        rm -rf /tmp/static /tmp/src
-        mkdir -p /tmp/static /tmp/src
+        rm -rf /tmp/static /tmp/src /tmp/build
+        mkdir -p /tmp/static /tmp/src /tmp/build
         cp -r static/microbit /tmp/static/
         cp -r static/penguinmod /tmp/static/
         cp -r src/generated /tmp/src/
+        cp -r build /tmp/build/
 
         # Fetch all branches
         git fetch origin
@@ -92,14 +94,15 @@ jobs:
         git merge origin/develop --no-edit
 
         # Replace directories
-        rm -rf static/microbit static/penguinmod src/generated
-        mkdir -p static/microbit static/penguinmod src/generated
+        rm -rf static/microbit static/penguinmod src/generated build
+        mkdir -p static/microbit static/penguinmod src/generated build
         cp -r /tmp/static/microbit/* static/microbit/
         cp -r /tmp/static/penguinmod/* static/penguinmod/
         cp -r /tmp/src/generated/* src/generated/
+        cp -r /tmp/build/* build/
 
         # Force add directories (ignore .gitignore)
-        git add -f static/microbit static/penguinmod src/generated
+        git add -f static/microbit static/penguinmod src/generated build
 
         # Commit if changed
         git commit -m "chore: update build artifacts from develop" || echo "No changes"
