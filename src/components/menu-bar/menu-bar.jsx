@@ -406,7 +406,7 @@ class MenuBar extends React.Component {
             'redo': 'Ctrl+Y',
             'settings': 'Ctrl+,',
             'toggleBackpack': 'Ctrl+.',
-            'extensionManager': 'Ctrl+E'
+            'extensionManager': 'Alt+E'
         };
         return defaultShortcuts[registryKeyId] || '';
     }
