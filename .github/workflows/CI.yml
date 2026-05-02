@@ -77,7 +77,7 @@ jobs:
         cp -r static/microbit /tmp/static/
         cp -r static/penguinmod /tmp/static/
         cp -r src/generated /tmp/src/
-        cp -r build /tmp/build/
+        cp -r build /tmp/
 
         # Fetch all branches
         git fetch origin
@@ -99,7 +99,7 @@ jobs:
         cp -r /tmp/static/microbit/* static/microbit/
         cp -r /tmp/static/penguinmod/* static/penguinmod/
         cp -r /tmp/src/generated/* src/generated/
-        cp -r /tmp/build/* build/
+        cp -r /tmp/* build/
 
         # Force add directories (ignore .gitignore)
         git add -f static/microbit static/penguinmod src/generated build
