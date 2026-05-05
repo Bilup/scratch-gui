@@ -28,13 +28,15 @@ const messages = defineMessages({
 
 const noop = () => {};
 
-const SecurityManagerModalComponent = props => (
-    <Modal
-        className={styles.modalContent}
-        onRequestClose={props.enableButtons ? props.onDenied : noop}
-        contentLabel={props.intl.formatMessage(messages.title)}
-        id="securitymanagermodal"
-    >
+const SecurityManagerModalComponent = props => {
+    console.log('[SecurityManagerModal] Rendering, type:', props.type, 'enableButtons:', props.enableButtons);
+    return (
+        <Modal
+            className={styles.modalContent}
+            onRequestClose={props.enableButtons ? props.onDenied : noop}
+            contentLabel={props.intl.formatMessage(messages.title)}
+            id="securitymanagermodal"
+        >
         <Box className={styles.body}>
             {props.type === SecurityModals.LoadExtension ? (
                 <LoadExtensionModal {...props.data} />
@@ -85,6 +87,7 @@ const SecurityManagerModalComponent = props => (
         </Box>
     </Modal>
 );
+};
 
 SecurityManagerModalComponent.propTypes = {
     intl: intlShape,

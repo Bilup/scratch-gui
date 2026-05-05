@@ -187,15 +187,20 @@ class TWSecurityManagerComponent extends React.Component {
         // with just one click. This means that some places have to wait until previous modals are
         // closed before it knows if it needs to display another modal.
 
+        console.log('[Security Manager] acquireModalLock called, current lock state:', this.modalLocked);
         if (this.modalLocked) {
+            console.log('[Security Manager] Modal is locked, waiting in queue...');
             await new Promise(resolve => {
                 this.nextModalCallbacks.push(resolve);
             });
+            console.log('[Security Manager] Wait complete, proceeding');
         } else {
             this.modalLocked = true;
+            console.log('[Security Manager] Lock acquired');
         }
 
         const releaseLock = () => {
+            console.log('[Security Manager] Releasing lock');
             if (this.nextModalCallbacks.length) {
                 const nextModalCallback = this.nextModalCallbacks.shift();
                 nextModalCallback();
@@ -209,14 +214,36 @@ class TWSecurityManagerComponent extends React.Component {
         };
 
         const showModal = async (type, data) => {
-            const result = await new Promise(resolve => {
+            console.log('[Security Manager] showModal called for type:', type);
+            console.log('[Security Manager] showModal creating new Promise...');
+            
+            // 添加超时机制，防止无限等待
+            const TIMEOUT_MS = 60000; // 60秒超时
+            
+            const result = await new Promise((resolve, reject) => {
+                console.log('[Security Manager] Promise executor running, calling setState');
+                
+                // 设置超时
+                const timeoutId = setTimeout(() => {
+                    console.error('[Security Manager] Modal timeout after', TIMEOUT_MS, 'ms');
+                    reject(new Error('Modal timeout'));
+                }, TIMEOUT_MS);
+                
                 this.setState(oldState => ({
                     type,
                     data,
-                    callback: resolve,
+                    callback: (value) => {
+                        clearTimeout(timeoutId);
+                        resolve(value);
+                    },
                     modalCount: oldState.modalCount + 1
-                }));
+                }), () => {
+                    console.log('[Security Manager] setState callback fired');
+                });
+                console.log('[Security Manager] setState called');
             });
+            
+            console.log('[Security Manager] Modal resolved with result:', result);
             releaseLock();
             return result;
         };
@@ -228,10 +255,12 @@ class TWSecurityManagerComponent extends React.Component {
     }
 
     handleAllowed () {
+        console.log('[Security Manager] handleAllowed called, callback:', this.state.callback);
         this.state.callback(true);
     }
 
     handleDenied () {
+        console.log('[Security Manager] handleDenied called, callback:', this.state.callback);
         this.state.callback(false);
     }
 
@@ -262,29 +291,56 @@ class TWSecurityManagerComponent extends React.Component {
      * @returns {Promise<boolean>} Whether the extension can be loaded
      */
     async canLoadExtensionFromProject (url) {
-        if (isTrustedExtension(url)) {
-            log.info(`Loading extension ${url} automatically`);
-            return true;
-        }
-        const {showModal} = await this.acquireModalLock();
-        if (url.startsWith('data:')) {
-            const allowed = await showModal(SecurityModals.LoadExtension, {
-                url,
-                unsandboxed: getPersistedUnsandboxed(),
-                onChangeUnsandboxed: this.handleChangeUnsandboxed.bind(this)
-            });
-            if (allowed) {
-                setPersistedUnsandboxed(this.state.data.unsandboxed);
-            }
-            if (allowed && this.state.data.unsandboxed) {
-                manuallyTrustExtension(url);
-            }
-            return allowed;
-        }
-        return showModal(SecurityModals.LoadExtension, {
-            url,
-            unsandboxed: false
+        console.log('[Security Manager] canLoadExtensionFromProject called with URL:', url);
+        
+        // 添加整体超时保护，防止任何环节卡住
+        const TIMEOUT_MS = 60000; // 60秒超时
+        const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => {
+                console.error('[Security Manager] canLoadExtensionFromProject timeout');
+                reject(new Error('Extension loading timeout'));
+            }, TIMEOUT_MS);
         });
+        
+        const resultPromise = (async () => {
+            if (isTrustedExtension(url)) {
+                log.info(`Loading extension ${url} automatically`);
+                console.log('[Security Manager] Extension is trusted, allowing automatically');
+                return true;
+            }
+            console.log('[Security Manager] Extension is not trusted, acquiring modal lock...');
+            const {showModal} = await this.acquireModalLock();
+            console.log('[Security Manager] Modal lock acquired');
+            if (url.startsWith('data:')) {
+                console.log('[Security Manager] Extension is data:url, showing special modal');
+                const allowed = await showModal(SecurityModals.LoadExtension, {
+                    url,
+                    unsandboxed: getPersistedUnsandboxed(),
+                    onChangeUnsandboxed: this.handleChangeUnsandboxed.bind(this)
+                });
+                console.log('[Security Manager] Data:url extension modal result:', allowed);
+                if (allowed) {
+                    setPersistedUnsandboxed(this.state.data.unsandboxed);
+                }
+                if (allowed && this.state.data.unsandboxed) {
+                    manuallyTrustExtension(url);
+                }
+                return allowed;
+            }
+            console.log('[Security Manager] Showing standard extension modal');
+            return showModal(SecurityModals.LoadExtension, {
+                url,
+                unsandboxed: false
+            });
+        })();
+        
+        try {
+            return await Promise.race([resultPromise, timeoutPromise]);
+        } catch (error) {
+            console.error('[Security Manager] canLoadExtensionFromProject failed:', error);
+            // 返回false而不是抛出错误，这样扩展不会被加载但项目仍然可以打开
+            return false;
+        }
     }
 
     /**
@@ -444,7 +500,9 @@ class TWSecurityManagerComponent extends React.Component {
     }
 
     render () {
+        console.log('[Security Manager] render called, this.state.type:', this.state.type);
         if (this.state.type) {
+            console.log('[Security Manager] Rendering modal, type:', this.state.type);
             return (
                 <SecurityManagerModal
                     type={this.state.type}
@@ -455,6 +513,7 @@ class TWSecurityManagerComponent extends React.Component {
                 />
             );
         }
+        console.log('[Security Manager] No modal to render, type is null');
         return null;
     }
 }

@@ -61,12 +61,14 @@ const SBFileUploaderHOC = function (WrappedComponent) {
         }
         // step 1: this is where the upload process begins
         handleStartSelectingFileUpload () {
+            console.log('[SBFileUploader] Step 1: Starting file upload process');
             this.expectingFileUploadFinish = true;
             this.createFileObjects(); // go to step 2
         }
         // step 2: create a FileReader and an <input> element, and issue a
         // pseudo-click to it. That will open the file chooser dialog.
         createFileObjects () {
+            console.log('[SBFileUploader] Step 2: Creating file objects');
             // redo step 7, in case it got skipped last time and its objects are
             // still in memory
             this.removeFileObjects();
@@ -75,6 +77,7 @@ const SBFileUploaderHOC = function (WrappedComponent) {
             this.fileReader.onload = this.onload;
             // tw: Use FS API when available
             if (this.props.showOpenFilePicker) {
+                console.log('[SBFileUploader] Step 2: Using File System API');
                 (async () => {
                     try {
                         const [handle] = await this.props.showOpenFilePicker({
@@ -91,6 +94,7 @@ const SBFileUploaderHOC = function (WrappedComponent) {
                             ]
                         });
                         const file = await handle.getFile();
+                        console.log('[SBFileUploader] Step 2: File selected via FS API:', file.name, file.size);
                         this.handleChange({
                             target: {
                                 files: [file],
@@ -100,13 +104,15 @@ const SBFileUploaderHOC = function (WrappedComponent) {
                     } catch (err) {
                         // If the user aborted it, that's not an error.
                         if (err && err.name === 'AbortError') {
+                            console.log('[SBFileUploader] Step 2: User cancelled file selection');
                             return;
                         }
                         // eslint-disable-next-line no-console
-                        console.error(err);
+                        console.error('[SBFileUploader] Step 2: Error selecting file:', err);
                     }
                 })();
             } else {
+                console.log('[SBFileUploader] Step 2: Using fallback input element');
                 // create <input> element and add it to DOM
                 this.inputElement = document.createElement('input');
                 this.inputElement.accept = '.sb,.sb2,.sb3,.html';
@@ -121,6 +127,7 @@ const SBFileUploaderHOC = function (WrappedComponent) {
         // step 3: user has picked a file using the file chooser dialog.
         // We don't actually load the file here, we only decide whether to do so.
         handleChange (e) {
+            console.log('[SBFileUploader] Step 3: File selected, handling change');
             const {
                 intl,
                 isShowingWithoutId,
@@ -131,6 +138,7 @@ const SBFileUploaderHOC = function (WrappedComponent) {
             const thisFileInput = e.target;
             if (thisFileInput.files) { // Don't attempt to load if no file was selected
                 this.fileToUpload = thisFileInput.files[0];
+                console.log('[SBFileUploader] Step 3: Selected file:', this.fileToUpload.name, this.fileToUpload.size, 'bytes');
 
                 // If user owns the project, or user has changed the project,
                 // we must confirm with the user that they really intend to
@@ -138,9 +146,11 @@ const SBFileUploaderHOC = function (WrappedComponent) {
                 // changed it, no need to confirm.)
                 let uploadAllowed = true;
                 if (userOwnsProject || (projectChanged && isShowingWithoutId)) {
+                    console.log('[SBFileUploader] Step 3: Requesting confirmation from user');
                     uploadAllowed = confirm( // eslint-disable-line no-alert
                         intl.formatMessage(sharedMessages.replaceProjectWarning)
                     );
+                    console.log('[SBFileUploader] Step 3: User confirmation:', uploadAllowed);
                 }
                 if (uploadAllowed) {
                     // Don't update file handle until after confirming replace.
@@ -154,12 +164,16 @@ const SBFileUploaderHOC = function (WrappedComponent) {
                     }
 
                     // cues step 4
+                    console.log('[SBFileUploader] Step 3: Requesting project upload');
                     this.props.requestProjectUpload(loadingState);
                 } else {
                     // skips ahead to step 7
+                    console.log('[SBFileUploader] Step 3: User cancelled, removing file objects');
                     this.removeFileObjects();
                 }
                 this.props.closeFileMenu();
+            } else {
+                console.log('[SBFileUploader] Step 3: No file selected');
             }
         }
         // step 4 is below, in mapDispatchToProps
@@ -167,12 +181,15 @@ const SBFileUploaderHOC = function (WrappedComponent) {
         // step 5: called from componentDidUpdate when project state shows
         // that project data has finished "uploading" into the browser
         handleFinishedLoadingUpload () {
+            console.log('[SBFileUploader] Step 5: Finished loading upload');
             this.expectingFileUploadFinish = false;
             if (this.fileToUpload && this.fileReader) {
                 // begin to read data from the file. When finished,
                 // cues step 6 using the reader's onload callback
+                console.log('[SBFileUploader] Step 5: Reading file as ArrayBuffer:', this.fileToUpload.name);
                 this.fileReader.readAsArrayBuffer(this.fileToUpload);
             } else {
+                console.log('[SBFileUploader] Step 5: Missing fileToUpload or fileReader, cancelling');
                 this.props.cancelFileUpload(this.props.loadingState);
                 // skip ahead to step 7
                 this.removeFileObjects();
@@ -190,20 +207,27 @@ const SBFileUploaderHOC = function (WrappedComponent) {
         // step 6: attached as a handler on our FileReader object; called when
         // file upload raw data is available in the reader
         async onload () {
+            console.log('[SBFileUploader] Step 6: File reader onload triggered');
             if (this.fileReader) {
                 this.props.onLoadingStarted();
                 const filename = this.fileToUpload && this.fileToUpload.name;
                 let loadingSuccess = false;
+                console.log('[SBFileUploader] Step 6: Loading file:', filename);
                 // tw: stop when loading new project
+                console.log('[SBFileUploader] Step 6: Quitting VM before loading new project');
                 this.props.vm.quit();
                 let projectData = this.fileReader.result;
+                console.log('[SBFileUploader] Step 6: Project data size:', projectData.byteLength, 'bytes');
 
                 if (filename && filename.endsWith('.html')) {
+                    console.log('[SBFileUploader] Step 6: File is HTML, unpackaging...');
                     try {
                         const blob = new Blob([projectData], {type: 'text/html'});
                         const unpackaged = await unpackage(blob);
                         projectData = unpackaged.data;
+                        console.log('[SBFileUploader] Step 6: Unpackaging complete, type:', unpackaged.type);
                     } catch (error) {
+                        console.error('[SBFileUploader] Step 6: Failed to unpackage HTML file:', error);
                         log.error('Failed to unpackage HTML file:', error);
                         this.props.onLoadingFailed(error);
                         this.props.onLoadingFinished(this.props.loadingState, false);
@@ -212,25 +236,33 @@ const SBFileUploaderHOC = function (WrappedComponent) {
                     }
                 }
 
+                console.log('[SBFileUploader] Step 6: Calling vm.loadProject...');
                 this.props.vm.loadProject(projectData)
                     .then(() => {
+                        console.log('[SBFileUploader] Step 6: VM loadProject succeeded');
                         if (filename) {
                             const uploadedProjectTitle = this.getProjectTitleFromFilename(filename);
                             this.props.onSetProjectTitle(uploadedProjectTitle);
+                            console.log('[SBFileUploader] Step 6: Set project title:', uploadedProjectTitle);
                         }
                         this.props.vm.renderer.draw();
+                        console.log('[SBFileUploader] Step 6: Renderer draw called');
                         loadingSuccess = true;
                     })
                     .catch(error => {
+                        console.error('[SBFileUploader] Step 6: VM loadProject failed:', error);
                         log.error(error);
                         this.props.onLoadingFailed(error);
                     })
                     .then(() => {
+                        console.log('[SBFileUploader] Step 6: Loading finished, success:', loadingSuccess);
                         this.props.onLoadingFinished(this.props.loadingState, loadingSuccess);
                         // go back to step 7: whether project loading succeeded
                         // or failed, reset file objects
                         this.removeFileObjects();
                     });
+            } else {
+                console.log('[SBFileUploader] Step 6: fileReader is null, skipping');
             }
         }
         // step 7: remove the <input> element from the DOM and clear reader and
