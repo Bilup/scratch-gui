@@ -36040,30 +36040,33 @@ const messages = Object(react_intl__WEBPACK_IMPORTED_MODULE_0__["defineMessages"
   }
 });
 const noop = () => {};
-const SecurityManagerModalComponent = props => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(_containers_windowed_modal_jsx__WEBPACK_IMPORTED_MODULE_4__["default"], {
-  className: _security_manager_modal_css__WEBPACK_IMPORTED_MODULE_17___default.a.modalContent,
-  onRequestClose: props.enableButtons ? props.onDenied : noop,
-  contentLabel: props.intl.formatMessage(messages.title),
-  id: "securitymanagermodal"
-}, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
-  className: _security_manager_modal_css__WEBPACK_IMPORTED_MODULE_17___default.a.body
-}, props.type === _lib_constants_security_manager_js__WEBPACK_IMPORTED_MODULE_5__["default"].LoadExtension ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(_load_extension_jsx__WEBPACK_IMPORTED_MODULE_6__["default"], props.data) : props.type === _lib_constants_security_manager_js__WEBPACK_IMPORTED_MODULE_5__["default"].Fetch ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(_fetch_jsx__WEBPACK_IMPORTED_MODULE_7__["default"], props.data) : props.type === _lib_constants_security_manager_js__WEBPACK_IMPORTED_MODULE_5__["default"].OpenWindow ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(_open_window_jsx__WEBPACK_IMPORTED_MODULE_8__["default"], props.data) : props.type === _lib_constants_security_manager_js__WEBPACK_IMPORTED_MODULE_5__["default"].Redirect ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(_redirect_jsx__WEBPACK_IMPORTED_MODULE_9__["default"], props.data) : props.type === _lib_constants_security_manager_js__WEBPACK_IMPORTED_MODULE_5__["default"].RecordAudio ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(_record_audio_jsx__WEBPACK_IMPORTED_MODULE_10__["default"], props.data) : props.type === _lib_constants_security_manager_js__WEBPACK_IMPORTED_MODULE_5__["default"].RecordVideo ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(_record_video_jsx__WEBPACK_IMPORTED_MODULE_11__["default"], props.data) : props.type === _lib_constants_security_manager_js__WEBPACK_IMPORTED_MODULE_5__["default"].ReadClipboard ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(_read_clipboard_jsx__WEBPACK_IMPORTED_MODULE_12__["default"], props.data) : props.type === _lib_constants_security_manager_js__WEBPACK_IMPORTED_MODULE_5__["default"].Notify ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(_notify_jsx__WEBPACK_IMPORTED_MODULE_13__["default"], props.data) : props.type === _lib_constants_security_manager_js__WEBPACK_IMPORTED_MODULE_5__["default"].Geolocate ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(_geolocate_jsx__WEBPACK_IMPORTED_MODULE_14__["default"], props.data) : props.type === _lib_constants_security_manager_js__WEBPACK_IMPORTED_MODULE_5__["default"].Embed ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(_embed_jsx__WEBPACK_IMPORTED_MODULE_15__["default"], props.data) : null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
-  className: _security_manager_modal_css__WEBPACK_IMPORTED_MODULE_17___default.a.buttons
-}, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("button", {
-  className: _security_manager_modal_css__WEBPACK_IMPORTED_MODULE_17___default.a.denyButton,
-  onClick: props.onDenied,
-  disabled: !props.enableButtons
-}, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_0__["FormattedMessage"], {
-  defaultMessage: "Deny",
-  id: "tw.securityManager.deny"
-})), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("button", {
-  className: _security_manager_modal_css__WEBPACK_IMPORTED_MODULE_17___default.a.allowButton,
-  onClick: props.onAllowed,
-  disabled: !props.enableButtons
-}, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_0__["FormattedMessage"], {
-  defaultMessage: "Allow",
-  id: "tw.securityManager.allow"
-})))));
+const SecurityManagerModalComponent = props => {
+  console.log('[SecurityManagerModal] Rendering, type:', props.type, 'enableButtons:', props.enableButtons);
+  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(_containers_windowed_modal_jsx__WEBPACK_IMPORTED_MODULE_4__["default"], {
+    className: _security_manager_modal_css__WEBPACK_IMPORTED_MODULE_17___default.a.modalContent,
+    onRequestClose: props.enableButtons ? props.onDenied : noop,
+    contentLabel: props.intl.formatMessage(messages.title),
+    id: "securitymanagermodal"
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
+    className: _security_manager_modal_css__WEBPACK_IMPORTED_MODULE_17___default.a.body
+  }, props.type === _lib_constants_security_manager_js__WEBPACK_IMPORTED_MODULE_5__["default"].LoadExtension ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(_load_extension_jsx__WEBPACK_IMPORTED_MODULE_6__["default"], props.data) : props.type === _lib_constants_security_manager_js__WEBPACK_IMPORTED_MODULE_5__["default"].Fetch ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(_fetch_jsx__WEBPACK_IMPORTED_MODULE_7__["default"], props.data) : props.type === _lib_constants_security_manager_js__WEBPACK_IMPORTED_MODULE_5__["default"].OpenWindow ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(_open_window_jsx__WEBPACK_IMPORTED_MODULE_8__["default"], props.data) : props.type === _lib_constants_security_manager_js__WEBPACK_IMPORTED_MODULE_5__["default"].Redirect ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(_redirect_jsx__WEBPACK_IMPORTED_MODULE_9__["default"], props.data) : props.type === _lib_constants_security_manager_js__WEBPACK_IMPORTED_MODULE_5__["default"].RecordAudio ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(_record_audio_jsx__WEBPACK_IMPORTED_MODULE_10__["default"], props.data) : props.type === _lib_constants_security_manager_js__WEBPACK_IMPORTED_MODULE_5__["default"].RecordVideo ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(_record_video_jsx__WEBPACK_IMPORTED_MODULE_11__["default"], props.data) : props.type === _lib_constants_security_manager_js__WEBPACK_IMPORTED_MODULE_5__["default"].ReadClipboard ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(_read_clipboard_jsx__WEBPACK_IMPORTED_MODULE_12__["default"], props.data) : props.type === _lib_constants_security_manager_js__WEBPACK_IMPORTED_MODULE_5__["default"].Notify ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(_notify_jsx__WEBPACK_IMPORTED_MODULE_13__["default"], props.data) : props.type === _lib_constants_security_manager_js__WEBPACK_IMPORTED_MODULE_5__["default"].Geolocate ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(_geolocate_jsx__WEBPACK_IMPORTED_MODULE_14__["default"], props.data) : props.type === _lib_constants_security_manager_js__WEBPACK_IMPORTED_MODULE_5__["default"].Embed ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(_embed_jsx__WEBPACK_IMPORTED_MODULE_15__["default"], props.data) : null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
+    className: _security_manager_modal_css__WEBPACK_IMPORTED_MODULE_17___default.a.buttons
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("button", {
+    className: _security_manager_modal_css__WEBPACK_IMPORTED_MODULE_17___default.a.denyButton,
+    onClick: props.onDenied,
+    disabled: !props.enableButtons
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_0__["FormattedMessage"], {
+    defaultMessage: "Deny",
+    id: "tw.securityManager.deny"
+  })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("button", {
+    className: _security_manager_modal_css__WEBPACK_IMPORTED_MODULE_17___default.a.allowButton,
+    onClick: props.onAllowed,
+    disabled: !props.enableButtons
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_0__["FormattedMessage"], {
+    defaultMessage: "Allow",
+    id: "tw.securityManager.allow"
+  })))));
+};
 SecurityManagerModalComponent.propTypes = {
   intl: react_intl__WEBPACK_IMPORTED_MODULE_0__["intlShape"],
   type: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.oneOf(Object.values(_lib_constants_security_manager_js__WEBPACK_IMPORTED_MODULE_5__["default"])),
@@ -51487,14 +51490,19 @@ class TWSecurityManagerComponent extends react__WEBPACK_IMPORTED_MODULE_0___defa
     // with just one click. This means that some places have to wait until previous modals are
     // closed before it knows if it needs to display another modal.
 
+    console.log('[Security Manager] acquireModalLock called, current lock state:', this.modalLocked);
     if (this.modalLocked) {
+      console.log('[Security Manager] Modal is locked, waiting in queue...');
       await new Promise(resolve => {
         this.nextModalCallbacks.push(resolve);
       });
+      console.log('[Security Manager] Wait complete, proceeding');
     } else {
       this.modalLocked = true;
+      console.log('[Security Manager] Lock acquired');
     }
     const releaseLock = () => {
+      console.log('[Security Manager] Releasing lock');
       if (this.nextModalCallbacks.length) {
         const nextModalCallback = this.nextModalCallbacks.shift();
         nextModalCallback();
@@ -51507,14 +51515,34 @@ class TWSecurityManagerComponent extends react__WEBPACK_IMPORTED_MODULE_0___defa
       }
     };
     const showModal = async (type, data) => {
-      const result = await new Promise(resolve => {
+      console.log('[Security Manager] showModal called for type:', type);
+      console.log('[Security Manager] showModal creating new Promise...');
+
+      // 添加超时机制，防止无限等待
+      const TIMEOUT_MS = 60000; // 60秒超时
+
+      const result = await new Promise((resolve, reject) => {
+        console.log('[Security Manager] Promise executor running, calling setState');
+
+        // 设置超时
+        const timeoutId = setTimeout(() => {
+          console.error('[Security Manager] Modal timeout after', TIMEOUT_MS, 'ms');
+          reject(new Error('Modal timeout'));
+        }, TIMEOUT_MS);
         this.setState(oldState => ({
           type,
           data,
-          callback: resolve,
+          callback: value => {
+            clearTimeout(timeoutId);
+            resolve(value);
+          },
           modalCount: oldState.modalCount + 1
-        }));
+        }), () => {
+          console.log('[Security Manager] setState callback fired');
+        });
+        console.log('[Security Manager] setState called');
       });
+      console.log('[Security Manager] Modal resolved with result:', result);
       releaseLock();
       return result;
     };
@@ -51524,9 +51552,11 @@ class TWSecurityManagerComponent extends react__WEBPACK_IMPORTED_MODULE_0___defa
     };
   }
   handleAllowed() {
+    console.log('[Security Manager] handleAllowed called, callback:', this.state.callback);
     this.state.callback(true);
   }
   handleDenied() {
+    console.log('[Security Manager] handleDenied called, callback:', this.state.callback);
     this.state.callback(false);
   }
 
@@ -51555,31 +51585,56 @@ class TWSecurityManagerComponent extends react__WEBPACK_IMPORTED_MODULE_0___defa
    * @returns {Promise<boolean>} Whether the extension can be loaded
    */
   async canLoadExtensionFromProject(url) {
-    if (isTrustedExtension(url)) {
-      _lib_utils_log_js__WEBPACK_IMPORTED_MODULE_3__["default"].info("Loading extension ".concat(url, " automatically"));
-      return true;
-    }
-    const {
-      showModal
-    } = await this.acquireModalLock();
-    if (url.startsWith('data:')) {
-      const allowed = await showModal(_lib_constants_security_manager_js__WEBPACK_IMPORTED_MODULE_6__["default"].LoadExtension, {
-        url,
-        unsandboxed: Object(_lib_persistence_tw_unsandboxed_js__WEBPACK_IMPORTED_MODULE_7__["getPersistedUnsandboxed"])(),
-        onChangeUnsandboxed: this.handleChangeUnsandboxed.bind(this)
-      });
-      if (allowed) {
-        Object(_lib_persistence_tw_unsandboxed_js__WEBPACK_IMPORTED_MODULE_7__["setPersistedUnsandboxed"])(this.state.data.unsandboxed);
-      }
-      if (allowed && this.state.data.unsandboxed) {
-        manuallyTrustExtension(url);
-      }
-      return allowed;
-    }
-    return showModal(_lib_constants_security_manager_js__WEBPACK_IMPORTED_MODULE_6__["default"].LoadExtension, {
-      url,
-      unsandboxed: false
+    console.log('[Security Manager] canLoadExtensionFromProject called with URL:', url);
+
+    // 添加整体超时保护，防止任何环节卡住
+    const TIMEOUT_MS = 60000; // 60秒超时
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => {
+        console.error('[Security Manager] canLoadExtensionFromProject timeout');
+        reject(new Error('Extension loading timeout'));
+      }, TIMEOUT_MS);
     });
+    const resultPromise = (async () => {
+      if (isTrustedExtension(url)) {
+        _lib_utils_log_js__WEBPACK_IMPORTED_MODULE_3__["default"].info("Loading extension ".concat(url, " automatically"));
+        console.log('[Security Manager] Extension is trusted, allowing automatically');
+        return true;
+      }
+      console.log('[Security Manager] Extension is not trusted, acquiring modal lock...');
+      const {
+        showModal
+      } = await this.acquireModalLock();
+      console.log('[Security Manager] Modal lock acquired');
+      if (url.startsWith('data:')) {
+        console.log('[Security Manager] Extension is data:url, showing special modal');
+        const allowed = await showModal(_lib_constants_security_manager_js__WEBPACK_IMPORTED_MODULE_6__["default"].LoadExtension, {
+          url,
+          unsandboxed: Object(_lib_persistence_tw_unsandboxed_js__WEBPACK_IMPORTED_MODULE_7__["getPersistedUnsandboxed"])(),
+          onChangeUnsandboxed: this.handleChangeUnsandboxed.bind(this)
+        });
+        console.log('[Security Manager] Data:url extension modal result:', allowed);
+        if (allowed) {
+          Object(_lib_persistence_tw_unsandboxed_js__WEBPACK_IMPORTED_MODULE_7__["setPersistedUnsandboxed"])(this.state.data.unsandboxed);
+        }
+        if (allowed && this.state.data.unsandboxed) {
+          manuallyTrustExtension(url);
+        }
+        return allowed;
+      }
+      console.log('[Security Manager] Showing standard extension modal');
+      return showModal(_lib_constants_security_manager_js__WEBPACK_IMPORTED_MODULE_6__["default"].LoadExtension, {
+        url,
+        unsandboxed: false
+      });
+    })();
+    try {
+      return await Promise.race([resultPromise, timeoutPromise]);
+    } catch (error) {
+      console.error('[Security Manager] canLoadExtensionFromProject failed:', error);
+      // 返回false而不是抛出错误，这样扩展不会被加载但项目仍然可以打开
+      return false;
+    }
   }
 
   /**
@@ -51757,7 +51812,9 @@ class TWSecurityManagerComponent extends react__WEBPACK_IMPORTED_MODULE_0___defa
     });
   }
   render() {
+    console.log('[Security Manager] render called, this.state.type:', this.state.type);
     if (this.state.type) {
+      console.log('[Security Manager] Rendering modal, type:', this.state.type);
       return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_components_tw_security_manager_modal_security_manager_modal_jsx__WEBPACK_IMPORTED_MODULE_5__["default"], {
         type: this.state.type,
         data: this.state.data,
@@ -51766,6 +51823,7 @@ class TWSecurityManagerComponent extends react__WEBPACK_IMPORTED_MODULE_0___defa
         key: this.state.modalCount
       });
     }
+    console.log('[Security Manager] No modal to render, type is null');
     return null;
   }
 }
@@ -52704,7 +52762,7 @@ class WindowedModal extends react__WEBPACK_IMPORTED_MODULE_2___default.a.Compone
       closable: true,
       className: "modal-window ".concat(className),
       modal: true,
-      alwaysOnTop: id === 'unknownPlatformModal',
+      alwaysOnTop: id === 'unknownPlatformModal' || id === 'securitymanagermodal',
       destroyOnMinimize: true,
       onClose: this.handleWindowClose,
       onMinimize: this.handleWindowMinimize,
@@ -62262,12 +62320,14 @@ const SBFileUploaderHOC = function SBFileUploaderHOC(WrappedComponent) {
     }
     // step 1: this is where the upload process begins
     handleStartSelectingFileUpload() {
+      console.log('[SBFileUploader] Step 1: Starting file upload process');
       this.expectingFileUploadFinish = true;
       this.createFileObjects(); // go to step 2
     }
     // step 2: create a FileReader and an <input> element, and issue a
     // pseudo-click to it. That will open the file chooser dialog.
     createFileObjects() {
+      console.log('[SBFileUploader] Step 2: Creating file objects');
       // redo step 7, in case it got skipped last time and its objects are
       // still in memory
       this.removeFileObjects();
@@ -62276,6 +62336,7 @@ const SBFileUploaderHOC = function SBFileUploaderHOC(WrappedComponent) {
       this.fileReader.onload = this.onload;
       // tw: Use FS API when available
       if (this.props.showOpenFilePicker) {
+        console.log('[SBFileUploader] Step 2: Using File System API');
         (async () => {
           try {
             const [handle] = await this.props.showOpenFilePicker({
@@ -62290,6 +62351,7 @@ const SBFileUploaderHOC = function SBFileUploaderHOC(WrappedComponent) {
               }]
             });
             const file = await handle.getFile();
+            console.log('[SBFileUploader] Step 2: File selected via FS API:', file.name, file.size);
             this.handleChange({
               target: {
                 files: [file],
@@ -62299,13 +62361,15 @@ const SBFileUploaderHOC = function SBFileUploaderHOC(WrappedComponent) {
           } catch (err) {
             // If the user aborted it, that's not an error.
             if (err && err.name === 'AbortError') {
+              console.log('[SBFileUploader] Step 2: User cancelled file selection');
               return;
             }
             // eslint-disable-next-line no-console
-            console.error(err);
+            console.error('[SBFileUploader] Step 2: Error selecting file:', err);
           }
         })();
       } else {
+        console.log('[SBFileUploader] Step 2: Using fallback input element');
         // create <input> element and add it to DOM
         this.inputElement = document.createElement('input');
         this.inputElement.accept = '.sb,.sb2,.sb3,.html';
@@ -62320,6 +62384,7 @@ const SBFileUploaderHOC = function SBFileUploaderHOC(WrappedComponent) {
     // step 3: user has picked a file using the file chooser dialog.
     // We don't actually load the file here, we only decide whether to do so.
     handleChange(e) {
+      console.log('[SBFileUploader] Step 3: File selected, handling change');
       const {
         intl,
         isShowingWithoutId,
@@ -62331,6 +62396,7 @@ const SBFileUploaderHOC = function SBFileUploaderHOC(WrappedComponent) {
       if (thisFileInput.files) {
         // Don't attempt to load if no file was selected
         this.fileToUpload = thisFileInput.files[0];
+        console.log('[SBFileUploader] Step 3: Selected file:', this.fileToUpload.name, this.fileToUpload.size, 'bytes');
 
         // If user owns the project, or user has changed the project,
         // we must confirm with the user that they really intend to
@@ -62338,9 +62404,11 @@ const SBFileUploaderHOC = function SBFileUploaderHOC(WrappedComponent) {
         // changed it, no need to confirm.)
         let uploadAllowed = true;
         if (userOwnsProject || projectChanged && isShowingWithoutId) {
+          console.log('[SBFileUploader] Step 3: Requesting confirmation from user');
           uploadAllowed = confirm(
           // eslint-disable-line no-alert
           intl.formatMessage(_constants_shared_messages__WEBPACK_IMPORTED_MODULE_6__["default"].replaceProjectWarning));
+          console.log('[SBFileUploader] Step 3: User confirmation:', uploadAllowed);
         }
         if (uploadAllowed) {
           // Don't update file handle until after confirming replace.
@@ -62354,12 +62422,16 @@ const SBFileUploaderHOC = function SBFileUploaderHOC(WrappedComponent) {
           }
 
           // cues step 4
+          console.log('[SBFileUploader] Step 3: Requesting project upload');
           this.props.requestProjectUpload(loadingState);
         } else {
           // skips ahead to step 7
+          console.log('[SBFileUploader] Step 3: User cancelled, removing file objects');
           this.removeFileObjects();
         }
         this.props.closeFileMenu();
+      } else {
+        console.log('[SBFileUploader] Step 3: No file selected');
       }
     }
     // step 4 is below, in mapDispatchToProps
@@ -62367,12 +62439,15 @@ const SBFileUploaderHOC = function SBFileUploaderHOC(WrappedComponent) {
     // step 5: called from componentDidUpdate when project state shows
     // that project data has finished "uploading" into the browser
     handleFinishedLoadingUpload() {
+      console.log('[SBFileUploader] Step 5: Finished loading upload');
       this.expectingFileUploadFinish = false;
       if (this.fileToUpload && this.fileReader) {
         // begin to read data from the file. When finished,
         // cues step 6 using the reader's onload callback
+        console.log('[SBFileUploader] Step 5: Reading file as ArrayBuffer:', this.fileToUpload.name);
         this.fileReader.readAsArrayBuffer(this.fileToUpload);
       } else {
+        console.log('[SBFileUploader] Step 5: Missing fileToUpload or fileReader, cancelling');
         this.props.cancelFileUpload(this.props.loadingState);
         // skip ahead to step 7
         this.removeFileObjects();
@@ -62390,21 +62465,28 @@ const SBFileUploaderHOC = function SBFileUploaderHOC(WrappedComponent) {
     // step 6: attached as a handler on our FileReader object; called when
     // file upload raw data is available in the reader
     async onload() {
+      console.log('[SBFileUploader] Step 6: File reader onload triggered');
       if (this.fileReader) {
         this.props.onLoadingStarted();
         const filename = this.fileToUpload && this.fileToUpload.name;
         let loadingSuccess = false;
+        console.log('[SBFileUploader] Step 6: Loading file:', filename);
         // tw: stop when loading new project
+        console.log('[SBFileUploader] Step 6: Quitting VM before loading new project');
         this.props.vm.quit();
         let projectData = this.fileReader.result;
+        console.log('[SBFileUploader] Step 6: Project data size:', projectData.byteLength, 'bytes');
         if (filename && filename.endsWith('.html')) {
+          console.log('[SBFileUploader] Step 6: File is HTML, unpackaging...');
           try {
             const blob = new Blob([projectData], {
               type: 'text/html'
             });
             const unpackaged = await Object(_unpackager__WEBPACK_IMPORTED_MODULE_8__["default"])(blob);
             projectData = unpackaged.data;
+            console.log('[SBFileUploader] Step 6: Unpackaging complete, type:', unpackaged.type);
           } catch (error) {
+            console.error('[SBFileUploader] Step 6: Failed to unpackage HTML file:', error);
             _utils_log__WEBPACK_IMPORTED_MODULE_5__["default"].error('Failed to unpackage HTML file:', error);
             this.props.onLoadingFailed(error);
             this.props.onLoadingFinished(this.props.loadingState, false);
@@ -62412,22 +62494,30 @@ const SBFileUploaderHOC = function SBFileUploaderHOC(WrappedComponent) {
             return;
           }
         }
+        console.log('[SBFileUploader] Step 6: Calling vm.loadProject...');
         this.props.vm.loadProject(projectData).then(() => {
+          console.log('[SBFileUploader] Step 6: VM loadProject succeeded');
           if (filename) {
             const uploadedProjectTitle = this.getProjectTitleFromFilename(filename);
             this.props.onSetProjectTitle(uploadedProjectTitle);
+            console.log('[SBFileUploader] Step 6: Set project title:', uploadedProjectTitle);
           }
           this.props.vm.renderer.draw();
+          console.log('[SBFileUploader] Step 6: Renderer draw called');
           loadingSuccess = true;
         }).catch(error => {
+          console.error('[SBFileUploader] Step 6: VM loadProject failed:', error);
           _utils_log__WEBPACK_IMPORTED_MODULE_5__["default"].error(error);
           this.props.onLoadingFailed(error);
         }).then(() => {
+          console.log('[SBFileUploader] Step 6: Loading finished, success:', loadingSuccess);
           this.props.onLoadingFinished(this.props.loadingState, loadingSuccess);
           // go back to step 7: whether project loading succeeded
           // or failed, reset file objects
           this.removeFileObjects();
         });
+      } else {
+        console.log('[SBFileUploader] Step 6: fileReader is null, skipping');
       }
     }
     // step 7: remove the <input> element from the DOM and clear reader and
@@ -64682,20 +64772,48 @@ const vmManagerHOC = function vmManagerHOC(WrappedComponent) {
       };
       const originalLoadProject = vm.loadProject;
       vm.loadProject = async data => {
+        console.log('[VM Manager] loadProject called, data type:', data instanceof ArrayBuffer ? 'ArrayBuffer' : data instanceof Blob ? 'Blob' : ArrayBuffer.isView(data) ? 'ArrayBufferView' : typeof data);
         let gitJson = null;
         try {
           let buffer = null;
           if (data instanceof ArrayBuffer) {
             buffer = data;
+            console.log('[VM Manager] Data is ArrayBuffer, length:', buffer.byteLength);
           } else if (ArrayBuffer.isView(data)) {
             buffer = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
+            console.log('[VM Manager] Data is ArrayBufferView, converted to ArrayBuffer');
           } else if (typeof Blob !== 'undefined' && data instanceof Blob) {
+            console.log('[VM Manager] Data is Blob, converting to ArrayBuffer...');
             buffer = await data.arrayBuffer();
+            console.log('[VM Manager] Blob converted to ArrayBuffer, length:', buffer.byteLength);
           }
           if (buffer) {
+            console.log('[VM Manager] Loading zip from buffer...');
             const zip = await jszip__WEBPACK_IMPORTED_MODULE_7___default.a.loadAsync(buffer);
+
+            // 检查项目中的扩展
+            try {
+              const projectJsonFile = zip.file('project.json');
+              if (projectJsonFile) {
+                const projectJson = JSON.parse(await projectJsonFile.async('string'));
+                if (projectJson.extensions && projectJson.extensions.length > 0) {
+                  console.log('[VM Manager] Project has extensions:', projectJson.extensions);
+                }
+                if (projectJson.extensionURLs) {
+                  console.log('[VM Manager] Project has extensionURLs:', projectJson.extensionURLs);
+                  for (const [extId, extUrl] of Object.entries(projectJson.extensionURLs)) {
+                    if (extUrl && extUrl.startsWith('data:')) {
+                      console.log('[VM Manager] WARNING: Found data:url extension:', extId);
+                    }
+                  }
+                }
+              }
+            } catch (e) {
+              console.warn('[VM Manager] Failed to check project extensions:', e);
+            }
             const file = zip.file('git.json');
             if (file) {
+              console.log('[VM Manager] Found git.json in project zip');
               gitJson = await file.async('string');
 
               // 检查 gitJson 是否是二次编码的 JSON 字符串
@@ -64703,6 +64821,7 @@ const vmManagerHOC = function vmManagerHOC(WrappedComponent) {
                 const parsed = JSON.parse(gitJson);
                 // 如果 parsed 是字符串，说明是二次编码的，尝试再次解析
                 if (typeof parsed === 'string') {
+                  console.log('[VM Manager] git.json is double-encoded, re-parsing...');
                   const reParsed = JSON.parse(parsed);
                   gitJson = JSON.stringify(reParsed);
                 }
@@ -64719,7 +64838,9 @@ const vmManagerHOC = function vmManagerHOC(WrappedComponent) {
         } catch (e) {
           console.warn('[VM Manager] Failed to read git.json:', e);
         }
+        console.log('[VM Manager] Calling original loadProject...');
         const result = await originalLoadProject.call(vm, data);
+        console.log('[VM Manager] Original loadProject completed');
         if (gitJson) {
           try {
             console.log('[VM Manager] Calling importRepoFromGitJsonString...');
@@ -64733,13 +64854,20 @@ const vmManagerHOC = function vmManagerHOC(WrappedComponent) {
       };
     }
     loadProject() {
+      console.log('[VM Manager] loadProject method called');
       // tw: stop when loading new project
+      console.log('[VM Manager] Quitting VM before loading project');
       this.props.vm.quit();
+      console.log('[VM Manager] Loading project data, size:', this.props.projectData instanceof ArrayBuffer ? this.props.projectData.byteLength : 'unknown');
       return this.props.vm.loadProject(this.props.projectData).then(() => {
+        console.log('[VM Manager] Project loaded successfully');
         this.props.onLoadedProject(this.props.loadingState, this.props.canSave);
         // Wrap in a setTimeout because skin loading in
         // the renderer can be async.
-        setTimeout(() => this.props.onSetProjectUnchanged());
+        setTimeout(() => {
+          console.log('[VM Manager] Setting project as unchanged');
+          this.props.onSetProjectUnchanged();
+        });
 
         // If the vm is not running, call draw on the renderer manually
         // This draws the state of the loaded project with no blocks running
@@ -64747,11 +64875,13 @@ const vmManagerHOC = function vmManagerHOC(WrappedComponent) {
         // 2.0 runs monitors and shows updates (e.g. timer monitor)
         // before the VM starts running other hat blocks.
         if (!this.props.isStarted) {
+          console.log('[VM Manager] VM not started, calling renderer.draw()');
           // Wrap in a setTimeout because skin loading in
           // the renderer can be async.
           setTimeout(() => this.props.vm.renderer.draw());
         }
       }).catch(e => {
+        console.error('[VM Manager] Project loading failed:', e);
         this.props.onError(e);
       });
     }
@@ -72097,8 +72227,12 @@ __webpack_require__.r(__webpack_exports__);
 
 const unzipOrNull = async binaryData => {
   try {
-    return await _turbowarp_jszip__WEBPACK_IMPORTED_MODULE_0___default.a.loadAsync(binaryData);
+    console.log('[Unpackager] Attempting to unzip binary data');
+    const result = await _turbowarp_jszip__WEBPACK_IMPORTED_MODULE_0___default.a.loadAsync(binaryData);
+    console.log('[Unpackager] Successfully unzipped binary data');
+    return result;
   } catch (e) {
+    console.log('[Unpackager] Failed to unzip, returning null:', e.message);
     return null;
   }
 };
@@ -72249,16 +72383,23 @@ const findFileInZip = (zip, path) => {
   return null;
 };
 const unpackageBinaryBlob = async data => {
+  console.log('[Unpackager] unpackageBinaryBlob started');
   const projectZip = await unzipOrNull(data);
   if (projectZip) {
+    console.log('[Unpackager] Found zip structure, searching for project.json');
     const projectJSON = findFileInZip(projectZip, 'project.json');
-    const projectJSONData = JSON.parse(await projectJSON.async('text'));
-    const type = identifyProjectJSONType(projectJSONData);
-    return {
-      type,
-      data
-    };
+    if (projectJSON) {
+      const projectJSONData = JSON.parse(await projectJSON.async('text'));
+      const type = identifyProjectJSONType(projectJSONData);
+      console.log('[Unpackager] Identified project type:', type);
+      return {
+        type,
+        data
+      };
+    }
+    console.log('[Unpackager] No project.json found in zip');
   }
+  console.log('[Unpackager] Returning as raw sb format');
   return {
     type: 'sb',
     data
@@ -72274,10 +72415,13 @@ const zipToArrayBuffer = zip => {
   });
 };
 const unpackage = async blob => {
+  console.log('[Unpackager] unpackage started');
   const packagedZip = await unzipOrNull(blob);
   if (packagedZip) {
+    console.log('[Unpackager] Input is a zip file');
     const projectJSON = findFileInZip(packagedZip, 'project.json');
     if (projectJSON) {
+      console.log('[Unpackager] Found project.json in zip');
       const innerFolderPath = getContainingFolder(projectJSON.name);
       const innerZip = packagedZip.folder(innerFolderPath);
       let sb3Assets = 0;
@@ -72294,6 +72438,7 @@ const unpackage = async blob => {
         }
       }
       const type = sb2Assets > 0 && sb3Assets === 0 ? 'sb2' : 'sb3';
+      console.log('[Unpackager] Detected assets - sb3:', sb3Assets, ', sb2:', sb2Assets, ', type:', type);
       return {
         type,
         data: await zipToArrayBuffer(innerZip)
@@ -72301,44 +72446,53 @@ const unpackage = async blob => {
     }
     const projectBinary = findFileInZip(packagedZip, 'project.zip') || findFileInZip(packagedZip, 'project');
     if (projectBinary) {
+      console.log('[Unpackager] Found project binary in zip');
       const projectData = await projectBinary.async('arraybuffer');
       return unpackageBinaryBlob(projectData);
     }
     throw new Error('Input was a zip but we could not find a project.');
   }
   const text = await readAsText(blob);
+  console.log('[Unpackager] Input is not a zip, trying text parsing');
   let base85Matches = matchAll(text, /<script data="([^"]+)">decodeChunk\((\d+)\)<\/script>/g);
   if (base85Matches.length) {
+    console.log('[Unpackager] Found base85 encoded data with decodeChunk pattern');
     const base85 = base85Matches.map(i => i[1]).join('');
     const length = base85Matches.map(i => +i[2]).reduce((a, b) => a + b, 0);
     return unpackageBinaryBlob(decodeBase85WithoutLengthHeader(base85, length));
   }
   base85Matches = matchAll(text, /<script type="p4-project">([^<]+)<\/script>/g);
   if (base85Matches.length) {
+    console.log('[Unpackager] Found base85 encoded data with p4-project script');
     const base85 = base85Matches.map(i => i[1]).join('');
     return unpackageBinaryBlob(decodeBase85WithLengthHeader(base85));
   }
   const base85Match = text.match(/const result = base85decode\("(.+)"\);/) || text.match(/<script id="p4-encoded-project-data" type="p4-encoded-project-data">([^<]+)<\/script>/);
   if (base85Match) {
+    console.log('[Unpackager] Found base85 encoded data with base85decode function');
     const base85 = base85Match[1];
     return unpackageBinaryBlob(decodeBase85WithLengthHeader(base85));
   }
   const dataURIMatch = text.match(/const getProjectData = \(\) => fetch\("([a-zA-Z0-9+/=\-:;,]+)"\)/) || text.match(/var project = '([a-zA-Z0-9+/=\-:;,]+)';/) || text.match(/window\.__PACKAGER__ = {\n {4}projectData: "([a-zA-Z0-9+/=\-:;,]+)"/);
   if (dataURIMatch) {
+    console.log('[Unpackager] Found data URI encoded project');
     const dataURI = dataURIMatch[1];
     return unpackageBinaryBlob(decodeDataURI(dataURI));
   }
   let htmlifierOptions = text.match(/<script>\nconst GENERATED = \d+\nconst initOptions = ({[\s\S]+})\ninit\(initOptions\)\n<\/script>/m);
   if (htmlifierOptions) {
+    console.log('[Unpackager] Found htmlifier initOptions pattern');
     const htmlifierAssets = JSON.parse(htmlifierOptions[1]).assets;
     const compressedProjectData = htmlifierAssets.file;
     if (compressedProjectData) {
+      console.log('[Unpackager] Found compressed project data in htmlifier assets');
       const decodedProjectData = decodeDataURI(compressedProjectData);
       return {
         type: 'sb',
         data: decodedProjectData
       };
     }
+    console.log('[Unpackager] Rebuilding project zip from htmlifier assets');
     const newZip = new _turbowarp_jszip__WEBPACK_IMPORTED_MODULE_0___default.a();
     for (const name of Object.keys(htmlifierAssets)) {
       const nameInZip = name === 'project' ? 'project.json' : name;
@@ -72352,6 +72506,7 @@ const unpackage = async blob => {
   }
   htmlifierOptions = text.match(/var TYPE = 'json',\nPROJECT_JSON = "([^"]*)",\nASSETS = ({[^}]*}),/m);
   if (htmlifierOptions) {
+    console.log('[Unpackager] Found alternative htmlifier format');
     const projectJSON = decodeDataURI(htmlifierOptions[1]);
     const assetsJSON = JSON.parse(htmlifierOptions[2]);
     const newZip = new _turbowarp_jszip__WEBPACK_IMPORTED_MODULE_0___default.a();
@@ -72365,12 +72520,15 @@ const unpackage = async blob => {
     };
   }
   if (text.includes('<script src="script.js"></script>')) {
+    console.log('[Unpackager] Error: Only HTML file provided, not complete zip');
     throw new Error('It looks like the project was packaged as a zip, but only the HTML file was provided.');
   }
   if (text.includes('<style class="scratch-render-styles"') || text.includes('<div class="sc-layers"') || text.includes('<canvas class="sc-canvas"') || text.includes('<div class="scratch-render-overlays"') || text.includes('<div class="sc-monitor-overlay"')) {
+    console.log('[Unpackager] Error: HTML saved after project loaded');
     // eslint-disable-next-line max-len
     throw new Error('It looks like you saved the HTML after the project loads. This does not work as the project data is removed from the HTML as the project loads to save memory.');
   }
+  console.log('[Unpackager] Error: Could not find project in input');
   throw new Error('Input was not a zip and we could not find project.');
 };
 /* harmony default export */ __webpack_exports__["default"] = (unpackage);

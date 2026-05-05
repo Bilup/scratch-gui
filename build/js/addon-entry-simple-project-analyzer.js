@@ -12416,9 +12416,6 @@ _chart_js__WEBPACK_IMPORTED_MODULE_0__["Chart"].register(_chart_js__WEBPACK_IMPO
     markAsSeen: true
   }).then(() => {
     analyzer.init();
-    if (isVSCodeLayoutEnabled()) vm.runtime.on('PROJECT_CHANGED', () => {
-      analyzer.analyzeProjectForSidebar();
-    });
   });
 });
 
