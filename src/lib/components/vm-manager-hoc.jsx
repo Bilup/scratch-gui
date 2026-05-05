@@ -91,50 +91,85 @@ const vmManagerHOC = function (WrappedComponent) {
 
             const originalLoadProject = vm.loadProject;
             vm.loadProject = async data => {
+                console.log('[VM Manager] loadProject called, data type:', data instanceof ArrayBuffer ? 'ArrayBuffer' : 
+                    data instanceof Blob ? 'Blob' : 
+                    ArrayBuffer.isView(data) ? 'ArrayBufferView' : typeof data);
+                
                 let gitJson = null;
 
                 try {
                     let buffer = null;
                     if (data instanceof ArrayBuffer) {
                         buffer = data;
+                        console.log('[VM Manager] Data is ArrayBuffer, length:', buffer.byteLength);
                     } else if (ArrayBuffer.isView(data)) {
                         buffer = data.buffer.slice(
                             data.byteOffset,
                             data.byteOffset + data.byteLength
                         );
+                        console.log('[VM Manager] Data is ArrayBufferView, converted to ArrayBuffer');
                     } else if (typeof Blob !== 'undefined' && data instanceof Blob) {
+                        console.log('[VM Manager] Data is Blob, converting to ArrayBuffer...');
                         buffer = await data.arrayBuffer();
+                        console.log('[VM Manager] Blob converted to ArrayBuffer, length:', buffer.byteLength);
                     }
 
                     if (buffer) {
+                        console.log('[VM Manager] Loading zip from buffer...');
                         const zip = await JSZip.loadAsync(buffer);
-                        const file = zip.file('git.json');
-                        if (file) {
-                        gitJson = await file.async('string');
                         
-                        // 检查 gitJson 是否是二次编码的 JSON 字符串
+                        // 检查项目中的扩展
                         try {
-                            const parsed = JSON.parse(gitJson);
-                            // 如果 parsed 是字符串，说明是二次编码的，尝试再次解析
-                            if (typeof parsed === 'string') {
-                                const reParsed = JSON.parse(parsed);
-                                gitJson = JSON.stringify(reParsed);
+                            const projectJsonFile = zip.file('project.json');
+                            if (projectJsonFile) {
+                                const projectJson = JSON.parse(await projectJsonFile.async('string'));
+                                if (projectJson.extensions && projectJson.extensions.length > 0) {
+                                    console.log('[VM Manager] Project has extensions:', projectJson.extensions);
+                                }
+                                if (projectJson.extensionURLs) {
+                                    console.log('[VM Manager] Project has extensionURLs:', projectJson.extensionURLs);
+                                    for (const [extId, extUrl] of Object.entries(projectJson.extensionURLs)) {
+                                        if (extUrl && extUrl.startsWith('data:')) {
+                                            console.log('[VM Manager] WARNING: Found data:url extension:', extId);
+                                        }
+                                    }
+                                }
                             }
                         } catch (e) {
-                            console.warn('[VM Manager] Failed to parse git.json:', e);
+                            console.warn('[VM Manager] Failed to check project extensions:', e);
                         }
                         
-                        // 直接设置 tempGitJsonString，确保在导入后立即更新
-                        BrowserGit._setTempGitJsonString(gitJson);
-                    } else {
-                        console.log('[VM Manager] No git.json found in SB3');
-                    }
+                        const file = zip.file('git.json');
+                        if (file) {
+                            console.log('[VM Manager] Found git.json in project zip');
+                            gitJson = await file.async('string');
+                        
+                            // 检查 gitJson 是否是二次编码的 JSON 字符串
+                            try {
+                                const parsed = JSON.parse(gitJson);
+                                // 如果 parsed 是字符串，说明是二次编码的，尝试再次解析
+                                if (typeof parsed === 'string') {
+                                    console.log('[VM Manager] git.json is double-encoded, re-parsing...');
+                                    const reParsed = JSON.parse(parsed);
+                                    gitJson = JSON.stringify(reParsed);
+                                }
+                            } catch (e) {
+                                console.warn('[VM Manager] Failed to parse git.json:', e);
+                            }
+                        
+                            // 直接设置 tempGitJsonString，确保在导入后立即更新
+                            BrowserGit._setTempGitJsonString(gitJson);
+                        } else {
+                            console.log('[VM Manager] No git.json found in SB3');
+                        }
                     }
                 } catch (e) {
                     console.warn('[VM Manager] Failed to read git.json:', e);
                 }
 
+                console.log('[VM Manager] Calling original loadProject...');
                 const result = await originalLoadProject.call(vm, data);
+                console.log('[VM Manager] Original loadProject completed');
 
                 if (gitJson) {
                     try {
@@ -151,14 +186,22 @@ const vmManagerHOC = function (WrappedComponent) {
         }
 
         loadProject () {
+            console.log('[VM Manager] loadProject method called');
             // tw: stop when loading new project
+            console.log('[VM Manager] Quitting VM before loading project');
             this.props.vm.quit();
+            console.log('[VM Manager] Loading project data, size:', 
+                this.props.projectData instanceof ArrayBuffer ? this.props.projectData.byteLength : 'unknown');
             return this.props.vm.loadProject(this.props.projectData)
                 .then(() => {
+                    console.log('[VM Manager] Project loaded successfully');
                     this.props.onLoadedProject(this.props.loadingState, this.props.canSave);
                     // Wrap in a setTimeout because skin loading in
                     // the renderer can be async.
-                    setTimeout(() => this.props.onSetProjectUnchanged());
+                    setTimeout(() => {
+                        console.log('[VM Manager] Setting project as unchanged');
+                        this.props.onSetProjectUnchanged();
+                    });
 
                     // If the vm is not running, call draw on the renderer manually
                     // This draws the state of the loaded project with no blocks running
@@ -166,12 +209,14 @@ const vmManagerHOC = function (WrappedComponent) {
                     // 2.0 runs monitors and shows updates (e.g. timer monitor)
                     // before the VM starts running other hat blocks.
                     if (!this.props.isStarted) {
+                        console.log('[VM Manager] VM not started, calling renderer.draw()');
                         // Wrap in a setTimeout because skin loading in
                         // the renderer can be async.
                         setTimeout(() => this.props.vm.renderer.draw());
                     }
                 })
                 .catch(e => {
+                    console.error('[VM Manager] Project loading failed:', e);
                     this.props.onError(e);
                 });
         }
