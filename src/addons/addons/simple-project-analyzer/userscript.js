@@ -2397,8 +2397,5 @@ export default function ({ addon, msg, console }) {
     markAsSeen: true
   }).then(() => {
     analyzer.init();
-    if(isVSCodeLayoutEnabled()) vm.runtime.on('PROJECT_CHANGED', () => {
-      analyzer.analyzeProjectForSidebar();
-    });
   });
 }
