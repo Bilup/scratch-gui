@@ -253,13 +253,14 @@ const setDefaultAuthor = author => {
     }
 };
 
-const repoExists = () => {
+const repoExists = async () => {
     const fs = getFs();
     const pfs = fs.promises;
     console.log('[BrowserGit] repoExists checking...');
-    console.log('[BrowserGit] .git exists:', exists(pfs, pathJoin(REPO_DIR, '.git')));
+    const gitExists = await exists(pfs, pathJoin(REPO_DIR, '.git'));
+    console.log('[BrowserGit] .git exists:', gitExists);
     console.log('[BrowserGit] tempGitJsonString exists:', !!tempGitJsonString);
-    return exists(pfs, pathJoin(REPO_DIR, '.git')) || !!tempGitJsonString;
+    return gitExists || !!tempGitJsonString;
 };
 
 const listFilesRecursive = async (pfs, rootDir) => {
@@ -327,6 +328,75 @@ const exportRepoToGitJsonString = async () => {
     }
 };
 
+let tempGitFiles = null;
+
+const updateTempGitFiles = async () => {
+    console.log('[BrowserGit] updateTempGitFiles called');
+    console.log('[BrowserGit] REPO_DIR:', REPO_DIR);
+    
+    const fs = getFs();
+    const pfs = fs.promises;
+    
+    const gitDirExists = await exists(pfs, pathJoin(REPO_DIR, '.git'));
+    console.log('[BrowserGit] .git dir exists:', gitDirExists);
+    console.log('[BrowserGit] tempGitJsonString exists:', !!tempGitJsonString);
+    
+    if (!gitDirExists) {
+        console.log('[BrowserGit] .git dir not exists, setting tempGitFiles to null');
+        tempGitFiles = null;
+        return;
+    }
+    
+    if (!(await repoExists())) {
+        console.log('[BrowserGit] repo does not exist');
+        tempGitFiles = null;
+        return;
+    }
+
+    try {
+        const gitDir = pathJoin(REPO_DIR, '.git');
+        console.log('[BrowserGit] Reading files from:', gitDir);
+        const files = await listFilesRecursive(pfs, gitDir);
+        console.log('[BrowserGit] Found', files.length, 'files in .git');
+        
+        const gitFiles = {};
+        
+        for (const filePath of files) {
+            try {
+                const data = await pfs.readFile(filePath);
+                const view = data instanceof Uint8Array ? data : new Uint8Array(data);
+                const relPath = filePath.replace(`${REPO_DIR}/`, '');
+                gitFiles[relPath] = view;
+            } catch (e) {
+                console.warn('[BrowserGit] Failed to read file for export:', filePath, e);
+            }
+        }
+        
+        console.log('[BrowserGit] Cached', Object.keys(gitFiles).length, 'files in tempGitFiles');
+        tempGitFiles = gitFiles;
+    } catch (e) {
+        console.warn('[BrowserGit] Failed to update tempGitFiles:', e);
+        tempGitFiles = null;
+    }
+};
+
+const exportGitToZip = (parentZip) => {
+    console.log('[BrowserGit] exportGitToZip called');
+    console.log('[BrowserGit] tempGitFiles:', tempGitFiles ? `${Object.keys(tempGitFiles).length} files` : 'null');
+    
+    if (!tempGitFiles) {
+        console.log('[BrowserGit] exportGitToZip: tempGitFiles is null, not exporting');
+        return null;
+    }
+    
+    console.log('[BrowserGit] Exporting', Object.keys(tempGitFiles).length, 'files to zip');
+    for (const [relPath, data] of Object.entries(tempGitFiles)) {
+        parentZip.file(relPath, data);
+    }
+    
+    return true;
+};
+
 const initRepo = async ({defaultBranch = 'main', vm = null, onProgress} = {}) => {
     if (!defaultBranch || typeof defaultBranch !== 'string') {
         throw new Error('Invalid branch name');
@@ -373,6 +443,7 @@ const initRepo = async ({defaultBranch = 'main', vm = null, onProgress} = {}) =>
                 author: getDefaultAuthor()
             });
             tempGitJsonString = await exportRepoToGitJsonString();
+            await updateTempGitFiles();
         } catch (e) {
             // Clean up partial initialization on error
             try {
@@ -533,6 +604,7 @@ const createBranch = async ({ref} = {}) => {
         throw new Error(`Failed to create branch ${ref}: ${e.message}`);
     }
     tempGitJsonString = await exportRepoToGitJsonString();
+    await updateTempGitFiles();
     return 'ok';
 };
 
@@ -547,6 +619,9 @@ const checkoutBranch = async ref => {
     } catch (e) {
         throw new Error(`Failed to checkout branch ${ref}: ${e.message}`);
     }
+    // 更新缓存以反映当前分支的状态
+    tempGitJsonString = await exportRepoToGitJsonString();
+    await updateTempGitFiles();
     return 'ok';
 };
 
@@ -561,6 +636,9 @@ const checkoutCommit = async oid => {
     } catch (e) {
         throw new Error(`Failed to checkout commit ${oid}: ${e.message}`);
     }
+    // 更新缓存以反映当前提交的状态
+    tempGitJsonString = await exportRepoToGitJsonString();
+    await updateTempGitFiles();
     return 'ok';
 };
 
@@ -739,6 +817,7 @@ const commitProject = async ({vm, message, author, onProgress} = {}) => {
             author: effectiveAuthor
         });
         tempGitJsonString = await exportRepoToGitJsonString();
+        await updateTempGitFiles();
         return ret;
     } catch (e) {
         throw new Error(`Failed to commit: ${e.message}`);
@@ -751,6 +830,7 @@ const deleteRepo = async () => {
     if (!(await exists(pfs, REPO_DIR))) return;
     await removeRecursive(pfs, REPO_DIR);
     tempGitJsonString = await exportRepoToGitJsonString();
+    await updateTempGitFiles();
 };
 
 const deleteBranch = async ref => {
@@ -769,6 +849,7 @@ const deleteBranch = async ref => {
         throw new Error(`Failed to delete branch ${ref}: ${e.message}`);
     }
     tempGitJsonString = await exportRepoToGitJsonString();
+    await updateTempGitFiles();
 };
 
 const listBranches = async () => {
@@ -957,6 +1038,7 @@ const importRepoFromGitJsonString = async gitJsonString => {
         
         // Update tempGitJsonString after successful import
         tempGitJsonString = await exportRepoToGitJsonString();
+        await updateTempGitFiles();
     } catch (e) {
         // Clean up on import failure
         try {
@@ -967,6 +1049,65 @@ const importRepoFromGitJsonString = async gitJsonString => {
         // 恢复 tempGitJsonString
         tempGitJsonString = savedGitJson;
         throw new Error(`Failed to import repository: ${e.message}`);
+    }
+};
+
+const importRepoFromZip = async (zip) => {
+    console.log('[BrowserGit] importRepoFromZip called');
+    const fs = getFs();
+    const pfs = fs.promises;
+    
+    // 使用 Object.values(zip.files) 获取所有文件，因为 glob 模式可能不工作
+    const allEntries = Object.values(zip.files || {});
+    console.log('[BrowserGit] Total files in zip:', allEntries.length);
+    
+    // 筛选出 .git 开头的文件
+    const gitFiles = allEntries.filter(entry => entry.name.startsWith('.git/') && !entry.dir);
+    console.log('[BrowserGit] Found .git files in zip:', gitFiles.length);
+    
+    if (!gitFiles || gitFiles.length === 0) {
+        console.log('[BrowserGit] importRepoFromZip: no .git files found in zip');
+        return false;
+    }
+    
+    const savedGitJson = tempGitJsonString;
+    
+    try {
+        await deleteRepo();
+        await ensureDir(pfs, REPO_DIR);
+        
+        console.log('[BrowserGit] Importing', gitFiles.length, 'files from zip to .git');
+        for (const file of gitFiles) {
+            try {
+                const relPath = file.name;
+                const filePath = pathJoin(REPO_DIR, relPath);
+                await ensureParentDir(pfs, filePath);
+                const content = await file.async('uint8array');
+                await pfs.writeFile(filePath, content);
+            } catch (e) {
+                console.warn('[BrowserGit] Failed to write file during import from zip:', file.name, e);
+            }
+        }
+        
+        const branches = await listBranches();
+        const ref = branches.includes('main') ? 'main' : branches[0];
+        
+        if (ref) {
+            await git.checkout({fs, dir: REPO_DIR, ref, force: true});
+        }
+        
+        tempGitJsonString = await exportRepoToGitJsonString();
+        await updateTempGitFiles();
+        return true;
+    } catch (e) {
+        try {
+            await deleteRepo();
+        } catch (cleanupError) {
+            console.warn('Failed to clean up after import error:', cleanupError);
+        }
+        tempGitJsonString = savedGitJson;
+        console.warn('Failed to import repository from zip:', e);
+        return false;
     }
 };
 
@@ -1071,6 +1212,7 @@ const commitSb3 = async ({
     });
 
     tempGitJsonString = await exportRepoToGitJsonString();
+    await updateTempGitFiles();
     return oid;
 };
 
@@ -1131,6 +1273,8 @@ export {
     _setTempGitJsonString,
     getTempGitJsonString,
     importRepoFromGitJsonString,
+    importRepoFromZip,
+    exportGitToZip,
     deleteRepo,
     deleteBranch,
     commitProject,
