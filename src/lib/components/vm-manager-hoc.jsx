@@ -81,11 +81,10 @@ const vmManagerHOC = function (WrappedComponent) {
 
             const originalSaveProjectZip = vm._saveProjectZip;
             vm._saveProjectZip = (options = {}) => {
+                console.log('[VM Manager] _saveProjectZip called');
                 const zip = originalSaveProjectZip.call(vm, options);
-                const gitJson = BrowserGit.exportRepoToGitJsonStringSync();
-                if (gitJson) {
-                    zip.file('git.json', gitJson);
-                }
+                const result = BrowserGit.exportGitToZip(zip);
+                console.log('[VM Manager] exportGitToZip result:', result);
                 return zip;
             };
 
@@ -139,47 +138,61 @@ const vmManagerHOC = function (WrappedComponent) {
                             console.warn('[VM Manager] Failed to check project extensions:', e);
                         }
                         
-                        const file = zip.file('git.json');
-                        if (file) {
-                            console.log('[VM Manager] Found git.json in project zip');
-                            gitJson = await file.async('string');
+                        // 优先尝试从 .git 文件夹导入（新格式）
+                        // 使用特定文件检测而不是 glob 模式，因为 JSZip 的 glob 可能不支持某些模式
+                        const gitConfigFile = zip.file('.git/config');
+                        console.log('[VM Manager] .git/config exists:', !!gitConfigFile);
                         
-                            // 检查 gitJson 是否是二次编码的 JSON 字符串
-                            try {
-                                const parsed = JSON.parse(gitJson);
-                                // 如果 parsed 是字符串，说明是二次编码的，尝试再次解析
-                                if (typeof parsed === 'string') {
-                                    console.log('[VM Manager] git.json is double-encoded, re-parsing...');
-                                    const reParsed = JSON.parse(parsed);
-                                    gitJson = JSON.stringify(reParsed);
-                                }
-                            } catch (e) {
-                                console.warn('[VM Manager] Failed to parse git.json:', e);
-                            }
-                        
-                            // 直接设置 tempGitJsonString，确保在导入后立即更新
-                            BrowserGit._setTempGitJsonString(gitJson);
+                        if (gitConfigFile) {
+                            console.log('[VM Manager] Found .git folder in project zip, importing directly...');
+                            const imported = await BrowserGit.importRepoFromZip(zip);
+                            console.log('[VM Manager] Import from .git folder:', imported ? 'success' : 'failed');
                         } else {
-                            console.log('[VM Manager] No git.json found in SB3');
+                            // 回退到 git.json（旧格式）
+                            const file = zip.file('git.json');
+                            if (file) {
+                                console.log('[VM Manager] Found git.json in project zip (legacy format)');
+                                gitJson = await file.async('string');
+                        
+                                // 检查 gitJson 是否是二次编码的 JSON 字符串
+                                try {
+                                    const parsed = JSON.parse(gitJson);
+                                    // 如果 parsed 是字符串，说明是二次编码的，尝试再次解析
+                                    if (typeof parsed === 'string') {
+                                        console.log('[VM Manager] git.json is double-encoded, re-parsing...');
+                                        const reParsed = JSON.parse(parsed);
+                                        gitJson = JSON.stringify(reParsed);
+                                    }
+                                } catch (e) {
+                                    console.warn('[VM Manager] Failed to parse git.json:', e);
+                                }
+                        
+                                // 直接设置 tempGitJsonString，确保在导入后立即更新
+                                BrowserGit._setTempGitJsonString(gitJson);
+                            } else {
+                                console.log('[VM Manager] No git.json or .git folder found in SB3');
+                            }
                         }
                     }
                 } catch (e) {
-                    console.warn('[VM Manager] Failed to read git.json:', e);
+                    console.warn('[VM Manager] Failed to read git data:', e);
+                }
+
+                // 对于旧格式的 git.json，需要在 originalLoadProject 之前导入
+                // 这样在加载过程中 repoExists() 才能返回正确的值
+                if (gitJson) {
+                    try {
+                        console.log('[VM Manager] Importing git.json BEFORE loadProject (legacy format)...');
+                        await BrowserGit.importRepoFromGitJsonString(gitJson);
+                        console.log('[VM Manager] importRepoFromGitJsonString completed before loadProject');
+                    } catch (e) {
+                        console.warn('[VM Manager] Failed to import git.json:', e);
+                    }
                 }
 
                 console.log('[VM Manager] Calling original loadProject...');
                 const result = await originalLoadProject.call(vm, data);
                 console.log('[VM Manager] Original loadProject completed');
-
-                if (gitJson) {
-                    try {
-                        console.log('[VM Manager] Calling importRepoFromGitJsonString...');
-                        await BrowserGit.importRepoFromGitJsonString(gitJson);
-                        console.log('[VM Manager] importRepoFromGitJsonString completed');
-                    } catch (e) {
-                        console.warn('[VM Manager] Failed to import git.json:', e);
-                    }
-                }
 
                 return result;
             };
