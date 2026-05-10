@@ -2634,7 +2634,9 @@ __webpack_require__.r(__webpack_exports__);
   "toolbox-category-drag": () => __webpack_require__.e(/*! import() | addon-entry-toolbox-category-drag */ "addon-entry-toolbox-category-drag").then(__webpack_require__.bind(null, /*! ../addons/toolbox-category-drag/_runtime_entry.js */ "./src/addons/addons/toolbox-category-drag/_runtime_entry.js")),
   "block-pins": () => __webpack_require__.e(/*! import() | addon-entry-block-pins */ "addon-entry-block-pins").then(__webpack_require__.bind(null, /*! ../addons/block-pins/_runtime_entry.js */ "./src/addons/addons/block-pins/_runtime_entry.js")),
   "show-fps": () => __webpack_require__.e(/*! import() | addon-entry-tw-show-fps */ "addon-entry-tw-show-fps").then(__webpack_require__.bind(null, /*! ../addons/show-fps/_runtime_entry.js */ "./src/addons/addons/show-fps/_runtime_entry.js")),
-  "simple-project-analyzer": () => __webpack_require__.e(/*! import() | addon-entry-simple-project-analyzer */ "addon-entry-simple-project-analyzer").then(__webpack_require__.bind(null, /*! ../addons/simple-project-analyzer/_runtime_entry.js */ "./src/addons/addons/simple-project-analyzer/_runtime_entry.js"))
+  "simple-project-analyzer": () => __webpack_require__.e(/*! import() | addon-entry-simple-project-analyzer */ "addon-entry-simple-project-analyzer").then(__webpack_require__.bind(null, /*! ../addons/simple-project-analyzer/_runtime_entry.js */ "./src/addons/addons/simple-project-analyzer/_runtime_entry.js")),
+  "background": () => __webpack_require__.e(/*! import() | addon-entry-background */ "addon-entry-background").then(__webpack_require__.bind(null, /*! ../addons/background/_runtime_entry.js */ "./src/addons/addons/background/_runtime_entry.js")),
+  "todo": () => __webpack_require__.e(/*! import() | addon-entry-todo */ "addon-entry-todo").then(__webpack_require__.bind(null, /*! ../addons/todo/_runtime_entry.js */ "./src/addons/addons/todo/_runtime_entry.js"))
 });
 
 /***/ }),
