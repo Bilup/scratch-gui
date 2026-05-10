@@ -718,6 +718,7 @@
         "tw.simpleDialog.ok": "确定",
         "tw.simpleDialog.cancel": "取消",
         "gui.opcodeLabels.online": "在线？",
-        "gui.opcodeLabels.costumes": "造型"
+        "gui.opcodeLabels.costumes": "造型",
+        "tw.menuBar.todo": "待办"
     }
 }
