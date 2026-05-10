@@ -507,5 +507,10 @@
   "show-fps/@description": "在舞台上方显示当前帧率（FPS）。",
   "show-fps/@name": "显示 FPS",
   "simple-project-analyzer/@name": "SPA 简易作品分析器",
-  "simple-project-analyzer/@description": "使用简单的算法在编辑器中分析您的作品！"
+  "simple-project-analyzer/@description": "使用简单的算法在编辑器中分析您的作品！",
+  "background/@name": "背景",
+  "background/@description": "让你的编辑器焕然一新。",
+  "background/@info-reducePerformance": "这可能会造成一些性能问题，而且会覆盖 Bilup 原有的壁纸设置。",
+  "todo/@name": "待办",
+  "todo/@description": "记录作品的待办！"
 }

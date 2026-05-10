@@ -93,4 +93,6 @@ export default {
   "block-pins": () => import(/* webpackChunkName: "addon-entry-block-pins" */ "../addons/block-pins/_runtime_entry.js"),
   "show-fps": () => import(/* webpackChunkName: "addon-entry-tw-show-fps" */ "../addons/show-fps/_runtime_entry.js"),
   "simple-project-analyzer": () => import(/* webpackChunkName: "addon-entry-simple-project-analyzer" */ "../addons/simple-project-analyzer/_runtime_entry.js"),
+  "background": () => import(/* webpackChunkName: "addon-entry-background" */ "../addons/background/_runtime_entry.js"),
+  "todo": () => import(/* webpackChunkName: "addon-entry-todo" */ "../addons/todo/_runtime_entry.js"),
 };

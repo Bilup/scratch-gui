@@ -92,6 +92,8 @@ import _toolbox_category_drag from "../addons/toolbox-category-drag/_manifest_en
 import _block_pins from "../addons/block-pins/_manifest_entry.js";
 import _show_fps from "../addons/show-fps/_manifest_entry.js";
 import _simple_project_analyzer from "../addons/simple-project-analyzer/_manifest_entry.js";
+import _background from "../addons/background/_manifest_entry.js";
+import _todo from "../addons/todo/_manifest_entry.js";
 export default {
   "cat-blocks": _cat_blocks,
   "dev-inspector": _dev_inspector,
@@ -185,5 +187,7 @@ export default {
   "toolbox-category-drag": _toolbox_category_drag,
   "block-pins": _block_pins,
   "show-fps": _show_fps,
-  "simple-project-analyzer": _simple_project_analyzer
+  "simple-project-analyzer": _simple_project_analyzer,
+  "background": _background,
+  "todo": _todo,
 };

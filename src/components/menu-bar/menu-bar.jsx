@@ -9,7 +9,7 @@ import bindAll from 'lodash.bindall';
 import bowser from 'bowser';
 import React from 'react';
 
-import {updateCallbacks} from '../../lib/shortcuts/event-router.js';
+import { updateCallbacks } from '../../lib/shortcuts/event-router.js';
 
 import VM from 'scratch-vm';
 
@@ -144,8 +144,8 @@ import {
     FilePen, PencilRuler, TriangleAlert, Info, Shuffle, Zap, Gauge,
     FilePlusCorner, Upload, RefreshCcw, ClockPlus, Package, FileInput,
     Save, ArchiveRestore, UserPen, Cloud, Settings, PackagePlus, Puzzle,
-    Bookmark, GitBranch, FileCog, Bug, Database, Undo, Redo, Handshake, 
-    Sparkles, Wrench, Keyboard, ChartColumn
+    Bookmark, GitBranch, FileCog, Bug, Database, Undo, Redo, Handshake,
+    Sparkles, Wrench, Keyboard, ChartColumn, ListTodo
 } from 'lucide-react';
 
 import sharedMessages from '../../lib/constants/shared-messages';
@@ -330,6 +330,9 @@ class MenuBar extends React.Component {
         // Prevent the legacy addon from also injecting a bookmarks menu.
         window.__bilupNativeWorkspaceBookmarks = true;
 
+        // Expose showPrompt for addons
+        window.__bilupPrompt = this.showPrompt.bind(this);
+
         this.loadWorkspaceBookmarksFromProject();
         if (this.props.vm && this.props.vm.runtime) {
             this.workspaceBookmarksProjectListener = () => {
@@ -386,10 +389,10 @@ class MenuBar extends React.Component {
             'backpack': 'toggleBackpack',
             'extensionManager': 'extensionManager'
         };
-        
+
         // Get the correct keyId for the shortcut registry
         const registryKeyId = keyIdMap[keyId] || keyId;
-        
+
         // Get custom shortcut from props, or return default
         if (this.props.customShortcuts && this.props.customShortcuts[registryKeyId]) {
             return this.props.customShortcuts[registryKeyId];
@@ -589,7 +592,7 @@ class MenuBar extends React.Component {
             const hasCustomShortcuts = this.props.customShortcuts && Object.keys(this.props.customShortcuts).length > 0;
             const isSaveCustomized = hasCustomShortcuts && this.props.customShortcuts.save;
             const isOpenCustomized = hasCustomShortcuts && this.props.customShortcuts.open;
-            
+
             if (event.key.toLowerCase() === 's' && !isSaveCustomized) {
                 this.props.handleSaveProject();
                 event.preventDefault();
@@ -728,9 +731,9 @@ class MenuBar extends React.Component {
         if (name === null) return;
 
         let category = this.props.intl.formatMessage({
-                    defaultMessage: 'General',
-                    id: 'tw.menuBar.bookmarkDefaultCategory'
-                });
+            defaultMessage: 'General',
+            id: 'tw.menuBar.bookmarkDefaultCategory'
+        });
         if (enableCategories) {
             const categoryInput = await this.showPrompt(
                 this.props.intl.formatMessage({
@@ -749,9 +752,9 @@ class MenuBar extends React.Component {
             );
             if (categoryInput === null) return;
             category = categoryInput.trim() || this.props.intl.formatMessage({
-                    defaultMessage: 'General',
-                    id: 'tw.menuBar.bookmarkDefaultCategory'
-                });
+                defaultMessage: 'General',
+                id: 'tw.menuBar.bookmarkDefaultCategory'
+            });
         }
 
         const bookmark = {
@@ -814,9 +817,9 @@ class MenuBar extends React.Component {
         }
 
         let newCategory = bookmark.category || this.props.intl.formatMessage({
-                    defaultMessage: 'General',
-                    id: 'tw.menuBar.bookmarkDefaultCategory'
-                });
+            defaultMessage: 'General',
+            id: 'tw.menuBar.bookmarkDefaultCategory'
+        });
         if (enableCategories) {
             const categoryList = this.state.workspaceBookmarksCategories.join(', ');
             const categoryInput = await this.showPrompt(
@@ -964,9 +967,9 @@ class MenuBar extends React.Component {
         this.setState({
             workspaceBookmarks: [],
             workspaceBookmarksCategories: [this.props.intl.formatMessage({
-                    defaultMessage: 'General',
-                    id: 'tw.menuBar.bookmarkDefaultCategory'
-                })],
+                defaultMessage: 'General',
+                id: 'tw.menuBar.bookmarkDefaultCategory'
+            })],
             workspaceBookmarksCollapsedCategories: []
         }, () => {
             this.saveWorkspaceBookmarksToProject();
@@ -1358,11 +1361,11 @@ class MenuBar extends React.Component {
                                                 <div>
                                                     <Save />
                                                     <MenuItem
-                                                    onClick={this.handleClickSaveAsCopy}
-                                                    shortcut={formatShortcutDisplay(this.getShortcut('saveAs'))}
-                                                >
-                                                    {createCopyMessage}
-                                                </MenuItem>
+                                                        onClick={this.handleClickSaveAsCopy}
+                                                        shortcut={formatShortcutDisplay(this.getShortcut('saveAs'))}
+                                                    >
+                                                        {createCopyMessage}
+                                                    </MenuItem>
                                                 </div>
                                             )}
                                             {this.props.canRemix && (
@@ -1833,6 +1836,10 @@ class MenuBar extends React.Component {
                                                 />
                                             </MenuItem>
                                         )}
+                                    </MenuSection>
+                                ) : null}
+                                {window.__bilupTodoToggle || window.__bilupSPAToggle ? (
+                                    <MenuSection>
                                         {window.__bilupSPAToggle && (
                                             <MenuItem
                                                 onClick={() => {
@@ -1845,6 +1852,21 @@ class MenuBar extends React.Component {
                                                     defaultMessage="Simple Project Analyzer"
                                                     description="Menu bar item to toggle the simple project analyzer"
                                                     id="tw.menuBar.spa"
+                                                />
+                                            </MenuItem>
+                                        )}
+                                        {window.__bilupTodoToggle && (
+                                            <MenuItem
+                                                onClick={() => {
+                                                    window.__bilupTodoToggle();
+                                                    this.props.onRequestCloseTools();
+                                                }}
+                                            >
+                                                <ListTodo />
+                                                <FormattedMessage
+                                                    defaultMessage="ToDo"
+                                                    description="Menu bar item to toggle the ToDo"
+                                                    id="tw.menuBar.todo"
                                                 />
                                             </MenuItem>
                                         )}
