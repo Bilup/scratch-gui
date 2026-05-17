@@ -130,6 +130,7 @@ class CollaborationService {
 
         this.peerConfig = {
             host: 'collab.bilup.org',
+            port: 443,
             key: 'bilup',
             path: '/',
             secure: true,
@@ -1355,6 +1356,38 @@ class CollaborationService {
 
     changeRoomPrivacy (newPrivacy) {
         return changeRoomPrivacyExternal(this, newPrivacy);
+    }
+
+    updatePeerConfig (config) {
+        if ('host' in config) {
+            this.peerConfig.host = config.host;
+        }
+        if ('port' in config) {
+            this.peerConfig.port = config.port;
+        }
+        if ('key' in config) {
+            if (config.key === '' || config.key === undefined) {
+                delete this.peerConfig.key;
+            } else {
+                this.peerConfig.key = config.key;
+            }
+        }
+        if ('path' in config) {
+            this.peerConfig.path = config.path;
+        }
+        if ('secure' in config) {
+            this.peerConfig.secure = config.secure;
+        }
+    }
+
+    getPeerConfig () {
+        return {
+            host: this.peerConfig.host,
+            port: this.peerConfig.port,
+            key: this.peerConfig.key === undefined ? '' : this.peerConfig.key,
+            path: this.peerConfig.path,
+            secure: this.peerConfig.secure
+        };
     }
 }
 

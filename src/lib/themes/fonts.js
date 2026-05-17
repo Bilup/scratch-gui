@@ -64,7 +64,7 @@ const applyThemeFonts = async fonts => {
     newFontStyleElement.textContent = `
         /* Theme Fonts - High Priority Overrides */
         *:not([class^="paint-editor_text-area_"]) {
-            font-family: var(--theme-font, ${fontFamily}) !important;
+            font-family: ${fontFamily} !important;
         }
 
         /* Ensure key UI elements inherit correctly */
@@ -75,7 +75,7 @@ const applyThemeFonts = async fonts => {
         [class*="menu-bar_"],
         [class*="settings-menu_"],
         .blocklyHtmlInput,
-        button, input, textarea, select,
+        button, input, textarea[class^="paint-editor_text-area_*"], select,
         .menu-bar, .menu-item {
             font-family: inherit !important;
         }

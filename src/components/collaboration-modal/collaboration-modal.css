@@ -679,3 +679,94 @@
     padding-left: 1rem;
     border-top: 1px solid $ui-black-transparent;
 }
+
+/* Settings button */
+.settingsButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid $ui-black-transparent;
+    color: $text-primary;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    transition: all 0.2s;
+    margin-left: auto;
+}
+
+.settingsButton:hover {
+    background: $badge-border;
+    border-color: $ui-black-transparent;
+}
+
+.settingsButton:active {
+    background: $ui-black-transparent;
+}
+
+/* Close button */
+.closeButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: $text-primary;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    transition: all 0.2s;
+    margin-left: auto;
+}
+
+.closeButton:hover {
+    background: $badge-border;
+}
+
+.closeButton:active {
+    background: $ui-black-transparent;
+}
+
+/* Settings section */
+.settingsSection {
+    margin-top: 1.5rem;
+    padding-left: 1rem;
+}
+
+.settingsSection .sectionTitle {
+    margin-bottom: 1.5rem;
+}
+
+.settingsSection .inputGroup {
+    margin-bottom: 1.25rem;
+}
+
+.settingsSection .checkboxLabel {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: $text-primary;
+}
+
+.settingsSection .checkbox {
+    width: 1rem;
+    height: 1rem;
+    cursor: pointer;
+    accent-color: $motion-primary;
+}
+
+/* Settings actions */
+.settingsActions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid $ui-black-transparent;
+}
+
+.settingsActions .secondaryButton,
+.settingsActions .primaryButton {
+    flex: 1;
+}

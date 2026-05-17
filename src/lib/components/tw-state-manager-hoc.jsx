@@ -392,6 +392,49 @@ const TWStateManager = function (WrappedComponent) {
                 }
             }
 
+            // Handle collab parameter for peerJS config
+            if (urlParams.has('collab')) {
+                try {
+                    const collabParam = urlParams.get('collab');
+                    const decoded = decodeURIComponent(collabParam);
+                    const collabConfig = JSON.parse(decoded);
+
+                    // Update peerJS config if provided
+                    if (typeof window !== 'undefined' && window.CollaborationService) {
+                        try {
+                            const service = window.CollaborationService.getInstance();
+                            if (service && service.updatePeerConfig && collabConfig.peer) {
+                                service.updatePeerConfig(collabConfig.peer);
+                                console.log('[STATE MANAGER] Applied peer config from collab parameter');
+                            }
+                        } catch (e) {
+                            console.warn('[STATE MANAGER] Failed to update peer config:', e);
+                        }
+                    }
+
+                    // Handle room code from collab config
+                    if (collabConfig.room) {
+                        const roomCode = collabConfig.room;
+
+                        // Clear pending room code if any
+                        this.pendingRoomCode = roomCode;
+
+                        // Remove room and username params from URL (keep collab)
+                        const currentUrl = new URL(location.href);
+                        currentUrl.searchParams.delete('room');
+                        currentUrl.searchParams.delete('username');
+                        history.replaceState(null, null, currentUrl.toString());
+
+                        if (this.props.username) {
+                            this.handleRoomCode(roomCode);
+                        }
+                    }
+                    // Don't remove collab parameter - keep it for persistence
+                } catch (e) {
+                    console.error('[STATE MANAGER] Failed to parse collab parameter:', e);
+                }
+            }
+
             const routerCallbacks = {
                 onSetProjectId: this.onSetProjectId,
                 onSetIsPlayerOnly: this.onSetIsPlayerOnly,

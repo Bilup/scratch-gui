@@ -61,7 +61,7 @@ const showAlert = (intl, message, options = {}) => new Promise(resolve => {
     const okBtn = document.createElement('button');
     okBtn.innerText = options.okLabel || 'OK';
     okBtn.className = 'mw-alert-ok-btn';
-    okBtn.style.cssText = 'padding:8px 14px;border-radius:8px;border:none;background:var(--ui-primary, #4C97FF);color:white;cursor:pointer;font-weight:600;';
+    okBtn.style.cssText = 'padding:8px 14px;border-radius:8px;border:none;background:var(--looks-secondary, #4C97FF);color:white;cursor:pointer;font-weight:600;';
 
     okBtn.addEventListener('click', () => {
         try {
