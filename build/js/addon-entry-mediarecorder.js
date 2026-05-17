@@ -294,7 +294,7 @@ const setRecordElem = elem => {
       if (!optionsWindow) return;
 
       // Update window title
-      optionsWindow.setTitle("".concat(msg('option-title'), " - Recording"));
+      optionsWindow.setTitle("".concat(msg('option-title'), " - ").concat(msg('recording')));
 
       // Create status content
       const statusContent = document.createElement('div');
@@ -303,7 +303,7 @@ const setRecordElem = elem => {
       // Status header
       const statusHeader = document.createElement('div');
       statusHeader.className = 'media-recorder-status-header';
-      statusHeader.innerHTML = "\n        <div class=\"media-recorder-status-icon\">\uD83C\uDFAC</div>\n        <div class=\"media-recorder-status-text\">\n          <h3>Recording in Progress</h3>\n          <p>Your project is being recorded. You can stop anytime using the button below.</p>\n        </div>\n      ";
+      statusHeader.innerHTML = "\n        <div class=\"media-recorder-status-icon\">\uD83C\uDFAC</div>\n        <div class=\"media-recorder-status-text\">\n          <h3>".concat(msg('recording-in-progress'), "</h3>\n          <p>").concat(msg('recording-description'), "</p>\n        </div>\n      ");
       statusContent.appendChild(statusHeader);
 
       // Status info container
@@ -313,13 +313,13 @@ const setRecordElem = elem => {
       // Recording time display
       const timeDisplay = document.createElement('div');
       timeDisplay.className = 'media-recorder-status-item';
-      timeDisplay.innerHTML = "\n        <span class=\"media-recorder-status-label\">Time:</span>\n        <span class=\"media-recorder-status-value\" id=\"recording-time\">0s / ".concat(opts.secs, "s</span>\n      ");
+      timeDisplay.innerHTML = "\n        <span class=\"media-recorder-status-label\">".concat(msg('time'), ":</span>\n        <span class=\"media-recorder-status-value\" id=\"recording-time\">0s / ").concat(opts.secs, "s</span>\n      ");
       statusInfo.appendChild(timeDisplay);
 
       // Data size display
       const sizeDisplay = document.createElement('div');
       sizeDisplay.className = 'media-recorder-status-item';
-      sizeDisplay.innerHTML = "\n        <span class=\"media-recorder-status-label\">Size:</span>\n        <span class=\"media-recorder-status-value\" id=\"recording-size\">0 KB</span>\n      ";
+      sizeDisplay.innerHTML = "\n        <span class=\"media-recorder-status-label\">".concat(msg('size'), ":</span>\n        <span class=\"media-recorder-status-value\" id=\"recording-size\">0 KB</span>\n      ");
       statusInfo.appendChild(sizeDisplay);
       statusContent.appendChild(statusInfo);
 
@@ -330,7 +330,7 @@ const setRecordElem = elem => {
       // Cancel button (doesn't save)
       const cancelButton = document.createElement('button');
       cancelButton.className = 'media-recorder-button media-recorder-button-cancel';
-      cancelButton.textContent = 'Cancel Recording';
+      cancelButton.textContent = msg('cancel-recording');
       cancelButton.addEventListener('click', () => {
         stopRecording(true); // Force stop without saving
       });
@@ -338,14 +338,13 @@ const setRecordElem = elem => {
       // End and save button
       const saveButton = document.createElement('button');
       saveButton.className = 'media-recorder-button media-recorder-button-save';
-      saveButton.textContent = 'End and Save';
+      saveButton.textContent = msg('end-and-save');
       saveButton.addEventListener('click', () => {
         stopRecording(false); // Normal stop with saving
       });
       stopButtonContainer.appendChild(cancelButton);
       stopButtonContainer.appendChild(saveButton);
       statusContent.appendChild(stopButtonContainer);
-
       // Update window content
       optionsWindow.setContent(statusContent);
 

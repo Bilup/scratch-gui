@@ -1,7 +1,7 @@
 
 // AUTO-GENERATED — DO NOT EDIT
 // Source: https://raw.githubusercontent.com/PenguinMod/PenguinMod-ExtensionsGallery/main/src/lib/extensions.js
-// Synced at: 2026-05-10T14:31:03.923Z
+// Synced at: 2026-05-17T02:31:33.394Z
 
 /*
     note to contributors & developers that can read JSON:
@@ -407,14 +407,6 @@ export default [
         creator: "TheShovel",
         isGitHub: true,
         notes: "Some contributions by yuri-kiss :P",
-    },
-    {
-        name: "Project Page",
-        description: "Modify and affect the studio project page from the code. How annoying can an extension possibly be?",
-        code: "jwklong/projectpage.js",
-        banner: "jwklong/projectpage.avif",
-        creator: "jwklong",
-        isGitHub: true,
     },
     {
         name: "All Menus",
