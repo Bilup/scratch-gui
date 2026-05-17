@@ -276,6 +276,7 @@ const connectToRoom = async (service, roomId, username, isHost = false, privacy 
         }
 
         const peerId = service.generatePeerId(roomId, isHost);
+        console.log('[Collab] Creating Peer with config:', JSON.stringify(service.peerConfig, null, 2));
         service.peer = new Peer(peerId, service.peerConfig);
         return new Promise((resolve, reject) => {
             service.username = username || `User${Math.floor(Math.random() * 1000)}`;
@@ -300,6 +301,7 @@ const connectToRoom = async (service, roomId, username, isHost = false, privacy 
             });
 
             service.peer.on('error', error => {
+                console.error('[Collab] Peer error:', error.type, error.message, error);
                 if (service.isDisconnecting || (service._isShuttingDown && service._isShuttingDown())) {
                     console.warn('[Connection] Ignoring peer error during shutdown:', error);
                     return;

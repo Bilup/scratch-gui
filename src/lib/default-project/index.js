@@ -4,13 +4,7 @@ import projectData from './project-data';
 import overrideDefaultProject from '!arraybuffer-loader!./override-default-project.sb3';
 import backdrop from '!raw-loader!./223d25c297317463755043f276178aef.svg';
 /* eslint-enable import/no-unresolved */
-import {TextEncoder} from '../tw-text-encoder';
-import tips from './tips.json';
-
-function genTip(str) {
-    const randomTip = tips[Math.floor(Math.random() * tips.length)];
-    return str.replace(/\$\{TIP\}/g, randomTip);
-}
+import { TextEncoder } from '../tw-text-encoder';
 
 const defaultProject = translator => {
     if (overrideDefaultProject.byteLength > 0) {
@@ -40,7 +34,7 @@ const defaultProject = translator => {
         id: '223d25c297317463755043f276178aef',
         assetType: 'ImageVector',
         dataFormat: 'SVG',
-        data: encoder.encode(genTip(backdrop))
+        data: encoder.encode(backdrop)
     }];
 };
 

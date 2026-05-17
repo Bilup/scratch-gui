@@ -12,7 +12,7 @@ import FancyCheckbox from '../tw-fancy-checkbox/checkbox.jsx';
 
 const BufferedInput = BufferedInputHOC(Input);
 
-import { Handshake as CollaborationIcon, User, Crown, UserMinus, Copy, AlertTriangle, PenLine } from 'lucide-react';
+import { Handshake as CollaborationIcon, User, Crown, UserMinus, Copy, AlertTriangle, PenLine, Settings, X } from 'lucide-react';
 
 import showAlert from '../../addons/window-system/alert';
 
@@ -28,7 +28,15 @@ class CollaborationModal extends Component {
             connectionStep: props.isConnected ? 'connected' : 'join',
             error: null,
             pendingRequests: [],
-            showJoinRequest: false
+            showJoinRequest: false,
+            showSettings: false,
+            peerConfig: {
+                host: 'collab.bilup.org',
+                port: 443,
+                key: 'bilup',
+                path: '/',
+                secure: true
+            }
         };
 
         this.autoJoinAttempted = new Set();
@@ -59,6 +67,14 @@ class CollaborationModal extends Component {
         this.handleCancelClick = this.handleCancelClick.bind(this);
         this.togglePublicPrivacy = this.togglePublicPrivacy.bind(this);
         this.togglePrivatePrivacy = this.togglePrivatePrivacy.bind(this);
+        this.handleShowSettings = this.handleShowSettings.bind(this);
+        this.handleCloseSettings = this.handleCloseSettings.bind(this);
+        this.handleHostChange = this.handleHostChange.bind(this);
+        this.handlePortChange = this.handlePortChange.bind(this);
+        this.handleKeyChange = this.handleKeyChange.bind(this);
+        this.handlePathChange = this.handlePathChange.bind(this);
+        this.handleSecureChange = this.handleSecureChange.bind(this);
+        this.handleSaveConfig = this.handleSaveConfig.bind(this);
     }
 
     componentDidMount() {
@@ -244,6 +260,121 @@ class CollaborationModal extends Component {
 
     togglePrivatePrivacy() {
         this.handleChangeCurrentRoomPrivacy('private');
+    }
+
+    handleShowSettings() {
+        if (typeof window !== 'undefined' && window.CollaborationService) {
+            try {
+                const service = window.CollaborationService.getInstance();
+                if (service && service.getPeerConfig) {
+                    const config = service.getPeerConfig();
+                    this.setState({
+                        showSettings: true,
+                        peerConfig: config
+                    });
+                    return;
+                }
+            } catch (error) {
+                console.warn('Could not get peer config:', error);
+            }
+        }
+        this.setState({ showSettings: true });
+    }
+
+    handleCloseSettings() {
+        this.setState({ showSettings: false });
+    }
+
+    handleHostChange(host) {
+        this.setState(prevState => ({
+            peerConfig: {
+                ...prevState.peerConfig,
+                host
+            }
+        }));
+    }
+
+    handlePortChange(port) {
+        const portNum = parseInt(port, 10);
+        this.setState(prevState => ({
+            peerConfig: {
+                ...prevState.peerConfig,
+                port: isNaN(portNum) ? port : portNum
+            }
+        }));
+    }
+
+    handleKeyChange(key) {
+        this.setState(prevState => ({
+            peerConfig: {
+                ...prevState.peerConfig,
+                key: key === '' ? undefined : key
+            }
+        }));
+    }
+
+    handlePathChange(path) {
+        this.setState(prevState => ({
+            peerConfig: {
+                ...prevState.peerConfig,
+                path
+            }
+        }));
+    }
+
+    handleSecureChange(secure) {
+        this.setState(prevState => ({
+            peerConfig: {
+                ...prevState.peerConfig,
+                secure
+            }
+        }));
+    }
+
+    handleSaveConfig() {
+        if (typeof window !== 'undefined' && window.CollaborationService) {
+            try {
+                const service = window.CollaborationService.getInstance();
+                if (service && service.updatePeerConfig) {
+                    service.updatePeerConfig(this.state.peerConfig);
+                    
+                    // Update URL collab parameter
+                    const { host, port, key, path, secure } = this.state.peerConfig;
+                    const peerConfig = { 
+                        host, 
+                        port, 
+                        key: key === undefined ? '' : key, 
+                        path, 
+                        secure 
+                    };
+                    const collabConfig = { peer: peerConfig };
+                    const encoded = encodeURIComponent(JSON.stringify(collabConfig));
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('collab', encoded);
+                    window.history.replaceState(null, null, url.toString());
+                    
+                    if (service.isConnected) {
+                        service.disconnect();
+                    }
+                    
+                    showAlert(this.props.intl, this.props.intl.formatMessage({
+                        defaultMessage: 'Configuration saved successfully!',
+                        description: 'Alert message when configuration is saved',
+                        id: 'gui.collaboration.configSaved'
+                    }));
+                    this.setState({ showSettings: false });
+                    return;
+                }
+            } catch (error) {
+                console.error('Failed to save configuration:', error);
+                showAlert(this.props.intl, this.props.intl.formatMessage({
+                    defaultMessage: 'Failed to save configuration',
+                    description: 'Alert message when configuration save fails',
+                    id: 'gui.collaboration.configSaveFailed'
+                }));
+            }
+        }
+        this.setState({ showSettings: false });
     }
 
     handleRoomIdChange(roomId) {
@@ -596,6 +727,17 @@ class CollaborationModal extends Component {
                             id="gui.collaboration.title"
                         />
                     </div>
+                    <button
+                        className={styles.settingsButton}
+                        onClick={this.handleShowSettings}
+                        title={this.props.intl.formatMessage({
+                            defaultMessage: 'Connection settings',
+                            description: 'Tooltip for settings button',
+                            id: 'gui.collaboration.settingsButtonTitle'
+                        })}
+                    >
+                        <Settings size={20} />
+                    </button>
                 </div>
 
                 <div className={styles.description}>
@@ -1103,23 +1245,208 @@ class CollaborationModal extends Component {
         );
     }
 
+    renderSettingsStep() {
+        return (
+            <Box className={styles.content}>
+                <div className={styles.alphaBanner}>
+                    <div className={styles.bannerIcon}>
+                        <AlertTriangle size={20} />
+                    </div>
+                    <div className={styles.bannerContent}>
+                        <strong>
+                            <FormattedMessage
+                                defaultMessage="Alpha Warning:"
+                                description="Alpha warning label"
+                                id="gui.collaboration.alphaWarningLabel"
+                            />
+                        </strong>
+                        {' '}
+                        <FormattedMessage
+                            defaultMessage="This feature is in early development. Your projects may get corrupted or broken. Use at your own risk."
+                            description="Alpha warning message"
+                            id="gui.collaboration.alphaWarningMessage"
+                        />
+                    </div>
+                </div>
+
+                <div className={styles.header}>
+                    <Settings
+                        className={styles.headerIcon}
+                        draggable={false}
+                    />
+                    <div className={styles.headerText}>
+                        <FormattedMessage
+                            defaultMessage="Connection Settings"
+                            description="Title for settings modal"
+                            id="gui.collaboration.settingsTitle"
+                        />
+                    </div>
+                    <button
+                        className={styles.closeButton}
+                        onClick={this.handleCloseSettings}
+                        title={this.props.intl.formatMessage({
+                            defaultMessage: 'Close settings',
+                            description: 'Tooltip for close button',
+                            id: 'gui.collaboration.closeSettingsTitle'
+                        })}
+                    >
+                        <X size={20} />
+                    </button>
+                </div>
+
+                <div className={styles.settingsSection}>
+                    <h3 className={styles.sectionTitle}>
+                        <FormattedMessage
+                            defaultMessage="PeerJS Server Configuration"
+                            description="Settings section title"
+                            id="gui.collaboration.peerServerConfig"
+                        />
+                    </h3>
+
+                    <div className={styles.inputGroup}>
+                        <label className={styles.label}>
+                            <FormattedMessage
+                                defaultMessage="Host"
+                                description="Label for peer server host input"
+                                id="gui.collaboration.peerHost"
+                            />
+                        </label>
+                        <BufferedInput
+                            className={styles.input}
+                            placeholder={this.props.intl.formatMessage({
+                                defaultMessage: 'Enter host address...',
+                                description: 'Placeholder for host input',
+                                id: 'gui.collaboration.peerHostPlaceholder'
+                            })}
+                            value={this.state.peerConfig.host}
+                            onSubmit={this.handleHostChange}
+                        />
+                    </div>
+
+                    <div className={styles.inputGroup}>
+                        <label className={styles.label}>
+                            <FormattedMessage
+                                defaultMessage="Port"
+                                description="Label for peer server port input"
+                                id="gui.collaboration.peerPort"
+                            />
+                        </label>
+                        <BufferedInput
+                            className={styles.input}
+                            placeholder={this.props.intl.formatMessage({
+                                defaultMessage: 'Enter port number...',
+                                description: 'Placeholder for port input',
+                                id: 'gui.collaboration.peerPortPlaceholder'
+                            })}
+                            value={this.state.peerConfig.port}
+                            onSubmit={this.handlePortChange}
+                        />
+                    </div>
+
+                    <div className={styles.inputGroup}>
+                        <label className={styles.label}>
+                            <FormattedMessage
+                                defaultMessage="Key"
+                                description="Label for peer server key input"
+                                id="gui.collaboration.peerKey"
+                            />
+                        </label>
+                        <BufferedInput
+                            className={styles.input}
+                            placeholder={this.props.intl.formatMessage({
+                                defaultMessage: 'Enter API key...',
+                                description: 'Placeholder for key input',
+                                id: 'gui.collaboration.peerKeyPlaceholder'
+                            })}
+                            value={this.state.peerConfig.key}
+                            onSubmit={this.handleKeyChange}
+                        />
+                    </div>
+
+                    <div className={styles.inputGroup}>
+                        <label className={styles.label}>
+                            <FormattedMessage
+                                defaultMessage="Path"
+                                description="Label for peer server path input"
+                                id="gui.collaboration.peerPath"
+                            />
+                        </label>
+                        <BufferedInput
+                            className={styles.input}
+                            placeholder={this.props.intl.formatMessage({
+                                defaultMessage: 'Enter path...',
+                                description: 'Placeholder for path input',
+                                id: 'gui.collaboration.peerPathPlaceholder'
+                            })}
+                            value={this.state.peerConfig.path}
+                            onSubmit={this.handlePathChange}
+                        />
+                    </div>
+
+                    <div className={styles.inputGroup}>
+                        <label className={styles.checkboxLabel}>
+                            <input
+                                type="checkbox"
+                                checked={this.state.peerConfig.secure}
+                                onChange={e => this.handleSecureChange(e.target.checked)}
+                                className={styles.checkbox}
+                            />
+                            <FormattedMessage
+                                defaultMessage="Secure (HTTPS/WSS)"
+                                description="Label for secure connection checkbox"
+                                id="gui.collaboration.peerSecure"
+                            />
+                        </label>
+                    </div>
+                </div>
+
+                <div className={styles.settingsActions}>
+                    <Button
+                        className={styles.secondaryButton}
+                        onClick={this.handleCloseSettings}
+                    >
+                        <FormattedMessage
+                            defaultMessage="Cancel"
+                            description="Cancel settings button"
+                            id="gui.collaboration.cancelSettings"
+                        />
+                    </Button>
+                    <Button
+                        className={styles.primaryButton}
+                        onClick={this.handleSaveConfig}
+                    >
+                        <FormattedMessage
+                            defaultMessage="Save Settings"
+                            description="Save settings button"
+                            id="gui.collaboration.saveSettings"
+                        />
+                    </Button>
+                </div>
+            </Box>
+        );
+    }
+
     render() {
         let content;
-        switch (this.state.connectionStep) {
-            case 'join':
-                content = this.renderJoinStep();
-                break;
-            case 'connecting':
-                content = this.renderConnectingStep();
-                break;
-            case 'connected':
-                content = this.renderConnectedStep();
-                break;
-            case 'pending-approval':
-                content = this.renderPendingApprovalStep();
-                break;
-            default:
-                content = this.renderJoinStep();
+        if (this.state.showSettings) {
+            content = this.renderSettingsStep();
+        } else {
+            switch (this.state.connectionStep) {
+                case 'join':
+                    content = this.renderJoinStep();
+                    break;
+                case 'connecting':
+                    content = this.renderConnectingStep();
+                    break;
+                case 'connected':
+                    content = this.renderConnectedStep();
+                    break;
+                case 'pending-approval':
+                    content = this.renderPendingApprovalStep();
+                    break;
+                default:
+                    content = this.renderJoinStep();
+            }
         }
 
         return (

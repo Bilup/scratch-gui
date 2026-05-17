@@ -58,6 +58,9 @@ class SimpleDialogComponent extends React.Component {
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="simpleDialog-title"
+                width={400}
+                height={239}
+                resizable={false}
             >
                 <div className={styles.body}>
                     <p
