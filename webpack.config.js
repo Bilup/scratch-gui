@@ -36,7 +36,7 @@ const base = {
         host: '0.0.0.0',
         disableHostCheck: true,
         compress: true,
-        port: process.env.PORT || 8061,
+        port: process.env.PORT || 9178,
         // allows ROUTING_STYLE=wildcard to work properly
         historyApiFallback: {
             rewrites: [
@@ -57,6 +57,7 @@ const base = {
         publicPath: root
     },
     resolve: {
+        extensions: ['.js', '.jsx', '.ts', '.tsx'],
         symlinks: false,
         alias: {
             'react': require.resolve('react'),
@@ -68,6 +69,34 @@ const base = {
     },
     module: {
         rules: [{
+            test: /\.tsx?$/,
+            use: [
+                {
+                    loader: 'babel-loader',
+                    options: {
+                        babelrc: false,
+                        plugins: [
+                            ['react-intl', {
+                                messagesDir: './translations/messages/'
+                            }]
+                        ],
+                        presets: ['@babel/preset-env', '@babel/preset-react']
+                    }
+                },
+                {
+                    loader: 'ts-loader',
+                    options: {
+                        transpileOnly: true
+                    }
+                }
+            ],
+            include: [
+                path.resolve(__dirname, 'src/addons')
+            ],
+            exclude: [
+                /node_modules/
+            ]
+        }, {
             test: /\.jsx?$/,
             loader: 'babel-loader',
             include: [
@@ -75,7 +104,8 @@ const base = {
                 /node_modules[\\/]scratch-[^\\/]+[\\/]src/,
                 /node_modules[\\/]pify/,
                 /node_modules[\\/]@vernier[\\/]godirect/,
-                /node_modules[\\/]@chenglou[\\/]pretext/
+                /node_modules[\\/]@chenglou[\\/]pretext/,
+                /node_modules[\\/]isomorphic-git/
             ],
             options: {
                 // Explicitly disable babelrc so we don't catch various config
@@ -112,6 +142,34 @@ const base = {
                         ];
                     }
                 }
+            }]
+        },
+        {
+            test: /\.less$/,
+            use: [{
+                loader: 'style-loader'
+            }, {
+                loader: 'css-loader',
+                options: {
+                    modules: true,
+                    importLoaders: 2,
+                    localIdentName: '[name]_[local]_[hash:base64:5]',
+                    camelCase: true
+                }
+            }, {
+                loader: 'postcss-loader',
+                options: {
+                    ident: 'postcss',
+                    plugins: function () {
+                        return [
+                            postcssImport,
+                            postcssVars,
+                            autoprefixer
+                        ];
+                    }
+                }
+            }, {
+                loader: 'less-loader'
             }]
         },
         {
