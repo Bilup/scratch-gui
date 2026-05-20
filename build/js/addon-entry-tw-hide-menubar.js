@@ -52,11 +52,9 @@ const resources = {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let {
-    addon,
-    msg,
-    Window
-  } = _ref;
+  let addon = _ref.addon,
+    msg = _ref.msg,
+    Window = _ref.Window;
   const cleanupKey = '__aeHideMenubarCleanup';
   if (typeof window[cleanupKey] === 'function') {
     window[cleanupKey]();

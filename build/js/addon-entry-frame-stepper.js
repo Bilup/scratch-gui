@@ -47,11 +47,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _debugger_module_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../debugger/module.js */ "./src/addons/addons/debugger/module.js");
 
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let {
-    addon,
-    console,
-    msg
-  } = _ref;
+  let addon = _ref.addon,
+    console = _ref.console,
+    msg = _ref.msg;
   Object(_debugger_module_js__WEBPACK_IMPORTED_MODULE_0__["setup"])(addon);
   let stepButton = null;
 

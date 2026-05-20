@@ -54,9 +54,7 @@ __webpack_require__.r(__webpack_exports__);
 // Toolbox Category Drag
 // By: SharkPool
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let {
-    addon
-  } = _ref;
+  let addon = _ref.addon;
   // wait for scratchblocks to be defined
   await addon.tab.traps.getBlockly();
   const COMMENT_TRAPPER_ID = "--Category_Order_ADDON-config";

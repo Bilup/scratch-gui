@@ -61,11 +61,9 @@ const setRecordElem = elem => {
   recordElem = elem;
 };
 /* harmony default export */ __webpack_exports__["default"] = (async _ref => {
-  let {
-    addon,
-    console,
-    msg
-  } = _ref;
+  let addon = _ref.addon,
+    console = _ref.console,
+    msg = _ref.msg;
   let isRecording = false;
   let isWaitingForFlag = false;
   let waitingForFlagFunc = null;

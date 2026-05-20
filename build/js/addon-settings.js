@@ -220,7 +220,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
 
 /***/ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./src/addons/settings/settings.css":
 /*!*************************************************************************************************************************!*\
-  !*** ./node_modules/css-loader??ref--5-1!./node_modules/postcss-loader/src??postcss!./src/addons/settings/settings.css ***!
+  !*** ./node_modules/css-loader??ref--6-1!./node_modules/postcss-loader/src??postcss!./src/addons/settings/settings.css ***!
   \*************************************************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
@@ -931,10 +931,9 @@ const normalize = text => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').
 const splitToWords = text => normalize(text).split(' ').filter(i => i);
 const parseTexts = texts => {
   const result = [];
-  for (const {
-    score,
-    text
-  } of texts) {
+  for (const _ref of texts) {
+    const score = _ref.score;
+    const text = _ref.text;
     result.push({
       score,
       words: splitToWords(text)
@@ -1002,7 +1001,7 @@ class Search {
 /***/ (function(module, exports, __webpack_require__) {
 
 
-var content = __webpack_require__(/*! !../../../node_modules/css-loader??ref--5-1!../../../node_modules/postcss-loader/src??postcss!./settings.css */ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./src/addons/settings/settings.css");
+var content = __webpack_require__(/*! !../../../node_modules/css-loader??ref--6-1!../../../node_modules/postcss-loader/src??postcss!./settings.css */ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./src/addons/settings/settings.css");
 
 if(typeof content === 'string') content = [[module.i, content, '']];
 
@@ -1079,6 +1078,12 @@ function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = 
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 function _objectWithoutProperties(e, t) { if (null == e) return {}; var o, r, i = _objectWithoutPropertiesLoose(e, t); if (Object.getOwnPropertySymbols) { var n = Object.getOwnPropertySymbols(e); for (r = 0; r < n.length; r++) o = n[r], -1 === t.indexOf(o) && {}.propertyIsEnumerable.call(e, o) && (i[o] = e[o]); } return i; }
 function _objectWithoutPropertiesLoose(r, e) { if (null == r) return {}; var t = {}; for (var n in r) if ({}.hasOwnProperty.call(r, n)) { if (-1 !== e.indexOf(n)) continue; t[n] = r[n]; } return t; }
+function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
+function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
+function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 /**
  * Copyright (C) 2021-2023 Thomas Weber
  *
@@ -1152,7 +1157,10 @@ const postThrottledSettingsChange = store => {
 const filterAddonsBySupport = () => {
   const supported = {};
   const unsupported = {};
-  for (const [id, manifest] of Object.entries(_generated_addon_manifests__WEBPACK_IMPORTED_MODULE_4__["default"])) {
+  for (const _ref of Object.entries(_generated_addon_manifests__WEBPACK_IMPORTED_MODULE_4__["default"])) {
+    var _ref2 = _slicedToArray(_ref, 2);
+    const id = _ref2[0];
+    const manifest = _ref2[1];
     if (manifest.unsupported) {
       unsupported[id] = manifest;
     } else {
@@ -1164,10 +1172,9 @@ const filterAddonsBySupport = () => {
     unsupported
   };
 };
-const {
-  supported: supportedAddons,
-  unsupported: unsupportedAddons
-} = filterAddonsBySupport();
+const _filterAddonsBySuppor = filterAddonsBySupport(),
+  supportedAddons = _filterAddonsBySuppor.supported,
+  unsupportedAddons = _filterAddonsBySuppor.unsupported;
 const getAllTags = () => {
   const tags = new Set();
   for (const manifest of Object.values(supportedAddons)) {
@@ -1196,10 +1203,8 @@ const clearHash = () => {
     history.replaceState(null, null, "".concat(location.pathname).concat(location.search));
   }
 };
-const CreditList = _ref => {
-  let {
-    credits
-  } = _ref;
+const CreditList = _ref3 => {
+  let credits = _ref3.credits;
   return credits.map((author, index) => {
     const isLast = index === credits.length - 1;
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", {
@@ -1218,13 +1223,11 @@ CreditList.propTypes = {
     link: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.string
   }))
 };
-const TagFilter = _ref2 => {
-  let {
-    tags,
-    selectedTags,
-    onTagToggle,
-    onClearAll
-  } = _ref2;
+const TagFilter = _ref4 => {
+  let tags = _ref4.tags,
+    selectedTags = _ref4.selectedTags,
+    onTagToggle = _ref4.onTagToggle,
+    onClearAll = _ref4.onClearAll;
   if (tags.length === 0) return null;
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
     className: _settings_css__WEBPACK_IMPORTED_MODULE_18___default.a.tagFilter
@@ -1251,12 +1254,10 @@ TagFilter.propTypes = {
   onTagToggle: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.func.isRequired,
   onClearAll: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.func.isRequired
 };
-const Switch = _ref3 => {
-  let {
-      onChange,
-      value
-    } = _ref3,
-    props = _objectWithoutProperties(_ref3, _excluded);
+const Switch = _ref5 => {
+  let onChange = _ref5.onChange,
+    value = _ref5.value,
+    props = _objectWithoutProperties(_ref5, _excluded);
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", _extends({
     className: _settings_css__WEBPACK_IMPORTED_MODULE_18___default.a.switch,
     state: value ? 'on' : 'off',
@@ -1270,12 +1271,10 @@ Switch.propTypes = {
   onChange: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.func,
   value: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.bool
 };
-const Select = _ref4 => {
-  let {
-    onChange,
-    value,
-    values
-  } = _ref4;
+const Select = _ref6 => {
+  let onChange = _ref6.onChange,
+    value = _ref6.value,
+    values = _ref6.values;
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
     className: _settings_css__WEBPACK_IMPORTED_MODULE_18___default.a.select
   }, values.map(potentialValue => {
@@ -1298,10 +1297,8 @@ Select.propTypes = {
     name: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.string
   }))
 };
-const Tags = _ref5 => {
-  let {
-    manifest
-  } = _ref5;
+const Tags = _ref7 => {
+  let manifest = _ref7.manifest;
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", {
     className: _settings_css__WEBPACK_IMPORTED_MODULE_18___default.a.tagContainer
   }, manifest.tags.includes('recommended') && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", {
@@ -1408,12 +1405,10 @@ ColorInput.propTypes = {
   onChange: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.func.isRequired,
   value: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.string.isRequired
 };
-const ResetButton = _ref6 => {
-  let {
-    addonId,
-    settingId,
-    forTextInput
-  } = _ref6;
+const ResetButton = _ref8 => {
+  let addonId = _ref8.addonId,
+    settingId = _ref8.settingId,
+    forTextInput = _ref8.forTextInput;
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
     className: classnames__WEBPACK_IMPORTED_MODULE_2___default()(_settings_css__WEBPACK_IMPORTED_MODULE_18___default.a.button, _settings_css__WEBPACK_IMPORTED_MODULE_18___default.a.resetSettingButton),
     onClick: () => _settings_store_singleton__WEBPACK_IMPORTED_MODULE_10__["default"].setAddonSetting(addonId, settingId, null),
@@ -1430,12 +1425,10 @@ ResetButton.propTypes = {
   settingId: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.string,
   forTextInput: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.bool
 };
-const Setting = _ref7 => {
-  let {
-    addonId,
-    setting,
-    value
-  } = _ref7;
+const Setting = _ref9 => {
+  let addonId = _ref9.addonId,
+    setting = _ref9.setting,
+    value = _ref9.value;
   if (!_settings_store_singleton__WEBPACK_IMPORTED_MODULE_10__["default"].evaluateCondition(addonId, setting.if)) {
     return null;
   }
@@ -1482,11 +1475,9 @@ const Setting = _ref7 => {
     settingId: settingId
   })), setting.type === 'select' && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_0___default.a.Fragment, null, label, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(Select, {
     value: value,
-    values: setting.potentialValues.map(_ref8 => {
-      let {
-        id,
-        name
-      } = _ref8;
+    values: setting.potentialValues.map(_ref0 => {
+      let id = _ref0.id,
+        name = _ref0.name;
       return {
         id,
         name: addonTranslations["".concat(addonId, "/@settings-select-").concat(settingId, "-").concat(id)] || name
@@ -1517,11 +1508,9 @@ Setting.propTypes = {
   }),
   value: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.oneOfType([prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.string, prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.bool, prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.number])
 };
-const Notice = _ref9 => {
-  let {
-    type,
-    text
-  } = _ref9;
+const Notice = _ref1 => {
+  let type = _ref1.type,
+    text = _ref1.text;
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
     className: _settings_css__WEBPACK_IMPORTED_MODULE_18___default.a.notice,
     type: type
@@ -1536,11 +1525,9 @@ Notice.propTypes = {
   type: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.string,
   text: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.string
 };
-const Presets = _ref0 => {
-  let {
-    addonId,
-    presets
-  } = _ref0;
+const Presets = _ref10 => {
+  let addonId = _ref10.addonId,
+    presets = _ref10.presets;
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
     className: classnames__WEBPACK_IMPORTED_MODULE_2___default()(_settings_css__WEBPACK_IMPORTED_MODULE_18___default.a.setting, _settings_css__WEBPACK_IMPORTED_MODULE_18___default.a.presets)
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
@@ -1566,13 +1553,11 @@ Presets.propTypes = {
     values: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.shape({})
   }))
 };
-const Addon = _ref1 => {
-  let {
-    id,
-    settings,
-    manifest,
-    extended
-  } = _ref1;
+const Addon = _ref11 => {
+  let id = _ref11.id,
+    settings = _ref11.settings,
+    manifest = _ref11.manifest,
+    extended = _ref11.extended;
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
     className: classnames__WEBPACK_IMPORTED_MODULE_2___default()(_settings_css__WEBPACK_IMPORTED_MODULE_18___default.a.addon, {
       [_settings_css__WEBPACK_IMPORTED_MODULE_18___default.a.addonDirty]: settings.dirty
@@ -1681,19 +1666,15 @@ const Dirty = props => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a
 Dirty.propTypes = {
   onReloadNow: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.func
 };
-const UnsupportedAddons = _ref10 => {
-  let {
-    addons: addonList
-  } = _ref10;
+const UnsupportedAddons = _ref12 => {
+  let addonList = _ref12.addons;
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
     className: _settings_css__WEBPACK_IMPORTED_MODULE_18___default.a.unsupportedContainer
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", {
     className: _settings_css__WEBPACK_IMPORTED_MODULE_18___default.a.unsupportedText
-  }, settingsTranslations.unsupported), addonList.map((_ref11, index) => {
-    let {
-      id,
-      manifest
-    } = _ref11;
+  }, settingsTranslations.unsupported), addonList.map((_ref13, index) => {
+    let id = _ref13.id,
+      manifest = _ref13.manifest;
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", {
       key: id,
       className: _settings_css__WEBPACK_IMPORTED_MODULE_18___default.a.unsupportedAddon
@@ -1708,17 +1689,13 @@ UnsupportedAddons.propTypes = {
     })
   }))
 };
-const InternalAddonList = _ref12 => {
-  let {
-    addons,
-    extended
-  } = _ref12;
-  return addons.map(_ref13 => {
-    let {
-      id,
-      manifest,
-      state
-    } = _ref13;
+const InternalAddonList = _ref14 => {
+  let addons = _ref14.addons,
+    extended = _ref14.extended;
+  return addons.map(_ref15 => {
+    let id = _ref15.id,
+      manifest = _ref15.manifest,
+      state = _ref15.state;
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(Addon, {
       key: id,
       id: id,
@@ -1771,11 +1748,9 @@ AddonGroup.propTypes = {
   })).isRequired,
   extended: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.bool.isRequired
 };
-const addonToSearchItem = _ref14 => {
-  let {
-    id,
-    manifest
-  } = _ref14;
+const addonToSearchItem = _ref16 => {
+  let id = _ref16.id,
+    manifest = _ref16.manifest;
   const texts = new Set();
   const addText = (score, text) => {
     if (text) {
@@ -1838,10 +1813,8 @@ class AddonList extends react__WEBPACK_IMPORTED_MODULE_0___default.a.Component {
     if (this.props.search) {
       // Rebuild search index with filtered addons
       const search = new _search__WEBPACK_IMPORTED_MODULE_3__["default"](filteredAddons.map(addonToSearchItem));
-      const addons = search.search(this.props.search).slice(0, 20).map(_ref15 => {
-        let {
-          index
-        } = _ref15;
+      const addons = search.search(this.props.search).slice(0, 20).map(_ref17 => {
+        let index = _ref17.index;
         return filteredAddons[index];
       });
       if (addons.length === 0) {
@@ -1882,12 +1855,13 @@ class AddonList extends react__WEBPACK_IMPORTED_MODULE_0___default.a.Component {
         groupedFilteredAddons.others.addons.push(addon);
       }
     }
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", null, Object.entries(groupedFilteredAddons).map(_ref16 => {
-      let [id, {
-        label,
-        addons,
-        open
-      }] = _ref16;
+    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", null, Object.entries(groupedFilteredAddons).map(_ref18 => {
+      let _ref19 = _slicedToArray(_ref18, 2),
+        id = _ref19[0],
+        _ref19$ = _ref19[1],
+        label = _ref19$.label,
+        addons = _ref19$.addons,
+        open = _ref19$.open;
       return addons.length > 0 && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(AddonGroup, {
         key: id,
         label: label,
@@ -1953,7 +1927,10 @@ class AddonSettingsComponent extends react__WEBPACK_IMPORTED_MODULE_0___default.
   }
   readFullAddonState() {
     const result = {};
-    for (const [id, manifest] of Object.entries(supportedAddons)) {
+    for (const _ref20 of Object.entries(supportedAddons)) {
+      var _ref21 = _slicedToArray(_ref20, 2);
+      const id = _ref21[0];
+      const manifest = _ref21[1];
       const enabled = _settings_store_singleton__WEBPACK_IMPORTED_MODULE_10__["default"].getAddonEnabled(id);
       const addonState = {
         enabled: enabled,
@@ -1969,11 +1946,10 @@ class AddonSettingsComponent extends react__WEBPACK_IMPORTED_MODULE_0___default.
     return result;
   }
   handleSettingStoreChanged(e) {
-    const {
-      addonId,
-      settingId,
-      value
-    } = e.detail;
+    const _e$detail = e.detail,
+      addonId = _e$detail.addonId,
+      settingId = _e$detail.settingId,
+      value = _e$detail.value;
     // If channels are unavailable, every change requires reload.
     const reloadRequired = e.detail.reloadRequired || !_channels__WEBPACK_IMPORTED_MODULE_11__["default"].changeChannel;
     this.setState(state => {
@@ -2103,16 +2079,20 @@ class AddonSettingsComponent extends react__WEBPACK_IMPORTED_MODULE_0___default.
     });
   }
   render() {
-    const addonState = Object.entries(supportedAddons).map(_ref17 => {
-      let [id, manifest] = _ref17;
+    const addonState = Object.entries(supportedAddons).map(_ref22 => {
+      let _ref23 = _slicedToArray(_ref22, 2),
+        id = _ref23[0],
+        manifest = _ref23[1];
       return {
         id,
         manifest,
         state: this.state[id]
       };
     });
-    const unsupported = Object.entries(unsupportedAddons).map(_ref18 => {
-      let [id, manifest] = _ref18;
+    const unsupported = Object.entries(unsupportedAddons).map(_ref24 => {
+      let _ref25 = _slicedToArray(_ref24, 2),
+        id = _ref25[0],
+        manifest = _ref25[1];
       return {
         id,
         manifest

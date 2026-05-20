@@ -151,10 +151,8 @@ __webpack_require__.r(__webpack_exports__);
 */
 
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let {
-    addon,
-    msg
-  } = _ref;
+  let addon = _ref.addon,
+    msg = _ref.msg;
   function getContrastColor(hexColor) {
     let r, g, b;
     if (hexColor.startsWith('#')) {

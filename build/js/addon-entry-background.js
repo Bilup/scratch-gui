@@ -51,6 +51,12 @@ const resources = {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _window_system_window_manager_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../window-system/window-manager.js */ "./src/addons/window-system/window-manager.js");
+function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
+function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
+function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 /**
  * IndexedDB by AI （嘿嘿）
  */
@@ -179,9 +185,9 @@ class BackgroundDB {
     });
   }
   listWallpapers() {
-    let {
-      enabledOnly = false
-    } = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    let _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+      _ref$enabledOnly = _ref.enabledOnly,
+      enabledOnly = _ref$enabledOnly === void 0 ? false : _ref$enabledOnly;
     return new Promise((resolve, reject) => {
       const transaction = this.db.transaction([this.wallpapersStore], 'readonly');
       const store = transaction.objectStore(this.wallpapersStore);
@@ -249,15 +255,16 @@ async function getSetting(id) {
     throw new Error(e);
   }
 }
-function applyBackgroundLayout(_ref) {
-  let {
-    image,
-    containerWidth,
-    containerHeight,
-    mode = 'stretch',
-    offsetX = 0,
-    offsetY = 0
-  } = _ref;
+function applyBackgroundLayout(_ref2) {
+  let image = _ref2.image,
+    containerWidth = _ref2.containerWidth,
+    containerHeight = _ref2.containerHeight,
+    _ref2$mode = _ref2.mode,
+    mode = _ref2$mode === void 0 ? 'stretch' : _ref2$mode,
+    _ref2$offsetX = _ref2.offsetX,
+    offsetX = _ref2$offsetX === void 0 ? 0 : _ref2$offsetX,
+    _ref2$offsetY = _ref2.offsetY,
+    offsetY = _ref2$offsetY === void 0 ? 0 : _ref2$offsetY;
   if (!image || !containerWidth || !containerHeight) return;
   image.style.objectFit = 'none';
   image.style.width = 'auto';
@@ -346,10 +353,11 @@ async function getWallpaperRotationList() {
   return wallpapers.map(item => item.id);
 }
 async function syncWallpaperSelection() {
-  let {
-    preferredId = null,
-    settings = null
-  } = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+  let _ref3 = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+    _ref3$preferredId = _ref3.preferredId,
+    preferredId = _ref3$preferredId === void 0 ? null : _ref3$preferredId,
+    _ref3$settings = _ref3.settings,
+    settings = _ref3$settings === void 0 ? null : _ref3$settings;
   const resolvedSettings = settings || (await bgDB.getSetting('settings')) || {};
   const list = await getWallpaperRotationList(resolvedSettings);
   if (!list.length) {
@@ -388,10 +396,8 @@ async function advanceWallpaperRotationIndex() {
     settings
   });
   if (!syncedSelection) return null;
-  const {
-    list,
-    index: currentIndex
-  } = syncedSelection;
+  const list = syncedSelection.list,
+    currentIndex = syncedSelection.index;
   const nextIndex = (currentIndex + 1) % list.length;
   await applySettings('WallpaperRotationIndex', nextIndex);
   await applySettings('currentWallpaperId', list[nextIndex]);
@@ -482,11 +488,9 @@ async function getActiveWorkspaceWallpaper() {
 }
 
 let bgWindow = null;
-/* harmony default export */ __webpack_exports__["default"] = (async function (_ref2) {
-  let {
-    addon,
-    msg
-  } = _ref2;
+/* harmony default export */ __webpack_exports__["default"] = (async function (_ref4) {
+  let addon = _ref4.addon,
+    msg = _ref4.msg;
   let bgButton;
 
   // 初始化数据库并加载保存的背景
@@ -769,10 +773,11 @@ async function addContext(modal, msg) {
     preview.image.alt = altText;
   };
   const setPreviewAppearance = function setPreviewAppearance(preview) {
-    let {
-      blur = 0,
-      opacity = 1
-    } = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+    let _ref5 = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+      _ref5$blur = _ref5.blur,
+      blur = _ref5$blur === void 0 ? 0 : _ref5$blur,
+      _ref5$opacity = _ref5.opacity,
+      opacity = _ref5$opacity === void 0 ? 1 : _ref5$opacity;
     preview.image.style.filter = "blur(".concat(blur, "px)");
     preview.image.style.opacity = "".concat(opacity);
   };
@@ -874,7 +879,9 @@ async function addContext(modal, msg) {
   modalAddPicInput.type = "file";
   modalAddPicInput.accept = ".png, .bmp, .jpg, .jpeg";
   modalAddPicInput.addEventListener('change', async e => {
-    const [file] = Array.from(e.target.files || []);
+    const _Array$from = Array.from(e.target.files || []),
+      _Array$from2 = _slicedToArray(_Array$from, 1),
+      file = _Array$from2[0];
     if (!file) return;
     await new Promise((resolve, reject) => {
       const reader = new FileReader();

@@ -2,7 +2,7 @@
 
 /***/ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./src/lib/themes/global-styles.css":
 /*!*************************************************************************************************************************!*\
-  !*** ./node_modules/css-loader??ref--5-1!./node_modules/postcss-loader/src??postcss!./src/lib/themes/global-styles.css ***!
+  !*** ./node_modules/css-loader??ref--6-1!./node_modules/postcss-loader/src??postcss!./src/lib/themes/global-styles.css ***!
   \*************************************************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
@@ -1073,6 +1073,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "GradientUtils", function() { return GradientUtils; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "customThemeManager", function() { return customThemeManager; });
 /* harmony import */ var _index_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./index.js */ "./src/lib/themes/index.js");
+function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
+function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
+function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
 function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
 function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
@@ -1614,7 +1620,11 @@ class CustomTheme extends _index_js__WEBPACK_IMPORTED_MODULE_0__["Theme"] {
       const hexMatch = stop.match(/#([a-fA-F0-9]{3,8})/);
       const oklabMatch = stop.match(/oklab\(\s*([+-]?[\d.]+)\s+([+-]?[\d.]+)\s+([+-]?[\d.]+)(?:\s*\/\s*([+-]?[\d.]+))?\s*\)\s*([\d.]+)?%?/i);
       if (rgbaMatch) {
-        const [, r, g, b, pos] = rgbaMatch;
+        const _rgbaMatch = _slicedToArray(rgbaMatch, 5),
+          r = _rgbaMatch[1],
+          g = _rgbaMatch[2],
+          b = _rgbaMatch[3],
+          pos = _rgbaMatch[4];
         color = "#".concat(parseInt(r, 10).toString(16).padStart(2, '0')).concat(parseInt(g, 10).toString(16).padStart(2, '0')).concat(parseInt(b, 10).toString(16).padStart(2, '0'));
         position = typeof pos === 'undefined' ? index / (stops.length - 1) * 100 : parseFloat(pos);
       } else if (hexMatch) {
@@ -1622,12 +1632,16 @@ class CustomTheme extends _index_js__WEBPACK_IMPORTED_MODULE_0__["Theme"] {
         const posMatch = stop.match(/([\d.]+)%/);
         position = posMatch ? parseFloat(posMatch[1]) : index / (stops.length - 1) * 100;
       } else if (oklabMatch) {
-        const [, L, A, B, _alpha, pos] = oklabMatch;
-        const {
-          r,
-          g,
-          b
-        } = this.oklabToRgb(parseFloat(L), parseFloat(A), parseFloat(B));
+        const _oklabMatch = _slicedToArray(oklabMatch, 6),
+          L = _oklabMatch[1],
+          A = _oklabMatch[2],
+          B = _oklabMatch[3],
+          _alpha = _oklabMatch[4],
+          pos = _oklabMatch[5];
+        const _this$oklabToRgb = this.oklabToRgb(parseFloat(L), parseFloat(A), parseFloat(B)),
+          r = _this$oklabToRgb.r,
+          g = _this$oklabToRgb.g,
+          b = _this$oklabToRgb.b;
         color = "#".concat(r.toString(16).padStart(2, '0')).concat(g.toString(16).padStart(2, '0')).concat(b.toString(16).padStart(2, '0'));
         position = typeof pos === 'undefined' ? index / (stops.length - 1) * 100 : parseFloat(pos);
       }
@@ -1987,7 +2001,11 @@ class CustomThemeManager {
       // Check for RGBA format: rgba(255, 107, 107, 0.8) 50%
       const rgbaMatch = stopString.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)\s*([\d.]+)%?/);
       if (rgbaMatch) {
-        const [, r, g, b, pos] = rgbaMatch;
+        const _rgbaMatch2 = _slicedToArray(rgbaMatch, 5),
+          r = _rgbaMatch2[1],
+          g = _rgbaMatch2[2],
+          b = _rgbaMatch2[3],
+          pos = _rgbaMatch2[4];
         const rHex = parseInt(r, 10).toString(16).padStart(2, '0');
         const gHex = parseInt(g, 10).toString(16).padStart(2, '0');
         const bHex = parseInt(b, 10).toString(16).padStart(2, '0');
@@ -2363,7 +2381,7 @@ const getFontFamilyString = fonts => {
 /***/ (function(module, exports, __webpack_require__) {
 
 
-var content = __webpack_require__(/*! !../../../node_modules/css-loader??ref--5-1!../../../node_modules/postcss-loader/src??postcss!./global-styles.css */ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./src/lib/themes/global-styles.css");
+var content = __webpack_require__(/*! !../../../node_modules/css-loader??ref--6-1!../../../node_modules/postcss-loader/src??postcss!./global-styles.css */ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./src/lib/themes/global-styles.css");
 
 if(typeof content === 'string') content = [[module.i, content, '']];
 
@@ -2419,9 +2437,7 @@ const uniqSortedWeights = weights => {
   return [...new Set(normalized)].sort((a, b) => Number(a) - Number(b));
 };
 const buildCss2AxisSpecifier = (weights, _ref) => {
-  let {
-    includeItalic
-  } = _ref;
+  let includeItalic = _ref.includeItalic;
   const w = uniqSortedWeights(weights);
   const fallback = w.length ? w : ['400', '700'];
   if (includeItalic) {
@@ -2927,6 +2943,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _themes_fonts__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../themes/fonts */ "./src/lib/themes/fonts.js");
 /* harmony import */ var _global_styles_css__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./global-styles.css */ "./src/lib/themes/global-styles.css");
 /* harmony import */ var _global_styles_css__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_global_styles_css__WEBPACK_IMPORTED_MODULE_3__);
+function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
+function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
+function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 
 
 
@@ -3180,11 +3202,17 @@ const applyWallpaper = wallpaper => {
 const applyGuiColors = theme => {
   const doc = document.documentElement;
   const defaultGuiColors = _index_js__WEBPACK_IMPORTED_MODULE_0__["Theme"].defaults && _index_js__WEBPACK_IMPORTED_MODULE_0__["Theme"].defaults.light && typeof _index_js__WEBPACK_IMPORTED_MODULE_0__["Theme"].defaults.light.getGuiColors === 'function' ? _index_js__WEBPACK_IMPORTED_MODULE_0__["Theme"].defaults.light.getGuiColors() : _index_js__WEBPACK_IMPORTED_MODULE_0__["GUI_MAP"] && _index_js__WEBPACK_IMPORTED_MODULE_0__["GUI_MAP"].light && _index_js__WEBPACK_IMPORTED_MODULE_0__["GUI_MAP"].light.guiColors || {};
-  for (const [name, value] of Object.entries(defaultGuiColors)) {
+  for (const _ref of Object.entries(defaultGuiColors)) {
+    var _ref2 = _slicedToArray(_ref, 2);
+    const name = _ref2[0];
+    const value = _ref2[1];
     doc.style.setProperty("--".concat(name, "-default"), value);
   }
   const guiColors = theme.getGuiColors();
-  for (const [name, defaultValue] of Object.entries(defaultGuiColors)) {
+  for (const _ref3 of Object.entries(defaultGuiColors)) {
+    var _ref4 = _slicedToArray(_ref3, 2);
+    const name = _ref4[0];
+    const defaultValue = _ref4[1];
     const value = Object.prototype.hasOwnProperty.call(guiColors, name) ? guiColors[name] : defaultValue;
     doc.style.setProperty("--".concat(name), value);
 
@@ -3200,7 +3228,10 @@ const applyGuiColors = theme => {
       doc.style.setProperty('--ui-primary-rgb', '229, 240, 255');
     }
   }
-  for (const [name, value] of Object.entries(guiColors)) {
+  for (const _ref5 of Object.entries(guiColors)) {
+    var _ref6 = _slicedToArray(_ref5, 2);
+    const name = _ref6[0];
+    const value = _ref6[1];
     if (!Object.prototype.hasOwnProperty.call(defaultGuiColors, name)) {
       doc.style.setProperty("--".concat(name), value);
     }

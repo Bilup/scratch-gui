@@ -79,10 +79,8 @@ __webpack_require__.r(__webpack_exports__);
  * @param {object} param0 Scratch addon parameters
  */
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let {
-    addon,
-    msg
-  } = _ref;
+  let addon = _ref.addon,
+    msg = _ref.msg;
   const vm = addon.tab.traps.vm;
   await new Promise(resolve => {
     if (vm.editingTarget) {

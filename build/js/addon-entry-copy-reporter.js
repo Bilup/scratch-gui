@@ -78,10 +78,8 @@ __webpack_require__.r(__webpack_exports__);
  * @param {Function} params.msg - Function to retrieve localized messages.
  */
 /* harmony default export */ __webpack_exports__["default"] = (function (_ref) {
-  let {
-    addon,
-    msg
-  } = _ref;
+  let addon = _ref.addon,
+    msg = _ref.msg;
   addon.tab.createEditorContextMenu(ctx => {
     const className = ctx.type === 'monitor_large' ? 'monitor_large-value' : 'monitor_value';
     const element = ctx.target.querySelector("[class*='".concat(className, "_']"));

@@ -52,11 +52,9 @@ const resources = {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
-  let {
-    addon,
-    console,
-    msg
-  } = _ref;
+  let addon = _ref.addon,
+    console = _ref.console,
+    msg = _ref.msg;
   const vm = addon.tab.traps.vm;
   const getProjectComplexity = () => {
     let blockCount = 0;
@@ -80,10 +78,9 @@ __webpack_require__.r(__webpack_exports__);
 
       // Analyze each script for complexity metrics
       scriptBlocks.forEach(scriptBlock => {
-        const {
-          depth,
-          length
-        } = _analyzeScript(sprite, scriptBlock.id);
+        const _analyzeScript = _analyzeScript2(sprite, scriptBlock.id),
+          depth = _analyzeScript.depth,
+          length = _analyzeScript.length;
         maxDepth = Math.max(maxDepth, depth);
         totalDepth += depth;
         longestScript = Math.max(longestScript, length);
@@ -133,7 +130,7 @@ __webpack_require__.r(__webpack_exports__);
       blockTypeCount
     };
   };
-  const _analyzeScript = function analyzeScript(sprite, blockId) {
+  const _analyzeScript2 = function analyzeScript(sprite, blockId) {
     let depth = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
     const block = sprite[blockId];
     if (!block) return {
@@ -147,7 +144,7 @@ __webpack_require__.r(__webpack_exports__);
     if (block.inputs) {
       Object.values(block.inputs).forEach(input => {
         if (input.block) {
-          const nested = _analyzeScript(sprite, input.block, depth + 1);
+          const nested = _analyzeScript2(sprite, input.block, depth + 1);
           maxDepth = Math.max(maxDepth, nested.depth);
           length += nested.length;
         }
@@ -156,7 +153,7 @@ __webpack_require__.r(__webpack_exports__);
 
     // Check next block in sequence
     if (block.next) {
-      const next = _analyzeScript(sprite, block.next, depth);
+      const next = _analyzeScript2(sprite, block.next, depth);
       maxDepth = Math.max(maxDepth, next.depth);
       length += next.length;
     }
