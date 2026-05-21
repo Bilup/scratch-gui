@@ -19,7 +19,7 @@ export default {
             link: 'https://github.com/RyaninCn11/'
         }
     ],
-    tags: ['editor', 'recommend'],
+    tags: ['recommended','new'],
     enabledByDefault: true,
     userscripts: [
         {
