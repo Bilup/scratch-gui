@@ -2,7 +2,7 @@ const manifest = {
     "editorOnly": true,
     "name": "To-Do",
     "description": "Record your project to-do!",
-    "tags": ["new", "recommanded","astraeditor"],
+    "tags": ["new", "recommended","astraeditor"],
     "credits": [
         {
             "name": "KOSHINO",
