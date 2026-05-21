@@ -3387,7 +3387,7 @@ __webpack_require__.r(__webpack_exports__);
     name: 'RyaninCn11',
     link: 'https://github.com/RyaninCn11/'
   }],
-  tags: ['editor', 'recommend'],
+  tags: ['recommended', 'new'],
   enabledByDefault: true,
   userscripts: [{
     url: 'userscript.js',
@@ -4420,7 +4420,7 @@ const manifest = {
   "editorOnly": true,
   "name": "To-Do",
   "description": "Record your project to-do!",
-  "tags": ["new", "recommanded", "astraeditor"],
+  "tags": ["new", "recommended", "astraeditor"],
   "credits": [{
     "name": "KOSHINO",
     "link": "https://github.com/KOSHINOawa"
