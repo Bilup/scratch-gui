@@ -64959,7 +64959,8 @@ const deleteRepo = async () => {
   const pfs = fs.promises;
   if (!(await exists(pfs, REPO_DIR))) return;
   await removeRecursive(pfs, REPO_DIR);
-  tempGitJsonString = await exportRepoToGitJsonString();
+  tempGitJsonString = null;
+  tempGitFiles = null;
   await updateTempGitFiles();
 };
 const deleteBranch = async ref => {
