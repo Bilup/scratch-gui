@@ -346623,6 +346623,7 @@ class Runtime extends EventEmitter {
      * Total number of finished or errored scratch-storage load() requests since the runtime was created or cleared.
      */
     this.finishedAssetRequests = 0;
+    this.signature = null;
   }
 
   /**
@@ -370601,6 +370602,7 @@ function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) 
 function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
 function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
 function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
+/* global BigInt */
 /**
  * @fileoverview
  * An SB3 serializer and deserializer. Parses provided
@@ -371232,6 +371234,51 @@ const getSimplifiedLayerOrdering = function getSimplifiedLayerOrdering(targets) 
   const layerOrders = targets.map(t => t.getLayerOrder());
   return MathUtil.reducedSortOrdering(layerOrders);
 };
+const generateBilupUUID = function generateBilupUUID() {
+  const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+
+  /**
+   * BigInt -> Base62
+   * @param {bigint} num - The number to convert
+   * @returns {string} The base62 string
+   */
+  const toBase62 = function toBase62(num) {
+    let out = '';
+    while (num > 0n) {
+      out = chars[Number(num % 62n)] + out;
+      num = num / 62n;
+    }
+    return out || '0';
+  };
+
+  /**
+   * Secure random string
+   * @param {number} length - The length of the random string
+   * @returns {string} The random base62 string
+   */
+  const randomBase62 = function randomBase62() {
+    let length = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 14;
+    const bytes = new Uint8Array(length * 2);
+    crypto.getRandomValues(bytes);
+    let result = '';
+    for (let i = 0; i < bytes.length; i++) {
+      result += chars[bytes[i] % 62];
+      if (result.length >= length) {
+        break;
+      }
+    }
+    return result;
+  };
+
+  // Timestamp
+  const time = toBase62(BigInt(Date.now()));
+
+  // High entropy random
+  const rand = randomBase62(14);
+
+  // Final UUID
+  return "BILUP-".concat(time, "-").concat(rand);
+};
 const serializeMonitors = function serializeMonitors(monitors, runtime, extensions) {
   // Monitors position is always stored as position from top-left corner in 480x360 stage.
   const xOffset = (runtime.stageWidth - 480) / 2;
@@ -371360,6 +371407,13 @@ const serialize = function serialize(runtime, targetId) {
 
   // Assemble payload and return
   obj.meta = meta;
+  if (typeof runtime.signature !== 'undefined' && runtime.signature && (!Array.isArray(runtime.signature) || runtime.signature.length > 0)) {
+    obj.signature = runtime.signature;
+  } else {
+    const generatedUuid = generateBilupUUID();
+    runtime.signature = generatedUuid;
+    obj.signature = generatedUuid;
+  }
   if (allowOptimization) {
     compress(obj);
   }
@@ -372066,6 +372120,17 @@ const checkPlatformCompatibility = (json, runtime) => {
  */
 const deserialize = async function deserialize(json, runtime, zip, isSingleSprite) {
   await checkPlatformCompatibility(json, runtime);
+  if (json && typeof json === 'object') {
+    let signatureValue = json.signature;
+    if (!signatureValue || Array.isArray(signatureValue) && signatureValue.length === 0) {
+      const generatedUuid = generateBilupUUID();
+      signatureValue = generatedUuid;
+      json.signature = generatedUuid;
+      log.info("[Signature Injector] GeneratedUUID: ".concat(generatedUuid));
+    }
+    // eslint-disable-next-line require-atomic-updates
+    runtime.signature = signatureValue;
+  }
   const extensions = {
     extensionIDs: new Set(),
     extensionURLs: new Map()
@@ -377272,6 +377337,16 @@ class VirtualMachine extends EventEmitter {
       }
     }
     return null;
+  }
+
+  /**
+   * Get the project's signature from the loaded project JSON.
+   * The signature is generated during project loading and stored on the runtime.
+   * It can be used to uniquely identify a project.
+   * @returns {?string|?Array} The project signature, or null if no project is loaded.
+   */
+  getProjectSignature() {
+    return this.runtime.signature;
   }
 
   /**
