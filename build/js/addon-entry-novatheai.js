@@ -84788,6 +84788,8 @@ const getToolLabel = (name, msg) => {
       return msg("tool-set-costume-order");
     case "deleteSprite":
       return msg("tool-delete-sprite");
+    case "undoAiChanges":
+      return msg("tool-undo-ai-changes");
     default:
       return name;
   }
@@ -88447,7 +88449,8 @@ function useChat(_ref) {
     appendSessionSnapshot = _ref.appendSessionSnapshot,
     enableReasoning = _ref.enableReasoning,
     vm = _ref.vm,
-    getUnconfiguredMessage = _ref.getUnconfiguredMessage;
+    getUnconfiguredMessage = _ref.getUnconfiguredMessage,
+    undoAiChanges = _ref.undoAiChanges;
   const _useState = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])(""),
     _useState2 = _slicedToArray(_useState, 2),
     inputText = _useState2[0],
@@ -88658,7 +88661,35 @@ function useChat(_ref) {
               } catch (parseError) {
                 throw new Error("Invalid tool arguments: ".concat(parseError.message));
               }
-              const result = await callTool(functionName, args);
+              let result;
+              if (functionName === "undoAiChanges") {
+                const count = typeof args.count === "number" ? args.count : 1;
+                const undoResult = undoAiChanges(count);
+                if (undoResult && undoResult.success && undoResult.snapshot) {
+                  if (typeof (vm === null || vm === void 0 ? void 0 : vm.loadProject) === "function") {
+                    try {
+                      await vm.loadProject(JSON.parse(undoResult.snapshot.projectJson));
+                    } catch (restoreError) {
+                      result = {
+                        success: false,
+                        error: "Failed to restore project: ".concat(restoreError.message)
+                      };
+                    }
+                  }
+                  result = {
+                    success: true,
+                    message: "Successfully undid ".concat(undoResult.removedCount, " message(s). Project restored."),
+                    removedCount: undoResult.removedCount
+                  };
+                } else {
+                  result = {
+                    success: false,
+                    error: (undoResult === null || undoResult === void 0 ? void 0 : undoResult.error) || "Failed to undo AI changes"
+                  };
+                }
+              } else {
+                result = await callTool(functionName, args);
+              }
               try {
                 toolResult = typeof result === "object" ? JSON.stringify(result) : String(result);
               } catch (stringifyError) {
@@ -88731,6 +88762,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _useStoredState__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./useStoredState */ "./src/addons/addons/novatheai/hooks/useStoredState.ts");
+/* harmony import */ var _toolRuntime__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../toolRuntime */ "./src/addons/addons/novatheai/toolRuntime.ts");
 function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
 function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
 function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
@@ -88742,6 +88774,7 @@ function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) 
 function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
 function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
 function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
+
 
 
 const getSessionTitle = messages => {
@@ -88892,7 +88925,69 @@ function useChatSessions(shouldAutoCollapseHistory) {
     updateSessionMessages,
     appendSessionSnapshot,
     hasSnapshot,
-    rollbackToMessage
+    rollbackToMessage,
+    undoAiChanges: function undoAiChanges() {
+      let count = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
+      const sessionId = currentSessionIdRef.current;
+      const session = sessions.find(item => item.id === sessionId);
+      if (!session || !sessionId) {
+        return null;
+      }
+      const snapshots = snapshotsRef.current[sessionId] || [];
+      const messages = session.messages;
+      const aiMessageIndices = [];
+      for (let i = messages.length - 1; i >= 0; i--) {
+        const msg = messages[i];
+        if (msg.role === "assistant" && msg.tool_calls && msg.tool_calls.length > 0) {
+          const hasMutatingTool = msg.tool_calls.some(tc => {
+            var _tc$function;
+            return ((_tc$function = tc.function) === null || _tc$function === void 0 ? void 0 : _tc$function.name) && _toolRuntime__WEBPACK_IMPORTED_MODULE_2__["MUTATING_TOOLS"].has(tc.function.name);
+          });
+          if (hasMutatingTool) {
+            aiMessageIndices.push(i);
+            if (aiMessageIndices.length >= count) {
+              break;
+            }
+          }
+        }
+      }
+      if (aiMessageIndices.length === 0) {
+        return {
+          success: false,
+          error: "No AI changes found to undo"
+        };
+      }
+      const oldestAiIndex = Math.min(...aiMessageIndices);
+      const messageBeforeAi = oldestAiIndex - 1;
+      if (messageBeforeAi < 0) {
+        return {
+          success: false,
+          error: "Cannot undo: no snapshot available before AI changes"
+        };
+      }
+      const targetMessage = messages[messageBeforeAi];
+      const targetSnapshot = snapshots.find(s => s.messageId === targetMessage.id);
+      if (!targetSnapshot) {
+        return {
+          success: false,
+          error: "No snapshot found for the message before AI changes"
+        };
+      }
+      const keptMessages = messages.slice(0, messageBeforeAi + 1);
+      const removedMessages = messages.slice(messageBeforeAi + 1);
+      snapshotsRef.current[sessionId] = snapshots.filter(entry => keptMessages.some(message => message.id === entry.messageId));
+      setSessions(previousSessions => previousSessions.map(item => item.id === session.id ? _objectSpread(_objectSpread({}, item), {}, {
+        title: getSessionTitle(keptMessages),
+        messages: keptMessages,
+        updatedAt: Date.now()
+      }) : item));
+      return {
+        success: true,
+        snapshot: targetSnapshot,
+        removedCount: removedMessages.length,
+        messageBeforeAiId: targetMessage.id
+      };
+    }
   };
 }
 
@@ -89075,7 +89170,8 @@ const Agent = _ref => {
     updateSessionMessages = _useChatSessions.updateSessionMessages,
     appendSessionSnapshot = _useChatSessions.appendSessionSnapshot,
     hasSnapshot = _useChatSessions.hasSnapshot,
-    rollbackToMessage = _useChatSessions.rollbackToMessage;
+    rollbackToMessage = _useChatSessions.rollbackToMessage,
+    undoAiChanges = _useChatSessions.undoAiChanges;
   const _useChat = Object(_hooks_useChat__WEBPACK_IMPORTED_MODULE_15__["useChat"])({
       messages,
       currentAgent,
@@ -89083,7 +89179,8 @@ const Agent = _ref => {
       appendSessionSnapshot,
       enableReasoning,
       vm,
-      getUnconfiguredMessage: () => msg("agent-unconfigured")
+      getUnconfiguredMessage: () => msg("agent-unconfigured"),
+      undoAiChanges
     }),
     inputText = _useChat.inputText,
     setInputText = _useChat.setInputText,
@@ -90059,12 +90156,13 @@ if(false) {}
 /*!****************************************************!*\
   !*** ./src/addons/addons/novatheai/toolRuntime.ts ***!
   \****************************************************/
-/*! exports provided: REQUIRED_TOOL_ARGUMENTS, validateToolArguments, callAITool */
+/*! exports provided: REQUIRED_TOOL_ARGUMENTS, MUTATING_TOOLS, validateToolArguments, callAITool */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "REQUIRED_TOOL_ARGUMENTS", function() { return REQUIRED_TOOL_ARGUMENTS; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "MUTATING_TOOLS", function() { return MUTATING_TOOLS; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "validateToolArguments", function() { return validateToolArguments; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "callAITool", function() { return callAITool; });
 const REQUIRED_TOOL_ARGUMENTS = {
@@ -90081,7 +90179,8 @@ const REQUIRED_TOOL_ARGUMENTS = {
   batchAddCostumesWithSvg: ["costumes"],
   reorderCostume: ["newIndex"]
 };
-const MUTATING_TOOLS = new Set(["applyPatch", "createSpriteWithSvg", "updateSpriteProperties", "addCostumeWithSvg", "batchAddCostumesWithSvg", "deleteCostume", "batchDeleteCostumes", "reorderCostume", "setCostumeOrder", "deleteSprite", "installExtension", "replaceBlocksRangeByUCF", "replaceScriptByUCF", "generateCodeFromUCF"]);
+const MUTATING_TOOLS = new Set(["applyPatch", "createSpriteWithSvg", "updateSpriteProperties", "addCostumeWithSvg", "batchAddCostumesWithSvg", "deleteCostume", "batchDeleteCostumes", "reorderCostume", "setCostumeOrder", "deleteSprite", "installExtension", "replaceBlocksRangeByUCF", "replaceScriptByUCF", "generateCodeFromUCF", "undoAiChanges"]);
+
 let mutationQueue = Promise.resolve();
 const isMissingToolArgument = value => value === undefined || value === null || typeof value === "string" && value.trim() === "";
 const hasAnyToolArgument = (args, names) => names.some(name => !isMissingToolArgument(args[name]));
@@ -90926,6 +91025,21 @@ const scratchToolSchemas = [{
         path: {
           type: "string",
           description: "Optional virtual path. If omitted, validates all virtual Scratch JS and SVG costume files."
+        }
+      }
+    }
+  }
+}, {
+  type: "function",
+  function: {
+    name: "undoAiChanges",
+    description: "Undo the AI's recent changes to the Scratch project. This will restore the project to the state before the AI made its recent changes, and remove the AI's messages and tool calls from the conversation. Use this when the AI made mistakes or the user wants to revert.",
+    parameters: {
+      type: "object",
+      properties: {
+        count: {
+          type: "number",
+          description: "Number of recent AI change sessions to undo. Each session typically corresponds to one user message and the AI's response. Defaults to 1."
         }
       }
     }
