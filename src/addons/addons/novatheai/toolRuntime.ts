@@ -28,7 +28,10 @@ const MUTATING_TOOLS = new Set([
   "replaceBlocksRangeByUCF",
   "replaceScriptByUCF",
   "generateCodeFromUCF",
+  "undoAiChanges",
 ]);
+
+export { MUTATING_TOOLS };
 
 let mutationQueue = Promise.resolve();
 

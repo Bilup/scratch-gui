@@ -171,6 +171,7 @@ const getToolLabel = (name: string, msg: (key: string) => string) => {
     case "reorderCostume": return msg("tool-reorder-costume");
     case "setCostumeOrder": return msg("tool-set-costume-order");
     case "deleteSprite": return msg("tool-delete-sprite");
+    case "undoAiChanges": return msg("tool-undo-ai-changes");
     default: return name;
   }
 };

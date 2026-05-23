@@ -628,6 +628,7 @@
   "novatheai/tool-reorder-costume": "Reorder Costume",
   "novatheai/tool-set-costume-order": "Set Costume Order",
   "novatheai/tool-delete-sprite": "Delete Sprite",
+  "novatheai/tool-undo-ai-changes": "Undo AI Changes",
   "novatheai/tool-sync-success": "Synced {fileCount} files, {operationCount} script operations",
   "novatheai/tool-patch-applied": "Patch applied",
   "novatheai/tool-diagnostics-pass": "Diagnostics passed",

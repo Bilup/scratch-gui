@@ -98,6 +98,7 @@ const Agent: React.FC<AgentProps> = ({ vm, workspace, editorThemeMode = "light",
     appendSessionSnapshot,
     hasSnapshot,
     rollbackToMessage,
+    undoAiChanges,
   } = useChatSessions(useDrawerHistory);
 
   const { inputText, setInputText, isGenerating, attachments, setAttachments, handleSend, handleStopGenerating } =
@@ -109,6 +110,7 @@ const Agent: React.FC<AgentProps> = ({ vm, workspace, editorThemeMode = "light",
       enableReasoning,
       vm,
       getUnconfiguredMessage: () => msg("agent-unconfigured"),
+      undoAiChanges,
     });
 
   const { previewAttachment, setPreviewAttachment, handleOpenAttachment } = useAttachmentInteraction(vm, workspace);

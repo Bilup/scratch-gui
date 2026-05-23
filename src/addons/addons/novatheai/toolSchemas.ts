@@ -472,4 +472,20 @@ export const scratchToolSchemas = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "undoAiChanges",
+      description: "Undo the AI's recent changes to the Scratch project. This will restore the project to the state before the AI made its recent changes, and remove the AI's messages and tool calls from the conversation. Use this when the AI made mistakes or the user wants to revert.",
+      parameters: {
+        type: "object",
+        properties: {
+          count: {
+            type: "number",
+            description: "Number of recent AI change sessions to undo. Each session typically corresponds to one user message and the AI's response. Defaults to 1.",
+          },
+        },
+      },
+    },
+  },
 ];
