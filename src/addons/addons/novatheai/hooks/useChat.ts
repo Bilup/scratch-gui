@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { FlattenedAgent, Attachment, ChatMessage } from "../types";
+import { FlattenedAgent, Attachment, ChatMessage, SessionSnapshot } from "../types";
 import { AITools } from "../tools";
 import { scratchToolSchemas } from "../toolSchemas";
 import { getProviderAdapter, isProviderImplemented } from "../providerAdapters";
@@ -22,6 +22,13 @@ interface UseChatOptions {
   enableReasoning: boolean;
   vm: any;
   getUnconfiguredMessage: () => string;
+  undoAiChanges: (count?: number) => {
+    success: boolean;
+    error?: string;
+    snapshot?: SessionSnapshot;
+    removedCount?: number;
+    messageBeforeAiId?: string;
+  } | null;
 }
 
 const createMessageId = () => `msg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -317,6 +324,7 @@ export function useChat({
   enableReasoning,
   vm,
   getUnconfiguredMessage,
+  undoAiChanges,
 }: UseChatOptions) {
   const [inputText, setInputText] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -575,7 +583,29 @@ export function useChat({
                 throw new Error(`Invalid tool arguments: ${parseError.message}`);
               }
 
-              const result = await callTool(functionName, args);
+              let result: any;
+              if (functionName === "undoAiChanges") {
+                const count = typeof args.count === "number" ? args.count : 1;
+                const undoResult = undoAiChanges(count);
+                if (undoResult && undoResult.success && undoResult.snapshot) {
+                  if (typeof vm?.loadProject === "function") {
+                    try {
+                      await vm.loadProject(JSON.parse(undoResult.snapshot.projectJson));
+                    } catch (restoreError: any) {
+                      result = { success: false, error: `Failed to restore project: ${restoreError.message}` };
+                    }
+                  }
+                  result = {
+                    success: true,
+                    message: `Successfully undid ${undoResult.removedCount} message(s). Project restored.`,
+                    removedCount: undoResult.removedCount,
+                  };
+                } else {
+                  result = { success: false, error: undoResult?.error || "Failed to undo AI changes" };
+                }
+              } else {
+                result = await callTool(functionName, args);
+              }
               try {
                 toolResult = typeof result === "object" ? JSON.stringify(result) : String(result);
               } catch (stringifyError: any) {

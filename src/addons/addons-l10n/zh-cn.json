@@ -623,6 +623,7 @@
   "novatheai/tool-reorder-costume": "重排造型",
   "novatheai/tool-set-costume-order": "设置造型顺序",
   "novatheai/tool-delete-sprite": "删除角色",
+  "novatheai/tool-undo-ai-changes": "撤销 AI 更改",
   "novatheai/tool-sync-success": "已同步 {fileCount} 个文件，{operationCount} 个脚本操作",
   "novatheai/tool-patch-applied": "补丁已应用",
   "novatheai/tool-diagnostics-pass": "诊断通过",
