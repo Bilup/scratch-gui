@@ -21,6 +21,7 @@ interface UseChatOptions {
   ) => void;
   enableReasoning: boolean;
   vm: any;
+  getUnconfiguredMessage: () => string;
 }
 
 const createMessageId = () => `msg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -315,6 +316,7 @@ export function useChat({
   appendSessionSnapshot,
   enableReasoning,
   vm,
+  getUnconfiguredMessage,
 }: UseChatOptions) {
   const [inputText, setInputText] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -340,26 +342,65 @@ export function useChat({
     if (!inputText.trim() && attachments.length === 0) return;
 
     if (!currentAgent) {
+      const newMessage: ChatMessage = {
+        id: createMessageId(),
+        role: "user",
+        content: inputText,
+        attachments,
+      };
       updateSessionMessages([
         ...messages,
+        newMessage,
         {
           id: createMessageId(),
           role: "assistant",
           content: "Error: 当前没有可用的 AI Agent，请先在设置中添加或恢复一个 Agent。",
         },
       ]);
+      setInputText("");
+      setAttachments([]);
+      return;
+    }
+
+    if (currentAgent.modelName === "dont-use-me") {
+      const newMessage: ChatMessage = {
+        id: createMessageId(),
+        role: "user",
+        content: inputText,
+        attachments,
+      };
+      updateSessionMessages([
+        ...messages,
+        newMessage,
+        {
+          id: createMessageId(),
+          role: "assistant",
+          content: getUnconfiguredMessage(),
+        },
+      ]);
+      setInputText("");
+      setAttachments([]);
       return;
     }
 
     if (!isProviderImplemented(currentAgent.provider)) {
+      const newMessage: ChatMessage = {
+        id: createMessageId(),
+        role: "user",
+        content: inputText,
+        attachments,
+      };
       updateSessionMessages([
         ...messages,
+        newMessage,
         {
           id: createMessageId(),
           role: "assistant",
           content: `Error: 当前 Provider '${currentAgent.provider}' 暂未接入。请改用 OpenAI、智谱、DeepSeek 或 Custom(OpenAI-compatible)。`,
         },
       ]);
+      setInputText("");
+      setAttachments([]);
       return;
     }
 

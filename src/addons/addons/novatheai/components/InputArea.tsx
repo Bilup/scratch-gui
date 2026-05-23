@@ -7,7 +7,6 @@ import { getAttachmentDisplayName } from "../attachmentUtils";
 import SendIcon from "../assets/icon-send.svg";
 import StopIcon from "../assets/icon-stop.svg";
 import ChevronRightIcon from "../assets/icon-chevron-right.svg";
-import ComposeExpandIcon from "../assets/icon-compose-expand.svg";
 
 interface InputAreaProps {
   inputText: string;
@@ -159,7 +158,16 @@ export const InputArea: React.FC<InputAreaProps> = ({
             title={isExpanded ? msg("exit-fullscreen") : msg("expand-input")}
             aria-label={isExpanded ? msg("exit-fullscreen") : msg("expand-input")}
           >
-            <img src={ComposeExpandIcon} aria-hidden="true" alt="" />
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M5 2.25H2.75V4.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M9 2.25h2.25V4.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M5 11.75H2.75V9.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M9 11.75h2.25V9.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M5 2.25 2.25 5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+              <path d="M9 2.25 11.75 5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+              <path d="M5 11.75 2.25 9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+              <path d="M9 11.75 11.75 9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+            </svg>
           </button>
         </div>
         <div className={composer.inputBottomRow}>

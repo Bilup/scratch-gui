@@ -19,8 +19,8 @@ const DEFAULT_AGENTS: Agent[] = [
     models: [
       {
         id: "default-1-model-1",
-        name: "Nobody",
-        modelId: "nobody-0.0-empty",
+        name: "Don't use me",
+        modelId: "dont-use-me",
       }
     ],
   },
