@@ -108,6 +108,7 @@ const Agent: React.FC<AgentProps> = ({ vm, workspace, editorThemeMode = "light",
       appendSessionSnapshot,
       enableReasoning,
       vm,
+      getUnconfiguredMessage: () => msg("agent-unconfigured"),
     });
 
   const { previewAttachment, setPreviewAttachment, handleOpenAttachment } = useAttachmentInteraction(vm, workspace);

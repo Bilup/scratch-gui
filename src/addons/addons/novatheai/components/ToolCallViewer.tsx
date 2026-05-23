@@ -149,12 +149,28 @@ const getToolLabel = (name: string, msg: (key: string) => string) => {
     case "applyPatch": return msg("tool-apply-patch");
     case "getDiagnostics": return msg("tool-get-diagnostics");
     case "readFile": return msg("tool-read-file");
+    case "readVariable": return msg("tool-read-variable");
+    case "readListSlice": return msg("tool-read-list-slice");
+    case "searchList": return msg("tool-search-list");
+    case "getDataSummary": return msg("tool-get-data-summary");
     case "searchFiles": return msg("tool-search-files");
     case "searchBlocks": return msg("tool-search-blocks");
     case "getBlockHelp": return msg("tool-get-block-help");
     case "getScratchGuide": return msg("tool-get-scratch-guide");
     case "getProjectOverview": return msg("tool-get-project-overview");
     case "listFiles": return msg("tool-list-files");
+    case "searchExtensions": return msg("tool-search-extensions");
+    case "installExtension": return msg("tool-install-extension");
+    case "createSpriteWithSvg": return msg("tool-create-sprite-with-svg");
+    case "updateSpriteProperties": return msg("tool-update-sprite-properties");
+    case "listCostumes": return msg("tool-list-costumes");
+    case "addCostumeWithSvg": return msg("tool-add-costume-with-svg");
+    case "batchAddCostumesWithSvg": return msg("tool-batch-add-costumes-with-svg");
+    case "deleteCostume": return msg("tool-delete-costume");
+    case "batchDeleteCostumes": return msg("tool-batch-delete-costumes");
+    case "reorderCostume": return msg("tool-reorder-costume");
+    case "setCostumeOrder": return msg("tool-set-costume-order");
+    case "deleteSprite": return msg("tool-delete-sprite");
     default: return name;
   }
 };
