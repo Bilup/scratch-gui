@@ -82289,17 +82289,6 @@ module.exports = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iMTIi
 
 /***/ }),
 
-/***/ "./src/addons/addons/novatheai/assets/icon-compose-expand.svg":
-/*!********************************************************************!*\
-  !*** ./src/addons/addons/novatheai/assets/icon-compose-expand.svg ***!
-  \********************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-module.exports = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQiIGhlaWdodD0iMTQiIHZpZXdCb3g9IjAgMCAxNCAxNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4NCiAgPHBhdGggZD0iTTUgMi4yNUgyLjc1VjQuNSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMS4yIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4NCiAgPHBhdGggZD0iTTkgMi4yNWgyLjI1VjQuNSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMS4yIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4NCiAgPHBhdGggZD0iTTUgMTEuNzVIMi43NVY5LjUiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2Utd2lkdGg9IjEuMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+DQogIDxwYXRoIGQ9Ik05IDExLjc1aDIuMjVWOS41IiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIxLjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPg0KICA8cGF0aCBkPSJNNSAyLjI1IDIuMjUgNSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMS4yIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4NCiAgPHBhdGggZD0iTTkgMi4yNSAxMS43NSA1IiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIxLjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPg0KICA8cGF0aCBkPSJNNSAxMS43NSAyLjI1IDkiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2Utd2lkdGg9IjEuMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+DQogIDxwYXRoIGQ9Ik05IDExLjc1IDExLjc1IDkiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2Utd2lkdGg9IjEuMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+DQo8L3N2Zz4NCg=="
-
-/***/ }),
-
 /***/ "./src/addons/addons/novatheai/assets/icon-copy.svg":
 /*!**********************************************************!*\
   !*** ./src/addons/addons/novatheai/assets/icon-copy.svg ***!
@@ -83588,15 +83577,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _assets_icon_send_svg__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(_assets_icon_send_svg__WEBPACK_IMPORTED_MODULE_5__);
 /* harmony import */ var _assets_icon_stop_svg__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../assets/icon-stop.svg */ "./src/addons/addons/novatheai/assets/icon-stop.svg");
 /* harmony import */ var _assets_icon_stop_svg__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(_assets_icon_stop_svg__WEBPACK_IMPORTED_MODULE_6__);
-/* harmony import */ var _assets_icon_compose_expand_svg__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../assets/icon-compose-expand.svg */ "./src/addons/addons/novatheai/assets/icon-compose-expand.svg");
-/* harmony import */ var _assets_icon_compose_expand_svg__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__webpack_require__.n(_assets_icon_compose_expand_svg__WEBPACK_IMPORTED_MODULE_7__);
 function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
 function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
 function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
 function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
-
 
 
 
@@ -83717,11 +83703,57 @@ const InputArea = _ref => {
     onClick: onToggleExpanded,
     title: isExpanded ? msg("exit-fullscreen") : msg("expand-input"),
     "aria-label": isExpanded ? msg("exit-fullscreen") : msg("expand-input")
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("img", {
-    src: _assets_icon_compose_expand_svg__WEBPACK_IMPORTED_MODULE_7___default.a,
-    "aria-hidden": "true",
-    alt: ""
-  }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", {
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("svg", {
+    width: "14",
+    height: "14",
+    viewBox: "0 0 14 14",
+    fill: "none",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("path", {
+    d: "M5 2.25H2.75V4.5",
+    stroke: "currentColor",
+    strokeWidth: "1.2",
+    strokeLinecap: "round",
+    strokeLinejoin: "round"
+  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("path", {
+    d: "M9 2.25h2.25V4.5",
+    stroke: "currentColor",
+    strokeWidth: "1.2",
+    strokeLinecap: "round",
+    strokeLinejoin: "round"
+  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("path", {
+    d: "M5 11.75H2.75V9.5",
+    stroke: "currentColor",
+    strokeWidth: "1.2",
+    strokeLinecap: "round",
+    strokeLinejoin: "round"
+  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("path", {
+    d: "M9 11.75h2.25V9.5",
+    stroke: "currentColor",
+    strokeWidth: "1.2",
+    strokeLinecap: "round",
+    strokeLinejoin: "round"
+  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("path", {
+    d: "M5 2.25 2.25 5",
+    stroke: "currentColor",
+    strokeWidth: "1.2",
+    strokeLinecap: "round"
+  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("path", {
+    d: "M9 2.25 11.75 5",
+    stroke: "currentColor",
+    strokeWidth: "1.2",
+    strokeLinecap: "round"
+  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("path", {
+    d: "M5 11.75 2.25 9",
+    stroke: "currentColor",
+    strokeWidth: "1.2",
+    strokeLinecap: "round"
+  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("path", {
+    d: "M9 11.75 11.75 9",
+    stroke: "currentColor",
+    strokeWidth: "1.2",
+    strokeLinecap: "round"
+  })))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", {
     className: _ui_Composer_module_less__WEBPACK_IMPORTED_MODULE_1___default.a.inputBottomRow
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", {
     className: _ui_Composer_module_less__WEBPACK_IMPORTED_MODULE_1___default.a.inputToolsScroller
@@ -84712,6 +84744,14 @@ const getToolLabel = (name, msg) => {
       return msg("tool-get-diagnostics");
     case "readFile":
       return msg("tool-read-file");
+    case "readVariable":
+      return msg("tool-read-variable");
+    case "readListSlice":
+      return msg("tool-read-list-slice");
+    case "searchList":
+      return msg("tool-search-list");
+    case "getDataSummary":
+      return msg("tool-get-data-summary");
     case "searchFiles":
       return msg("tool-search-files");
     case "searchBlocks":
@@ -84724,6 +84764,30 @@ const getToolLabel = (name, msg) => {
       return msg("tool-get-project-overview");
     case "listFiles":
       return msg("tool-list-files");
+    case "searchExtensions":
+      return msg("tool-search-extensions");
+    case "installExtension":
+      return msg("tool-install-extension");
+    case "createSpriteWithSvg":
+      return msg("tool-create-sprite-with-svg");
+    case "updateSpriteProperties":
+      return msg("tool-update-sprite-properties");
+    case "listCostumes":
+      return msg("tool-list-costumes");
+    case "addCostumeWithSvg":
+      return msg("tool-add-costume-with-svg");
+    case "batchAddCostumesWithSvg":
+      return msg("tool-batch-add-costumes-with-svg");
+    case "deleteCostume":
+      return msg("tool-delete-costume");
+    case "batchDeleteCostumes":
+      return msg("tool-batch-delete-costumes");
+    case "reorderCostume":
+      return msg("tool-reorder-costume");
+    case "setCostumeOrder":
+      return msg("tool-set-costume-order");
+    case "deleteSprite":
+      return msg("tool-delete-sprite");
     default:
       return name;
   }
@@ -87739,8 +87803,8 @@ const DEFAULT_AGENTS = [{
   apiKey: "",
   models: [{
     id: "default-1-model-1",
-    name: "Nobody",
-    modelId: "nobody-0.0-empty"
+    name: "Don't use me",
+    modelId: "dont-use-me"
   }]
 }];
 function useAgents() {
@@ -88382,7 +88446,8 @@ function useChat(_ref) {
     updateSessionMessages = _ref.updateSessionMessages,
     appendSessionSnapshot = _ref.appendSessionSnapshot,
     enableReasoning = _ref.enableReasoning,
-    vm = _ref.vm;
+    vm = _ref.vm,
+    getUnconfiguredMessage = _ref.getUnconfiguredMessage;
   const _useState = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])(""),
     _useState2 = _slicedToArray(_useState, 2),
     inputText = _useState2[0],
@@ -88412,19 +88477,51 @@ function useChat(_ref) {
     if (isGenerating) return;
     if (!inputText.trim() && attachments.length === 0) return;
     if (!currentAgent) {
-      updateSessionMessages([...messages, {
+      const newMessage = {
+        id: createMessageId(),
+        role: "user",
+        content: inputText,
+        attachments
+      };
+      updateSessionMessages([...messages, newMessage, {
         id: createMessageId(),
         role: "assistant",
         content: "Error: 当前没有可用的 AI Agent，请先在设置中添加或恢复一个 Agent。"
       }]);
+      setInputText("");
+      setAttachments([]);
+      return;
+    }
+    if (currentAgent.modelName === "dont-use-me") {
+      const newMessage = {
+        id: createMessageId(),
+        role: "user",
+        content: inputText,
+        attachments
+      };
+      updateSessionMessages([...messages, newMessage, {
+        id: createMessageId(),
+        role: "assistant",
+        content: getUnconfiguredMessage()
+      }]);
+      setInputText("");
+      setAttachments([]);
       return;
     }
     if (!Object(_providerAdapters__WEBPACK_IMPORTED_MODULE_3__["isProviderImplemented"])(currentAgent.provider)) {
-      updateSessionMessages([...messages, {
+      const newMessage = {
+        id: createMessageId(),
+        role: "user",
+        content: inputText,
+        attachments
+      };
+      updateSessionMessages([...messages, newMessage, {
         id: createMessageId(),
         role: "assistant",
         content: "Error: \u5F53\u524D Provider '".concat(currentAgent.provider, "' \u6682\u672A\u63A5\u5165\u3002\u8BF7\u6539\u7528 OpenAI\u3001\u667A\u8C31\u3001DeepSeek \u6216 Custom(OpenAI-compatible)\u3002")
       }]);
+      setInputText("");
+      setAttachments([]);
       return;
     }
     const newMessage = {
@@ -88985,7 +89082,8 @@ const Agent = _ref => {
       updateSessionMessages,
       appendSessionSnapshot,
       enableReasoning,
-      vm
+      vm,
+      getUnconfiguredMessage: () => msg("agent-unconfigured")
     }),
     inputText = _useChat.inputText,
     setInputText = _useChat.setInputText,
