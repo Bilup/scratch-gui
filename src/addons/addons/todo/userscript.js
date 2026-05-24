@@ -629,7 +629,7 @@ ${JSON.stringify(content)}
                     todoEleDelLine.className = 'sa-todo-list-ele-title sa-todo-list-ele-title-rmLine';
 
                     const todoEleSetDone = document.createElement('img');
-                    todoEleSetDone.src = getTodoListContent().tasks[index].done ? undone : done;
+                    todoEleSetDone.src = getTodoListContent().tasks[index].done ? done : undone;
                     todoEleSetDone.className = 'sa-todo-list-ele-done'
                     todoEleSetDone.style.backgroundColor = currentTask.color;
 
@@ -738,7 +738,7 @@ ${JSON.stringify(content)}
                     todoEleSetDone.onclick = () => {
                         const todos = getTodoListContent();
                         todos.tasks[index].done = !todos.tasks[index].done;
-                        todoEleSetDone.src = todos.tasks[index].done ? undone : done;
+                        todoEleSetDone.src = todos.tasks[index].done ? done : undone;
                         createCommentToStage(getFormatComment(todos), false);
                         refreshTodoStyle()
                     }
