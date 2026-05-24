@@ -706,7 +706,7 @@ __webpack_require__.r(__webpack_exports__);
           }
           todoEleDelLine.className = 'sa-todo-list-ele-title sa-todo-list-ele-title-rmLine';
           const todoEleSetDone = document.createElement('img');
-          todoEleSetDone.src = getTodoListContent().tasks[index].done ? _undone_svg__WEBPACK_IMPORTED_MODULE_3___default.a : _done_svg__WEBPACK_IMPORTED_MODULE_2___default.a;
+          todoEleSetDone.src = getTodoListContent().tasks[index].done ? _done_svg__WEBPACK_IMPORTED_MODULE_2___default.a : _undone_svg__WEBPACK_IMPORTED_MODULE_3___default.a;
           todoEleSetDone.className = 'sa-todo-list-ele-done';
           todoEleSetDone.style.backgroundColor = currentTask.color;
           const todoEleEditButton = document.createElement('img');
@@ -809,7 +809,7 @@ __webpack_require__.r(__webpack_exports__);
           todoEleSetDone.onclick = () => {
             const todos = getTodoListContent();
             todos.tasks[index].done = !todos.tasks[index].done;
-            todoEleSetDone.src = todos.tasks[index].done ? _undone_svg__WEBPACK_IMPORTED_MODULE_3___default.a : _done_svg__WEBPACK_IMPORTED_MODULE_2___default.a;
+            todoEleSetDone.src = todos.tasks[index].done ? _done_svg__WEBPACK_IMPORTED_MODULE_2___default.a : _undone_svg__WEBPACK_IMPORTED_MODULE_3___default.a;
             createCommentToStage(getFormatComment(todos), false);
             refreshTodoStyle();
           };
