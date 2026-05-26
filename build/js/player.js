@@ -33506,7 +33506,7 @@ const DocumentationLink = _ref => {
   let slug = _ref.slug,
     children = _ref.children;
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("a", {
-    href: "https://docs.turbowarp.org/".concat(slug),
+    href: "https://docs.bilup.org/".concat(slug),
     target: "_blank",
     rel: "noopener noreferrer"
   }, children);
@@ -61742,7 +61742,7 @@ const fetchProjectToken = async projectId => {
     return metadata.project_token;
   } catch (e) {
     _utils_log_js__WEBPACK_IMPORTED_MODULE_8__["default"].error(e);
-    throw new Error('Cannot access project token. Project is probably unshared. See https://docs.turbowarp.org/unshared-projects');
+    throw new Error('Cannot access project token. Project is probably unshared. See https://docs.bilup.org/unshared-projects');
   }
 };
 
