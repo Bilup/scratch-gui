@@ -2,7 +2,7 @@ scratch-gui modified for use in [Bilup](https://www.bilup.org/)
 
 ## Setup
 
-See https://docs.turbowarp.org/development/getting-started to setup the complete TurboWarp environment.
+See https://docs.bilup.org/development/getting-started to setup the complete TurboWarp environment.
 
 If you just want to play with the GUI then it's the same process as upstream scratch-gui.
 
