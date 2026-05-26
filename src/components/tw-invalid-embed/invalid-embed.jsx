@@ -14,11 +14,11 @@ const InvalidEmbed = () => (
         <p>
             {'See '}
             <a
-                href="https://docs.turbowarp.org/embedding"
+                href="https://docs.bilup.org/embedding"
                 target="_blank"
                 rel="noreferrer"
             >
-                {'docs.turbowarp.org/embedding'}
+                {'docs.bilup.org/embedding'}
             </a>
             {/* eslint-disable-next-line max-len */}
             {' for more information. You need to replace the iframe src with the embed page:'}
