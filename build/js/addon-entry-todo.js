@@ -758,7 +758,7 @@ __webpack_require__.r(__webpack_exports__);
                     const todoEleStep = document.createElement('li');
                     todoEleStep.className = 'sa-todo-list-ele-steps-li';
                     const todoEleSetDoneStep = document.createElement('img');
-                    todoEleSetDoneStep.src = needDone ? _undone_svg__WEBPACK_IMPORTED_MODULE_3___default.a : _done_svg__WEBPACK_IMPORTED_MODULE_2___default.a;
+                    todoEleSetDoneStep.src = needDone ? _done_svg__WEBPACK_IMPORTED_MODULE_2___default.a : _undone_svg__WEBPACK_IMPORTED_MODULE_3___default.a;
                     todoEleSetDoneStep.className = 'sa-todo-list-ele-done';
                     todoEleSetDoneStep.style.backgroundColor = currentTask.color;
                     todoEleSetDoneStep.onclick = () => {
