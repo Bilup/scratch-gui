@@ -2,13 +2,13 @@ scratch-gui modified for use in [Bilup](https://www.bilup.org/)
 
 ## Setup
 
-See https://docs.bilup.org/development/getting-started to setup the complete TurboWarp environment.
+See https://docs.bilup.org/development/getting-started to setup the complete Bilup environment.
 
 If you just want to play with the GUI then it's the same process as upstream scratch-gui.
 
 ## License
 
-TurboWarp's modifications to Scratch are licensed under the GNU General Public License v3.0. See LICENSE or https://www.gnu.org/licenses/ for details.
+Bilup's modifications to Scratch are licensed under the GNU General Public License v3.0. See LICENSE or https://www.gnu.org/licenses/ for details.
 
 The following is the original license for scratch-gui, which we are required to retain. This is NOT the license of this project.
 

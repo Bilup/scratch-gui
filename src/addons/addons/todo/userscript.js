@@ -684,7 +684,7 @@ ${JSON.stringify(content)}
                                         todoEleStep.className = 'sa-todo-list-ele-steps-li';
 
                                         const todoEleSetDoneStep = document.createElement('img');
-                                        todoEleSetDoneStep.src = needDone ? undone : done;
+                                        todoEleSetDoneStep.src = needDone ? done : undone;
                                         todoEleSetDoneStep.className = 'sa-todo-list-ele-done';
                                         todoEleSetDoneStep.style.backgroundColor = currentTask.color;
                                         todoEleSetDoneStep.onclick = () => {
