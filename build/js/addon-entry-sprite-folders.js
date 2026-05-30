@@ -388,7 +388,7 @@ __webpack_require__.r(__webpack_exports__);
             icon.src = dataUri;
           }
         }).catch(() => {
-          const url = "https://assets.scratch.mit.edu/internalapi/asset/".concat(costume.asset.assetId, ".").concat(costume.dataFormat || 'png', "/get/");
+          const url = "".concat(window.location.origin, "/internalapi/asset/").concat(costume.asset.assetId, ".").concat(costume.dataFormat || 'png', "/get/");
           if (icon.parentNode) {
             icon.src = url;
           }

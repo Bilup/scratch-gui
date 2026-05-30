@@ -46,7 +46,7 @@ exports.push([module.i, "/* Dev Inspector Styles */\n.dev-inspector-hidden {\n  
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__.p + "static/assets/15f2789dd231f36d43a4839306b3a2cb.svg";
+module.exports = __webpack_require__.p + "static/libassets/15f2789dd231f36d43a4839306b3a2cb.svg";
 
 /***/ }),
 

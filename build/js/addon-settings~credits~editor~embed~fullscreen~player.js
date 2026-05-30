@@ -706,7 +706,7 @@ module.exports = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAi
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__.p + "static/assets/b631383707e87a454b479dedaa8ca014.svg";
+module.exports = __webpack_require__.p + "static/libassets/b631383707e87a454b479dedaa8ca014.svg";
 
 /***/ }),
 
@@ -728,7 +728,7 @@ module.exports = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAi
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__.p + "static/assets/ef4a998a82a8567de018baa4607bc6a0.svg";
+module.exports = __webpack_require__.p + "static/libassets/ef4a998a82a8567de018baa4607bc6a0.svg";
 
 /***/ }),
 
