@@ -109,3 +109,41 @@ jobs:
 
         # Push
         git push origin develop-builds
+
+    - name: Deploy to web branch
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+        # Backup build folder
+        rm -rf /tmp/web-build
+        mkdir -p /tmp/web-build
+        cp -r /tmp/build/* /tmp/web-build/
+
+        # Fetch web branch if exists
+        git fetch origin web 2>/dev/null || true
+
+        # Create orphan web branch if not exists, otherwise checkout
+        if git show-ref --verify --quiet refs/remotes/origin/web; then
+          git checkout web
+        else
+          git checkout --orphan web
+          # Remove all files from new orphan branch
+          rm -rf .gitignore .github LICENSE README.md package.json package-lock.json node_modules src static test scripts translation.json webpack.*.js *.mjs tsconfig.json .eslint* .nvmrc 2>/dev/null || true
+          rm -rf * .??* 2>/dev/null || true
+        fi
+
+        # Clean web branch
+        rm -rf * .??* 2>/dev/null || true
+
+        # Copy build contents directly to root
+        cp -r /tmp/web-build/* .
+
+        # Add all files
+        git add -A
+
+        # Commit if changed
+        git commit -m "chore: deploy web build from develop" || echo "No changes"
+
+        # Push to web branch
+        git push origin web --force
