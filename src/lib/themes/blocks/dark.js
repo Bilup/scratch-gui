@@ -22,7 +22,7 @@ const blockColors = {
     control: {
         primary: '#332205',
         secondary: '#4C4C4C',
-        tertiary: '#CF63CF',
+        tertiary: '#FFAB19',
         quaternary: '#FFAB19'
     },
     event: {
