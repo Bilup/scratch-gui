@@ -210,7 +210,12 @@ export default async function ({ addon, console, msg }) {
           const sourceBlock = this.isShadow() && this.getParent() ? this.getParent() : this;
           const category = categories.find(i => i.categoryId === sourceBlock.category_);
           if (category) {
-            input.outlinePath.setAttribute("fill", fieldBackground(addon.settings.get(category.settingId)));
+            if (getBlocksThemeId() === "dark-dark") {
+              input.outlinePath.setAttribute("stroke", fieldBackground(addon.settings.get(category.settingId)));
+              input.outlinePath.setAttribute("fill", "#4C4C4C");
+            }else{
+              input.outlinePath.setAttribute("fill", fieldBackground(addon.settings.get(category.settingId)));
+            }
           }
         }
       }
