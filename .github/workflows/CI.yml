@@ -131,11 +131,7 @@ jobs:
         fi
 
         # Clean web branch (keep .git directory)
-        git rm -rf --cached .
-        rm -rf *
-        shopt -s dotglob
-        rm -rf !(.)
-        shopt -u dotglob
+        find . -mindepth 1 -maxdepth 1 -not -name '.git' -exec rm -rf {} +
 
         # Copy build contents directly to root
         cp -r /tmp/web-build/* .
