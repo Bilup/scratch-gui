@@ -212,7 +212,7 @@ export default async function ({ addon, console, msg }) {
           if (category) {
             if (getBlocksThemeId() === "dark-dark") {
               input.outlinePath.setAttribute("stroke", fieldBackground(addon.settings.get(category.settingId)));
-              input.outlinePath.setAttribute("stroke", "#4C4C4C");
+              input.outlinePath.setAttribute("fill", "#4C4C4C");
             }else{
               input.outlinePath.setAttribute("fill", fieldBackground(addon.settings.get(category.settingId)));
             }
