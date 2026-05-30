@@ -128,13 +128,14 @@ jobs:
           git checkout web
         else
           git checkout --orphan web
-          # Remove all files from new orphan branch
-          rm -rf .gitignore .github LICENSE README.md package.json package-lock.json node_modules src static test scripts translation.json webpack.*.js *.mjs tsconfig.json .eslint* .nvmrc 2>/dev/null || true
-          rm -rf * .??* 2>/dev/null || true
         fi
 
-        # Clean web branch
-        rm -rf * .??* 2>/dev/null || true
+        # Clean web branch (keep .git directory)
+        git rm -rf --cached .
+        rm -rf *
+        shopt -s dotglob
+        rm -rf !(.)
+        shopt -u dotglob
 
         # Copy build contents directly to root
         cp -r /tmp/web-build/* .
