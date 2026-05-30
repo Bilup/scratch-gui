@@ -207,11 +207,11 @@ export default async ({ addon, console, msg }) => {
 
                 // Fallback to asset URL
                 if (costume.asset.assetId) {
-                    const url = `https://assets.scratch.mit.edu/internalapi/asset/${costume.asset.assetId}.${costume.dataFormat || 'png'}/get/`;
+                    const url = `${window.location.origin}/static/assets/${costume.asset.assetId}.${costume.dataFormat || 'png'}`;
                     return url;
                 }
                 if (costume.md5ext) {
-                    return `https://assets.scratch.mit.edu/internalapi/asset/${costume.md5ext}/get/`;
+                    return `${window.location.origin}/static/assets/${costume.md5ext}`;
                 }
             }
         }
