@@ -252,7 +252,7 @@ export default async ({ addon, console, msg }) => {
                         icon.src = dataUri;
                     }
                 }).catch(() => {
-                    const url = `https://assets.scratch.mit.edu/internalapi/asset/${costume.asset.assetId}.${costume.dataFormat || 'png'}/get/`;
+                    const url = `${window.location.origin}/internalapi/asset/${costume.asset.assetId}.${costume.dataFormat || 'png'}/get/`;
                     if (icon.parentNode) {
                         icon.src = url;
                     }
