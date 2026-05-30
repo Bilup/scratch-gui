@@ -620,7 +620,8 @@ const arrowShadowColor = "#231f20";
           const sourceBlock = this.isShadow() && this.getParent() ? this.getParent() : this;
           const category = categories.find(i => i.categoryId === sourceBlock.category_);
           if (category) {
-            if (getBlocksThemeId() === "dark-dark") {
+            // Proprietary code for dark-blocks-media/default theme
+            if (getBlocksThemeId() === "dark-blocks-media/default") {
               input.outlinePath.setAttribute("stroke", fieldBackground(addon.settings.get(category.settingId)));
               input.outlinePath.setAttribute("fill", "#4C4C4C");
             } else {
