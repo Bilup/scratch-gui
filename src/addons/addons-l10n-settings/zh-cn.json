@@ -1,6 +1,6 @@
 {
   "cat-blocks/@description": "重新获取2020年愚人节首次推出的编辑器猫猫帽子积木。",
-  "cat-blocks/@info-watch": "当编辑器打开时，“看向鼠标”设置可能会影响性能。",
+  "cat-blocks/@info-watch": "当编辑器打开时，“跟随鼠标”设置可能会影响性能。",
   "cat-blocks/@name": "猫积木",
   "cat-blocks/@settings-name-watch": "跟随鼠标",
   "editor-devtools/@description": "为编辑器添加了新的菜单选项：复制/粘贴积木，更好的积木整理，以及更多功能！",
@@ -461,8 +461,8 @@
   "middle-click-popup/@info-math-and-conversions": "你现在可以直接在搜索框中进行数学计算（例如“10 + 5 * 2”），并在绿色框中查看结果。还支持单位换算，如“5cm in inches”、“100 km to miles”、“25 c to f”。支持距离、温度、重量、时间和角度单位。",
   "no-category-text/@description": "移除积木分类中的文字标签，并放大图标或气泡以填充空间。包含用于调整图标间距和缩放比例的设置。",
   "no-category-text/@name": "隐藏分类文字并放大图标",
-  "no-category-text/@settings-name-iconScale": "图标缩放比例（50–300%）",
-  "no-category-text/@settings-name-iconSpacing": "图标间距（10–200%）",
+  "no-category-text/@settings-name-iconScale": "图标缩放比例（50-300%）",
+  "no-category-text/@settings-name-iconSpacing": "图标间距（10-200%）",
   "remove-extension-button/@description": "从积木面板中移除“添加扩展”按钮。",
   "remove-extension-button/@name": "隐藏扩展按钮",
   "tw-disable-cloud-variables/@description": "默认禁用云变量。你仍可通过“编辑 > 启用云变量”菜单重新启用。",
@@ -512,5 +512,7 @@
   "background/@description": "让你的编辑器焕然一新。",
   "background/@info-reducePerformance": "这可能会造成一些性能问题，而且会覆盖 Bilup 原有的壁纸设置。",
   "todo/@name": "待办",
-  "todo/@description": "记录作品的待办！"
+  "todo/@description": "记录作品的待办！",
+  "novatheai/@name": "Bilup Nova",
+  "novatheai/@description": "一个为 Bilup 设计的 AI 助手，基于 Gandi IDE AI 助手插件。"
 }
