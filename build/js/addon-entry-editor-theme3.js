@@ -621,7 +621,7 @@ const arrowShadowColor = "#231f20";
           const category = categories.find(i => i.categoryId === sourceBlock.category_);
           if (category) {
             // Proprietary code for dark-blocks-media/default theme
-            if (getBlocksThemeId() === "dark-blocks-media/default") {
+            if (addon.tab.redux.state.scratchGui.theme.theme.getBlocksThemeId() === "dark-blocks-media/default") {
               input.outlinePath.setAttribute("stroke", fieldBackground(addon.settings.get(category.settingId)));
               input.outlinePath.setAttribute("fill", "#4C4C4C");
             } else {
