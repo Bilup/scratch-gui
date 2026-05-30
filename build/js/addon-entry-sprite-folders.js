@@ -350,11 +350,11 @@ __webpack_require__.r(__webpack_exports__);
 
         // Fallback to asset URL
         if (costume.asset.assetId) {
-          const url = "https://assets.scratch.mit.edu/internalapi/asset/".concat(costume.asset.assetId, ".").concat(costume.dataFormat || 'png', "/get/");
+          const url = "".concat(window.location.origin, "/static/assets/").concat(costume.asset.assetId, ".").concat(costume.dataFormat || 'png');
           return url;
         }
         if (costume.md5ext) {
-          return "https://assets.scratch.mit.edu/internalapi/asset/".concat(costume.md5ext, "/get/");
+          return "".concat(window.location.origin, "/static/assets/").concat(costume.md5ext);
         }
       }
     }
