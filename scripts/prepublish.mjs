@@ -11,7 +11,7 @@ import nodeCrypto from 'crypto';
 import crossFetch from 'cross-fetch';
 import yauzl from 'yauzl';
 import { fileURLToPath } from 'url';
-import cliProgress from 'cli-progress';
+//import cliProgress from 'cli-progress';
 
 /** @typedef {import('yauzl').Entry} ZipEntry */
 /** @typedef {import('yauzl').ZipFile} ZipFile */
@@ -186,114 +186,114 @@ ${code}
     console.info(`[PenguinMod] Wrote ${relativeOutFile}`);
 };
 
-const downloadLibraryAssets = async () => {
-    const libraryFiles = [
-        path.join('src', 'lib', 'libraries', 'costumes.json'),
-        path.join('src', 'lib', 'libraries', 'backdrops.json'),
-        path.join('src', 'lib', 'libraries', 'sprites.json'),
-        path.join('src', 'lib', 'libraries', 'sounds.json')
-    ];
+// const downloadLibraryAssets = async () => {
+//     const libraryFiles = [
+//         path.join('src', 'lib', 'libraries', 'costumes.json'),
+//         path.join('src', 'lib', 'libraries', 'backdrops.json'),
+//         path.join('src', 'lib', 'libraries', 'sprites.json'),
+//         path.join('src', 'lib', 'libraries', 'sounds.json')
+//     ];
 
-    const assetsDir = path.join('static', 'libassets');
-    const absoluteAssetsDir = path.join(basePath, assetsDir);
-    fs.mkdirSync(absoluteAssetsDir, { recursive: true });
+//     const assetsDir = path.join('static', 'libassets');
+//     const absoluteAssetsDir = path.join(basePath, assetsDir);
+//     fs.mkdirSync(absoluteAssetsDir, { recursive: true });
 
-    const md5extList = new Set();
+//     const md5extList = new Set();
 
-    for (const libraryFile of libraryFiles) {
-        const absoluteLibraryFile = path.join(basePath, libraryFile);
-        if (!fs.existsSync(absoluteLibraryFile)) {
-            console.warn(`Library file not found: ${libraryFile}`);
-            continue;
-        }
-        const content = fs.readFileSync(absoluteLibraryFile, 'utf8');
-        const items = JSON.parse(content);
+//     for (const libraryFile of libraryFiles) {
+//         const absoluteLibraryFile = path.join(basePath, libraryFile);
+//         if (!fs.existsSync(absoluteLibraryFile)) {
+//             console.warn(`Library file not found: ${libraryFile}`);
+//             continue;
+//         }
+//         const content = fs.readFileSync(absoluteLibraryFile, 'utf8');
+//         const items = JSON.parse(content);
         
-        for (const item of items) {
-            if (item.costumes && Array.isArray(item.costumes)) {
-                for (const costume of item.costumes) {
-                    if (costume.md5ext) {
-                        md5extList.add(costume.md5ext);
-                    }
-                }
-            }
-            if (item.sounds && Array.isArray(item.sounds)) {
-                for (const sound of item.sounds) {
-                    if (sound.md5ext) {
-                        md5extList.add(sound.md5ext);
-                    }
-                }
-            }
-            if (item.md5ext) {
-                md5extList.add(item.md5ext);
-            }
-        }
-    }
+//         for (const item of items) {
+//             if (item.costumes && Array.isArray(item.costumes)) {
+//                 for (const costume of item.costumes) {
+//                     if (costume.md5ext) {
+//                         md5extList.add(costume.md5ext);
+//                     }
+//                 }
+//             }
+//             if (item.sounds && Array.isArray(item.sounds)) {
+//                 for (const sound of item.sounds) {
+//                     if (sound.md5ext) {
+//                         md5extList.add(sound.md5ext);
+//                     }
+//                 }
+//             }
+//             if (item.md5ext) {
+//                 md5extList.add(item.md5ext);
+//             }
+//         }
+//     }
 
-    console.info(`[Library Assets] Found ${md5extList.size} unique assets to download`);
+//     console.info(`[Library Assets] Found ${md5extList.size} unique assets to download`);
 
-    const totalAssets = md5extList.size;
-    let downloaded = 0;
-    let skipped = 0;
-    let failed = 0;
-    const failedItems = [];
+//     const totalAssets = md5extList.size;
+//     let downloaded = 0;
+//     let skipped = 0;
+//     let failed = 0;
+//     const failedItems = [];
 
-    const progressBar = new cliProgress.SingleBar({
-        format: '[Library Assets] [{bar}] {percentage}% | {value}/{total} | ETA: {eta}s',
-        barCompleteChar: '\u2588',
-        barIncompleteChar: '\u2591',
-        hideCursor: true
-    });
+//     const progressBar = new cliProgress.SingleBar({
+//         format: '[Library Assets] [{bar}] {percentage}% | {value}/{total} | ETA: {eta}s',
+//         barCompleteChar: '\u2588',
+//         barIncompleteChar: '\u2591',
+//         hideCursor: true
+//     });
 
-    progressBar.start(totalAssets, 0);
+//     progressBar.start(totalAssets, 0);
 
-    for (const md5ext of md5extList) {
-        const assetPath = path.join(assetsDir, md5ext);
-        const absoluteAssetPath = path.join(basePath, assetPath);
+//     for (const md5ext of md5extList) {
+//         const assetPath = path.join(assetsDir, md5ext);
+//         const absoluteAssetPath = path.join(basePath, assetPath);
         
-        if (fs.existsSync(absoluteAssetPath)) {
-            skipped++;
-            progressBar.update(downloaded + skipped);
-            continue;
-        }
+//         if (fs.existsSync(absoluteAssetPath)) {
+//             skipped++;
+//             progressBar.update(downloaded + skipped);
+//             continue;
+//         }
 
-        const url = `https://assets.scratch.mit.edu/internalapi/asset/${md5ext}/get/`;
+//         const url = `https://assets.scratch.mit.edu/internalapi/asset/${md5ext}/get/`;
         
-        try {
-            const response = await fetchWithProxy(url);
-            if (!response.ok) {
-                failed++;
-                failedItems.push({ md5ext, error: `HTTP ${response.status}` });
-                progressBar.update(downloaded + skipped + failed);
-                continue;
-            }
+//         try {
+//             const response = await fetchWithProxy(url);
+//             if (!response.ok) {
+//                 failed++;
+//                 failedItems.push({ md5ext, error: `HTTP ${response.status}` });
+//                 progressBar.update(downloaded + skipped + failed);
+//                 continue;
+//             }
             
-            const buffer = Buffer.from(await response.arrayBuffer());
-            fs.writeFileSync(absoluteAssetPath, buffer);
-            downloaded++;
-            progressBar.update(downloaded + skipped + failed);
-        } catch (error) {
-            failed++;
-            failedItems.push({ md5ext, error: error.message });
-            progressBar.update(downloaded + skipped + failed);
-        }
-    }
+//             const buffer = Buffer.from(await response.arrayBuffer());
+//             fs.writeFileSync(absoluteAssetPath, buffer);
+//             downloaded++;
+//             progressBar.update(downloaded + skipped + failed);
+//         } catch (error) {
+//             failed++;
+//             failedItems.push({ md5ext, error: error.message });
+//             progressBar.update(downloaded + skipped + failed);
+//         }
+//     }
 
-    progressBar.stop();
-    console.info(`[Library Assets] Downloaded: ${downloaded}, Skipped: ${skipped}, Failed: ${failed}`);
+//     progressBar.stop();
+//     console.info(`[Library Assets] Downloaded: ${downloaded}, Skipped: ${skipped}, Failed: ${failed}`);
     
-    if (failed > 0) {
-        console.warn('\n[Library Assets] Failed downloads:');
-        for (const item of failedItems) {
-            console.warn(`  - ${item.md5ext}: ${item.error}`);
-        }
-    }
-};
+//     if (failed > 0) {
+//         console.warn('\n[Library Assets] Failed downloads:');
+//         for (const item of failedItems) {
+//             console.warn(`  - ${item.md5ext}: ${item.error}`);
+//         }
+//     }
+// };
 
 const prepublish = async () => {
     await downloadMicrobitHex();
     await syncPenguinMod();
-    await downloadLibraryAssets();
+    // await downloadLibraryAssets();
 };
 
 prepublish().then(
