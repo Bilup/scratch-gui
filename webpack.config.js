@@ -223,15 +223,7 @@ module.exports = [
         },
         module: {
             rules: base.module.rules.concat([
-                {
-                    test: /\.(svg|png|wav|mp3|gif|jpg|woff2)$/,
-                    loader: 'url-loader',
-                    options: {
-                        limit: 2048,
-                        outputPath: 'static/libassets/',
-                        esModule: false
-                    }
-                }
+                
             ])
         },
         optimization: {
@@ -333,16 +325,7 @@ module.exports = [
             },
             module: {
                 rules: base.module.rules.concat([
-                    {
-                        test: /\.(svg|png|wav|mp3|gif|jpg|woff2)$/,
-                        loader: 'url-loader',
-                        options: {
-                            limit: 2048,
-                            outputPath: 'static/libassets/',
-                            publicPath: `${STATIC_PATH}/libassets/`,
-                            esModule: false
-                        }
-                    }
+                    
                 ])
             },
             plugins: base.plugins.concat([
