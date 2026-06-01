@@ -10138,7 +10138,7 @@ _chart_js__WEBPACK_IMPORTED_MODULE_0__["Chart"].register(_chart_js__WEBPACK_IMPO
         this.sidebarContent.className = "sa-spa-sidebar-content";
         this.sidebarContent.style.cssText = "\n          width: 100%;\n          flex: 1;\n          display: flex;\n          flex-direction: column;\n          gap: 16px;\n          padding: 16px;\n          overflow-y: auto;\n          box-sizing: border-box;\n        ";
 
-        // 添加标题栏（包含标题和导出按钮）
+        // 添加标题栏(包含标题和导出按钮)
         const header = document.createElement("div");
         header.style.cssText = "\n          display: flex;\n          justify-content: space-between;\n          align-items: center;\n          padding-bottom: 12px;\n          border-bottom: 1px solid rgba(0, 0, 0, 0.1);\n          flex-shrink: 0;\n        ";
 
@@ -10221,7 +10221,7 @@ _chart_js__WEBPACK_IMPORTED_MODULE_0__["Chart"].register(_chart_js__WEBPACK_IMPO
       const loadingDiv = document.getElementById('saSAPASidebarLoading');
       if (!resultsDiv) return;
 
-      // 生成简化版的 HTML（适合 Sidebar 显示）
+      // 生成简化版的 HTML(适合 Sidebar 显示)
       resultsDiv.innerHTML = this.generateSidebarAnalysisHTML(analysis);
 
       // 更新统计数据
@@ -10741,7 +10741,7 @@ _chart_js__WEBPACK_IMPORTED_MODULE_0__["Chart"].register(_chart_js__WEBPACK_IMPO
       targets.forEach(target => {
         const blocks = target.blocks || {};
 
-        // 首先找出所有头代码（hat blocks）
+        // 首先找出所有头代码(hat blocks)
         const hatBlocks = [];
         Object.values(blocks).forEach(block => {
           if (block.opcode && !block.shadow && block.topLevel) {
@@ -10764,7 +10764,7 @@ _chart_js__WEBPACK_IMPORTED_MODULE_0__["Chart"].register(_chart_js__WEBPACK_IMPO
       });
     }
 
-    // 遍历代码栈，包括子栈（迭代实现）
+    // 遍历代码栈，包括子栈(迭代实现)
     traverseBlockStack(blocks, block, analysis) {
       if (!block) return;
       const stack = [block];
@@ -10772,17 +10772,17 @@ _chart_js__WEBPACK_IMPORTED_MODULE_0__["Chart"].register(_chart_js__WEBPACK_IMPO
         const currentBlock = stack.pop();
         if (!currentBlock) continue;
 
-        // 计数当前积木（非阴影）
+        // 计数当前积木(非阴影)
         if (!currentBlock.shadow) {
           analysis.effectiveBlocks++;
         }
 
-        // 处理下一个积木（先入栈，后处理）
+        // 处理下一个积木(先入栈，后处理)
         if (currentBlock.next && blocks[currentBlock.next]) {
           stack.push(blocks[currentBlock.next]);
         }
 
-        // 处理子栈（如循环体、条件语句等）
+        // 处理子栈(如循环体、条件语句等)
         if (currentBlock.inputs) {
           Object.values(currentBlock.inputs).forEach(input => {
             if (Array.isArray(input) && input.length >= 2) {
@@ -11407,7 +11407,7 @@ _chart_js__WEBPACK_IMPORTED_MODULE_0__["Chart"].register(_chart_js__WEBPACK_IMPO
       ctx.fillStyle = '#66ccff';
       ctx.fillRect(0, 0, width, topBarHeight);
 
-      // 绘制Logo（使用SVG路径直接绘制）
+      // 绘制Logo(使用SVG路径直接绘制)
       const logoX = 20;
       const logoY = 12;
       const logoWidth = 36;
@@ -11664,7 +11664,7 @@ _chart_js__WEBPACK_IMPORTED_MODULE_0__["Chart"].register(_chart_js__WEBPACK_IMPO
         startAngle = endAngle;
       });
 
-      // 绘制图例（3列布局，限制最大显示数量）
+      // 绘制图例(3列布局，限制最大显示数量)
       const legendStartX = padding + 280;
       const legendItemWidth = 180;
       const maxItems = 21; // 最多显示21项
@@ -11729,7 +11729,7 @@ _chart_js__WEBPACK_IMPORTED_MODULE_0__["Chart"].register(_chart_js__WEBPACK_IMPO
       let level = msg('beginner', '初学者');
       if (totalScore >= 18) level = msg('expert', '专家级');else if (totalScore >= 14) level = msg('advanced', '高级');else if (totalScore >= 10) level = msg('intermediate', '中级');else if (totalScore >= 6) level = msg('developing', '发展中');
 
-      // 绘制雷达图（在背景左侧1/3位置）
+      // 绘制雷达图(在背景左侧1/3位置)
       this.drawRadarChart(ctx, padding + 136, y + 160, 80, labels, data, 3, '#4d97ff');
 
       // 绘制评分详情
@@ -11806,7 +11806,7 @@ _chart_js__WEBPACK_IMPORTED_MODULE_0__["Chart"].register(_chart_js__WEBPACK_IMPO
       const maxValue = Math.max(...data, 1);
       const normalizedData = data.map(v => v / maxValue);
 
-      // 绘制雷达图（在背景左侧1/3位置）
+      // 绘制雷达图(在背景左侧1/3位置)
       this.drawRadarChart(ctx, padding + 136, y + 160, 100, labels, normalizedData, 1, '#E65100');
 
       // 绘制评分详情

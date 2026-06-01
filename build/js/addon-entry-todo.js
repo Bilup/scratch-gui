@@ -179,8 +179,8 @@ __webpack_require__.r(__webpack_exports__);
   /**
   * 获取两个时间戳的格式化日期区间
   * AI 太好用了你知道吗
-   * @param {number} timestamp1 - 第一个时间戳（毫秒）
-  * @param {number} timestamp2 - 第二个时间戳（毫秒）
+   * @param {number} timestamp1 - 第一个时间戳(毫秒)
+  * @param {number} timestamp2 - 第二个时间戳(毫秒)
   * @returns {string} 格式化后的日期区间字符串
   */
   function getFormattedDateRange(timestamp1, timestamp2) {
@@ -910,7 +910,7 @@ __webpack_require__.r(__webpack_exports__);
   /**
    * 添加新的Todo
    * @param {object} config 配置
-   * @param {1|2} config.mode - 1为加入组（group），2为加入todo（tasks）
+   * @param {1|2} config.mode - 1为加入组(group)，2为加入todo(tasks)
    * @param {string} config.id - ID，用于区分
    * @param {string} config.name - 对组的配置
    * @param {string} config.color - 显示的颜色
