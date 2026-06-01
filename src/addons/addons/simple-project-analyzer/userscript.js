@@ -139,7 +139,7 @@ export default function ({ addon, msg, console }) {
           box-sizing: border-box;
         `;
 
-        // 添加标题栏（包含标题和导出按钮）
+        // 添加标题栏(包含标题和导出按钮)
         const header = document.createElement("div");
         header.style.cssText = `
           display: flex;
@@ -271,7 +271,7 @@ export default function ({ addon, msg, console }) {
 
       if (!resultsDiv) return;
 
-      // 生成简化版的 HTML（适合 Sidebar 显示）
+      // 生成简化版的 HTML(适合 Sidebar 显示)
       resultsDiv.innerHTML = this.generateSidebarAnalysisHTML(analysis);
 
       // 更新统计数据
@@ -906,7 +906,7 @@ export default function ({ addon, msg, console }) {
       targets.forEach(target => {
         const blocks = target.blocks || {};
         
-        // 首先找出所有头代码（hat blocks）
+        // 首先找出所有头代码(hat blocks)
         const hatBlocks = [];
         Object.values(blocks).forEach(block => {
           if (block.opcode && !block.shadow && block.topLevel) {
@@ -929,7 +929,7 @@ export default function ({ addon, msg, console }) {
       });
     }
     
-    // 遍历代码栈，包括子栈（迭代实现）
+    // 遍历代码栈，包括子栈(迭代实现)
     traverseBlockStack(blocks, block, analysis) {
       if (!block) return;
       
@@ -939,17 +939,17 @@ export default function ({ addon, msg, console }) {
         const currentBlock = stack.pop();
         if (!currentBlock) continue;
         
-        // 计数当前积木（非阴影）
+        // 计数当前积木(非阴影)
         if (!currentBlock.shadow) {
           analysis.effectiveBlocks++;
         }
         
-        // 处理下一个积木（先入栈，后处理）
+        // 处理下一个积木(先入栈，后处理)
         if (currentBlock.next && blocks[currentBlock.next]) {
           stack.push(blocks[currentBlock.next]);
         }
         
-        // 处理子栈（如循环体、条件语句等）
+        // 处理子栈(如循环体、条件语句等)
         if (currentBlock.inputs) {
           Object.values(currentBlock.inputs).forEach(input => {
             if (Array.isArray(input) && input.length >= 2) {
@@ -1782,7 +1782,7 @@ export default function ({ addon, msg, console }) {
       ctx.fillStyle = '#66ccff';
       ctx.fillRect(0, 0, width, topBarHeight);
 
-      // 绘制Logo（使用SVG路径直接绘制）
+      // 绘制Logo(使用SVG路径直接绘制)
       const logoX = 20;
       const logoY = 12;
       const logoWidth = 36;
@@ -2045,7 +2045,7 @@ export default function ({ addon, msg, console }) {
         startAngle = endAngle;
       });
 
-      // 绘制图例（3列布局，限制最大显示数量）
+      // 绘制图例(3列布局，限制最大显示数量)
       const legendStartX = padding + 280;
       const legendItemWidth = 180;
       const maxItems = 21; // 最多显示21项
@@ -2118,7 +2118,7 @@ export default function ({ addon, msg, console }) {
       else if (totalScore >= 10) level = msg('intermediate', '中级');
       else if (totalScore >= 6) level = msg('developing', '发展中');
 
-      // 绘制雷达图（在背景左侧1/3位置）
+      // 绘制雷达图(在背景左侧1/3位置)
       this.drawRadarChart(ctx, padding + 136, y + 160, 80, labels, data, 3, '#4d97ff');
 
       // 绘制评分详情
@@ -2200,7 +2200,7 @@ export default function ({ addon, msg, console }) {
       const maxValue = Math.max(...data, 1);
       const normalizedData = data.map(v => v / maxValue);
 
-      // 绘制雷达图（在背景左侧1/3位置）
+      // 绘制雷达图(在背景左侧1/3位置)
       this.drawRadarChart(ctx, padding + 136, y + 160, 100, labels, normalizedData, 1, '#E65100');
 
       // 绘制评分详情

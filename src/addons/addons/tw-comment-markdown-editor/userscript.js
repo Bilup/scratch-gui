@@ -36,7 +36,7 @@ export default async function ({ addon, console }) {
       const textarea = commentEl.querySelector('textarea');
       if (!textarea) return;
 
-      // 查找顶部栏（拖动栏）
+      // 查找顶部栏(拖动栏)
       const topBar = commentEl.querySelector('.scratchCommentBody') || commentEl.querySelector('[class*="TopBar"]') || commentEl.firstElementChild;
       if (!topBar) return;
 
@@ -192,7 +192,7 @@ export default async function ({ addon, console }) {
       });
     }
 
-    // 分割文本，提取所有部分（包括scratchblocks代码块和普通文本）
+    // 分割文本，提取所有部分(包括scratchblocks代码块和普通文本)
     const parts = [];
     let lastIndex = 0;
     scratchblocksRegex.lastIndex = 0;
@@ -248,7 +248,7 @@ export default async function ({ addon, console }) {
     });
   }
 
-  // 简单的Markdown渲染（用于非scratchblocks内容）
+  // 简单的Markdown渲染(用于非scratchblocks内容)
   function renderMarkdownSimple(text, container) {
     container.innerHTML = '';
 

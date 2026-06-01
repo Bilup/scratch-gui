@@ -589,13 +589,13 @@ const SettingsContent: React.FC<SettingsWindowProps> = ({ msg, ...props }) => {
     });
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ["style"] });
 
-    // 也监听 class 变化（以防万一）
+    // 也监听 class 变化(以防万一)
     const bodyObserver = new MutationObserver(() => {
       checkTheme();
     });
     bodyObserver.observe(document.body, { attributes: true, attributeFilter: ["class"] });
 
-    // 定期检查（作为备份）
+    // 定期检查(作为备份)
     const interval = setInterval(checkTheme, 500);
 
     return () => {

@@ -52,7 +52,7 @@ const readFileAsArrayBuffer = (file: File) =>
 
 const truncatePreview = (content: string, maxLength = 1200) => {
   if (content.length <= maxLength) return content;
-  return `${content.slice(0, maxLength)}\n\n...（内容已截断，发送时会携带完整解析文本）`;
+  return `${content.slice(0, maxLength)}\n\n...(内容已截断，发送时会携带完整解析文本)`;
 };
 
 const parseSpreadsheet = async (file: File) => {
