@@ -1,4 +1,4 @@
-import ScratchStorage from '../../../node_modules/@bilup/scratch-storage';
+import ScratchStorage from '@bilup/scratch-storage';
 
 import defaultProject from '../default-project';
 

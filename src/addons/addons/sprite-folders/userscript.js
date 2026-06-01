@@ -207,11 +207,11 @@ export default async ({ addon, console, msg }) => {
 
                 // Fallback to asset URL
                 if (costume.asset.assetId) {
-                    const url = `${window.location.origin}/static/assets/${costume.asset.assetId}.${costume.dataFormat || 'png'}`;
+                    const url = `https://assets.r2.bilup.org/${costume.asset.assetId}.${costume.dataFormat || 'png'}`;
                     return url;
                 }
                 if (costume.md5ext) {
-                    return `${window.location.origin}/static/assets/${costume.md5ext}`;
+                    return `https://assets.r2.bilup.org/${costume.md5ext}`;
                 }
             }
         }
