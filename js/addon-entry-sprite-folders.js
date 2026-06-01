@@ -350,11 +350,11 @@ __webpack_require__.r(__webpack_exports__);
 
         // Fallback to asset URL
         if (costume.asset.assetId) {
-          const url = "".concat(window.location.origin, "/static/assets/").concat(costume.asset.assetId, ".").concat(costume.dataFormat || 'png');
+          const url = "https://assets.r2.bilup.org/".concat(costume.asset.assetId, ".").concat(costume.dataFormat || 'png');
           return url;
         }
         if (costume.md5ext) {
-          return "".concat(window.location.origin, "/static/assets/").concat(costume.md5ext);
+          return "https://assets.r2.bilup.org/".concat(costume.md5ext);
         }
       }
     }
