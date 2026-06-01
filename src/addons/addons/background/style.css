@@ -92,7 +92,7 @@
     background-color: var(--enable-workspace-background) !important;
 }
 
-/*不让左边那框产生“空隙”（原来的颜色是透明的不知道咋想的）*/
+/*不让左边那框产生“空隙”(原来的颜色是透明的不知道咋想的)*/
 .injectionDiv {
     border-left: 1px solid var(--ui-secondary) !important
 }

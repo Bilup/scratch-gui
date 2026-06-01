@@ -1,5 +1,5 @@
 /**
- * IndexedDB by AI （嘿嘿）
+ * IndexedDB by AI (嘿嘿)
  */
 class BackgroundDB {
     constructor(dbName = 'sa-background', version = 2) {
@@ -523,7 +523,7 @@ function showBgWindow(addon, msg) {
         return;
     }
 
-    // 计算初始位置（考虑新的窗口尺寸）
+    // 计算初始位置(考虑新的窗口尺寸)
     const initialX = Math.max(24, Math.min(window.innerWidth - 656, 50)); // 632 + 24 padding
     const initialY = Math.max(24, Math.min(window.innerHeight - 556, 50)); // 532 + 24 padding
 
@@ -552,7 +552,7 @@ function showBgWindow(addon, msg) {
     content.style.padding = '16px';
     content.style.boxSizing = 'border-box';
 
-    // 添加内容（等待异步操作完成）
+    // 添加内容(等待异步操作完成)
     addContext(content, msg).then(() => {
         // 设置窗口内容
         bgWindow.setContent(content);

@@ -210,13 +210,11 @@ export default async function ({ addon, console, msg }) {
           const sourceBlock = this.isShadow() && this.getParent() ? this.getParent() : this;
           const category = categories.find(i => i.categoryId === sourceBlock.category_);
           if (category) {
-            // Proprietary code for dark-blocks-media/default theme
             const themeState = addon.tab.redux.state.scratchGui.theme;
-            const theme = themeState && themeState.theme;
-            if (theme && theme.getBlocksThemeId() === 'dark-blocks-media/default') {
-              // input.outlinePath.setAttribute("stroke", fieldBackground(addon.settings.get(category.settingId)));
+            const isDarkBlocks = themeState && themeState.theme && themeState.theme.blocks === 'dark';
+            if (isDarkBlocks) {
               input.outlinePath.setAttribute("fill", "#4C4C4C");
-            }else{
+            } else {
               input.outlinePath.setAttribute("fill", fieldBackground(addon.settings.get(category.settingId)));
             }
           }

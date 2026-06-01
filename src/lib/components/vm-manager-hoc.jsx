@@ -138,7 +138,7 @@ const vmManagerHOC = function (WrappedComponent) {
                             console.warn('[VM Manager] Failed to check project extensions:', e);
                         }
                         
-                        // 优先尝试从 .git 文件夹导入（新格式）
+                        // 优先尝试从 .git 文件夹导入(新格式)
                         // 使用特定文件检测而不是 glob 模式，因为 JSZip 的 glob 可能不支持某些模式
                         const gitConfigFile = zip.file('.git/config');
                         console.log('[VM Manager] .git/config exists:', !!gitConfigFile);
@@ -148,7 +148,7 @@ const vmManagerHOC = function (WrappedComponent) {
                             const imported = await BrowserGit.importRepoFromZip(zip);
                             console.log('[VM Manager] Import from .git folder:', imported ? 'success' : 'failed');
                         } else {
-                            // 回退到 git.json（旧格式）
+                            // 回退到 git.json（旧格式)
                             const file = zip.file('git.json');
                             if (file) {
                                 console.log('[VM Manager] Found git.json in project zip (legacy format)');

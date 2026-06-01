@@ -40,7 +40,7 @@
     "@microbit/microbit-universal-hex": "0.2.2",
     "@turbowarp/jszip": "^3.11.1",
     "@turbowarp/nanolog": "^0.2.0",
-    "@bilup/scratch-storage": "github:Bilup/scratch-storage#develop",
+    "@bilup/scratch-storage": "github:Bilup/scratch-storage#develop-builds",
     "@turbowarp/startaudiocontext": "^1.0.0",
     "arraybuffer-loader": "^1.0.6",
     "autoprefixer": "^9.0.1",
