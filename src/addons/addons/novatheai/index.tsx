@@ -153,14 +153,6 @@ const Agent: React.FC<AgentProps> = ({ vm, workspace, editorThemeMode = "light",
 
     const exportText = exportConversationText(currentSession, messages);
 
-    try {
-      await navigator.clipboard.writeText(exportText);
-      window.alert(msg("export-copied", { count: exportText.length.toLocaleString() }));
-      return;
-    } catch (error) {
-      console.warn("[Bilup Nova] Failed to copy conversation export, falling back to download", error);
-    }
-
     const safeTitle = (currentSession?.title || "nova-session")
       .replace(/[\\/:*?"<>|]+/g, "_")
       .slice(0, 48);
