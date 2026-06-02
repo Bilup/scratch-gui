@@ -87922,15 +87922,6 @@ const Agent = _ref => {
       return;
     }
     const exportText = Object(_conversationExport__WEBPACK_IMPORTED_MODULE_17__["exportConversationText"])(currentSession, messages);
-    try {
-      await navigator.clipboard.writeText(exportText);
-      window.alert(msg("export-copied", {
-        count: exportText.length.toLocaleString()
-      }));
-      return;
-    } catch (error) {
-      console.warn("[Bilup Nova] Failed to copy conversation export, falling back to download", error);
-    }
     const safeTitle = ((currentSession === null || currentSession === void 0 ? void 0 : currentSession.title) || "nova-session").replace(/[\\/:*?"<>|]+/g, "_").slice(0, 48);
     const blob = new Blob([exportText], {
       type: "text/plain;charset=utf-8"
