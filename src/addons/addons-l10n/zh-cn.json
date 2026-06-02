@@ -593,7 +593,7 @@
   "novatheai/scroll-to-bottom": "回到底部",
   "novatheai/export-empty": "当前会话为空，没有可导出的内容。",
   "novatheai/export-copied": "会话文本已复制，共 {count} 字符。",
-  "novatheai/export-downloaded": "剪贴板不可用，已导出为文本文件，共 {count} 字符。",
+  "novatheai/export-downloaded": "已导出为文本文件，共 {count} 字符。",
   "novatheai/tool-running": "正在执行",
   "novatheai/tool-success": "完成",
   "novatheai/tool-error": "失败",

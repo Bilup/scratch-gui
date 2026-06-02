@@ -598,7 +598,7 @@
   "novatheai/scroll-to-bottom": "Scroll to bottom",
   "novatheai/export-empty": "Current session is empty, nothing to export.",
   "novatheai/export-copied": "Session text copied, {count} characters.",
-  "novatheai/export-downloaded": "Clipboard unavailable. Downloaded as text file, {count} characters.",
+  "novatheai/export-downloaded": "Downloaded as text file, {count} characters.",
   "novatheai/tool-running": "Running",
   "novatheai/tool-success": "Success",
   "novatheai/tool-error": "Error",

@@ -42,28 +42,28 @@ class TWNews extends React.Component {
         return null;
         // disable for now
 
-        if (this.state.closed || isScratchDesktop()) {
-            return null;
-        }
-        return (
-            <div className={styles.news}>
-                <div className={styles.text}>
-                    {/* eslint-disable-next-line max-len */}
-                    {`We rewrote the ${APP_NAME} compiler to make projects run even faster. Bugs are possible. `}
-                    <a
-                        href="https://docs.turbowarp.org/new-compiler"
-                        target="_blank"
-                        rel="noreferrer"
-                    >
-                        {'Learn more.'}
-                    </a>
-                </div>
-                <CloseButton
-                    className={styles.close}
-                    onClick={this.handleClose}
-                />
-            </div>
-        );
+        // if (this.state.closed || isScratchDesktop()) {
+        //     return null;
+        // }
+        // return (
+        //     <div className={styles.news}>
+        //         <div className={styles.text}>
+        //             {/* eslint-disable-next-line max-len */}
+        //             {`We rewrote the ${APP_NAME} compiler to make projects run even faster. Bugs are possible. `}
+        //             <a
+        //                 href="https://docs.turbowarp.org/new-compiler"
+        //                 target="_blank"
+        //                 rel="noreferrer"
+        //             >
+        //                 {'Learn more.'}
+        //             </a>
+        //         </div>
+        //         <CloseButton
+        //             className={styles.close}
+        //             onClick={this.handleClose}
+        //         />
+        //     </div>
+        // );
     }
 }
 
