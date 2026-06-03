@@ -65,7 +65,7 @@ class UsernameModal extends React.Component {
         // eslint-disable-next-line no-alert
         const newFramerate = await prompt(this.props.intl.formatMessage(messages.newFramerate), this.props.framerate);
         const parsed = parseFloat(newFramerate);
-        if (isFinite(parsed)) {
+        if (isFinite(parsed) && parsed > 0 && parsed <= 500) {
             this.props.vm.setFramerate(parsed);
         }
     }
