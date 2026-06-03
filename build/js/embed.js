@@ -49713,7 +49713,7 @@ class UsernameModal extends react__WEBPACK_IMPORTED_MODULE_1___default.a.Compone
     // eslint-disable-next-line no-alert
     const newFramerate = await prompt(this.props.intl.formatMessage(messages.newFramerate), this.props.framerate);
     const parsed = parseFloat(newFramerate);
-    if (isFinite(parsed)) {
+    if (isFinite(parsed) && parsed > 0 && parsed <= 500) {
       this.props.vm.setFramerate(parsed);
     }
   }
