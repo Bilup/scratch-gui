@@ -508,7 +508,7 @@ export default function ({ addon, msg, console }) {
         level = msg('developing');
       }
 
-      summaryDiv.innerHTML = `<strong>${msg('total-score')}：</strong>${totalScore} / 21<br><strong>${msg('evaluation-level')}：</strong>${level}`;
+      summaryDiv.innerHTML = `<strong>${msg('total-score')}:</strong>${totalScore} / 21<br><strong>${msg('evaluation-level')}:</strong>${level}`;
 
       // 创建雷达图
       if (this.drScratchChartInstance) {
@@ -574,7 +574,7 @@ export default function ({ addon, msg, console }) {
         level = msg('developing', '发展中');
       }
 
-      summaryDiv.innerHTML = `<strong>${msg('math-total-score')}：</strong>${totalScore}<br><strong>${msg('evaluation-level')}：</strong>${level}`;
+      summaryDiv.innerHTML = `<strong>${msg('math-total-score')}:</strong>${totalScore}<br><strong>${msg('evaluation-level')}:</strong>${level}`;
 
       // 数据标准化
       const maxValue = Math.max(...data, 1);
@@ -1298,8 +1298,8 @@ export default function ({ addon, msg, console }) {
               <div class="sa-analyze-col-6">
                 <div class="sa-analyze-score-details" id="saDrScratchDetails">
                   <div class="sa-analyze-score-summary">
-                    <h4>${msg('total-score', '总分')}：<span id="saDrScratchTotalScore">0</span> / 21</h4>
-                    <div class="sa-analyze-score-level" id="saDrScratchScoreLevel">${msg('evaluation-level', '评估等级')}：${msg('calculating', '计算中...')}</div>
+                    <h4>${msg('total-score', '总分')}:<span id="saDrScratchTotalScore">0</span> / 21</h4>
+                    <div class="sa-analyze-score-level" id="saDrScratchScoreLevel">${msg('evaluation-level', '评估等级')}:${msg('calculating', '计算中...')}</div>
                   </div>
                 </div>
               </div>
@@ -1318,8 +1318,8 @@ export default function ({ addon, msg, console }) {
               <div class="sa-analyze-col-6">
                 <div class="sa-analyze-score-details" id="saMathLogicDetails">
                   <div class="sa-analyze-score-summary">
-                    <h4>${msg('math-total-score', '数学总分')}：<span id="saMathTotalScore">0</span> ${msg('blocks-count', '')}</h4>
-                    <div class="sa-analyze-score-level" id="saMathScoreLevel">${msg('evaluation-level', '评估等级')}：${msg('calculating', '计算中...')}</div>
+                    <h4>${msg('math-total-score', '数学总分')}:<span id="saMathTotalScore">0</span> ${msg('blocks-count', '')}</h4>
+                    <div class="sa-analyze-score-level" id="saMathScoreLevel">${msg('evaluation-level', '评估等级')}:${msg('calculating', '计算中...')}</div>
                   </div>
                 </div>
               </div>
@@ -1566,7 +1566,7 @@ export default function ({ addon, msg, console }) {
       } else if (totalScore >= 6) {
         level = msg('developing', '发展中');
       }
-      document.getElementById('saDrScratchScoreLevel').textContent = `${msg('evaluation-level', '评估等级')}：${level}`;
+      document.getElementById('saDrScratchScoreLevel').textContent = `${msg('evaluation-level', '评估等级')}:${level}`;
 
       // 更新评分详情
       const detailsHTML = labels.map(label => `
@@ -1650,7 +1650,7 @@ export default function ({ addon, msg, console }) {
       } else if (totalScore >= 5) {
         level = msg('developing', '发展中');
       }
-      document.getElementById('saMathScoreLevel').textContent = `${msg('evaluation-level', '评估等级')}：${level}`;
+      document.getElementById('saMathScoreLevel').textContent = `${msg('evaluation-level', '评估等级')}:${level}`;
 
       // 更新评分详情
       const detailsHTML = labels.map(label => `
@@ -1966,7 +1966,7 @@ export default function ({ addon, msg, console }) {
       ctx.textAlign = 'left';
       ctx.fillText(msg('block-distribution', '代码类型分布'), padding + 20, y + 30);
 
-      // 饼图区域位置：左侧1/3位置
+      // 饼图区域位置:左侧1/3位置
       const chartAreaWidth = sectionWidth / 3;
       const centerX = padding + chartAreaWidth / 2;
       const centerY = y + 140; // 背景高度280的垂直中心

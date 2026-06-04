@@ -542,17 +542,6 @@ const GradientEditorApp = injectIntl(props => {
     const previewRef = React.useRef(null);
     const dragging = React.useRef({index: null, rect: null});
 
-    const presetNameToKey = {
-        'Sunset': 'tw.customThemes.preset.sunset',
-        'Ocean': 'tw.customThemes.preset.ocean',
-        'Forest': 'tw.customThemes.preset.forest',
-        'Purple Rain': 'tw.customThemes.preset.purpleRain',
-        'Fire': 'tw.customThemes.preset.fire',
-        'Aurora': 'tw.customThemes.preset.aurora',
-        'Space': 'tw.customThemes.preset.space',
-        'Cherry': 'tw.customThemes.preset.cherry'
-    };
-
     const handlePreview = async () => {
         if (isPreviewActive) {
             setIsPreviewActive(false);
