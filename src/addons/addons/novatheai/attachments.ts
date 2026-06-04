@@ -110,7 +110,7 @@ export const parseLocalAttachment = async (file: File): Promise<Attachment> => {
   } else if (TEXT_EXTENSIONS.has(extension) || file.type.startsWith("text/")) {
     parsed = await parseTextLikeFile(file);
   } else {
-    throw new Error(`暂不支持该文件格式：${file.name}`);
+    throw new Error(`暂不支持该文件格式:${file.name}`);
   }
 
   return {

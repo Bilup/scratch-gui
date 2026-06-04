@@ -150,7 +150,7 @@ export function useAgents() {
     >;
 
     if (!importedAgent || typeof importedAgent.provider !== "string" || typeof importedAgent.baseUrl !== "string" || typeof importedAgent.apiKey !== "string") {
-      throw new Error("导入失败：文件内容不是有效的 Agent 配置");
+      throw new Error("导入失败:文件内容不是有效的 Agent 配置");
     }
 
     // Handle legacy import

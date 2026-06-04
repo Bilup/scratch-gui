@@ -106,7 +106,7 @@ const fetchProviderModels = async (provider: Agent["provider"], baseUrl: string,
     const response = await fetch(url, { headers, signal });
     if (!response.ok) {
       const errorText = await response.text().catch(() => "");
-      throw new Error(`获取模型列表失败：${response.status} ${response.statusText}${errorText ? ` - ${errorText}` : ""}`);
+      throw new Error(`获取模型列表失败:${response.status} ${response.statusText}${errorText ? ` - ${errorText}` : ""}`);
     }
 
     const models = parseModelResponse(await response.json());
