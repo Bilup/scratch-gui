@@ -557,6 +557,10 @@ const AboutSettings: React.FC<{ msg: (key: string) => string }> = ({ msg }) => (
         <p className={styles.hint}>
           {msg("ui-architecture-hint")}
         </p>
+        <br/>
+        <p className={styles.hint}>
+          {msg("im-not-amazon")}
+        </p>
       </div>
     </div>
   </div>

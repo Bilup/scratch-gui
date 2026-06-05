@@ -145,7 +145,7 @@ import {
     FilePlusCorner, Upload, RefreshCcw, ClockPlus, Package, FileInput,
     Save, ArchiveRestore, UserPen, Cloud, Settings, PackagePlus, Puzzle,
     Bookmark, GitBranch, FileCog, Bug, Database, Undo, Redo, Handshake,
-    Sparkles, Wrench, Keyboard, ChartColumn, ListTodo
+    Sparkles, Wrench, Keyboard, ChartColumn, ListTodo, AppWindow
 } from 'lucide-react';
 
 import sharedMessages from '../../lib/constants/shared-messages';
@@ -1339,6 +1339,7 @@ class MenuBar extends React.Component {
                                             isRtl={this.props.isRtl}
                                             onClick={this.handleClickNewWindow}
                                         >
+                                            <AppWindow />
                                             <FormattedMessage
                                                 defaultMessage="New window"
                                                 // eslint-disable-next-line max-len
