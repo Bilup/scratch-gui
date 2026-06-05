@@ -377,6 +377,8 @@ const extensionDevelopers = [{
 }, {
   userID: '273910431',
   username: 'DLGrass'
+}, {
+  username: '蓝立方Blue3'
 }].map(fromHardcoded);
 const docs = [{
   userID: '148440803',
