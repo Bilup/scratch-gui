@@ -750,5 +750,6 @@
   "novatheai/model-id": "Model ID",
   "novatheai/max-tokens": "Max Tokens",
   "novatheai/delete": "Delete",
-  "novatheai/config-saved-locally": "Configuration is only saved in local addon storage."
+  "novatheai/config-saved-locally": "Configuration is only saved in local addon storage.",
+  "novatheai/im-not-amazon":"Bilup Nova is not affiliated with Amazon Nova."
 }
