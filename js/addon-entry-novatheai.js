@@ -83139,7 +83139,9 @@ const AboutSettings = _ref4 => {
     className: _ui_SettingsNew_module_less__WEBPACK_IMPORTED_MODULE_2___default.a.cardBody
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("p", {
     className: _ui_SettingsNew_module_less__WEBPACK_IMPORTED_MODULE_2___default.a.hint
-  }, msg("ui-architecture-hint")))));
+  }, msg("ui-architecture-hint")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("br", null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("p", {
+    className: _ui_SettingsNew_module_less__WEBPACK_IMPORTED_MODULE_2___default.a.hint
+  }, msg("im-not-amazon")))));
 };
 const SettingsContent = _ref5 => {
   let msg = _ref5.msg,
