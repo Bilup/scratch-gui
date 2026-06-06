@@ -34,7 +34,6 @@ jobs:
           name: dist
           path: |
             static/microbit
-            static/penguinmod
             src/generated
             build
       # Temp: Save package-lock.json
@@ -81,7 +80,6 @@ jobs:
         rm -rf /tmp/static /tmp/src /tmp/build
         mkdir -p /tmp/static /tmp/src /tmp/build
         cp -r static/microbit /tmp/static/
-        cp -r static/penguinmod /tmp/static/
         cp -r src/generated /tmp/src/
         cp -r build /tmp/
 
@@ -100,15 +98,15 @@ jobs:
         git merge origin/develop --no-edit
 
         # Replace directories
-        rm -rf static/microbit static/penguinmod src/generated build
-        mkdir -p static/microbit static/penguinmod src/generated build
+        rm -rf static/microbit src/generated build
+        mkdir -p static/microbit src/generated build
         cp -r /tmp/static/microbit/* static/microbit/
-        cp -r /tmp/static/penguinmod/* static/penguinmod/
+
         cp -r /tmp/src/generated/* src/generated/
         cp -r /tmp/build/* build/
 
         # Force add directories (ignore .gitignore)
-        git add -f static/microbit static/penguinmod src/generated build
+        git add -f static/microbit src/generated build
 
         # Commit if changed
         git commit -m "chore: update build artifacts from develop" || echo "No changes"
