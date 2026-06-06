@@ -745,5 +745,6 @@
   "novatheai/model-id": "模型 ID",
   "novatheai/max-tokens": "Max Tokens",
   "novatheai/delete": "删除",
-  "novatheai/config-saved-locally": "配置只保存在本地插件存储中。"
+  "novatheai/config-saved-locally": "配置只保存在本地插件存储中。",
+  "novatheai/im-not-amazon":"Bilup Nova 与 Amazon Nova 无关。"
 }
