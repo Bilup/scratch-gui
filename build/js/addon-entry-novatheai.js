@@ -86255,65 +86255,29 @@ const safeFetchJson = async (url, fallback) => {
     return fallback;
   }
 };
-const fetchPenguinModExtensions = async () => {
-  try {
-    const module = await import(/* webpackIgnore: true */"/penguinmod/extensions.js");
-    const extensions = Array.isArray(module === null || module === void 0 ? void 0 : module.default) ? module.default : [];
-    return extensions.map(extension => ({
-      name: normalizeText(extension.name),
-      description: normalizeText(extension.description),
-      extensionId: normalizeText(extension.name),
-      extensionURL: "https://extensions.penguinmod.com/extensions/".concat(extension.code),
-      iconURL: "https://extensions.penguinmod.com/images/".concat(extension.banner || "images/unknown.svg"),
-      source: "pm",
-      tags: ["pm"],
-      credits: [normalizeText(extension.creator)].filter(Boolean),
-      docsURI: null,
-      samples: null,
-      incompatibleWithScratch: false
-    }));
-  } catch (error) {
-    console.warn("[Bilup Nova] Failed to fetch PenguinMod extensions", error);
-    return [];
-  }
-};
 const fetchRemoteExtensions = async function fetchRemoteExtensions() {
   let forceRefresh = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
   const now = Date.now();
   if (!forceRefresh && cachedRemoteExtensions && now - cachedRemoteAt < REMOTE_CACHE_MS) {
     return cachedRemoteExtensions;
   }
-  const _await$Promise$all = await Promise.all([safeFetchJson("https://extensions.02engine.02studio.xyz/extensions.json", {
+  const _await$Promise$all = await Promise.all([safeFetchJson("https://extensions.turbowarp.org/generated-metadata/extensions-v0.json", {
       extensions: []
-    }), safeFetchJson("https://extensions.turbowarp.org/generated-metadata/extensions-v0.json", {
+    }), safeFetchJson("https://extensions.mistium.com/generated-metadata/extensions-v0.json", {
       extensions: []
-    }), safeFetchJson("https://mistiumextensions.02studio.xyz/generated-metadata/extensions-v0.json", {
-      extensions: []
-    }), safeFetchJson("https://sharkpoolextensions.02studio.xyz/Gallery%20Files/Extension-Keys.json", {
+    }), safeFetchJson("https://sharkpools-extensions.vercel.app/Extension-Keys.json", {
       extensions: {}
-    }), fetchPenguinModExtensions()]),
+    }), safeFetchJson("https://extensions.bilup.org/generated-metadata/extensions-v0.json", {
+      extensions: []
+    }), safeFetchJson("https://editors.astras.top/extensions/generated-metadata/extensions-v0.json", {
+      extensions: []
+    })]),
     _await$Promise$all2 = _slicedToArray(_await$Promise$all, 5),
-    engineData = _await$Promise$all2[0],
-    twData = _await$Promise$all2[1],
-    mistData = _await$Promise$all2[2],
-    sharkPoolData = _await$Promise$all2[3],
-    penguinModData = _await$Promise$all2[4];
-  const engineExtensions = (Array.isArray(engineData.extensions) ? engineData.extensions : []).map(extension => ({
-    name: normalizeText(extension.name),
-    description: normalizeText(extension.description),
-    extensionId: normalizeText(extension.id),
-    extensionURL: "https://extensions.02engine.02studio.xyz/extension/".concat(extension.slug, ".js"),
-    iconURL: "https://extensions.02engine.02studio.xyz/image/".concat(extension.image || "images/unknown.svg"),
-    source: "02engine",
-    tags: ["02engine", "ztengine"],
-    credits: [...(extension.original || []), ...(extension.by || [])].map(creditToText).filter(Boolean),
-    docsURI: null,
-    samples: extension.samples ? extension.samples.map(sample => ({
-      href: "".concat(ROOT, "editor?project_url=https://extensions.02engine.02studio.xyz/samples/").concat(encodeURIComponent(sample), ".sb3"),
-      text: sample
-    })) : null,
-    incompatibleWithScratch: !extension.scratchCompatible
-  }));
+    twData = _await$Promise$all2[0],
+    mistData = _await$Promise$all2[1],
+    sharkPoolData = _await$Promise$all2[2],
+    bilupData = _await$Promise$all2[3],
+    aeData = _await$Promise$all2[4];
   const twExtensions = (Array.isArray(twData.extensions) ? twData.extensions : []).map(extension => ({
     name: normalizeText(extension.name),
     description: normalizeText(extension.description),
@@ -86334,14 +86298,30 @@ const fetchRemoteExtensions = async function fetchRemoteExtensions() {
     name: normalizeText(extension.name),
     description: normalizeText(extension.description),
     extensionId: normalizeText(extension.id),
-    extensionURL: "https://mistiumextensions.02studio.xyz/featured/".concat(extension.name, ".js"),
-    iconURL: "https://mistiumextensions.02studio.xyz/".concat(extension.image || "images/unknown.svg"),
-    source: "mist",
-    tags: ["mist"],
+    extensionURL: "https://extensions.mistium.com/".concat(extension.slug, ".js"),
+    iconURL: "https://extensions.mistium.com/".concat(extension.image || "images/unknown.svg"),
+    source: "mistium",
+    tags: ["mistium"],
     credits: [...(extension.original || []), ...(extension.by || [])].map(creditToText).filter(Boolean),
     docsURI: null,
     samples: extension.samples ? extension.samples.map(sample => ({
       href: "".concat(ROOT, "editor?project_url=https://extensions.turbowarp.org/samples/").concat(encodeURIComponent(sample), ".sb3"),
+      text: sample
+    })) : null,
+    incompatibleWithScratch: !extension.scratchCompatible
+  }));
+  const bilupExtensions = (Array.isArray(bilupData.extensions) ? bilupData.extensions : []).map(extension => ({
+    name: normalizeText(extension.name),
+    description: normalizeText(extension.description),
+    extensionId: normalizeText(extension.id),
+    extensionURL: "https://extensions.bilup.org/".concat(extension.slug, ".js"),
+    iconURL: "https://extensions.bilup.org/".concat(extension.image || "images/unknown.svg"),
+    source: "bilup",
+    tags: ["bilup"],
+    credits: [...(extension.original || []), ...(extension.by || [])].map(creditToText).filter(Boolean),
+    docsURI: null,
+    samples: extension.samples ? extension.samples.map(sample => ({
+      href: "".concat(ROOT, "editor?project_url=https://extensions.bilup.org/samples/").concat(encodeURIComponent(sample), ".sb3"),
       text: sample
     })) : null,
     incompatibleWithScratch: !extension.scratchCompatible
@@ -86354,8 +86334,8 @@ const fetchRemoteExtensions = async function fetchRemoteExtensions() {
       name: slug,
       description: normalizeText(rawExtension.desc),
       extensionId: slug,
-      extensionURL: "https://sharkpoolextensions.02studio.xyz/extension-code/".concat(rawExtension.url),
-      iconURL: "https://sharkpoolextensions.02studio.xyz/extension-thumbs/".concat(rawExtension.banner || "images/unknown.svg"),
+      extensionURL: "https://sharkpools-extensions.vercel.app/".concat(rawExtension.url),
+      iconURL: "https://sharkpools-extensions.vercel.app/".concat(rawExtension.banner || "images/unknown.svg"),
       source: "sharkpool",
       tags: [...(rawExtension.tags || []), "sharkpool"].map(String),
       credits: normalizeText(rawExtension.creator).split(", ").filter(Boolean),
@@ -86364,7 +86344,20 @@ const fetchRemoteExtensions = async function fetchRemoteExtensions() {
       incompatibleWithScratch: false
     };
   });
-  cachedRemoteExtensions = [...engineExtensions, ...twExtensions, ...penguinModData, ...mistExtensions, ...sharkPoolExtensions].filter(extension => extension.extensionId || extension.extensionURL);
+  const aeExtensions = (Array.isArray(aeData.extensions) ? aeData.extensions : []).filter(extension => normalizeText(extension.id) !== 'shangcloud').map(extension => ({
+    name: normalizeText(extension.name),
+    description: normalizeText(extension.description),
+    extensionId: normalizeText(extension.id),
+    extensionURL: "https://editors.astras.top/extensions/".concat(extension.slug, ".js"),
+    iconURL: "https://editors.astras.top/extensions/".concat(extension.image || "images/unknown.svg"),
+    source: "ae",
+    tags: ["ae"],
+    credits: [...(extension.original || []), ...(extension.by || [])].map(creditToText).filter(Boolean),
+    docsURI: null,
+    samples: null,
+    incompatibleWithScratch: false
+  }));
+  cachedRemoteExtensions = [...twExtensions, ...bilupExtensions, ...mistExtensions, ...sharkPoolExtensions, ...aeExtensions].filter(extension => extension.extensionId || extension.extensionURL);
   cachedRemoteAt = now;
   return cachedRemoteExtensions;
 };
@@ -89056,7 +89049,7 @@ const scratchToolSchemas = [{
   type: "function",
   function: {
     name: "searchExtensions",
-    description: "Search built-in and known remote Scratch/TurboWarp/PenguinMod/Mist/SharkPool extensions by ID, name, keyword, source, or URL stem. Use before installing extension blocks that are not already loaded.",
+    description: "Search built-in and known remote Scratch/TurboWarp/Mist/SharkPool/Bilup extensions by ID, name, keyword, source, or URL stem. Use before installing extension blocks that are not already loaded.",
     parameters: {
       type: "object",
       properties: {
@@ -89066,7 +89059,7 @@ const scratchToolSchemas = [{
         },
         source: {
           type: "string",
-          description: "Optional source filter: scratch, 02engine, tw, pm, mist, sharkpool, special, external, or all."
+          description: "Optional source filter: scratch, tw, mist, sharkpool, bilup, ae, special, external, or all."
         },
         scratchCompatibleOnly: {
           type: "boolean",
@@ -89113,7 +89106,7 @@ const scratchToolSchemas = [{
         },
         source: {
           type: "string",
-          description: "Optional source filter: scratch, 02engine, tw, pm, mist, sharkpool, special, external, or all."
+          description: "Optional source filter: scratch, tw, mist, sharkpool, bilup, ae, special, external, or all."
         },
         mode: {
           type: "string",
