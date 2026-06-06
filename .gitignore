@@ -26,7 +26,6 @@ bun.lock
 
 # Downloaded during "npm install"
 /static/microbit
-/static/penguinmod
 
 # for act
 .secrets

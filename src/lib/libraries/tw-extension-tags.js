@@ -2,7 +2,7 @@ export default [
     {tag: 'scratch', intlLabel: 'Scratch'},
     {tag: 'tw', intlLabel: 'TurboWarp'},
     {tag: 'mistium', intlLabel: 'Mistium'},
-    {tag: 'sharkpools', intlLabel: 'SharkPools'},
-    {tag: 'penguinmod', intlLabel: 'PenguinMod'},
-    {tag: 'bilup', intlLabel: 'Bilup'}
+    {tag: 'sharkpool', intlLabel: 'SharkPool'},
+    {tag: 'bilup', intlLabel: 'Bilup'},
+    {tag: 'ae', intlLabel: 'AstraEditor'}
 ];

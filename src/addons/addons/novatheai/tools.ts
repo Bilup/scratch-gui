@@ -4556,7 +4556,7 @@ export class AITools {
 
   async searchExtensions(options: {
     query?: string;
-    source?: "scratch" | "02engine" | "tw" | "pm" | "mist" | "sharkpool" | "special" | "external" | "all";
+    source?: "scratch" | "tw" | "mistium" | "sharkpool" | "bilup" | "ae" | "special" | "external" | "all";
     scratchCompatibleOnly?: boolean;
     includeBuiltin?: boolean;
     includeRemote?: boolean;
@@ -4586,7 +4586,7 @@ export class AITools {
     extensionId?: string;
     extensionURL?: string;
     query?: string;
-    source?: "scratch" | "02engine" | "tw" | "pm" | "mist" | "sharkpool" | "special" | "external" | "all";
+    source?: "scratch" | "tw" | "mistium" | "sharkpool" | "bilup" | "ae" | "special" | "external" | "all";
     mode?: "auto" | "builtin" | "url" | "text";
     allowExternalUrl?: boolean;
     forceRefresh?: boolean;

@@ -163,29 +163,6 @@ const downloadMicrobitHex = async () => {
     console.info(`Wrote ${relativeGeneratedFile}`);
 };
 
-const syncPenguinMod = async () => {
-    const SOURCE ='https://raw.githubusercontent.com/PenguinMod/PenguinMod-ExtensionsGallery/main/src/lib/extensions.js';
-    const relativeOutFile = path.join('static', 'penguinmod', 'extensions.js');
-    const absoluteOutFile = path.join(basePath, relativeOutFile);
-    console.info('[PenguinMod] Fetching gallery…');
-    const res = await fetchWithProxy(SOURCE);
-    if (!res.ok) throw new Error(`[PenguinMod] Fetch failed: ${res.status}`);
-    const code = await res.text();
-    //sanity check
-    if (!code.includes('export default'))
-        throw new Error('[PenguinMod] Invalid PenguinMod module');
-    const wrapped = `
-// AUTO-GENERATED — DO NOT EDIT
-// Source: ${SOURCE}
-// Synced at: ${new Date().toISOString()}
-
-${code}
-`;
-    fs.mkdirSync(path.dirname(absoluteOutFile), { recursive: true });
-    fs.writeFileSync(absoluteOutFile, wrapped, 'utf8');
-    console.info(`[PenguinMod] Wrote ${relativeOutFile}`);
-};
-
 // const downloadLibraryAssets = async () => {
 //     const libraryFiles = [
 //         path.join('src', 'lib', 'libraries', 'costumes.json'),
@@ -292,7 +269,6 @@ ${code}
 
 const prepublish = async () => {
     await downloadMicrobitHex();
-    await syncPenguinMod();
     // await downloadLibraryAssets();
 };
 

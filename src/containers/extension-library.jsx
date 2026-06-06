@@ -46,9 +46,9 @@ const fetchLibrary = async () => {
 
     let twExtensions = [];
     let mistiumExtensions = [];
-    let sharkpoolsExtensions = [];
-    let penguinmodExtensions = [];
+    let sharkpoolExtensions = [];
     let bilupExtensions = [];
+    let aeExtensions = [];
 
     try {
         const twRes = await fetch('https://extensions.turbowarp.org/generated-metadata/extensions-v0.json');
@@ -145,13 +145,13 @@ const fetchLibrary = async () => {
     }
 
     try {
-        const sharkpoolsRes = await fetch('https://sharkpools-extensions.vercel.app/Gallery%20Files/Extension-Keys.json');
-        if (!sharkpoolsRes.ok) {
-            console.warn(`SharkPool extensions: HTTP status ${sharkpoolsRes.status}`);
+        const sharkpoolRes = await fetch('https://sharkpools-extensions.vercel.app/Gallery%20Files/Extension-Keys.json');
+        if (!sharkpoolRes.ok) {
+            console.warn(`SharkPool extensions: HTTP status ${sharkpoolRes.status}`);
         } else {
-            const sharkpoolsData = await sharkpoolsRes.json();
+            const sharkpoolData = await sharkpoolRes.json();
 
-            const rawExtensions = sharkpoolsData.extensions;
+            const rawExtensions = sharkpoolData.extensions;
             let normalizedExtensions = [];
 
             if (Array.isArray(rawExtensions)) {
@@ -171,7 +171,7 @@ const fetchLibrary = async () => {
 
             console.log('[SharkPools] Normalized extensions:', normalizedExtensions);
 
-            sharkpoolsExtensions = normalizedExtensions
+            sharkpoolExtensions = normalizedExtensions
                 .filter(ext => !ext.isDeprecated)
                 .map(extension => ({
                     name: extension.name,
@@ -181,7 +181,7 @@ const fetchLibrary = async () => {
                     extensionId: extension.id,
                     extensionURL: `https://sharkpools-extensions.vercel.app/extension-code/${extension.url}`,
                     iconURL: extension.banner ? `https://sharkpools-extensions.vercel.app/extension-thumbs/${extension.banner}` : emptyBanner,
-                    tags: ['sharkpools'],
+                    tags: ['sharkpool'],
                     credits: [
                         ...(extension.by || []),
                         ...(extension.original || (extension.creator ? [{ name: extension.creator }] : []))
@@ -208,49 +208,6 @@ const fetchLibrary = async () => {
         }
     } catch (error) {
         console.warn('Failed to load SharkPools extensions:', error);
-    }
-
-    try {
-        const penguinmodRes = await import(
-            /* webpackIgnore: true */
-            '/penguinmod/extensions.js'
-        );
-        const penguinmodData = {extensions: penguinmodRes.default};
-        penguinmodExtensions = penguinmodData.extensions
-            .map(extension => ({
-                name: extension.name,
-                nameTranslations: extension.nameTranslations || {},
-                description: extension.description,
-                descriptionTranslations: extension.descriptionTranslations || {},
-                extensionId: extension.id,
-                extensionURL: `https://extensions.penguinmod.com/extensions/${extension.code}`,
-                iconURL: extension.banner ? `https://extensions.penguinmod.com/images/${extension.banner}` : emptyBanner,
-                tags: ['penguinmod'],
-                credits: [
-                    ...(extension.by || []),
-                    ...(extension.original || (extension.creator ? [{ name: extension.creator }] : []))
-                ].map(credit => {
-                    if (credit.link) {
-                        return (
-                            <a
-                                href={credit.link}
-                                target="_blank"
-                                rel="noreferrer"
-                                key={credit.name}
-                            >
-                                {credit.name}
-                            </a>
-                        );
-                    }
-                    return credit.name;
-                }),
-                docsURI: null,
-                samples: null,
-                incompatibleWithScratch: true,
-                featured: true
-            }));
-    } catch (error) {
-        console.warn('Failed to load PenguinMod extensions:', error);
     }
 
     try {
@@ -299,7 +256,55 @@ const fetchLibrary = async () => {
         console.warn('Failed to load Bilup extensions:', error);
     }
 
-    return [...twExtensions, ...mistiumExtensions, ...sharkpoolsExtensions, ...penguinmodExtensions, ...bilupExtensions];
+    try {
+        const aeRes = await fetch('https://editors.astras.top/extensions/generated-metadata/extensions-v0.json');
+        if (!aeRes.ok) {
+            console.warn(`AE extensions: HTTP status ${aeRes.status}`);
+        } else {
+            const aeData = await aeRes.json();
+            aeExtensions = aeData.extensions
+                .filter(extension => extension.id !== 'shangcloud')
+                .map(extension => ({
+                name: extension.name,
+                nameTranslations: extension.nameTranslations || {},
+                description: extension.description,
+                descriptionTranslations: extension.descriptionTranslations || {},
+                extensionId: extension.id,
+                extensionURL: `https://editors.astras.top/extensions/${extension.slug}.js`,
+                iconURL: `https://editors.astras.top/extensions/${extension.image || 'images/unknown.svg'}`,
+                tags: ['ae'],
+                credits: [
+                    ...(extension.by || []),
+                    ...(extension.original || [])
+                ].map(credit => {
+                    if (credit.link) {
+                        return (
+                            <a
+                                href={credit.link}
+                                target="_blank"
+                                rel="noreferrer"
+                                key={credit.name}
+                            >
+                                {credit.name}
+                            </a>
+                        );
+                    }
+                    return credit.name;
+                }),
+                docsURI: extension.docs ? `https://editors.astras.top/extensions/${extension.slug}` : null,
+                samples: extension.samples ? extension.samples.map(sample => ({
+                    href: `${process.env.ROOT}editor?project_url=https://editors.astras.top/extensions/s/${encodeURIComponent(sample)}.sb3`,
+                    text: sample
+                })) : null,
+                incompatibleWithScratch: true,
+                featured: true
+            }));
+        }
+    } catch (error) {
+        console.warn('Failed to load AstraEditor extensions:', error);
+    }
+
+    return [...twExtensions, ...mistiumExtensions, ...sharkpoolExtensions, ...bilupExtensions, ...aeExtensions];
 };
 
 class ExtensionLibrary extends React.PureComponent {

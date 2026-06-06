@@ -1,4 +1,4 @@
-export type ExtensionSource = "scratch" | "02engine" | "tw" | "pm" | "mist" | "sharkpool" | "special" | "external";
+export type ExtensionSource = "scratch" | "tw" | "mistium" | "sharkpool" | "bilup" | "ae" | "special" | "external";
 
 export interface ExtensionRegistryItem {
   extensionId: string;
@@ -88,59 +88,19 @@ const safeFetchJson = async <T>(url: string, fallback: T): Promise<T> => {
   }
 };
 
-const fetchPenguinModExtensions = async (): Promise<ExtensionRegistryItem[]> => {
-  try {
-    const module = await import(/* webpackIgnore: true */ "/penguinmod/extensions.js");
-    const extensions = Array.isArray(module?.default) ? module.default : [];
-    return extensions.map((extension: any) => ({
-      name: normalizeText(extension.name),
-      description: normalizeText(extension.description),
-      extensionId: normalizeText(extension.name),
-      extensionURL: `https://extensions.penguinmod.com/extensions/${extension.code}`,
-      iconURL: `https://extensions.penguinmod.com/images/${extension.banner || "images/unknown.svg"}`,
-      source: "pm" as ExtensionSource,
-      tags: ["pm"],
-      credits: [normalizeText(extension.creator)].filter(Boolean),
-      docsURI: null,
-      samples: null,
-      incompatibleWithScratch: false,
-    }));
-  } catch (error) {
-    console.warn("[Bilup Nova] Failed to fetch PenguinMod extensions", error);
-    return [];
-  }
-};
-
 export const fetchRemoteExtensions = async (forceRefresh = false) => {
   const now = Date.now();
   if (!forceRefresh && cachedRemoteExtensions && now - cachedRemoteAt < REMOTE_CACHE_MS) {
     return cachedRemoteExtensions;
   }
 
-  const [engineData, twData, mistData, sharkPoolData, penguinModData] = await Promise.all([
-    safeFetchJson<any>("https://extensions.02engine.02studio.xyz/extensions.json", { extensions: [] }),
+  const [twData, mistData, sharkPoolData, bilupData, aeData] = await Promise.all([
     safeFetchJson<any>("https://extensions.turbowarp.org/generated-metadata/extensions-v0.json", { extensions: [] }),
-    safeFetchJson<any>("https://mistiumextensions.02studio.xyz/generated-metadata/extensions-v0.json", { extensions: [] }),
-    safeFetchJson<any>("https://sharkpoolextensions.02studio.xyz/Gallery%20Files/Extension-Keys.json", { extensions: {} }),
-    fetchPenguinModExtensions(),
+    safeFetchJson<any>("https://extensions.mistium.com/generated-metadata/extensions-v0.json", { extensions: [] }),
+    safeFetchJson<any>("https://sharkpools-extensions.vercel.app/Extension-Keys.json", { extensions: {} }),
+    safeFetchJson<any>("https://extensions.bilup.org/generated-metadata/extensions-v0.json", { extensions: [] }),
+    safeFetchJson<any>("https://editors.astras.top/extensions/generated-metadata/extensions-v0.json", { extensions: [] }),
   ]);
-
-  const engineExtensions = (Array.isArray(engineData.extensions) ? engineData.extensions : []).map((extension: any) => ({
-    name: normalizeText(extension.name),
-    description: normalizeText(extension.description),
-    extensionId: normalizeText(extension.id),
-    extensionURL: `https://extensions.02engine.02studio.xyz/extension/${extension.slug}.js`,
-    iconURL: `https://extensions.02engine.02studio.xyz/image/${extension.image || "images/unknown.svg"}`,
-    source: "02engine" as ExtensionSource,
-    tags: ["02engine", "ztengine"],
-    credits: [...(extension.original || []), ...(extension.by || [])].map(creditToText).filter(Boolean),
-    docsURI: null,
-    samples: extension.samples ? extension.samples.map((sample: string) => ({
-      href: `${ROOT}editor?project_url=https://extensions.02engine.02studio.xyz/samples/${encodeURIComponent(sample)}.sb3`,
-      text: sample,
-    })) : null,
-    incompatibleWithScratch: !extension.scratchCompatible,
-  }));
 
   const twExtensions = (Array.isArray(twData.extensions) ? twData.extensions : []).map((extension: any) => ({
     name: normalizeText(extension.name),
@@ -163,10 +123,10 @@ export const fetchRemoteExtensions = async (forceRefresh = false) => {
     name: normalizeText(extension.name),
     description: normalizeText(extension.description),
     extensionId: normalizeText(extension.id),
-    extensionURL: `https://mistiumextensions.02studio.xyz/featured/${extension.name}.js`,
-    iconURL: `https://mistiumextensions.02studio.xyz/${extension.image || "images/unknown.svg"}`,
-    source: "mist" as ExtensionSource,
-    tags: ["mist"],
+    extensionURL: `https://extensions.mistium.com/${extension.slug}.js`,
+    iconURL: `https://extensions.mistium.com/${extension.image || "images/unknown.svg"}`,
+    source: "mistium" as ExtensionSource,
+    tags: ["mistium"],
     credits: [...(extension.original || []), ...(extension.by || [])].map(creditToText).filter(Boolean),
     docsURI: null,
     samples: extension.samples ? extension.samples.map((sample: string) => ({
@@ -176,12 +136,29 @@ export const fetchRemoteExtensions = async (forceRefresh = false) => {
     incompatibleWithScratch: !extension.scratchCompatible,
   }));
 
+  const bilupExtensions = (Array.isArray(bilupData.extensions) ? bilupData.extensions : []).map((extension: any) => ({
+    name: normalizeText(extension.name),
+    description: normalizeText(extension.description),
+    extensionId: normalizeText(extension.id),
+    extensionURL: `https://extensions.bilup.org/${extension.slug}.js`,
+    iconURL: `https://extensions.bilup.org/${extension.image || "images/unknown.svg"}`,
+    source: "bilup" as ExtensionSource,
+    tags: ["bilup"],
+    credits: [...(extension.original || []), ...(extension.by || [])].map(creditToText).filter(Boolean),
+    docsURI: null,
+    samples: extension.samples ? extension.samples.map((sample: string) => ({
+      href: `${ROOT}editor?project_url=https://extensions.bilup.org/samples/${encodeURIComponent(sample)}.sb3`,
+      text: sample,
+    })) : null,
+    incompatibleWithScratch: !extension.scratchCompatible,
+  }));
+
   const sharkPoolExtensions = Object.entries(sharkPoolData.extensions || {}).map(([slug, rawExtension]: [string, any]) => ({
     name: slug,
     description: normalizeText(rawExtension.desc),
     extensionId: slug,
-    extensionURL: `https://sharkpoolextensions.02studio.xyz/extension-code/${rawExtension.url}`,
-    iconURL: `https://sharkpoolextensions.02studio.xyz/extension-thumbs/${rawExtension.banner || "images/unknown.svg"}`,
+    extensionURL: `https://sharkpools-extensions.vercel.app/${rawExtension.url}`,
+    iconURL: `https://sharkpools-extensions.vercel.app/${rawExtension.banner || "images/unknown.svg"}`,
     source: "sharkpool" as ExtensionSource,
     tags: [...(rawExtension.tags || []), "sharkpool"].map(String),
     credits: normalizeText(rawExtension.creator).split(", ").filter(Boolean),
@@ -190,12 +167,28 @@ export const fetchRemoteExtensions = async (forceRefresh = false) => {
     incompatibleWithScratch: false,
   }));
 
+  const aeExtensions = (Array.isArray(aeData.extensions) ? aeData.extensions : [])
+    .filter((extension: any) => normalizeText(extension.id) !== 'shangcloud')
+    .map((extension: any) => ({
+    name: normalizeText(extension.name),
+    description: normalizeText(extension.description),
+    extensionId: normalizeText(extension.id),
+    extensionURL: `https://editors.astras.top/extensions/${extension.slug}.js`,
+    iconURL: `https://editors.astras.top/extensions/${extension.image || "images/unknown.svg"}`,
+    source: "ae" as ExtensionSource,
+    tags: ["ae"],
+    credits: [...(extension.original || []), ...(extension.by || [])].map(creditToText).filter(Boolean),
+    docsURI: null,
+    samples: null,
+    incompatibleWithScratch: false,
+  }));
+
   cachedRemoteExtensions = [
-    ...engineExtensions,
     ...twExtensions,
-    ...penguinModData,
+    ...bilupExtensions,
     ...mistExtensions,
     ...sharkPoolExtensions,
+    ...aeExtensions,
   ].filter((extension) => extension.extensionId || extension.extensionURL);
   cachedRemoteAt = now;
   return cachedRemoteExtensions;

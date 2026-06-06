@@ -28,6 +28,9 @@ const isTrustedExtension = url => (
     url.startsWith('https://extensions.turbowarp.org/') ||
     url.startsWith('https://extensions.bilup.org/') ||
     url.startsWith('https://extensions.mistium.com/') ||
+    url.startsWith('https://sharkpools-extensions.vercel.app/') ||
+    url.startsWith('https://editors.astras.top/extensions/') ||
+
 
 
     // For development.
