@@ -338,9 +338,7 @@ const fromHardcoded = _ref => {
     userID = _ref$userID === void 0 ? '0' : _ref$userID,
     username = _ref.username,
     _ref$userUrlType = _ref.userUrlType,
-    userUrlType = _ref$userUrlType === void 0 ? 'github' : _ref$userUrlType,
-    _ref$userImage = _ref.userImage,
-    userImage = _ref$userImage === void 0 ? '' : _ref$userImage;
+    userUrlType = _ref$userUrlType === void 0 ? 'github' : _ref$userUrlType;
   const result = {
     // image: `https://avatars.githubusercontent.com/u/${userID}`,
     text: username
@@ -350,9 +348,7 @@ const fromHardcoded = _ref => {
       result.image = "https://avatars.githubusercontent.com/u/".concat(userID);
       result.href = "https://github.com/".concat(username, "/");
     } else if (userUrlType === 'bilibili') {
-      if (userImage !== '') {
-        result.image = userImage;
-      }
+      result.image = "src/playground/credits/images/".concat(userID, ".webp");
       result.href = "https://space.bilibili.com/".concat(userID, "/");
     }
   }
@@ -394,8 +390,8 @@ const addonDevelopers = [{
 const extensionDevelopers = [{
   userUrlType: 'bilibili',
   username: 'MR醉诗',
-  userID: '3546960701163977',
-  userImage: 'https://i1.hdslb.com/bfs/face/594b7c3a597f9f5bf3e66e384feb1d17ce7387cb.jpg@128w_128h_1c_1s.webp'
+  userID: '3546960701163977'
+  // userImage:'https://i1.hdslb.com/bfs/face/594b7c3a597f9f5bf3e66e384feb1d17ce7387cb.jpg@128w_128h_1c_1s.webp'
 }, {
   userUrlType: 'github',
   userID: '273910431',
@@ -403,8 +399,8 @@ const extensionDevelopers = [{
 }, {
   userUrlType: 'bilibili',
   username: '蓝立方Blue3',
-  userID: '25786611',
-  userImage: 'https://i1.hdslb.com/bfs/face/62a30dec6dc1aa1e319db1e77e5e948fd37e85e3.jpg@128w_128h_1c_1s.webp'
+  userID: '25786611'
+  // userImage:'https://i1.hdslb.com/bfs/face/62a30dec6dc1aa1e319db1e77e5e948fd37e85e3.jpg@128w_128h_1c_1s.webp', 
 }].map(fromHardcoded);
 const docs = [{
   userUrlType: 'github',
