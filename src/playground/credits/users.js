@@ -18,7 +18,7 @@ const fromHardcoded = ({userID = '0', username, userUrlType = 'github'}) => {
             result.image = `https://avatars.githubusercontent.com/u/${userID}`;
             result.href = `https://github.com/${username}/`;
         }else if(userUrlType === 'bilibili'){
-            result.image = `src/playground/credits/images/${userID}.webp`;  
+            result.image = `/static/credits/${userID}.webp`;  
             result.href = `https://space.bilibili.com/${userID}/`;
         }
         
