@@ -95,6 +95,7 @@ import _simple_project_analyzer from "../addons/simple-project-analyzer/_manifes
 import _background from "../addons/background/_manifest_entry.js";
 import _todo from "../addons/todo/_manifest_entry.js";
 import _novatheai from "../addons/novatheai/_manifest_entry.js";
+import _calculator from "../addons/calculator/_manifest_entry.js";
 export default {
   "cat-blocks": _cat_blocks,
   "dev-inspector": _dev_inspector,
@@ -192,4 +193,5 @@ export default {
   "background": _background,
   "todo": _todo,
   "novatheai": _novatheai,
+  "calculator": _calculator,
 };
