@@ -348,7 +348,7 @@ const fromHardcoded = _ref => {
       result.image = "https://avatars.githubusercontent.com/u/".concat(userID);
       result.href = "https://github.com/".concat(username, "/");
     } else if (userUrlType === 'bilibili') {
-      result.image = "src/playground/credits/images/".concat(userID, ".webp");
+      result.image = "/static/credits/".concat(userID, ".webp");
       result.href = "https://space.bilibili.com/".concat(userID, "/");
     }
   }
