@@ -924,7 +924,7 @@ __webpack_require__.r(__webpack_exports__);
     "general.username": "用户名",
     "general.password": "密码",
     "general.signIn": "登录",
-    "login.needHelp": "需要帮助？",
+    "login.needHelp": "需要帮助?",
     "form.validationRequired": "必填字段",
     "gui.menuBar.tutorialsLibrary": "教程",
     "gui.menuBar.restoreSprite": "复原删除的角色",
@@ -1057,7 +1057,7 @@ __webpack_require__.r(__webpack_exports__);
     "gui.costumeTab.addFileCostume": "上传造型",
     "gui.extensionLibrary.chooseAnExtension": "选择一个扩展",
     "gui.extensionLibrary.extensionUrl": "键入扩展的URL",
-    "gui.monitors.importListColumnPrompt": "使用第几列（1-{numberOfColumns}）？",
+    "gui.monitors.importListColumnPrompt": "使用第几列(1-{numberOfColumns})?",
     "gui.recordingStep.alertMsg": "无法启动录音",
     "gui.soundLibrary.chooseASound": "选择一个声音",
     "gui.soundTab.fileUploadSound": "上传声音",
@@ -1330,10 +1330,10 @@ __webpack_require__.r(__webpack_exports__);
     "gui.sharedMessages.costume": "造型{index}",
     "gui.sharedMessages.sprite": "角色{index}",
     "gui.sharedMessages.pop": "啵",
-    "gui.sharedMessages.replaceProjectWarning": "是否丢弃当前作品中尚未保存的内容？",
+    "gui.sharedMessages.replaceProjectWarning": "是否丢弃当前作品中尚未保存的内容?",
     "gui.sharedMessages.loadFromComputerTitle": "从电脑中打开",
     "gui.theme.default": "原样式",
-    "gui.theme.dark": "深色（测试）",
+    "gui.theme.dark": "深色(测试)",
     "gui.theme.highContrast": "高对比度",
     "gui.gui.defaultProjectTitle": "Scratch作品",
     "boost.color.any": "任何颜色",
@@ -1343,19 +1343,19 @@ __webpack_require__.r(__webpack_exports__);
     "boost.color.red": "黄色",
     "boost.color.white": "白色",
     "boost.color.yellow": "黄色",
-    "boost.getMotorPosition": "马达 [MOTOR_REPORTER_ID] 位置",
+    "boost.getMotorPosition": "马达[MOTOR_REPORTER_ID]的位置",
     "boost.getTiltAngle": "向[TILT_DIRECTION]倾角",
     "boost.motorDirection.backward": "逆时针",
     "boost.motorDirection.forward": "顺时针",
     "boost.motorDirection.reverse": "反转",
-    "boost.motorOff": "关闭马达 [MOTOR_ID]",
-    "boost.motorOn": "开启马达 [MOTOR_ID]",
-    "boost.motorOnFor": "使马达 [MOTOR_ID]转动 [DURATION] 秒",
-    "boost.motorOnForRotation": "使马达 [MOTOR_ID]转动 [ROTATION] 圈",
-    "boost.seeingColor": "看到 [COLOR]积木 ?",
+    "boost.motorOff": "关闭马达[MOTOR_ID]",
+    "boost.motorOn": "开启马达[MOTOR_ID]",
+    "boost.motorOnFor": "使马达[MOTOR_ID]转动[DURATION]秒",
+    "boost.motorOnForRotation": "使马达[MOTOR_ID]转动[ROTATION]圈",
+    "boost.seeingColor": "看到[COLOR]积木?",
     "boost.setLightHue": "将灯光颜色设为[HUE]",
-    "boost.setMotorDirection": "将马达[MOTOR_ID] 方向设为 [MOTOR_DIRECTION]",
-    "boost.setMotorPower": "将马达 [MOTOR_ID] 速度设为 [POWER]%",
+    "boost.setMotorDirection": "将马达[MOTOR_ID]方向设为[MOTOR_DIRECTION]",
+    "boost.setMotorPower": "将马达[MOTOR_ID]速度设为[POWER]%",
     "boost.tiltDirection.any": "任意方向",
     "boost.tiltDirection.down": "下",
     "boost.tiltDirection.left": "左",
@@ -1364,7 +1364,7 @@ __webpack_require__.r(__webpack_exports__);
     "boost.whenColor": "当看到[COLOR]积木",
     "boost.whenTilted": "当向[TILT_DIRECTION_ANY]倾斜",
     "ev3.beepNote": "鸣笛[NOTE][TIME]秒",
-    "ev3.buttonPressed": "按下按钮[PORT]？",
+    "ev3.buttonPressed": "按下按钮[PORT]?",
     "ev3.getBrightness": "亮度",
     "ev3.getDistance": "距离",
     "ev3.getMotorPosition": "马达[PORT]的位置",
@@ -1378,8 +1378,8 @@ __webpack_require__.r(__webpack_exports__);
     "gdxfor.getForce": "受力",
     "gdxfor.getSpin": "向[DIRECTION]的旋转速度",
     "gdxfor.getTilt": "向[TILT]倾角",
-    "gdxfor.isFreeFalling": "自由落体？",
-    "gdxfor.isTilted": "向[TILT]倾斜？",
+    "gdxfor.isFreeFalling": "自由落体?",
+    "gdxfor.isTilted": "向[TILT]倾斜?",
     "gdxfor.pulled": "拉扯",
     "gdxfor.pushed": "挤压",
     "gdxfor.shaken": "被晃动",
@@ -1403,7 +1403,7 @@ __webpack_require__.r(__webpack_exports__);
     "makeymakey.spaceKey": "空格",
     "makeymakey.upArrow": "↑",
     "makeymakey.upArrowShort": "上",
-    "makeymakey.whenKeyPressed": "当按下 [KEY] 键",
+    "makeymakey.whenKeyPressed": "当按下[KEY]键",
     "makeymakey.whenKeysPressedInOrder": "当依次按下[SEQUENCE]键时",
     "microbit.buttonsMenu.any": "任意",
     "microbit.clearDisplay": "清空屏幕",
@@ -1413,8 +1413,8 @@ __webpack_require__.r(__webpack_exports__);
     "microbit.gesturesMenu.jumped": "抛起",
     "microbit.gesturesMenu.moved": "移动",
     "microbit.gesturesMenu.shaken": "晃动",
-    "microbit.isButtonPressed": "按下[BTN]按钮？",
-    "microbit.isTilted": "向[DIRECTION]倾斜？",
+    "microbit.isButtonPressed": "按下[BTN]按钮?",
+    "microbit.isTilted": "向[DIRECTION]倾斜?",
     "microbit.pinStateMenu.off": "低电平",
     "microbit.pinStateMenu.on": "高电平",
     "microbit.tiltAngle": "向[DIRECTION]倾角",
@@ -1469,15 +1469,15 @@ __webpack_require__.r(__webpack_exports__);
     "music.instrumentTrombone": "(9) 长号",
     "music.instrumentVibraphone": "(16) 颤音琴",
     "music.instrumentWoodenFlute": "(13) 木长笛",
-    "music.midiPlayDrumForBeats": "击打 [DRUM] [BEATS] 拍",
-    "music.midiSetInstrument": "将乐器设为 [INSTRUMENT]",
-    "music.playDrumForBeats": "击打 [DRUM] [BEATS] 拍",
+    "music.midiPlayDrumForBeats": "击打[DRUM][BEATS]拍",
+    "music.midiSetInstrument": "将乐器设为[INSTRUMENT]",
+    "music.playDrumForBeats": "击打[DRUM][BEATS]拍",
     "music.playNoteForBeats": "演奏音符[NOTE][BEATS]拍",
     "music.restForBeats": "休止[BEATS]拍",
-    "music.setInstrument": "将乐器设为 [INSTRUMENT]",
+    "music.setInstrument": "将乐器设为[INSTRUMENT]",
     "music.setTempo": "将演奏速度设定为[TEMPO]",
     "pen.categoryName": "画笔",
-    "pen.changeColorParam": "将笔的 [COLOR_PARAM] 增加[VALUE]",
+    "pen.changeColorParam": "将笔的[COLOR_PARAM]增加[VALUE]",
     "pen.changeHue": "将笔的颜色增加[HUE]",
     "pen.changeShade": "将笔的亮度增加[SHADE]",
     "pen.changeSize": "将笔的粗细增加[SIZE]",
@@ -1489,11 +1489,20 @@ __webpack_require__.r(__webpack_exports__);
     "pen.penDown": "落笔",
     "pen.penUp": "抬笔",
     "pen.setColor": "将笔的颜色设为[COLOR]",
-    "pen.setColorParam": "将笔的 [COLOR_PARAM] 设为[VALUE]",
+    "pen.setColorParam": "将笔的[COLOR_PARAM]设为[VALUE]",
     "pen.setHue": "将笔的颜色设为[HUE]",
     "pen.setShade": "将笔的亮度设为[SHADE]",
     "pen.setSize": "将笔的粗细设为[SIZE]",
     "pen.stamp": "图章",
+    "pen.triangle": "在([X0],[Y0]),([X1],[Y1]),([X2],[Y2])之间绘制三角形",
+    "pen.setPrintFont": "将打印字体设为[FONT]",
+    "pen.setPrintFontSize": "将打印字体大小设为[SIZE]",
+    "pen.setPrintFontColor": "将打印字体颜色设为[COLOR]",
+    "pen.setPrintFontStrokeColor": "将打印字体描边颜色设为[COLOR]",
+    "pen.setPrintFontStrokeWidth": "将打印字体描边宽度设为[WIDTH]",
+    "pen.setPrintFontWeight": "将打印字体粗细设为[WEIGHT]",
+    "pen.setPrintFontItalics": "将打印字体斜体设为[OPTION]",
+    "pen.printText": "在([X],[Y])打印[TEXT]",
     "speech.defaultWhenIHearValue": "开始",
     "speech.extensionName": "语音识别",
     "speech.listenAndWait": "听候语音输入",
@@ -1505,13 +1514,13 @@ __webpack_require__.r(__webpack_exports__);
     "text2speech.giant": "巨人",
     "text2speech.kitten": "小猫",
     "text2speech.setLanguageBlock": "将朗读语言设置为[LANGUAGE]",
-    "text2speech.setVoiceBlock": "使用 [VOICE] 嗓音",
-    "text2speech.speakAndWaitBlock": "朗读 [WORDS]",
+    "text2speech.setVoiceBlock": "使用[VOICE]发音",
+    "text2speech.speakAndWaitBlock": "朗读[WORDS]",
     "text2speech.squeak": "尖细",
     "text2speech.tenor": "男高音",
     "translate.categoryName": "翻译",
     "translate.defaultTextToTranslate": "你好",
-    "translate.translateBlock": "将 [WORDS] 译为 [LANGUAGE]",
+    "translate.translateBlock": "将[WORDS]翻译为[LANGUAGE]",
     "translate.viewerLanguage": "访客语言",
     "videoSensing.categoryName": "视频侦测",
     "videoSensing.direction": "方向",
@@ -1527,7 +1536,7 @@ __webpack_require__.r(__webpack_exports__);
     "videoSensing.whenMotionGreaterThan": "当视频运动 > [REFERENCE]",
     "wedo2.getDistance": "距离",
     "wedo2.getTiltAngle": "向[TILT_DIRECTION]倾角",
-    "wedo2.isTilted": "向[TILT_DIRECTION_ANY]倾斜？",
+    "wedo2.isTilted": "向[TILT_DIRECTION_ANY]倾斜?",
     "wedo2.motorDirection.backward": "逆时针",
     "wedo2.motorDirection.forward": "顺时针",
     "wedo2.motorDirection.reverse": "反转",
@@ -1572,7 +1581,7 @@ __webpack_require__.r(__webpack_exports__);
     "paint.modeTools.thickness": "粗细",
     "paint.modeTools.flipHorizontal": "水平翻转",
     "paint.modeTools.flipVertical": "垂直翻转",
-    "paint.modeTools.filled": "实心",
+    "paint.modeTools.filled": "填充",
     "paint.modeTools.outlined": "轮廓",
     "paint.paintEditor.bitmap": "转换为位图",
     "paint.paintEditor.vector": "转换为矢量图",
@@ -60285,8 +60294,8 @@ return false;}async function hasObject(_ref150){let fs=_ref150.fs,cache=_ref150.
 const getExternalRefDelta=oid=>_readObject({fs,cache,gitdir,oid});// Look for it in the loose object directory.
 let result=await hasObjectLoose({fs,gitdir,oid});// Check to see if it's in a packfile.
 if(!result){result=await hasObjectPacked({fs,cache,gitdir,oid,getExternalRefDelta});}// Finally
-return result;}// TODO: make a function that just returns obCount. then emptyPackfile = () => sizePack(pack) === 0
-function emptyPackfile(pack){const pheader='5041434b';const version='00000002';const obCount='00000000';const header=pheader+version+obCount;return pack.slice(0,12).toString('hex')===header;}function filterCapabilities(server,client){const serverNames=server.map(cap=>cap.split('=',1)[0]);return client.filter(cap=>{const name=cap.split('=',1)[0];return serverNames.includes(name);});}const pkg={name:'isomorphic-git',version:'1.38.3',agent:'git/isomorphic-git@1.38.3'};class FIFO{constructor(){this._queue=[];}write(chunk){if(this._ended){throw Error('You cannot write to a FIFO that has already been ended!');}if(this._waiting){const resolve=this._waiting;this._waiting=null;resolve({value:chunk});}else{this._queue.push(chunk);}}end(){this._ended=true;if(this._waiting){const resolve=this._waiting;this._waiting=null;resolve({done:true});}}destroy(err){this.error=err;this.end();}async next(){if(this._queue.length>0){return{value:this._queue.shift()};}if(this._ended){return{done:true};}if(this._waiting){throw Error('You cannot call read until the previous call to read has returned!');}return new Promise(resolve=>{this._waiting=resolve;});}}// Note: progress messages are designed to be written directly to the terminal,
+return result;}function addCredentialUsername(_ref151){let config=_ref151.config,onAuth=_ref151.onAuth;if(!onAuth)return onAuth;return async(url,auth)=>{const username=auth.username||(await config.get("credential.".concat(url,".username")));return onAuth(url,username?_objectSpread(_objectSpread({},auth),{},{username}):auth);};}// TODO: make a function that just returns obCount. then emptyPackfile = () => sizePack(pack) === 0
+function emptyPackfile(pack){const pheader='5041434b';const version='00000002';const obCount='00000000';const header=pheader+version+obCount;return pack.slice(0,12).toString('hex')===header;}function filterCapabilities(server,client){const serverNames=server.map(cap=>cap.split('=',1)[0]);return client.filter(cap=>{const name=cap.split('=',1)[0];return serverNames.includes(name);});}const pkg={name:'isomorphic-git',version:'1.38.4',agent:'git/isomorphic-git@1.38.4'};class FIFO{constructor(){this._queue=[];}write(chunk){if(this._ended){throw Error('You cannot write to a FIFO that has already been ended!');}if(this._waiting){const resolve=this._waiting;this._waiting=null;resolve({value:chunk});}else{this._queue.push(chunk);}}end(){this._ended=true;if(this._waiting){const resolve=this._waiting;this._waiting=null;resolve({done:true});}}destroy(err){this.error=err;this.end();}async next(){if(this._queue.length>0){return{value:this._queue.shift()};}if(this._ended){return{done:true};}if(this._waiting){throw Error('You cannot call read until the previous call to read has returned!');}return new Promise(resolve=>{this._waiting=resolve;});}}// Note: progress messages are designed to be written directly to the terminal,
 // so they are often sent with just a carriage return to overwrite the last line of output.
 // But there are also messages delimited with newlines.
 // I also include CRLF just in case.
@@ -60393,7 +60402,7 @@ _nextBit();};_nextBit();return{packetlines,packfile,progress};}// static mux ({
 //   return output
 // }
 }async function parseUploadPackResponse(stream){const _GitSideBand$demux=GitSideBand.demux(stream),packetlines=_GitSideBand$demux.packetlines,packfile=_GitSideBand$demux.packfile,progress=_GitSideBand$demux.progress;const shallows=[];const unshallows=[];const acks=[];let nak=false;let done=false;return new Promise((resolve,reject)=>{// Parse the response
-forAwait(packetlines,data=>{const line=data.toString('utf8').trim();if(line.startsWith('shallow')){const oid=line.slice(-41).trim();if(oid.length!==40){reject(new InvalidOidError(oid));}shallows.push(oid);}else if(line.startsWith('unshallow')){const oid=line.slice(-41).trim();if(oid.length!==40){reject(new InvalidOidError(oid));}unshallows.push(oid);}else if(line.startsWith('ACK')){const _line$split=line.split(' '),_line$split2=_slicedToArray(_line$split,3),oid=_line$split2[1],status=_line$split2[2];acks.push({oid,status});if(!status)done=true;}else if(line.startsWith('NAK')){nak=true;done=true;}else{done=true;nak=true;}if(done){stream.error?reject(stream.error):resolve({shallows,unshallows,acks,nak,packfile,progress});}}).finally(()=>{if(!done){stream.error?reject(stream.error):resolve({shallows,unshallows,acks,nak,packfile,progress});}});});}function writeUploadPackRequest(_ref151){let _ref151$capabilities=_ref151.capabilities,capabilities=_ref151$capabilities===void 0?[]:_ref151$capabilities,_ref151$wants=_ref151.wants,wants=_ref151$wants===void 0?[]:_ref151$wants,_ref151$haves=_ref151.haves,haves=_ref151$haves===void 0?[]:_ref151$haves,_ref151$shallows=_ref151.shallows,shallows=_ref151$shallows===void 0?[]:_ref151$shallows,_ref151$depth=_ref151.depth,depth=_ref151$depth===void 0?null:_ref151$depth,_ref151$since=_ref151.since,since=_ref151$since===void 0?null:_ref151$since,_ref151$exclude=_ref151.exclude,exclude=_ref151$exclude===void 0?[]:_ref151$exclude;const packstream=[];wants=[...new Set(wants)];// remove duplicates
+forAwait(packetlines,data=>{const line=data.toString('utf8').trim();if(line.startsWith('shallow')){const oid=line.slice(-41).trim();if(oid.length!==40){reject(new InvalidOidError(oid));}shallows.push(oid);}else if(line.startsWith('unshallow')){const oid=line.slice(-41).trim();if(oid.length!==40){reject(new InvalidOidError(oid));}unshallows.push(oid);}else if(line.startsWith('ACK')){const _line$split=line.split(' '),_line$split2=_slicedToArray(_line$split,3),oid=_line$split2[1],status=_line$split2[2];acks.push({oid,status});if(!status)done=true;}else if(line.startsWith('NAK')){nak=true;done=true;}else{done=true;nak=true;}if(done){stream.error?reject(stream.error):resolve({shallows,unshallows,acks,nak,packfile,progress});}}).finally(()=>{if(!done){stream.error?reject(stream.error):resolve({shallows,unshallows,acks,nak,packfile,progress});}});});}function writeUploadPackRequest(_ref152){let _ref152$capabilities=_ref152.capabilities,capabilities=_ref152$capabilities===void 0?[]:_ref152$capabilities,_ref152$wants=_ref152.wants,wants=_ref152$wants===void 0?[]:_ref152$wants,_ref152$haves=_ref152.haves,haves=_ref152$haves===void 0?[]:_ref152$haves,_ref152$shallows=_ref152.shallows,shallows=_ref152$shallows===void 0?[]:_ref152$shallows,_ref152$depth=_ref152.depth,depth=_ref152$depth===void 0?null:_ref152$depth,_ref152$since=_ref152.since,since=_ref152$since===void 0?null:_ref152$since,_ref152$exclude=_ref152.exclude,exclude=_ref152$exclude===void 0?[]:_ref152$exclude;const packstream=[];wants=[...new Set(wants)];// remove duplicates
 let firstLineCapabilities=" ".concat(capabilities.join(' '));for(const oid of wants){packstream.push(GitPktLine.encode("want ".concat(oid).concat(firstLineCapabilities,"\n")));firstLineCapabilities='';}for(const oid of shallows){packstream.push(GitPktLine.encode("shallow ".concat(oid,"\n")));}if(depth!==null){packstream.push(GitPktLine.encode("deepen ".concat(depth,"\n")));}if(since!==null){packstream.push(GitPktLine.encode("deepen-since ".concat(Math.floor(since.valueOf()/1000),"\n")));}for(const oid of exclude){packstream.push(GitPktLine.encode("deepen-not ".concat(oid,"\n")));}packstream.push(GitPktLine.flush());for(const oid of haves){packstream.push(GitPktLine.encode("have ".concat(oid,"\n")));}packstream.push(GitPktLine.encode("done\n"));return packstream;}// @ts-check
 /**
  *
@@ -60432,10 +60441,10 @@ let firstLineCapabilities=" ".concat(capabilities.join(' '));for(const oid of wa
  *
  * @returns {Promise<FetchResult>}
  * @see FetchResult
- */async function _fetch(_ref152){let fs=_ref152.fs,cache=_ref152.cache,http=_ref152.http,onProgress=_ref152.onProgress,onMessage=_ref152.onMessage,onAuth=_ref152.onAuth,onAuthSuccess=_ref152.onAuthSuccess,onAuthFailure=_ref152.onAuthFailure,gitdir=_ref152.gitdir,_ref=_ref152.ref,_remoteRef=_ref152.remoteRef,_remote=_ref152.remote,_url=_ref152.url,corsProxy=_ref152.corsProxy,_ref152$depth=_ref152.depth,depth=_ref152$depth===void 0?null:_ref152$depth,_ref152$since=_ref152.since,since=_ref152$since===void 0?null:_ref152$since,_ref152$exclude=_ref152.exclude,exclude=_ref152$exclude===void 0?[]:_ref152$exclude,_ref152$relative=_ref152.relative,relative=_ref152$relative===void 0?false:_ref152$relative,_ref152$tags=_ref152.tags,tags=_ref152$tags===void 0?false:_ref152$tags,_ref152$singleBranch=_ref152.singleBranch,singleBranch=_ref152$singleBranch===void 0?false:_ref152$singleBranch,_ref152$headers=_ref152.headers,headers=_ref152$headers===void 0?{}:_ref152$headers,_ref152$prune=_ref152.prune,prune=_ref152$prune===void 0?false:_ref152$prune,_ref152$pruneTags=_ref152.pruneTags,pruneTags=_ref152$pruneTags===void 0?false:_ref152$pruneTags;const ref=_ref||(await _currentBranch({fs,gitdir,test:true}));const config=await GitConfigManager.get({fs,gitdir});// Figure out what remote to use.
+ */async function _fetch(_ref153){let fs=_ref153.fs,cache=_ref153.cache,http=_ref153.http,onProgress=_ref153.onProgress,onMessage=_ref153.onMessage,onAuth=_ref153.onAuth,onAuthSuccess=_ref153.onAuthSuccess,onAuthFailure=_ref153.onAuthFailure,gitdir=_ref153.gitdir,_ref=_ref153.ref,_remoteRef=_ref153.remoteRef,_remote=_ref153.remote,_url=_ref153.url,corsProxy=_ref153.corsProxy,_ref153$depth=_ref153.depth,depth=_ref153$depth===void 0?null:_ref153$depth,_ref153$since=_ref153.since,since=_ref153$since===void 0?null:_ref153$since,_ref153$exclude=_ref153.exclude,exclude=_ref153$exclude===void 0?[]:_ref153$exclude,_ref153$relative=_ref153.relative,relative=_ref153$relative===void 0?false:_ref153$relative,_ref153$tags=_ref153.tags,tags=_ref153$tags===void 0?false:_ref153$tags,_ref153$singleBranch=_ref153.singleBranch,singleBranch=_ref153$singleBranch===void 0?false:_ref153$singleBranch,_ref153$headers=_ref153.headers,headers=_ref153$headers===void 0?{}:_ref153$headers,_ref153$prune=_ref153.prune,prune=_ref153$prune===void 0?false:_ref153$prune,_ref153$pruneTags=_ref153.pruneTags,pruneTags=_ref153$pruneTags===void 0?false:_ref153$pruneTags;const ref=_ref||(await _currentBranch({fs,gitdir,test:true}));const config=await GitConfigManager.get({fs,gitdir});// Figure out what remote to use.
 const remote=_remote||ref&&(await config.get("branch.".concat(ref,".remote")))||'origin';// Lookup the URL for the given remote.
 const url=_url||(await config.get("remote.".concat(remote,".url")));if(typeof url==='undefined'){throw new MissingParameterError('remote OR url');}// Figure out what remote ref to use.
-const remoteRef=_remoteRef||ref&&(await config.get("branch.".concat(ref,".merge")))||_ref||'HEAD';if(corsProxy===undefined){corsProxy=await config.get('http.corsProxy');}const GitRemoteHTTP=GitRemoteManager.getRemoteHelperFor({url});const remoteHTTP=await GitRemoteHTTP.discover({http,onAuth,onAuthSuccess,onAuthFailure,corsProxy,service:'git-upload-pack',url,headers,protocolVersion:1});const auth=remoteHTTP.auth;// hack to get new credentials from CredentialManager API
+const remoteRef=_remoteRef||ref&&(await config.get("branch.".concat(ref,".merge")))||_ref||'HEAD';if(corsProxy===undefined){corsProxy=await config.get('http.corsProxy');}const GitRemoteHTTP=GitRemoteManager.getRemoteHelperFor({url});const remoteHTTP=await GitRemoteHTTP.discover({http,onAuth:addCredentialUsername({config,onAuth}),onAuthSuccess,onAuthFailure:addCredentialUsername({config,onAuth:onAuthFailure}),corsProxy,service:'git-upload-pack',url,headers,protocolVersion:1});const auth=remoteHTTP.auth;// hack to get new credentials from CredentialManager API
 const remoteRefs=remoteHTTP.refs;// For the special case of an empty repository with no refs, return null.
 if(remoteRefs.size===0){return{defaultBranch:null,fetchHead:null,fetchHeadDescription:null};}// Check that the remote supports the requested features
 if(depth!==null&&!remoteHTTP.capabilities.has('shallow')){throw new RemoteCapabilityError('shallow','depth');}if(since!==null&&!remoteHTTP.capabilities.has('deepen-since')){throw new RemoteCapabilityError('deepen-since','since');}if(exclude.length>0&&!remoteHTTP.capabilities.has('deepen-not')){throw new RemoteCapabilityError('deepen-not','exclude');}if(relative===true&&!remoteHTTP.capabilities.has('deepen-relative')){throw new RemoteCapabilityError('deepen-relative','relative');}// Figure out the SHA for the requested ref
@@ -60464,7 +60473,7 @@ response.HEAD=remoteHTTP.symrefs.get('HEAD');// AWS CodeCommit doesn't list HEAD
 // Find the SHA of the branch called HEAD
 if(response.HEAD===undefined){const _GitRefManager$resolv2=GitRefManager.resolveAgainstMap({ref:'HEAD',map:remoteRefs}),oid=_GitRefManager$resolv2.oid;// Use the name of the first branch that's not called HEAD that has
 // the same SHA as the branch called HEAD.
-for(const _ref153 of remoteRefs.entries()){var _ref154=_slicedToArray(_ref153,2);const key=_ref154[0];const value=_ref154[1];if(key!=='HEAD'&&value===oid){response.HEAD=key;break;}}}const noun=fullref.startsWith('refs/tags')?'tag':'branch';response.FETCH_HEAD={oid,description:"".concat(noun," '").concat(abbreviateRef(fullref),"' of ").concat(url)};if(onProgress||onMessage){const lines=splitLines(response.progress);forAwait(lines,async line=>{if(onMessage)await onMessage(line);if(onProgress){const matches=line.match(/([^:]*).*\((\d+?)\/(\d+?)\)/);if(matches){await onProgress({phase:matches[1].trim(),loaded:parseInt(matches[2],10),total:parseInt(matches[3],10)});}}});}const packfile=Buffer.from(await collect(response.packfile));if(raw.body.error)throw raw.body.error;const packfileSha=packfile.slice(-20).toString('hex');const res={defaultBranch:response.HEAD,fetchHead:response.FETCH_HEAD.oid,fetchHeadDescription:response.FETCH_HEAD.description};if(response.headers){res.headers=response.headers;}if(prune){res.pruned=response.pruned;}// This is a quick fix for the empty .git/objects/pack/pack-.pack file error,
+for(const _ref154 of remoteRefs.entries()){var _ref155=_slicedToArray(_ref154,2);const key=_ref155[0];const value=_ref155[1];if(key!=='HEAD'&&value===oid){response.HEAD=key;break;}}}const noun=fullref.startsWith('refs/tags')?'tag':'branch';response.FETCH_HEAD={oid,description:"".concat(noun," '").concat(abbreviateRef(fullref),"' of ").concat(url)};if(onProgress||onMessage){const lines=splitLines(response.progress);forAwait(lines,async line=>{if(onMessage)await onMessage(line);if(onProgress){const matches=line.match(/([^:]*).*\((\d+?)\/(\d+?)\)/);if(matches){await onProgress({phase:matches[1].trim(),loaded:parseInt(matches[2],10),total:parseInt(matches[3],10)});}}});}const packfile=Buffer.from(await collect(response.packfile));if(raw.body.error)throw raw.body.error;const packfileSha=packfile.slice(-20).toString('hex');const res={defaultBranch:response.HEAD,fetchHead:response.FETCH_HEAD.oid,fetchHeadDescription:response.FETCH_HEAD.description};if(response.headers){res.headers=response.headers;}if(prune){res.pruned=response.pruned;}// This is a quick fix for the empty .git/objects/pack/pack-.pack file error,
 // which due to the way `git-list-pack` works causes the program to hang when it tries to read it.
 // TODO: Longer term, we should actually:
 // a) NOT concatenate the entire packfile into memory (line 78),
@@ -60481,7 +60490,7 @@ if(packfileSha!==''&&!emptyPackfile(packfile)){res.packfile="objects/pack/pack-"
  * @param {boolean} [args.bare = false]
  * @param {string} [args.defaultBranch = 'master']
  * @returns {Promise<void>}
- */async function _init(_ref155){let fs=_ref155.fs,_ref155$bare=_ref155.bare,bare=_ref155$bare===void 0?false:_ref155$bare,dir=_ref155.dir,_ref155$gitdir=_ref155.gitdir,gitdir=_ref155$gitdir===void 0?bare?dir:join(dir,'.git'):_ref155$gitdir,_ref155$defaultBranch=_ref155.defaultBranch,defaultBranch=_ref155$defaultBranch===void 0?'master':_ref155$defaultBranch;// Don't overwrite an existing config
+ */async function _init(_ref156){let fs=_ref156.fs,_ref156$bare=_ref156.bare,bare=_ref156$bare===void 0?false:_ref156$bare,dir=_ref156.dir,_ref156$gitdir=_ref156.gitdir,gitdir=_ref156$gitdir===void 0?bare?dir:join(dir,'.git'):_ref156$gitdir,_ref156$defaultBranch=_ref156.defaultBranch,defaultBranch=_ref156$defaultBranch===void 0?'master':_ref156$defaultBranch;// Don't overwrite an existing config
 if(await fs.exists(gitdir+'/config'))return;let folders=['hooks','info','objects/info','objects/pack','refs/heads','refs/tags'];folders=folders.map(dir=>gitdir+'/'+dir);for(const folder of folders){await fs.mkdir(folder);}await fs.write(gitdir+'/config','[core]\n'+'\trepositoryformatversion = 0\n'+'\tfilemode = false\n'+"\tbare = ".concat(bare,"\n")+(bare?'':'\tlogallrefupdates = true\n')+'\tsymlinks = false\n'+'\tignorecase = true\n');await fs.write(gitdir+'/HEAD',"ref: refs/heads/".concat(defaultBranch,"\n"));}// @ts-check
 /**
  * @param {object} args
@@ -60513,7 +60522,7 @@ if(await fs.exists(gitdir+'/config'))return;let folders=['hooks','info','objects
  *
  * @returns {Promise<void>} Resolves successfully when clone completes
  *
- */async function _clone(_ref156){let fs=_ref156.fs,cache=_ref156.cache,http=_ref156.http,onProgress=_ref156.onProgress,onMessage=_ref156.onMessage,onAuth=_ref156.onAuth,onAuthSuccess=_ref156.onAuthSuccess,onAuthFailure=_ref156.onAuthFailure,onPostCheckout=_ref156.onPostCheckout,dir=_ref156.dir,gitdir=_ref156.gitdir,url=_ref156.url,corsProxy=_ref156.corsProxy,ref=_ref156.ref,remote=_ref156.remote,depth=_ref156.depth,since=_ref156.since,exclude=_ref156.exclude,relative=_ref156.relative,singleBranch=_ref156.singleBranch,noCheckout=_ref156.noCheckout,noTags=_ref156.noTags,headers=_ref156.headers,nonBlocking=_ref156.nonBlocking,_ref156$batchSize=_ref156.batchSize,batchSize=_ref156$batchSize===void 0?100:_ref156$batchSize;try{await _init({fs,gitdir});await _addRemote({fs,gitdir,remote,url,force:false});if(corsProxy){const config=await GitConfigManager.get({fs,gitdir});await config.set("http.corsProxy",corsProxy);await GitConfigManager.save({fs,gitdir,config});}const _await$_fetch=await _fetch({fs,cache,http,onProgress,onMessage,onAuth,onAuthSuccess,onAuthFailure,gitdir,ref,remote,corsProxy,depth,since,exclude,relative,singleBranch,headers,tags:!noTags}),defaultBranch=_await$_fetch.defaultBranch,fetchHead=_await$_fetch.fetchHead;if(fetchHead===null)return;ref=ref||defaultBranch;ref=ref.replace('refs/heads/','');// Checkout that branch
+ */async function _clone(_ref157){let fs=_ref157.fs,cache=_ref157.cache,http=_ref157.http,onProgress=_ref157.onProgress,onMessage=_ref157.onMessage,onAuth=_ref157.onAuth,onAuthSuccess=_ref157.onAuthSuccess,onAuthFailure=_ref157.onAuthFailure,onPostCheckout=_ref157.onPostCheckout,dir=_ref157.dir,gitdir=_ref157.gitdir,url=_ref157.url,corsProxy=_ref157.corsProxy,ref=_ref157.ref,remote=_ref157.remote,depth=_ref157.depth,since=_ref157.since,exclude=_ref157.exclude,relative=_ref157.relative,singleBranch=_ref157.singleBranch,noCheckout=_ref157.noCheckout,noTags=_ref157.noTags,headers=_ref157.headers,nonBlocking=_ref157.nonBlocking,_ref157$batchSize=_ref157.batchSize,batchSize=_ref157$batchSize===void 0?100:_ref157$batchSize;try{await _init({fs,gitdir});await _addRemote({fs,gitdir,remote,url,force:false});if(corsProxy){const config=await GitConfigManager.get({fs,gitdir});await config.set("http.corsProxy",corsProxy);await GitConfigManager.save({fs,gitdir,config});}const _await$_fetch=await _fetch({fs,cache,http,onProgress,onMessage,onAuth,onAuthSuccess,onAuthFailure,gitdir,ref,remote,corsProxy,depth,since,exclude,relative,singleBranch,headers,tags:!noTags}),defaultBranch=_await$_fetch.defaultBranch,fetchHead=_await$_fetch.fetchHead;if(fetchHead===null)return;ref=ref||defaultBranch;ref=ref.replace('refs/heads/','');// Checkout that branch
 await _checkout({fs,cache,onProgress,onPostCheckout,dir,gitdir,ref,remote,noCheckout,nonBlocking,batchSize});}catch(err){// Remove partial local repository, see #1283
 // Ignore any error as we are already failing.
 // The catch is necessary so the original error is not masked.
@@ -60562,7 +60571,7 @@ await fs.rmdir(gitdir,{recursive:true,maxRetries:10}).catch(()=>undefined);throw
  * })
  * console.log('done')
  *
- */async function clone(_ref157){let fs=_ref157.fs,http=_ref157.http,onProgress=_ref157.onProgress,onMessage=_ref157.onMessage,onAuth=_ref157.onAuth,onAuthSuccess=_ref157.onAuthSuccess,onAuthFailure=_ref157.onAuthFailure,onPostCheckout=_ref157.onPostCheckout,dir=_ref157.dir,_ref157$gitdir=_ref157.gitdir,gitdir=_ref157$gitdir===void 0?join(dir,'.git'):_ref157$gitdir,url=_ref157.url,_ref157$corsProxy=_ref157.corsProxy,corsProxy=_ref157$corsProxy===void 0?undefined:_ref157$corsProxy,_ref157$ref=_ref157.ref,ref=_ref157$ref===void 0?undefined:_ref157$ref,_ref157$remote=_ref157.remote,remote=_ref157$remote===void 0?'origin':_ref157$remote,_ref157$depth=_ref157.depth,depth=_ref157$depth===void 0?undefined:_ref157$depth,_ref157$since=_ref157.since,since=_ref157$since===void 0?undefined:_ref157$since,_ref157$exclude=_ref157.exclude,exclude=_ref157$exclude===void 0?[]:_ref157$exclude,_ref157$relative=_ref157.relative,relative=_ref157$relative===void 0?false:_ref157$relative,_ref157$singleBranch=_ref157.singleBranch,singleBranch=_ref157$singleBranch===void 0?false:_ref157$singleBranch,_ref157$noCheckout=_ref157.noCheckout,noCheckout=_ref157$noCheckout===void 0?false:_ref157$noCheckout,_ref157$noTags=_ref157.noTags,noTags=_ref157$noTags===void 0?false:_ref157$noTags,_ref157$headers=_ref157.headers,headers=_ref157$headers===void 0?{}:_ref157$headers,_ref157$cache=_ref157.cache,cache=_ref157$cache===void 0?{}:_ref157$cache,_ref157$nonBlocking=_ref157.nonBlocking,nonBlocking=_ref157$nonBlocking===void 0?false:_ref157$nonBlocking,_ref157$batchSize=_ref157.batchSize,batchSize=_ref157$batchSize===void 0?100:_ref157$batchSize;try{assertParameter('fs',fs);assertParameter('http',http);assertParameter('gitdir',gitdir);if(!noCheckout){assertParameter('dir',dir);}assertParameter('url',url);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _clone({fs:fsp,cache,http,onProgress,onMessage,onAuth,onAuthSuccess,onAuthFailure,onPostCheckout,dir,gitdir:updatedGitdir,url,corsProxy,ref,remote,depth,since,exclude,relative,singleBranch,noCheckout,noTags,headers,nonBlocking,batchSize});}catch(err){err.caller='git.clone';throw err;}}// @ts-check
+ */async function clone(_ref158){let fs=_ref158.fs,http=_ref158.http,onProgress=_ref158.onProgress,onMessage=_ref158.onMessage,onAuth=_ref158.onAuth,onAuthSuccess=_ref158.onAuthSuccess,onAuthFailure=_ref158.onAuthFailure,onPostCheckout=_ref158.onPostCheckout,dir=_ref158.dir,_ref158$gitdir=_ref158.gitdir,gitdir=_ref158$gitdir===void 0?join(dir,'.git'):_ref158$gitdir,url=_ref158.url,_ref158$corsProxy=_ref158.corsProxy,corsProxy=_ref158$corsProxy===void 0?undefined:_ref158$corsProxy,_ref158$ref=_ref158.ref,ref=_ref158$ref===void 0?undefined:_ref158$ref,_ref158$remote=_ref158.remote,remote=_ref158$remote===void 0?'origin':_ref158$remote,_ref158$depth=_ref158.depth,depth=_ref158$depth===void 0?undefined:_ref158$depth,_ref158$since=_ref158.since,since=_ref158$since===void 0?undefined:_ref158$since,_ref158$exclude=_ref158.exclude,exclude=_ref158$exclude===void 0?[]:_ref158$exclude,_ref158$relative=_ref158.relative,relative=_ref158$relative===void 0?false:_ref158$relative,_ref158$singleBranch=_ref158.singleBranch,singleBranch=_ref158$singleBranch===void 0?false:_ref158$singleBranch,_ref158$noCheckout=_ref158.noCheckout,noCheckout=_ref158$noCheckout===void 0?false:_ref158$noCheckout,_ref158$noTags=_ref158.noTags,noTags=_ref158$noTags===void 0?false:_ref158$noTags,_ref158$headers=_ref158.headers,headers=_ref158$headers===void 0?{}:_ref158$headers,_ref158$cache=_ref158.cache,cache=_ref158$cache===void 0?{}:_ref158$cache,_ref158$nonBlocking=_ref158.nonBlocking,nonBlocking=_ref158$nonBlocking===void 0?false:_ref158$nonBlocking,_ref158$batchSize=_ref158.batchSize,batchSize=_ref158$batchSize===void 0?100:_ref158$batchSize;try{assertParameter('fs',fs);assertParameter('http',http);assertParameter('gitdir',gitdir);if(!noCheckout){assertParameter('dir',dir);}assertParameter('url',url);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _clone({fs:fsp,cache,http,onProgress,onMessage,onAuth,onAuthSuccess,onAuthFailure,onPostCheckout,dir,gitdir:updatedGitdir,url,corsProxy,ref,remote,depth,since,exclude,relative,singleBranch,noCheckout,noTags,headers,nonBlocking,batchSize});}catch(err){err.caller='git.clone';throw err;}}// @ts-check
 /**
  * Create a new commit
  *
@@ -60605,7 +60614,7 @@ await fs.rmdir(gitdir,{recursive:true,maxRetries:10}).catch(()=>undefined);throw
  * })
  * console.log(sha)
  *
- */async function commit(_ref158){let _fs=_ref158.fs,onSign=_ref158.onSign,dir=_ref158.dir,_ref158$gitdir=_ref158.gitdir,gitdir=_ref158$gitdir===void 0?join(dir,'.git'):_ref158$gitdir,message=_ref158.message,author=_ref158.author,committer=_ref158.committer,signingKey=_ref158.signingKey,_ref158$amend=_ref158.amend,amend=_ref158$amend===void 0?false:_ref158$amend,_ref158$dryRun=_ref158.dryRun,dryRun=_ref158$dryRun===void 0?false:_ref158$dryRun,_ref158$noUpdateBranc=_ref158.noUpdateBranch,noUpdateBranch=_ref158$noUpdateBranc===void 0?false:_ref158$noUpdateBranc,ref=_ref158.ref,parent=_ref158.parent,tree=_ref158.tree,_ref158$cache=_ref158.cache,cache=_ref158$cache===void 0?{}:_ref158$cache;try{assertParameter('fs',_fs);if(!amend){assertParameter('message',message);}if(signingKey){assertParameter('onSign',onSign);}const fs=new FileSystem(_fs);const updatedGitdir=await discoverGitdir({fsp:fs,dotgit:gitdir});return await _commit({fs,cache,onSign,gitdir:updatedGitdir,message,author,committer,signingKey,amend,dryRun,noUpdateBranch,ref,parent,tree});}catch(err){err.caller='git.commit';throw err;}}// @ts-check
+ */async function commit(_ref159){let _fs=_ref159.fs,onSign=_ref159.onSign,dir=_ref159.dir,_ref159$gitdir=_ref159.gitdir,gitdir=_ref159$gitdir===void 0?join(dir,'.git'):_ref159$gitdir,message=_ref159.message,author=_ref159.author,committer=_ref159.committer,signingKey=_ref159.signingKey,_ref159$amend=_ref159.amend,amend=_ref159$amend===void 0?false:_ref159$amend,_ref159$dryRun=_ref159.dryRun,dryRun=_ref159$dryRun===void 0?false:_ref159$dryRun,_ref159$noUpdateBranc=_ref159.noUpdateBranch,noUpdateBranch=_ref159$noUpdateBranc===void 0?false:_ref159$noUpdateBranc,ref=_ref159.ref,parent=_ref159.parent,tree=_ref159.tree,_ref159$cache=_ref159.cache,cache=_ref159$cache===void 0?{}:_ref159$cache;try{assertParameter('fs',_fs);if(!amend){assertParameter('message',message);}if(signingKey){assertParameter('onSign',onSign);}const fs=new FileSystem(_fs);const updatedGitdir=await discoverGitdir({fsp:fs,dotgit:gitdir});return await _commit({fs,cache,onSign,gitdir:updatedGitdir,message,author,committer,signingKey,amend,dryRun,noUpdateBranch,ref,parent,tree});}catch(err){err.caller='git.commit';throw err;}}// @ts-check
 /**
  * Get the name of the branch currently pointed to by .git/HEAD
  *
@@ -60627,7 +60636,7 @@ await fs.rmdir(gitdir,{recursive:true,maxRetries:10}).catch(()=>undefined);throw
  * })
  * console.log(branch)
  *
- */async function currentBranch(_ref159){let fs=_ref159.fs,dir=_ref159.dir,_ref159$gitdir=_ref159.gitdir,gitdir=_ref159$gitdir===void 0?join(dir,'.git'):_ref159$gitdir,_ref159$fullname=_ref159.fullname,fullname=_ref159$fullname===void 0?false:_ref159$fullname,_ref159$test=_ref159.test,test=_ref159$test===void 0?false:_ref159$test;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _currentBranch({fs:fsp,gitdir:updatedGitdir,fullname,test});}catch(err){err.caller='git.currentBranch';throw err;}}// @ts-check
+ */async function currentBranch(_ref160){let fs=_ref160.fs,dir=_ref160.dir,_ref160$gitdir=_ref160.gitdir,gitdir=_ref160$gitdir===void 0?join(dir,'.git'):_ref160$gitdir,_ref160$fullname=_ref160.fullname,fullname=_ref160$fullname===void 0?false:_ref160$fullname,_ref160$test=_ref160.test,test=_ref160$test===void 0?false:_ref160$test;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _currentBranch({fs:fsp,gitdir:updatedGitdir,fullname,test});}catch(err){err.caller='git.currentBranch';throw err;}}// @ts-check
 /**
  * @param {Object} args
  * @param {import('../models/FileSystem.js').FileSystem} args.fs
@@ -60635,7 +60644,7 @@ await fs.rmdir(gitdir,{recursive:true,maxRetries:10}).catch(()=>undefined);throw
  * @param {string} args.ref
  *
  * @returns {Promise<void>}
- */async function _deleteBranch(_ref160){let fs=_ref160.fs,gitdir=_ref160.gitdir,ref=_ref160.ref;ref=ref.startsWith('refs/heads/')?ref:"refs/heads/".concat(ref);const exist=await GitRefManager.exists({fs,gitdir,ref});if(!exist){throw new NotFoundError(ref);}const fullRef=await GitRefManager.expand({fs,gitdir,ref});const currentRef=await _currentBranch({fs,gitdir,fullname:true});if(fullRef===currentRef){// detach HEAD
+ */async function _deleteBranch(_ref161){let fs=_ref161.fs,gitdir=_ref161.gitdir,ref=_ref161.ref;ref=ref.startsWith('refs/heads/')?ref:"refs/heads/".concat(ref);const exist=await GitRefManager.exists({fs,gitdir,ref});if(!exist){throw new NotFoundError(ref);}const fullRef=await GitRefManager.expand({fs,gitdir,ref});const currentRef=await _currentBranch({fs,gitdir,fullname:true});if(fullRef===currentRef){// detach HEAD
 const value=await GitRefManager.resolve({fs,gitdir,ref:fullRef});await GitRefManager.writeRef({fs,gitdir,ref:'HEAD',value});}// Delete a specified branch
 await GitRefManager.deleteRef({fs,gitdir,ref:fullRef});// Delete branch config entries
 const abbrevRef=abbreviateRef(ref);const config=await GitConfigManager.get({fs,gitdir});await config.deleteSection('branch',abbrevRef);await GitConfigManager.save({fs,gitdir,config});}// @ts-check
@@ -60656,7 +60665,7 @@ const abbrevRef=abbreviateRef(ref);const config=await GitConfigManager.get({fs,g
  * await git.deleteBranch({ fs, dir: '/tutorial', ref: 'local-branch' })
  * console.log('done')
  *
- */async function deleteBranch(_ref161){let fs=_ref161.fs,dir=_ref161.dir,_ref161$gitdir=_ref161.gitdir,gitdir=_ref161$gitdir===void 0?join(dir,'.git'):_ref161$gitdir,ref=_ref161.ref;try{assertParameter('fs',fs);assertParameter('ref',ref);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _deleteBranch({fs:fsp,gitdir:updatedGitdir,ref});}catch(err){err.caller='git.deleteBranch';throw err;}}// @ts-check
+ */async function deleteBranch(_ref162){let fs=_ref162.fs,dir=_ref162.dir,_ref162$gitdir=_ref162.gitdir,gitdir=_ref162$gitdir===void 0?join(dir,'.git'):_ref162$gitdir,ref=_ref162.ref;try{assertParameter('fs',fs);assertParameter('ref',ref);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _deleteBranch({fs:fsp,gitdir:updatedGitdir,ref});}catch(err){err.caller='git.deleteBranch';throw err;}}// @ts-check
 /**
  * Delete a local ref
  *
@@ -60672,7 +60681,7 @@ const abbrevRef=abbreviateRef(ref);const config=await GitConfigManager.get({fs,g
  * await git.deleteRef({ fs, dir: '/tutorial', ref: 'refs/tags/test-tag' })
  * console.log('done')
  *
- */async function deleteRef(_ref162){let fs=_ref162.fs,dir=_ref162.dir,_ref162$gitdir=_ref162.gitdir,gitdir=_ref162$gitdir===void 0?join(dir,'.git'):_ref162$gitdir,ref=_ref162.ref;try{assertParameter('fs',fs);assertParameter('ref',ref);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});await GitRefManager.deleteRef({fs:fsp,gitdir:updatedGitdir,ref});}catch(err){err.caller='git.deleteRef';throw err;}}// @ts-check
+ */async function deleteRef(_ref163){let fs=_ref163.fs,dir=_ref163.dir,_ref163$gitdir=_ref163.gitdir,gitdir=_ref163$gitdir===void 0?join(dir,'.git'):_ref163$gitdir,ref=_ref163.ref;try{assertParameter('fs',fs);assertParameter('ref',ref);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});await GitRefManager.deleteRef({fs:fsp,gitdir:updatedGitdir,ref});}catch(err){err.caller='git.deleteRef';throw err;}}// @ts-check
 /**
  * @param {Object} args
  * @param {import('../models/FileSystem.js').FileSystem} args.fs
@@ -60680,7 +60689,7 @@ const abbrevRef=abbreviateRef(ref);const config=await GitConfigManager.get({fs,g
  * @param {string} args.remote
  *
  * @returns {Promise<void>}
- */async function _deleteRemote(_ref163){let fs=_ref163.fs,gitdir=_ref163.gitdir,remote=_ref163.remote;const config=await GitConfigManager.get({fs,gitdir});await config.deleteSection('remote',remote);await GitConfigManager.save({fs,gitdir,config});}// @ts-check
+ */async function _deleteRemote(_ref164){let fs=_ref164.fs,gitdir=_ref164.gitdir,remote=_ref164.remote;const config=await GitConfigManager.get({fs,gitdir});await config.deleteSection('remote',remote);await GitConfigManager.save({fs,gitdir,config});}// @ts-check
 /**
  * Removes the local config entry for a given remote
  *
@@ -60696,7 +60705,7 @@ const abbrevRef=abbreviateRef(ref);const config=await GitConfigManager.get({fs,g
  * await git.deleteRemote({ fs, dir: '/tutorial', remote: 'upstream' })
  * console.log('done')
  *
- */async function deleteRemote(_ref164){let fs=_ref164.fs,dir=_ref164.dir,_ref164$gitdir=_ref164.gitdir,gitdir=_ref164$gitdir===void 0?join(dir,'.git'):_ref164$gitdir,remote=_ref164.remote;try{assertParameter('fs',fs);assertParameter('remote',remote);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _deleteRemote({fs:fsp,gitdir:updatedGitdir,remote});}catch(err){err.caller='git.deleteRemote';throw err;}}// @ts-check
+ */async function deleteRemote(_ref165){let fs=_ref165.fs,dir=_ref165.dir,_ref165$gitdir=_ref165.gitdir,gitdir=_ref165$gitdir===void 0?join(dir,'.git'):_ref165$gitdir,remote=_ref165.remote;try{assertParameter('fs',fs);assertParameter('remote',remote);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _deleteRemote({fs:fsp,gitdir:updatedGitdir,remote});}catch(err){err.caller='git.deleteRemote';throw err;}}// @ts-check
 /**
  * Delete a local tag ref
  *
@@ -60711,7 +60720,7 @@ const abbrevRef=abbreviateRef(ref);const config=await GitConfigManager.get({fs,g
  * await git.deleteTag({ dir: '$input((/))', ref: '$input((test-tag))' })
  * console.log('done')
  *
- */async function _deleteTag(_ref165){let fs=_ref165.fs,gitdir=_ref165.gitdir,ref=_ref165.ref;ref=ref.startsWith('refs/tags/')?ref:"refs/tags/".concat(ref);await GitRefManager.deleteRef({fs,gitdir,ref});}// @ts-check
+ */async function _deleteTag(_ref166){let fs=_ref166.fs,gitdir=_ref166.gitdir,ref=_ref166.ref;ref=ref.startsWith('refs/tags/')?ref:"refs/tags/".concat(ref);await GitRefManager.deleteRef({fs,gitdir,ref});}// @ts-check
 /**
  * Delete a local tag ref
  *
@@ -60727,9 +60736,9 @@ const abbrevRef=abbreviateRef(ref);const config=await GitConfigManager.get({fs,g
  * await git.deleteTag({ fs, dir: '/tutorial', ref: 'test-tag' })
  * console.log('done')
  *
- */async function deleteTag(_ref166){let fs=_ref166.fs,dir=_ref166.dir,_ref166$gitdir=_ref166.gitdir,gitdir=_ref166$gitdir===void 0?join(dir,'.git'):_ref166$gitdir,ref=_ref166.ref;try{assertParameter('fs',fs);assertParameter('ref',ref);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _deleteTag({fs:fsp,gitdir:updatedGitdir,ref});}catch(err){err.caller='git.deleteTag';throw err;}}async function expandOidLoose(_ref167){let fs=_ref167.fs,gitdir=_ref167.gitdir,short=_ref167.oid;const prefix=short.slice(0,2);const objectsSuffixes=await fs.readdir("".concat(gitdir,"/objects/").concat(prefix));return objectsSuffixes.map(suffix=>"".concat(prefix).concat(suffix)).filter(_oid=>_oid.startsWith(short));}async function expandOidPacked(_ref168){let fs=_ref168.fs,cache=_ref168.cache,gitdir=_ref168.gitdir,short=_ref168.oid,getExternalRefDelta=_ref168.getExternalRefDelta;// Iterate through all the .pack files
+ */async function deleteTag(_ref167){let fs=_ref167.fs,dir=_ref167.dir,_ref167$gitdir=_ref167.gitdir,gitdir=_ref167$gitdir===void 0?join(dir,'.git'):_ref167$gitdir,ref=_ref167.ref;try{assertParameter('fs',fs);assertParameter('ref',ref);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _deleteTag({fs:fsp,gitdir:updatedGitdir,ref});}catch(err){err.caller='git.deleteTag';throw err;}}async function expandOidLoose(_ref168){let fs=_ref168.fs,gitdir=_ref168.gitdir,short=_ref168.oid;const prefix=short.slice(0,2);const objectsSuffixes=await fs.readdir("".concat(gitdir,"/objects/").concat(prefix));return objectsSuffixes.map(suffix=>"".concat(prefix).concat(suffix)).filter(_oid=>_oid.startsWith(short));}async function expandOidPacked(_ref169){let fs=_ref169.fs,cache=_ref169.cache,gitdir=_ref169.gitdir,short=_ref169.oid,getExternalRefDelta=_ref169.getExternalRefDelta;// Iterate through all the .pack files
 const results=[];let list=await fs.readdir(join(gitdir,'objects/pack'));list=list.filter(x=>x.endsWith('.idx'));for(const filename of list){const indexFile="".concat(gitdir,"/objects/pack/").concat(filename);const p=await readPackIndex({fs,cache,filename:indexFile,getExternalRefDelta});if(p.error)throw new InternalError(p.error);// Search through the list of oids in the packfile
-for(const oid of p.offsets.keys()){if(oid.startsWith(short))results.push(oid);}}return results;}async function _expandOid(_ref169){let fs=_ref169.fs,cache=_ref169.cache,gitdir=_ref169.gitdir,short=_ref169.oid;// Curry the current read method so that the packfile un-deltification
+for(const oid of p.offsets.keys()){if(oid.startsWith(short))results.push(oid);}}return results;}async function _expandOid(_ref170){let fs=_ref170.fs,cache=_ref170.cache,gitdir=_ref170.gitdir,short=_ref170.oid;// Curry the current read method so that the packfile un-deltification
 // process can acquire external ref-deltas.
 const getExternalRefDelta=oid=>_readObject({fs,cache,gitdir,oid});const results=await expandOidLoose({fs,gitdir,oid:short});const packedOids=await expandOidPacked({fs,cache,gitdir,oid:short,getExternalRefDelta});// Objects can exist in a pack file as well as loose, make sure we only get a list of unique oids.
 for(const packedOid of packedOids){if(results.indexOf(packedOid)===-1){results.push(packedOid);}}if(results.length===1){return results[0];}if(results.length>1){throw new AmbiguousError('oids',short,results);}throw new NotFoundError("an object matching \"".concat(short,"\""));}// @ts-check
@@ -60749,7 +60758,7 @@ for(const packedOid of packedOids){if(results.indexOf(packedOid)===-1){results.p
  * let oid = await git.expandOid({ fs, dir: '/tutorial', oid: '0414d2a'})
  * console.log(oid)
  *
- */async function expandOid(_ref170){let fs=_ref170.fs,dir=_ref170.dir,_ref170$gitdir=_ref170.gitdir,gitdir=_ref170$gitdir===void 0?join(dir,'.git'):_ref170$gitdir,oid=_ref170.oid,_ref170$cache=_ref170.cache,cache=_ref170$cache===void 0?{}:_ref170$cache;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('oid',oid);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _expandOid({fs:fsp,cache,gitdir:updatedGitdir,oid});}catch(err){err.caller='git.expandOid';throw err;}}// @ts-check
+ */async function expandOid(_ref171){let fs=_ref171.fs,dir=_ref171.dir,_ref171$gitdir=_ref171.gitdir,gitdir=_ref171$gitdir===void 0?join(dir,'.git'):_ref171$gitdir,oid=_ref171.oid,_ref171$cache=_ref171.cache,cache=_ref171$cache===void 0?{}:_ref171$cache;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('oid',oid);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _expandOid({fs:fsp,cache,gitdir:updatedGitdir,oid});}catch(err){err.caller='git.expandOid';throw err;}}// @ts-check
 /**
  * Expand an abbreviated ref to its full name
  *
@@ -60765,7 +60774,7 @@ for(const packedOid of packedOids){if(results.indexOf(packedOid)===-1){results.p
  * let fullRef = await git.expandRef({ fs, dir: '/tutorial', ref: 'main'})
  * console.log(fullRef)
  *
- */async function expandRef(_ref171){let fs=_ref171.fs,dir=_ref171.dir,_ref171$gitdir=_ref171.gitdir,gitdir=_ref171$gitdir===void 0?join(dir,'.git'):_ref171$gitdir,ref=_ref171.ref;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('ref',ref);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await GitRefManager.expand({fs:fsp,gitdir:updatedGitdir,ref});}catch(err){err.caller='git.expandRef';throw err;}}// @ts-check
+ */async function expandRef(_ref172){let fs=_ref172.fs,dir=_ref172.dir,_ref172$gitdir=_ref172.gitdir,gitdir=_ref172$gitdir===void 0?join(dir,'.git'):_ref172$gitdir,ref=_ref172.ref;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('ref',ref);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await GitRefManager.expand({fs:fsp,gitdir:updatedGitdir,ref});}catch(err){err.caller='git.expandRef';throw err;}}// @ts-check
 /**
  * @param {object} args
  * @param {import('../models/FileSystem.js').FileSystem} args.fs
@@ -60773,7 +60782,7 @@ for(const packedOid of packedOids){if(results.indexOf(packedOid)===-1){results.p
  * @param {string} args.gitdir
  * @param {string[]} args.oids
  *
- */async function _findMergeBase(_ref172){let fs=_ref172.fs,cache=_ref172.cache,gitdir=_ref172.gitdir,oids=_ref172.oids;// Note: right now, the tests are geared so that the output should match that of
+ */async function _findMergeBase(_ref173){let fs=_ref173.fs,cache=_ref173.cache,gitdir=_ref173.gitdir,oids=_ref173.oids;// Note: right now, the tests are geared so that the output should match that of
 // `git merge-base --all --octopus`
 // because without the --octopus flag, git's output seems to depend on the ORDER of the oids,
 // and computing virtual merge bases is just too much for me to fathom right now.
@@ -60782,8 +60791,8 @@ for(const packedOid of packedOids){if(results.indexOf(packedOid)===-1){results.p
 // has passed through. So we just need to keep track of which walkers have visited each commit
 // until we find a commit that N distinct walkers has visited.
 const visits={};const passes=oids.length;let heads=oids.map((oid,index)=>({index,oid}));while(heads.length){// Count how many times we've passed each commit
-const result=new Set();for(const _ref173 of heads){const oid=_ref173.oid;const index=_ref173.index;if(!visits[oid])visits[oid]=new Set();visits[oid].add(index);if(visits[oid].size===passes){result.add(oid);}}if(result.size>0){return[...result];}// We haven't found a common ancestor yet
-const newheads=new Map();for(const _ref174 of heads){const oid=_ref174.oid;const index=_ref174.index;try{const _await$_readObject1=await _readObject({fs,cache,gitdir,oid}),object=_await$_readObject1.object;const commit=GitCommit.from(object);const _commit$parseHeaders=commit.parseHeaders(),parent=_commit$parseHeaders.parent;for(const oid of parent){if(!visits[oid]||!visits[oid].has(index)){newheads.set(oid+':'+index,{oid,index});}}}catch(err){// do nothing
+const result=new Set();for(const _ref174 of heads){const oid=_ref174.oid;const index=_ref174.index;if(!visits[oid])visits[oid]=new Set();visits[oid].add(index);if(visits[oid].size===passes){result.add(oid);}}if(result.size>0){return[...result];}// We haven't found a common ancestor yet
+const newheads=new Map();for(const _ref175 of heads){const oid=_ref175.oid;const index=_ref175.index;try{const _await$_readObject1=await _readObject({fs,cache,gitdir,oid}),object=_await$_readObject1.object;const commit=GitCommit.from(object);const _commit$parseHeaders=commit.parseHeaders(),parent=_commit$parseHeaders.parent;for(const oid of parent){if(!visits[oid]||!visits[oid].has(index)){newheads.set(oid+':'+index,{oid,index});}}}catch(err){// do nothing
 }}heads=Array.from(newheads.values());}return[];}// @ts-check
 // import diff3 from 'node-diff3'
 /**
@@ -60825,7 +60834,7 @@ const newheads=new Map();for(const _ref174 of heads){const oid=_ref174.oid;const
  *
  * @returns {Promise<MergeResult>} Resolves to a description of the merge operation
  *
- */async function _merge(_ref175){let fs=_ref175.fs,cache=_ref175.cache,dir=_ref175.dir,gitdir=_ref175.gitdir,ours=_ref175.ours,theirs=_ref175.theirs,_ref175$fastForward=_ref175.fastForward,fastForward=_ref175$fastForward===void 0?true:_ref175$fastForward,_ref175$fastForwardOn=_ref175.fastForwardOnly,fastForwardOnly=_ref175$fastForwardOn===void 0?false:_ref175$fastForwardOn,_ref175$dryRun=_ref175.dryRun,dryRun=_ref175$dryRun===void 0?false:_ref175$dryRun,_ref175$noUpdateBranc=_ref175.noUpdateBranch,noUpdateBranch=_ref175$noUpdateBranc===void 0?false:_ref175$noUpdateBranc,_ref175$abortOnConfli=_ref175.abortOnConflict,abortOnConflict=_ref175$abortOnConfli===void 0?true:_ref175$abortOnConfli,message=_ref175.message,author=_ref175.author,committer=_ref175.committer,signingKey=_ref175.signingKey,onSign=_ref175.onSign,mergeDriver=_ref175.mergeDriver,_ref175$allowUnrelate=_ref175.allowUnrelatedHistories,allowUnrelatedHistories=_ref175$allowUnrelate===void 0?false:_ref175$allowUnrelate;if(ours===undefined){ours=await _currentBranch({fs,gitdir,fullname:true});}ours=await GitRefManager.expand({fs,gitdir,ref:ours});theirs=await GitRefManager.expand({fs,gitdir,ref:theirs});const ourOid=await GitRefManager.resolve({fs,gitdir,ref:ours});const theirOid=await GitRefManager.resolve({fs,gitdir,ref:theirs});// find most recent common ancestor of ref a and ref b
+ */async function _merge(_ref176){let fs=_ref176.fs,cache=_ref176.cache,dir=_ref176.dir,gitdir=_ref176.gitdir,ours=_ref176.ours,theirs=_ref176.theirs,_ref176$fastForward=_ref176.fastForward,fastForward=_ref176$fastForward===void 0?true:_ref176$fastForward,_ref176$fastForwardOn=_ref176.fastForwardOnly,fastForwardOnly=_ref176$fastForwardOn===void 0?false:_ref176$fastForwardOn,_ref176$dryRun=_ref176.dryRun,dryRun=_ref176$dryRun===void 0?false:_ref176$dryRun,_ref176$noUpdateBranc=_ref176.noUpdateBranch,noUpdateBranch=_ref176$noUpdateBranc===void 0?false:_ref176$noUpdateBranc,_ref176$abortOnConfli=_ref176.abortOnConflict,abortOnConflict=_ref176$abortOnConfli===void 0?true:_ref176$abortOnConfli,message=_ref176.message,author=_ref176.author,committer=_ref176.committer,signingKey=_ref176.signingKey,onSign=_ref176.onSign,mergeDriver=_ref176.mergeDriver,_ref176$allowUnrelate=_ref176.allowUnrelatedHistories,allowUnrelatedHistories=_ref176$allowUnrelate===void 0?false:_ref176$allowUnrelate;if(ours===undefined){ours=await _currentBranch({fs,gitdir,fullname:true});}ours=await GitRefManager.expand({fs,gitdir,ref:ours});theirs=await GitRefManager.expand({fs,gitdir,ref:theirs});const ourOid=await GitRefManager.resolve({fs,gitdir,ref:ours});const theirOid=await GitRefManager.resolve({fs,gitdir,ref:theirs});// find most recent common ancestor of ref a and ref b
 const baseOids=await _findMergeBase({fs,cache,gitdir,oids:[ourOid,theirOid]});if(baseOids.length!==1){if(baseOids.length===0&&allowUnrelatedHistories){// 4b825…  == the empty tree used by git
 baseOids.push('4b825dc642cb6eb9a060e54bf8d69288fbee4904');}else{// TODO: Recursive Merge strategy
 throw new MergeNotSupportedError();}}const baseOid=baseOids[0];// handle fast-forward case
@@ -60871,7 +60880,7 @@ if(tree instanceof MergeConflictError)throw tree;if(!message){message="Merge bra
  *
  * @returns {Promise<void>} Resolves successfully when pull operation completes
  *
- */async function _pull(_ref176){let fs=_ref176.fs,cache=_ref176.cache,http=_ref176.http,onProgress=_ref176.onProgress,onMessage=_ref176.onMessage,onAuth=_ref176.onAuth,onAuthSuccess=_ref176.onAuthSuccess,onAuthFailure=_ref176.onAuthFailure,dir=_ref176.dir,gitdir=_ref176.gitdir,ref=_ref176.ref,url=_ref176.url,remote=_ref176.remote,remoteRef=_ref176.remoteRef,prune=_ref176.prune,pruneTags=_ref176.pruneTags,fastForward=_ref176.fastForward,fastForwardOnly=_ref176.fastForwardOnly,corsProxy=_ref176.corsProxy,singleBranch=_ref176.singleBranch,headers=_ref176.headers,author=_ref176.author,committer=_ref176.committer,signingKey=_ref176.signingKey;try{// If ref is undefined, use 'HEAD'
+ */async function _pull(_ref177){let fs=_ref177.fs,cache=_ref177.cache,http=_ref177.http,onProgress=_ref177.onProgress,onMessage=_ref177.onMessage,onAuth=_ref177.onAuth,onAuthSuccess=_ref177.onAuthSuccess,onAuthFailure=_ref177.onAuthFailure,dir=_ref177.dir,gitdir=_ref177.gitdir,ref=_ref177.ref,url=_ref177.url,remote=_ref177.remote,remoteRef=_ref177.remoteRef,prune=_ref177.prune,pruneTags=_ref177.pruneTags,fastForward=_ref177.fastForward,fastForwardOnly=_ref177.fastForwardOnly,corsProxy=_ref177.corsProxy,singleBranch=_ref177.singleBranch,headers=_ref177.headers,author=_ref177.author,committer=_ref177.committer,signingKey=_ref177.signingKey;try{// If ref is undefined, use 'HEAD'
 if(!ref){const head=await _currentBranch({fs,gitdir});// TODO: use a better error.
 if(!head){throw new MissingParameterError('ref');}ref=head;}const _await$_fetch2=await _fetch({fs,cache,http,onProgress,onMessage,onAuth,onAuthSuccess,onAuthFailure,gitdir,corsProxy,ref,url,remote,remoteRef,singleBranch,headers,prune,pruneTags}),fetchHead=_await$_fetch2.fetchHead,fetchHeadDescription=_await$_fetch2.fetchHeadDescription;// Merge the remote tracking branch into the local one.
 await _merge({fs,cache,gitdir,ours:ref,theirs:fetchHead,fastForward,fastForwardOnly,message:"Merge ".concat(fetchHeadDescription),author,committer,signingKey,dryRun:false,noUpdateBranch:false});await _checkout({fs,cache,onProgress,dir,gitdir,ref,remote,noCheckout:false});}catch(err){err.caller='git.pull';throw err;}}// @ts-check
@@ -60909,7 +60918,7 @@ await _merge({fs,cache,gitdir,ours:ref,theirs:fetchHead,fastForward,fastForwardO
  * })
  * console.log('done')
  *
- */async function fastForward(_ref177){let fs=_ref177.fs,http=_ref177.http,onProgress=_ref177.onProgress,onMessage=_ref177.onMessage,onAuth=_ref177.onAuth,onAuthSuccess=_ref177.onAuthSuccess,onAuthFailure=_ref177.onAuthFailure,dir=_ref177.dir,_ref177$gitdir=_ref177.gitdir,gitdir=_ref177$gitdir===void 0?join(dir,'.git'):_ref177$gitdir,ref=_ref177.ref,url=_ref177.url,remote=_ref177.remote,remoteRef=_ref177.remoteRef,corsProxy=_ref177.corsProxy,singleBranch=_ref177.singleBranch,_ref177$headers=_ref177.headers,headers=_ref177$headers===void 0?{}:_ref177$headers,_ref177$cache=_ref177.cache,cache=_ref177$cache===void 0?{}:_ref177$cache;try{assertParameter('fs',fs);assertParameter('http',http);assertParameter('gitdir',gitdir);const thisWillNotBeUsed={name:'',email:'',timestamp:Date.now(),timezoneOffset:0};const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _pull({fs:fsp,cache,http,onProgress,onMessage,onAuth,onAuthSuccess,onAuthFailure,dir,gitdir:updatedGitdir,ref,url,remote,remoteRef,fastForwardOnly:true,corsProxy,singleBranch,headers,author:thisWillNotBeUsed,committer:thisWillNotBeUsed});}catch(err){err.caller='git.fastForward';throw err;}}// @ts-check
+ */async function fastForward(_ref178){let fs=_ref178.fs,http=_ref178.http,onProgress=_ref178.onProgress,onMessage=_ref178.onMessage,onAuth=_ref178.onAuth,onAuthSuccess=_ref178.onAuthSuccess,onAuthFailure=_ref178.onAuthFailure,dir=_ref178.dir,_ref178$gitdir=_ref178.gitdir,gitdir=_ref178$gitdir===void 0?join(dir,'.git'):_ref178$gitdir,ref=_ref178.ref,url=_ref178.url,remote=_ref178.remote,remoteRef=_ref178.remoteRef,corsProxy=_ref178.corsProxy,singleBranch=_ref178.singleBranch,_ref178$headers=_ref178.headers,headers=_ref178$headers===void 0?{}:_ref178$headers,_ref178$cache=_ref178.cache,cache=_ref178$cache===void 0?{}:_ref178$cache;try{assertParameter('fs',fs);assertParameter('http',http);assertParameter('gitdir',gitdir);const thisWillNotBeUsed={name:'',email:'',timestamp:Date.now(),timezoneOffset:0};const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _pull({fs:fsp,cache,http,onProgress,onMessage,onAuth,onAuthSuccess,onAuthFailure,dir,gitdir:updatedGitdir,ref,url,remote,remoteRef,fastForwardOnly:true,corsProxy,singleBranch,headers,author:thisWillNotBeUsed,committer:thisWillNotBeUsed});}catch(err){err.caller='git.fastForward';throw err;}}// @ts-check
 /**
  *
  * @typedef {object} FetchResult - The object returned has the following schema:
@@ -60965,7 +60974,7 @@ await _merge({fs,cache,gitdir,ours:ref,theirs:fetchHead,fastForward,fastForwardO
  * })
  * console.log(result)
  *
- */async function fetch(_ref178){let fs=_ref178.fs,http=_ref178.http,onProgress=_ref178.onProgress,onMessage=_ref178.onMessage,onAuth=_ref178.onAuth,onAuthSuccess=_ref178.onAuthSuccess,onAuthFailure=_ref178.onAuthFailure,dir=_ref178.dir,_ref178$gitdir=_ref178.gitdir,gitdir=_ref178$gitdir===void 0?join(dir,'.git'):_ref178$gitdir,ref=_ref178.ref,remote=_ref178.remote,remoteRef=_ref178.remoteRef,url=_ref178.url,corsProxy=_ref178.corsProxy,_ref178$depth=_ref178.depth,depth=_ref178$depth===void 0?null:_ref178$depth,_ref178$since=_ref178.since,since=_ref178$since===void 0?null:_ref178$since,_ref178$exclude=_ref178.exclude,exclude=_ref178$exclude===void 0?[]:_ref178$exclude,_ref178$relative=_ref178.relative,relative=_ref178$relative===void 0?false:_ref178$relative,_ref178$tags=_ref178.tags,tags=_ref178$tags===void 0?false:_ref178$tags,_ref178$singleBranch=_ref178.singleBranch,singleBranch=_ref178$singleBranch===void 0?false:_ref178$singleBranch,_ref178$headers=_ref178.headers,headers=_ref178$headers===void 0?{}:_ref178$headers,_ref178$prune=_ref178.prune,prune=_ref178$prune===void 0?false:_ref178$prune,_ref178$pruneTags=_ref178.pruneTags,pruneTags=_ref178$pruneTags===void 0?false:_ref178$pruneTags,_ref178$cache=_ref178.cache,cache=_ref178$cache===void 0?{}:_ref178$cache;try{assertParameter('fs',fs);assertParameter('http',http);assertParameter('gitdir',gitdir);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _fetch({fs:fsp,cache,http,onProgress,onMessage,onAuth,onAuthSuccess,onAuthFailure,gitdir:updatedGitdir,ref,remote,remoteRef,url,corsProxy,depth,since,exclude,relative,tags,singleBranch,headers,prune,pruneTags});}catch(err){err.caller='git.fetch';throw err;}}// @ts-check
+ */async function fetch(_ref179){let fs=_ref179.fs,http=_ref179.http,onProgress=_ref179.onProgress,onMessage=_ref179.onMessage,onAuth=_ref179.onAuth,onAuthSuccess=_ref179.onAuthSuccess,onAuthFailure=_ref179.onAuthFailure,dir=_ref179.dir,_ref179$gitdir=_ref179.gitdir,gitdir=_ref179$gitdir===void 0?join(dir,'.git'):_ref179$gitdir,ref=_ref179.ref,remote=_ref179.remote,remoteRef=_ref179.remoteRef,url=_ref179.url,corsProxy=_ref179.corsProxy,_ref179$depth=_ref179.depth,depth=_ref179$depth===void 0?null:_ref179$depth,_ref179$since=_ref179.since,since=_ref179$since===void 0?null:_ref179$since,_ref179$exclude=_ref179.exclude,exclude=_ref179$exclude===void 0?[]:_ref179$exclude,_ref179$relative=_ref179.relative,relative=_ref179$relative===void 0?false:_ref179$relative,_ref179$tags=_ref179.tags,tags=_ref179$tags===void 0?false:_ref179$tags,_ref179$singleBranch=_ref179.singleBranch,singleBranch=_ref179$singleBranch===void 0?false:_ref179$singleBranch,_ref179$headers=_ref179.headers,headers=_ref179$headers===void 0?{}:_ref179$headers,_ref179$prune=_ref179.prune,prune=_ref179$prune===void 0?false:_ref179$prune,_ref179$pruneTags=_ref179.pruneTags,pruneTags=_ref179$pruneTags===void 0?false:_ref179$pruneTags,_ref179$cache=_ref179.cache,cache=_ref179$cache===void 0?{}:_ref179$cache;try{assertParameter('fs',fs);assertParameter('http',http);assertParameter('gitdir',gitdir);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _fetch({fs:fsp,cache,http,onProgress,onMessage,onAuth,onAuthSuccess,onAuthFailure,gitdir:updatedGitdir,ref,remote,remoteRef,url,corsProxy,depth,since,exclude,relative,tags,singleBranch,headers,prune,pruneTags});}catch(err){err.caller='git.fetch';throw err;}}// @ts-check
 /**
  * Find the merge base for a set of commits
  *
@@ -60976,7 +60985,7 @@ await _merge({fs,cache,gitdir,ours:ref,theirs:fetchHead,fastForward,fastForwardO
  * @param {string[]} args.oids - Which commits
  * @param {object} [args.cache] - a [cache](cache.md) object
  *
- */async function findMergeBase(_ref179){let fs=_ref179.fs,dir=_ref179.dir,_ref179$gitdir=_ref179.gitdir,gitdir=_ref179$gitdir===void 0?join(dir,'.git'):_ref179$gitdir,oids=_ref179.oids,_ref179$cache=_ref179.cache,cache=_ref179$cache===void 0?{}:_ref179$cache;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('oids',oids);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _findMergeBase({fs:fsp,cache,gitdir:updatedGitdir,oids});}catch(err){err.caller='git.findMergeBase';throw err;}}// @ts-check
+ */async function findMergeBase(_ref180){let fs=_ref180.fs,dir=_ref180.dir,_ref180$gitdir=_ref180.gitdir,gitdir=_ref180$gitdir===void 0?join(dir,'.git'):_ref180$gitdir,oids=_ref180.oids,_ref180$cache=_ref180.cache,cache=_ref180$cache===void 0?{}:_ref180$cache;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('oids',oids);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _findMergeBase({fs:fsp,cache,gitdir:updatedGitdir,oids});}catch(err){err.caller='git.findMergeBase';throw err;}}// @ts-check
 /**
  * Find the root git directory
  *
@@ -60987,7 +60996,7 @@ await _merge({fs,cache,gitdir,ours:ref,theirs:fetchHead,fastForward,fastForwardO
  * @param {string} args.filepath
  *
  * @returns {Promise<string>} Resolves successfully with a root git directory path
- */async function _findRoot(_ref180){let fs=_ref180.fs,filepath=_ref180.filepath;if(await fs.exists(join(filepath,'.git'))){return filepath;}else{const parent=dirname(filepath);if(parent===filepath){throw new NotFoundError("git root for ".concat(filepath));}return _findRoot({fs,filepath:parent});}}// @ts-check
+ */async function _findRoot(_ref181){let fs=_ref181.fs,filepath=_ref181.filepath;if(await fs.exists(join(filepath,'.git'))){return filepath;}else{const parent=dirname(filepath);if(parent===filepath){throw new NotFoundError("git root for ".concat(filepath));}return _findRoot({fs,filepath:parent});}}// @ts-check
 /**
  * Find the root git directory
  *
@@ -61007,7 +61016,7 @@ await _merge({fs,cache,gitdir,ours:ref,theirs:fetchHead,fastForward,fastForwardO
  * })
  * console.log(gitroot)
  *
- */async function findRoot(_ref181){let fs=_ref181.fs,filepath=_ref181.filepath;try{assertParameter('fs',fs);assertParameter('filepath',filepath);return await _findRoot({fs:new FileSystem(fs),filepath});}catch(err){err.caller='git.findRoot';throw err;}}// @ts-check
+ */async function findRoot(_ref182){let fs=_ref182.fs,filepath=_ref182.filepath;try{assertParameter('fs',fs);assertParameter('filepath',filepath);return await _findRoot({fs:new FileSystem(fs),filepath});}catch(err){err.caller='git.findRoot';throw err;}}// @ts-check
 /**
  * Read an entry from the git config files.
  *
@@ -61032,7 +61041,7 @@ await _merge({fs,cache,gitdir,ours:ref,theirs:fetchHead,fastForward,fastForwardO
  * })
  * console.log(value)
  *
- */async function getConfig(_ref182){let fs=_ref182.fs,dir=_ref182.dir,_ref182$gitdir=_ref182.gitdir,gitdir=_ref182$gitdir===void 0?join(dir,'.git'):_ref182$gitdir,path=_ref182.path;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('path',path);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _getConfig({fs:fsp,gitdir:updatedGitdir,path});}catch(err){err.caller='git.getConfig';throw err;}}// @ts-check
+ */async function getConfig(_ref183){let fs=_ref183.fs,dir=_ref183.dir,_ref183$gitdir=_ref183.gitdir,gitdir=_ref183$gitdir===void 0?join(dir,'.git'):_ref183$gitdir,path=_ref183.path;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('path',path);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _getConfig({fs:fsp,gitdir:updatedGitdir,path});}catch(err){err.caller='git.getConfig';throw err;}}// @ts-check
 /**
  * @param {Object} args
  * @param {import('../models/FileSystem.js').FileSystem} args.fs
@@ -61041,7 +61050,7 @@ await _merge({fs,cache,gitdir,ours:ref,theirs:fetchHead,fastForward,fastForwardO
  *
  * @returns {Promise<Array<any>>} Resolves with an array of the config value
  *
- */async function _getConfigAll(_ref183){let fs=_ref183.fs,gitdir=_ref183.gitdir,path=_ref183.path;const config=await GitConfigManager.get({fs,gitdir});return config.getall(path);}// @ts-check
+ */async function _getConfigAll(_ref184){let fs=_ref184.fs,gitdir=_ref184.gitdir,path=_ref184.path;const config=await GitConfigManager.get({fs,gitdir});return config.getall(path);}// @ts-check
 /**
  * Read a multi-valued entry from the git config files.
  *
@@ -61057,7 +61066,7 @@ await _merge({fs,cache,gitdir,ours:ref,theirs:fetchHead,fastForward,fastForwardO
  *
  * @returns {Promise<Array<any>>} Resolves with the config value
  *
- */async function getConfigAll(_ref184){let fs=_ref184.fs,dir=_ref184.dir,_ref184$gitdir=_ref184.gitdir,gitdir=_ref184$gitdir===void 0?join(dir,'.git'):_ref184$gitdir,path=_ref184.path;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('path',path);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _getConfigAll({fs:fsp,gitdir:updatedGitdir,path});}catch(err){err.caller='git.getConfigAll';throw err;}}// @ts-check
+ */async function getConfigAll(_ref185){let fs=_ref185.fs,dir=_ref185.dir,_ref185$gitdir=_ref185.gitdir,gitdir=_ref185$gitdir===void 0?join(dir,'.git'):_ref185$gitdir,path=_ref185.path;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('path',path);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _getConfigAll({fs:fsp,gitdir:updatedGitdir,path});}catch(err){err.caller='git.getConfigAll';throw err;}}// @ts-check
 /**
  *
  * @typedef {Object} GetRemoteInfoResult - The object returned has the following schema:
@@ -61095,20 +61104,20 @@ await _merge({fs,cache,gitdir,ours:ref,theirs:fetchHead,fastForward,fastForwardO
  * });
  * console.log(info);
  *
- */async function getRemoteInfo(_ref185){let http=_ref185.http,onAuth=_ref185.onAuth,onAuthSuccess=_ref185.onAuthSuccess,onAuthFailure=_ref185.onAuthFailure,corsProxy=_ref185.corsProxy,url=_ref185.url,_ref185$headers=_ref185.headers,headers=_ref185$headers===void 0?{}:_ref185$headers,_ref185$forPush=_ref185.forPush,forPush=_ref185$forPush===void 0?false:_ref185$forPush;try{assertParameter('http',http);assertParameter('url',url);const GitRemoteHTTP=GitRemoteManager.getRemoteHelperFor({url});const remote=await GitRemoteHTTP.discover({http,onAuth,onAuthSuccess,onAuthFailure,corsProxy,service:forPush?'git-receive-pack':'git-upload-pack',url,headers,protocolVersion:1});// Note: remote.capabilities, remote.refs, and remote.symrefs are Set and Map objects,
+ */async function getRemoteInfo(_ref186){let http=_ref186.http,onAuth=_ref186.onAuth,onAuthSuccess=_ref186.onAuthSuccess,onAuthFailure=_ref186.onAuthFailure,corsProxy=_ref186.corsProxy,url=_ref186.url,_ref186$headers=_ref186.headers,headers=_ref186$headers===void 0?{}:_ref186$headers,_ref186$forPush=_ref186.forPush,forPush=_ref186$forPush===void 0?false:_ref186$forPush;try{assertParameter('http',http);assertParameter('url',url);const GitRemoteHTTP=GitRemoteManager.getRemoteHelperFor({url});const remote=await GitRemoteHTTP.discover({http,onAuth,onAuthSuccess,onAuthFailure,corsProxy,service:forPush?'git-receive-pack':'git-upload-pack',url,headers,protocolVersion:1});// Note: remote.capabilities, remote.refs, and remote.symrefs are Set and Map objects,
 // but one of the objectives of the public API is to always return JSON-compatible objects
 // so we must JSONify them.
 const result={capabilities:[...remote.capabilities]};// Convert the flat list into an object tree, because I figure 99% of the time
 // that will be easier to use.
-for(const _ref186 of remote.refs){var _ref187=_slicedToArray(_ref186,2);const ref=_ref187[0];const oid=_ref187[1];const parts=ref.split('/');const last=parts.pop();let o=result;for(const part of parts){o[part]=o[part]||{};o=o[part];}o[last]=oid;}// Merge symrefs on top of refs to more closely match actual git repo layouts
-for(const _ref188 of remote.symrefs){var _ref189=_slicedToArray(_ref188,2);const symref=_ref189[0];const ref=_ref189[1];const parts=symref.split('/');const last=parts.pop();let o=result;for(const part of parts){o[part]=o[part]||{};o=o[part];}o[last]=ref;}return result;}catch(err){err.caller='git.getRemoteInfo';throw err;}}// @ts-check
+for(const _ref187 of remote.refs){var _ref188=_slicedToArray(_ref187,2);const ref=_ref188[0];const oid=_ref188[1];const parts=ref.split('/');const last=parts.pop();let o=result;for(const part of parts){o[part]=o[part]||{};o=o[part];}o[last]=oid;}// Merge symrefs on top of refs to more closely match actual git repo layouts
+for(const _ref189 of remote.symrefs){var _ref190=_slicedToArray(_ref189,2);const symref=_ref190[0];const ref=_ref190[1];const parts=symref.split('/');const last=parts.pop();let o=result;for(const part of parts){o[part]=o[part]||{};o=o[part];}o[last]=ref;}return result;}catch(err){err.caller='git.getRemoteInfo';throw err;}}// @ts-check
 /**
  * @param {any} remote
  * @param {string} prefix
  * @param {boolean} symrefs
  * @param {boolean} peelTags
  * @returns {ServerRef[]}
- */function formatInfoRefs(remote,prefix,symrefs,peelTags){const refs=[];for(const _ref190 of remote.refs){var _ref191=_slicedToArray(_ref190,2);const key=_ref191[0];const value=_ref191[1];if(prefix&&!key.startsWith(prefix))continue;if(key.endsWith('^{}')){if(peelTags){const _key=key.replace('^{}','');// Peeled tags are almost always listed immediately after the original tag
+ */function formatInfoRefs(remote,prefix,symrefs,peelTags){const refs=[];for(const _ref191 of remote.refs){var _ref192=_slicedToArray(_ref191,2);const key=_ref192[0];const value=_ref192[1];if(prefix&&!key.startsWith(prefix))continue;if(key.endsWith('^{}')){if(peelTags){const _key=key.replace('^{}','');// Peeled tags are almost always listed immediately after the original tag
 const last=refs[refs.length-1];const r=last.ref===_key?last:refs.find(x=>x.ref===_key);if(r===undefined){throw new Error('I did not expect this to happen');}r.peeled=value;}continue;}/** @type ServerRef */const ref={ref:key,oid:value};if(symrefs){if(remote.symrefs.has(key)){ref.target=remote.symrefs.get(key);}}refs.push(ref);}return refs;}// @ts-check
 /**
  * @typedef {Object} GetRemoteInfo2Result - This object has the following schema:
@@ -61153,10 +61162,10 @@ const last=refs[refs.length-1];const r=last.ref===_key?last:refs.find(x=>x.ref==
  * });
  * console.log(info);
  *
- */async function getRemoteInfo2(_ref192){let http=_ref192.http,onAuth=_ref192.onAuth,onAuthSuccess=_ref192.onAuthSuccess,onAuthFailure=_ref192.onAuthFailure,corsProxy=_ref192.corsProxy,url=_ref192.url,_ref192$headers=_ref192.headers,headers=_ref192$headers===void 0?{}:_ref192$headers,_ref192$forPush=_ref192.forPush,forPush=_ref192$forPush===void 0?false:_ref192$forPush,_ref192$protocolVersi=_ref192.protocolVersion,protocolVersion=_ref192$protocolVersi===void 0?2:_ref192$protocolVersi;try{assertParameter('http',http);assertParameter('url',url);const GitRemoteHTTP=GitRemoteManager.getRemoteHelperFor({url});const remote=await GitRemoteHTTP.discover({http,onAuth,onAuthSuccess,onAuthFailure,corsProxy,service:forPush?'git-receive-pack':'git-upload-pack',url,headers,protocolVersion});if(remote.protocolVersion===2){/** @type GetRemoteInfo2Result */return{protocolVersion:remote.protocolVersion,capabilities:remote.capabilities2};}// Note: remote.capabilities, remote.refs, and remote.symrefs are Set and Map objects,
+ */async function getRemoteInfo2(_ref193){let http=_ref193.http,onAuth=_ref193.onAuth,onAuthSuccess=_ref193.onAuthSuccess,onAuthFailure=_ref193.onAuthFailure,corsProxy=_ref193.corsProxy,url=_ref193.url,_ref193$headers=_ref193.headers,headers=_ref193$headers===void 0?{}:_ref193$headers,_ref193$forPush=_ref193.forPush,forPush=_ref193$forPush===void 0?false:_ref193$forPush,_ref193$protocolVersi=_ref193.protocolVersion,protocolVersion=_ref193$protocolVersi===void 0?2:_ref193$protocolVersi;try{assertParameter('http',http);assertParameter('url',url);const GitRemoteHTTP=GitRemoteManager.getRemoteHelperFor({url});const remote=await GitRemoteHTTP.discover({http,onAuth,onAuthSuccess,onAuthFailure,corsProxy,service:forPush?'git-receive-pack':'git-upload-pack',url,headers,protocolVersion});if(remote.protocolVersion===2){/** @type GetRemoteInfo2Result */return{protocolVersion:remote.protocolVersion,capabilities:remote.capabilities2};}// Note: remote.capabilities, remote.refs, and remote.symrefs are Set and Map objects,
 // but one of the objectives of the public API is to always return JSON-compatible objects
 // so we must JSONify them.
-/** @type Object<string, true> */const capabilities={};for(const cap of remote.capabilities){const _cap$split=cap.split('='),_cap$split2=_slicedToArray(_cap$split,2),key=_cap$split2[0],value=_cap$split2[1];if(value){capabilities[key]=value;}else{capabilities[key]=true;}}/** @type GetRemoteInfo2Result */return{protocolVersion:1,capabilities,refs:formatInfoRefs(remote,undefined,true,true)};}catch(err){err.caller='git.getRemoteInfo2';throw err;}}async function hashObject(_ref193){let type=_ref193.type,object=_ref193.object,_ref193$format=_ref193.format,format=_ref193$format===void 0?'content':_ref193$format,_ref193$oid=_ref193.oid,oid=_ref193$oid===void 0?undefined:_ref193$oid;if(format!=='deflated'){if(format!=='wrapped'){object=GitObject.wrap({type,object});}oid=await shasum(object);}return{oid,object};}// @ts-check
+/** @type Object<string, true> */const capabilities={};for(const cap of remote.capabilities){const _cap$split=cap.split('='),_cap$split2=_slicedToArray(_cap$split,2),key=_cap$split2[0],value=_cap$split2[1];if(value){capabilities[key]=value;}else{capabilities[key]=true;}}/** @type GetRemoteInfo2Result */return{protocolVersion:1,capabilities,refs:formatInfoRefs(remote,undefined,true,true)};}catch(err){err.caller='git.getRemoteInfo2';throw err;}}async function hashObject(_ref194){let type=_ref194.type,object=_ref194.object,_ref194$format=_ref194.format,format=_ref194$format===void 0?'content':_ref194$format,_ref194$oid=_ref194.oid,oid=_ref194$oid===void 0?undefined:_ref194$oid;if(format!=='deflated'){if(format!=='wrapped'){object=GitObject.wrap({type,object});}oid=await shasum(object);}return{oid,object};}// @ts-check
 /**
  *
  * @typedef {object} HashBlobResult - The object returned has the following schema:
@@ -61184,7 +61193,7 @@ const last=refs[refs.length-1];const r=last.ref===_key?last:refs.find(x=>x.ref==
  * console.log('object', object)
  * console.log('format', format)
  *
- */async function hashBlob(_ref194){let object=_ref194.object;try{assertParameter('object',object);// Convert object to buffer
+ */async function hashBlob(_ref195){let object=_ref195.object;try{assertParameter('object',object);// Convert object to buffer
 if(typeof object==='string'){object=Buffer.from(object,'utf8');}else if(!(object instanceof Uint8Array)){object=new Uint8Array(object);}const type='blob';const _await$hashObject=await hashObject({type,format:'content',object}),oid=_await$hashObject.oid,_object=_await$hashObject.object;return{oid,type,object:_object,format:'wrapped'};}catch(err){err.caller='git.hashBlob';throw err;}}// @ts-check
 /**
  * @param {object} args
@@ -61196,7 +61205,7 @@ if(typeof object==='string'){object=Buffer.from(object,'utf8');}else if(!(object
  * @param {string} args.filepath
  *
  * @returns {Promise<{oids: string[]}>}
- */async function _indexPack(_ref195){let fs=_ref195.fs,cache=_ref195.cache,onProgress=_ref195.onProgress,dir=_ref195.dir,gitdir=_ref195.gitdir,filepath=_ref195.filepath;try{filepath=join(dir,filepath);const pack=await fs.read(filepath);const getExternalRefDelta=oid=>_readObject({fs,cache,gitdir,oid});const idx=await GitPackIndex.fromPack({pack,getExternalRefDelta,onProgress});await fs.write(filepath.replace(/\.pack$/,'.idx'),await idx.toBuffer());return{oids:[...idx.hashes]};}catch(err){err.caller='git.indexPack';throw err;}}// @ts-check
+ */async function _indexPack(_ref196){let fs=_ref196.fs,cache=_ref196.cache,onProgress=_ref196.onProgress,dir=_ref196.dir,gitdir=_ref196.gitdir,filepath=_ref196.filepath;try{filepath=join(dir,filepath);const pack=await fs.read(filepath);const getExternalRefDelta=oid=>_readObject({fs,cache,gitdir,oid});const idx=await GitPackIndex.fromPack({pack,getExternalRefDelta,onProgress});await fs.write(filepath.replace(/\.pack$/,'.idx'),await idx.toBuffer());return{oids:[...idx.hashes]};}catch(err){err.caller='git.indexPack';throw err;}}// @ts-check
 /**
  * Create the .idx file for a given .pack file
  *
@@ -61225,7 +61234,7 @@ if(typeof object==='string'){object=Buffer.from(object,'utf8');}else if(!(object
  * })
  * console.log(oids)
  *
- */async function indexPack(_ref196){let fs=_ref196.fs,onProgress=_ref196.onProgress,dir=_ref196.dir,_ref196$gitdir=_ref196.gitdir,gitdir=_ref196$gitdir===void 0?join(dir,'.git'):_ref196$gitdir,filepath=_ref196.filepath,_ref196$cache=_ref196.cache,cache=_ref196$cache===void 0?{}:_ref196$cache;try{assertParameter('fs',fs);assertParameter('dir',dir);assertParameter('gitdir',dir);assertParameter('filepath',filepath);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _indexPack({fs:fsp,cache,onProgress,dir,gitdir:updatedGitdir,filepath});}catch(err){err.caller='git.indexPack';throw err;}}// @ts-check
+ */async function indexPack(_ref197){let fs=_ref197.fs,onProgress=_ref197.onProgress,dir=_ref197.dir,_ref197$gitdir=_ref197.gitdir,gitdir=_ref197$gitdir===void 0?join(dir,'.git'):_ref197$gitdir,filepath=_ref197.filepath,_ref197$cache=_ref197.cache,cache=_ref197$cache===void 0?{}:_ref197$cache;try{assertParameter('fs',fs);assertParameter('dir',dir);assertParameter('gitdir',dir);assertParameter('filepath',filepath);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _indexPack({fs:fsp,cache,onProgress,dir,gitdir:updatedGitdir,filepath});}catch(err){err.caller='git.indexPack';throw err;}}// @ts-check
 /**
  * Initialize a new repository
  *
@@ -61241,7 +61250,7 @@ if(typeof object==='string'){object=Buffer.from(object,'utf8');}else if(!(object
  * await git.init({ fs, dir: '/tutorial' })
  * console.log('done')
  *
- */async function init(_ref197){let fs=_ref197.fs,_ref197$bare=_ref197.bare,bare=_ref197$bare===void 0?false:_ref197$bare,dir=_ref197.dir,_ref197$gitdir=_ref197.gitdir,gitdir=_ref197$gitdir===void 0?bare?dir:join(dir,'.git'):_ref197$gitdir,_ref197$defaultBranch=_ref197.defaultBranch,defaultBranch=_ref197$defaultBranch===void 0?'master':_ref197$defaultBranch;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);if(!bare){assertParameter('dir',dir);}const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _init({fs:fsp,bare,dir,gitdir:updatedGitdir,defaultBranch});}catch(err){err.caller='git.init';throw err;}}// @ts-check
+ */async function init(_ref198){let fs=_ref198.fs,_ref198$bare=_ref198.bare,bare=_ref198$bare===void 0?false:_ref198$bare,dir=_ref198.dir,_ref198$gitdir=_ref198.gitdir,gitdir=_ref198$gitdir===void 0?bare?dir:join(dir,'.git'):_ref198$gitdir,_ref198$defaultBranch=_ref198.defaultBranch,defaultBranch=_ref198$defaultBranch===void 0?'master':_ref198$defaultBranch;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);if(!bare){assertParameter('dir',dir);}const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _init({fs:fsp,bare,dir,gitdir:updatedGitdir,defaultBranch});}catch(err){err.caller='git.init';throw err;}}// @ts-check
 /**
  * @param {object} args
  * @param {import('../models/FileSystem.js').FileSystem} args.fs
@@ -61252,7 +61261,7 @@ if(typeof object==='string'){object=Buffer.from(object,'utf8');}else if(!(object
  * @param {number} args.depth - Maximum depth to search before giving up. -1 means no maximum depth.
  *
  * @returns {Promise<boolean>}
- */async function _isDescendent(_ref198){let fs=_ref198.fs,cache=_ref198.cache,gitdir=_ref198.gitdir,oid=_ref198.oid,ancestor=_ref198.ancestor,depth=_ref198.depth;const shallows=await GitShallowManager.read({fs,gitdir});if(!oid){throw new MissingParameterError('oid');}if(!ancestor){throw new MissingParameterError('ancestor');}// If you don't like this behavior, add your own check.
+ */async function _isDescendent(_ref199){let fs=_ref199.fs,cache=_ref199.cache,gitdir=_ref199.gitdir,oid=_ref199.oid,ancestor=_ref199.ancestor,depth=_ref199.depth;const shallows=await GitShallowManager.read({fs,gitdir});if(!oid){throw new MissingParameterError('oid');}if(!ancestor){throw new MissingParameterError('ancestor');}// If you don't like this behavior, add your own check.
 // Edge cases are hard to define a perfect solution.
 if(oid===ancestor)return false;// We do not use recursion here, because that would lead to depth-first traversal,
 // and we want to maintain a breadth-first traversal to avoid hitting shallow clone depth cutoffs.
@@ -61283,7 +61292,7 @@ if(!shallows.has(oid)){for(const parent of commit.parent){if(!visited.has(parent
  * console.log(oid, ancestor)
  * await git.isDescendent({ fs, dir: '/tutorial', oid, ancestor, depth: -1 })
  *
- */async function isDescendent(_ref199){let fs=_ref199.fs,dir=_ref199.dir,_ref199$gitdir=_ref199.gitdir,gitdir=_ref199$gitdir===void 0?join(dir,'.git'):_ref199$gitdir,oid=_ref199.oid,ancestor=_ref199.ancestor,_ref199$depth=_ref199.depth,depth=_ref199$depth===void 0?-1:_ref199$depth,_ref199$cache=_ref199.cache,cache=_ref199$cache===void 0?{}:_ref199$cache;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('oid',oid);assertParameter('ancestor',ancestor);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _isDescendent({fs:fsp,cache,gitdir:updatedGitdir,oid,ancestor,depth});}catch(err){err.caller='git.isDescendent';throw err;}}// @ts-check
+ */async function isDescendent(_ref200){let fs=_ref200.fs,dir=_ref200.dir,_ref200$gitdir=_ref200.gitdir,gitdir=_ref200$gitdir===void 0?join(dir,'.git'):_ref200$gitdir,oid=_ref200.oid,ancestor=_ref200.ancestor,_ref200$depth=_ref200.depth,depth=_ref200$depth===void 0?-1:_ref200$depth,_ref200$cache=_ref200.cache,cache=_ref200$cache===void 0?{}:_ref200$cache;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('oid',oid);assertParameter('ancestor',ancestor);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _isDescendent({fs:fsp,cache,gitdir:updatedGitdir,oid,ancestor,depth});}catch(err){err.caller='git.isDescendent';throw err;}}// @ts-check
 /**
  * Test whether a filepath should be ignored (because of .gitignore or .git/exclude)
  *
@@ -61298,7 +61307,7 @@ if(!shallows.has(oid)){for(const parent of commit.parent){if(!visited.has(parent
  * @example
  * await git.isIgnored({ fs, dir: '/tutorial', filepath: 'docs/add.md' })
  *
- */async function isIgnored(_ref200){let fs=_ref200.fs,dir=_ref200.dir,_ref200$gitdir=_ref200.gitdir,gitdir=_ref200$gitdir===void 0?join(dir,'.git'):_ref200$gitdir,filepath=_ref200.filepath;try{assertParameter('fs',fs);assertParameter('dir',dir);assertParameter('gitdir',gitdir);assertParameter('filepath',filepath);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return GitIgnoreManager.isIgnored({fs:fsp,dir,gitdir:updatedGitdir,filepath});}catch(err){err.caller='git.isIgnored';throw err;}}// @ts-check
+ */async function isIgnored(_ref201){let fs=_ref201.fs,dir=_ref201.dir,_ref201$gitdir=_ref201.gitdir,gitdir=_ref201$gitdir===void 0?join(dir,'.git'):_ref201$gitdir,filepath=_ref201.filepath;try{assertParameter('fs',fs);assertParameter('dir',dir);assertParameter('gitdir',gitdir);assertParameter('filepath',filepath);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return GitIgnoreManager.isIgnored({fs:fsp,dir,gitdir:updatedGitdir,filepath});}catch(err){err.caller='git.isIgnored';throw err;}}// @ts-check
 /**
  * List branches
  *
@@ -61325,7 +61334,7 @@ if(!shallows.has(oid)){for(const parent of commit.parent){if(!visited.has(parent
  * let remoteBranches = await git.listBranches({ fs, dir: '/tutorial', remote: 'origin' })
  * console.log(remoteBranches)
  *
- */async function listBranches(_ref201){let fs=_ref201.fs,dir=_ref201.dir,_ref201$gitdir=_ref201.gitdir,gitdir=_ref201$gitdir===void 0?join(dir,'.git'):_ref201$gitdir,remote=_ref201.remote;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return GitRefManager.listBranches({fs:fsp,gitdir:updatedGitdir,remote});}catch(err){err.caller='git.listBranches';throw err;}}// @ts-check
+ */async function listBranches(_ref202){let fs=_ref202.fs,dir=_ref202.dir,_ref202$gitdir=_ref202.gitdir,gitdir=_ref202$gitdir===void 0?join(dir,'.git'):_ref202$gitdir,remote=_ref202.remote;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return GitRefManager.listBranches({fs:fsp,gitdir:updatedGitdir,remote});}catch(err){err.caller='git.listBranches';throw err;}}// @ts-check
 /**
  * @param {object} args
  * @param {import('../models/FileSystem.js').FileSystem} args.fs
@@ -61334,7 +61343,7 @@ if(!shallows.has(oid)){for(const parent of commit.parent){if(!visited.has(parent
  * @param {string} [args.ref]
  *
  * @returns {Promise<Array<string>>}
- */async function _listFiles(_ref202){let fs=_ref202.fs,gitdir=_ref202.gitdir,ref=_ref202.ref,cache=_ref202.cache;if(ref){const oid=await GitRefManager.resolve({gitdir,fs,ref});const filenames=[];await accumulateFilesFromOid({fs,cache,gitdir,oid,filenames,prefix:''});return filenames;}else{return GitIndexManager.acquire({fs,gitdir,cache},async function(index){return index.entries.map(x=>x.path);});}}async function accumulateFilesFromOid(_ref203){let fs=_ref203.fs,cache=_ref203.cache,gitdir=_ref203.gitdir,oid=_ref203.oid,filenames=_ref203.filenames,prefix=_ref203.prefix;const _await$_readTree=await _readTree({fs,cache,gitdir,oid}),tree=_await$_readTree.tree;// TODO: Use `walk` to do this. Should be faster.
+ */async function _listFiles(_ref203){let fs=_ref203.fs,gitdir=_ref203.gitdir,ref=_ref203.ref,cache=_ref203.cache;if(ref){const oid=await GitRefManager.resolve({gitdir,fs,ref});const filenames=[];await accumulateFilesFromOid({fs,cache,gitdir,oid,filenames,prefix:''});return filenames;}else{return GitIndexManager.acquire({fs,gitdir,cache},async function(index){return index.entries.map(x=>x.path);});}}async function accumulateFilesFromOid(_ref204){let fs=_ref204.fs,cache=_ref204.cache,gitdir=_ref204.gitdir,oid=_ref204.oid,filenames=_ref204.filenames,prefix=_ref204.prefix;const _await$_readTree=await _readTree({fs,cache,gitdir,oid}),tree=_await$_readTree.tree;// TODO: Use `walk` to do this. Should be faster.
 for(const entry of tree){if(entry.type==='tree'){await accumulateFilesFromOid({fs,cache,gitdir,oid:entry.oid,filenames,prefix:join(prefix,entry.path)});}else{filenames.push(join(prefix,entry.path));}}}// @ts-check
 /**
  * List all the files in the git index or a commit
@@ -61359,7 +61368,7 @@ for(const entry of tree){if(entry.type==='tree'){await accumulateFilesFromOid({f
  * files = await git.listFiles({ fs, dir: '/tutorial' })
  * console.log(files)
  *
- */async function listFiles(_ref204){let fs=_ref204.fs,dir=_ref204.dir,_ref204$gitdir=_ref204.gitdir,gitdir=_ref204$gitdir===void 0?join(dir,'.git'):_ref204$gitdir,ref=_ref204.ref,_ref204$cache=_ref204.cache,cache=_ref204$cache===void 0?{}:_ref204$cache;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _listFiles({fs:fsp,cache,gitdir:updatedGitdir,ref});}catch(err){err.caller='git.listFiles';throw err;}}// @ts-check
+ */async function listFiles(_ref205){let fs=_ref205.fs,dir=_ref205.dir,_ref205$gitdir=_ref205.gitdir,gitdir=_ref205$gitdir===void 0?join(dir,'.git'):_ref205$gitdir,ref=_ref205.ref,_ref205$cache=_ref205.cache,cache=_ref205$cache===void 0?{}:_ref205$cache;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _listFiles({fs:fsp,cache,gitdir:updatedGitdir,ref});}catch(err){err.caller='git.listFiles';throw err;}}// @ts-check
 /**
  * List all the object notes
  *
@@ -61370,7 +61379,7 @@ for(const entry of tree){if(entry.type==='tree'){await accumulateFilesFromOid({f
  * @param {string} args.ref
  *
  * @returns {Promise<Array<{target: string, note: string}>>}
- */async function _listNotes(_ref205){let fs=_ref205.fs,cache=_ref205.cache,gitdir=_ref205.gitdir,ref=_ref205.ref;// Get the current note commit
+ */async function _listNotes(_ref206){let fs=_ref206.fs,cache=_ref206.cache,gitdir=_ref206.gitdir,ref=_ref206.ref;// Get the current note commit
 let parent;try{parent=await GitRefManager.resolve({gitdir,fs,ref});}catch(err){if(err instanceof NotFoundError){return[];}}// Create the current note tree
 const result=await _readTree({fs,cache,gitdir,oid:parent});// Format the tree entries
 const notes=result.tree.map(entry=>({target:entry.path,note:entry.oid}));return notes;}// @ts-check
@@ -61385,7 +61394,7 @@ const notes=result.tree.map(entry=>({target:entry.path,note:entry.oid}));return 
  * @param {object} [args.cache] - a [cache](cache.md) object
  *
  * @returns {Promise<Array<{target: string, note: string}>>} Resolves successfully with an array of entries containing SHA-1 object ids of the note and the object the note targets
- */async function listNotes(_ref206){let fs=_ref206.fs,dir=_ref206.dir,_ref206$gitdir=_ref206.gitdir,gitdir=_ref206$gitdir===void 0?join(dir,'.git'):_ref206$gitdir,_ref206$ref=_ref206.ref,ref=_ref206$ref===void 0?'refs/notes/commits':_ref206$ref,_ref206$cache=_ref206.cache,cache=_ref206$cache===void 0?{}:_ref206$cache;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('ref',ref);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _listNotes({fs:fsp,cache,gitdir:updatedGitdir,ref});}catch(err){err.caller='git.listNotes';throw err;}}// @ts-check
+ */async function listNotes(_ref207){let fs=_ref207.fs,dir=_ref207.dir,_ref207$gitdir=_ref207.gitdir,gitdir=_ref207$gitdir===void 0?join(dir,'.git'):_ref207$gitdir,_ref207$ref=_ref207.ref,ref=_ref207$ref===void 0?'refs/notes/commits':_ref207$ref,_ref207$cache=_ref207.cache,cache=_ref207$cache===void 0?{}:_ref207$cache;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('ref',ref);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _listNotes({fs:fsp,cache,gitdir:updatedGitdir,ref});}catch(err){err.caller='git.listNotes';throw err;}}// @ts-check
 /**
  * List refs
  *
@@ -61401,14 +61410,14 @@ const notes=result.tree.map(entry=>({target:entry.path,note:entry.oid}));return 
  * let refs = await git.listRefs({ fs, dir: '/tutorial', filepath: 'refs/heads' })
  * console.log(refs)
  *
- */async function listRefs(_ref207){let fs=_ref207.fs,dir=_ref207.dir,_ref207$gitdir=_ref207.gitdir,gitdir=_ref207$gitdir===void 0?join(dir,'.git'):_ref207$gitdir,filepath=_ref207.filepath;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return GitRefManager.listRefs({fs:fsp,gitdir:updatedGitdir,filepath});}catch(err){err.caller='git.listRefs';throw err;}}// @ts-check
+ */async function listRefs(_ref208){let fs=_ref208.fs,dir=_ref208.dir,_ref208$gitdir=_ref208.gitdir,gitdir=_ref208$gitdir===void 0?join(dir,'.git'):_ref208$gitdir,filepath=_ref208.filepath;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return GitRefManager.listRefs({fs:fsp,gitdir:updatedGitdir,filepath});}catch(err){err.caller='git.listRefs';throw err;}}// @ts-check
 /**
  * @param {object} args
  * @param {import('../models/FileSystem.js').FileSystem} args.fs
  * @param {string} args.gitdir
  *
  * @returns {Promise<Array<{remote: string, url: string}>>}
- */async function _listRemotes(_ref208){let fs=_ref208.fs,gitdir=_ref208.gitdir;const config=await GitConfigManager.get({fs,gitdir});const remoteNames=await config.getSubsections('remote');const remotes=Promise.all(remoteNames.map(async remote=>{const url=await config.get("remote.".concat(remote,".url"));return{remote,url};}));return remotes;}// @ts-check
+ */async function _listRemotes(_ref209){let fs=_ref209.fs,gitdir=_ref209.gitdir;const config=await GitConfigManager.get({fs,gitdir});const remoteNames=await config.getSubsections('remote');const remotes=Promise.all(remoteNames.map(async remote=>{const url=await config.get("remote.".concat(remote,".url"));return{remote,url};}));return remotes;}// @ts-check
 /**
  * List remotes
  *
@@ -61423,7 +61432,7 @@ const notes=result.tree.map(entry=>({target:entry.path,note:entry.oid}));return 
  * let remotes = await git.listRemotes({ fs, dir: '/tutorial' })
  * console.log(remotes)
  *
- */async function listRemotes(_ref209){let fs=_ref209.fs,dir=_ref209.dir,_ref209$gitdir=_ref209.gitdir,gitdir=_ref209$gitdir===void 0?join(dir,'.git'):_ref209$gitdir;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _listRemotes({fs:fsp,gitdir:updatedGitdir});}catch(err){err.caller='git.listRemotes';throw err;}}/**
+ */async function listRemotes(_ref210){let fs=_ref210.fs,dir=_ref210.dir,_ref210$gitdir=_ref210.gitdir,gitdir=_ref210$gitdir===void 0?join(dir,'.git'):_ref210$gitdir;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _listRemotes({fs:fsp,gitdir:updatedGitdir});}catch(err){err.caller='git.listRemotes';throw err;}}/**
  * @typedef {Object} ServerRef - This object has the following schema:
  * @property {string} ref - The name of the ref
  * @property {string} oid - The SHA-1 object id the ref points to
@@ -61437,7 +61446,7 @@ const refs=[];let line;while(true){line=await read();if(line===true)break;if(lin
  * @param {boolean} [args.symrefs = false] - Include symbolic ref targets
  * @param {boolean} [args.peelTags = false] - Include peeled tags values
  * @returns {Uint8Array[]}
- */async function writeListRefsRequest(_ref210){let prefix=_ref210.prefix,symrefs=_ref210.symrefs,peelTags=_ref210.peelTags;const packstream=[];// command
+ */async function writeListRefsRequest(_ref211){let prefix=_ref211.prefix,symrefs=_ref211.symrefs,peelTags=_ref211.peelTags;const packstream=[];// command
 packstream.push(GitPktLine.encode('command=ls-refs\n'));// capability-list
 packstream.push(GitPktLine.encode("agent=".concat(pkg.agent,"\n")));// [command-args]
 if(peelTags||symrefs||prefix){packstream.push(GitPktLine.delim());}if(peelTags)packstream.push(GitPktLine.encode('peel'));if(symrefs)packstream.push(GitPktLine.encode('symrefs'));if(prefix)packstream.push(GitPktLine.encode("ref-prefix ".concat(prefix)));packstream.push(GitPktLine.flush());return packstream;}// @ts-check
@@ -61535,7 +61544,7 @@ if(peelTags||symrefs||prefix){packstream.push(GitPktLine.delim());}if(peelTags)p
  * });
  * console.log(refs);
  *
- */async function listServerRefs(_ref211){let http=_ref211.http,onAuth=_ref211.onAuth,onAuthSuccess=_ref211.onAuthSuccess,onAuthFailure=_ref211.onAuthFailure,corsProxy=_ref211.corsProxy,url=_ref211.url,_ref211$headers=_ref211.headers,headers=_ref211$headers===void 0?{}:_ref211$headers,_ref211$forPush=_ref211.forPush,forPush=_ref211$forPush===void 0?false:_ref211$forPush,_ref211$protocolVersi=_ref211.protocolVersion,protocolVersion=_ref211$protocolVersi===void 0?2:_ref211$protocolVersi,prefix=_ref211.prefix,symrefs=_ref211.symrefs,peelTags=_ref211.peelTags;try{assertParameter('http',http);assertParameter('url',url);const remote=await GitRemoteHTTP.discover({http,onAuth,onAuthSuccess,onAuthFailure,corsProxy,service:forPush?'git-receive-pack':'git-upload-pack',url,headers,protocolVersion});if(remote.protocolVersion===1){return formatInfoRefs(remote,prefix,symrefs,peelTags);}// Protocol Version 2
+ */async function listServerRefs(_ref212){let http=_ref212.http,onAuth=_ref212.onAuth,onAuthSuccess=_ref212.onAuthSuccess,onAuthFailure=_ref212.onAuthFailure,corsProxy=_ref212.corsProxy,url=_ref212.url,_ref212$headers=_ref212.headers,headers=_ref212$headers===void 0?{}:_ref212$headers,_ref212$forPush=_ref212.forPush,forPush=_ref212$forPush===void 0?false:_ref212$forPush,_ref212$protocolVersi=_ref212.protocolVersion,protocolVersion=_ref212$protocolVersi===void 0?2:_ref212$protocolVersi,prefix=_ref212.prefix,symrefs=_ref212.symrefs,peelTags=_ref212.peelTags;try{assertParameter('http',http);assertParameter('url',url);const remote=await GitRemoteHTTP.discover({http,onAuth,onAuthSuccess,onAuthFailure,corsProxy,service:forPush?'git-receive-pack':'git-upload-pack',url,headers,protocolVersion});if(remote.protocolVersion===1){return formatInfoRefs(remote,prefix,symrefs,peelTags);}// Protocol Version 2
 const body=await writeListRefsRequest({prefix,symrefs,peelTags});const res=await GitRemoteHTTP.connect({http,auth:remote.auth,headers,corsProxy,service:forPush?'git-receive-pack':'git-upload-pack',url,body});return parseListRefsResponse(res.body);}catch(err){err.caller='git.listServerRefs';throw err;}}// @ts-check
 /**
  * List tags
@@ -61551,9 +61560,9 @@ const body=await writeListRefsRequest({prefix,symrefs,peelTags});const res=await
  * let tags = await git.listTags({ fs, dir: '/tutorial' })
  * console.log(tags)
  *
- */async function listTags(_ref212){let fs=_ref212.fs,dir=_ref212.dir,_ref212$gitdir=_ref212.gitdir,gitdir=_ref212$gitdir===void 0?join(dir,'.git'):_ref212$gitdir;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return GitRefManager.listTags({fs:fsp,gitdir:updatedGitdir});}catch(err){err.caller='git.listTags';throw err;}}function compareAge(a,b){return a.committer.timestamp-b.committer.timestamp;}// @ts-check
+ */async function listTags(_ref213){let fs=_ref213.fs,dir=_ref213.dir,_ref213$gitdir=_ref213.gitdir,gitdir=_ref213$gitdir===void 0?join(dir,'.git'):_ref213$gitdir;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return GitRefManager.listTags({fs:fsp,gitdir:updatedGitdir});}catch(err){err.caller='git.listTags';throw err;}}function compareAge(a,b){return a.committer.timestamp-b.committer.timestamp;}// @ts-check
 // the empty file content object id
-const EMPTY_OID='e69de29bb2d1d6434b8b29ae775ad8c2e48c5391';async function resolveFileIdInTree(_ref213){let fs=_ref213.fs,cache=_ref213.cache,gitdir=_ref213.gitdir,oid=_ref213.oid,fileId=_ref213.fileId;if(fileId===EMPTY_OID)return;const _oid=oid;let filepath;const result=await resolveTree({fs,cache,gitdir,oid});const tree=result.tree;if(fileId===result.oid){filepath=result.path;}else{filepath=await _resolveFileId({fs,cache,gitdir,tree,fileId,oid:_oid});if(Array.isArray(filepath)){if(filepath.length===0)filepath=undefined;else if(filepath.length===1)filepath=filepath[0];}}return filepath;}async function _resolveFileId(_ref214){let fs=_ref214.fs,cache=_ref214.cache,gitdir=_ref214.gitdir,tree=_ref214.tree,fileId=_ref214.fileId,oid=_ref214.oid,_ref214$filepaths=_ref214.filepaths,filepaths=_ref214$filepaths===void 0?[]:_ref214$filepaths,_ref214$parentPath=_ref214.parentPath,parentPath=_ref214$parentPath===void 0?'':_ref214$parentPath;const walks=tree.entries().map(function(entry){let result;if(entry.oid===fileId){result=join(parentPath,entry.path);filepaths.push(result);}else if(entry.type==='tree'){result=_readObject({fs,cache,gitdir,oid:entry.oid}).then(function(_ref215){let object=_ref215.object;return _resolveFileId({fs,cache,gitdir,tree:GitTree.from(object),fileId,oid,filepaths,parentPath:join(parentPath,entry.path)});});}return result;});await Promise.all(walks);return filepaths;}// @ts-check
+const EMPTY_OID='e69de29bb2d1d6434b8b29ae775ad8c2e48c5391';async function resolveFileIdInTree(_ref214){let fs=_ref214.fs,cache=_ref214.cache,gitdir=_ref214.gitdir,oid=_ref214.oid,fileId=_ref214.fileId;if(fileId===EMPTY_OID)return;const _oid=oid;let filepath;const result=await resolveTree({fs,cache,gitdir,oid});const tree=result.tree;if(fileId===result.oid){filepath=result.path;}else{filepath=await _resolveFileId({fs,cache,gitdir,tree,fileId,oid:_oid});if(Array.isArray(filepath)){if(filepath.length===0)filepath=undefined;else if(filepath.length===1)filepath=filepath[0];}}return filepath;}async function _resolveFileId(_ref215){let fs=_ref215.fs,cache=_ref215.cache,gitdir=_ref215.gitdir,tree=_ref215.tree,fileId=_ref215.fileId,oid=_ref215.oid,_ref215$filepaths=_ref215.filepaths,filepaths=_ref215$filepaths===void 0?[]:_ref215$filepaths,_ref215$parentPath=_ref215.parentPath,parentPath=_ref215$parentPath===void 0?'':_ref215$parentPath;const walks=tree.entries().map(function(entry){let result;if(entry.oid===fileId){result=join(parentPath,entry.path);filepaths.push(result);}else if(entry.type==='tree'){result=_readObject({fs,cache,gitdir,oid:entry.oid}).then(function(_ref216){let object=_ref216.object;return _resolveFileId({fs,cache,gitdir,tree:GitTree.from(object),fileId,oid,filepaths,parentPath:join(parentPath,entry.path)});});}return result;});await Promise.all(walks);return filepaths;}// @ts-check
 /**
  * Get commit descriptions from the git history
  *
@@ -61576,7 +61585,7 @@ const EMPTY_OID='e69de29bb2d1d6434b8b29ae775ad8c2e48c5391';async function resolv
  * let commits = await git.log({ dir: '$input((/))', depth: $input((5)), ref: '$input((master))' })
  * console.log(commits)
  *
- */async function _log(_ref216){let fs=_ref216.fs,cache=_ref216.cache,gitdir=_ref216.gitdir,filepath=_ref216.filepath,ref=_ref216.ref,depth=_ref216.depth,since=_ref216.since,force=_ref216.force,follow=_ref216.follow;const sinceTimestamp=typeof since==='undefined'?undefined:Math.floor(since.valueOf()/1000);// TODO: In the future, we may want to have an API where we return a
+ */async function _log(_ref217){let fs=_ref217.fs,cache=_ref217.cache,gitdir=_ref217.gitdir,filepath=_ref217.filepath,ref=_ref217.ref,depth=_ref217.depth,since=_ref217.since,force=_ref217.force,follow=_ref217.follow;const sinceTimestamp=typeof since==='undefined'?undefined:Math.floor(since.valueOf()/1000);// TODO: In the future, we may want to have an API where we return a
 // async iterator that emits commits.
 const commits=[];const shallowCommits=await GitShallowManager.read({fs,gitdir});const oid=await GitRefManager.resolve({fs,gitdir,ref});const tips=[await _readCommit({fs,cache,gitdir,oid})];let lastFileOid;let lastCommit;let isOk;function endCommit(commit){if(isOk&&filepath)commits.push(commit);}while(tips.length>0){const commit=tips.pop();// Stop the log if we've hit the age limit
 if(sinceTimestamp!==undefined&&commit.commit.committer.timestamp<=sinceTimestamp){break;}if(filepath){let vFileOid;try{vFileOid=await resolveFilepath({fs,cache,gitdir,oid:commit.commit.tree,filepath});if(lastCommit&&lastFileOid!==vFileOid){commits.push(lastCommit);}lastFileOid=vFileOid;lastCommit=commit;isOk=true;}catch(e){if(e instanceof NotFoundError){let found=follow&&lastFileOid;if(found){found=await resolveFileIdInTree({fs,cache,gitdir,oid:commit.commit.tree,fileId:lastFileOid});if(found){if(Array.isArray(found)){if(lastCommit){const lastFound=await resolveFileIdInTree({fs,cache,gitdir,oid:lastCommit.commit.tree,fileId:lastFileOid});if(Array.isArray(lastFound)){found=found.filter(p=>lastFound.indexOf(p)===-1);if(found.length===1){found=found[0];filepath=found;if(lastCommit)commits.push(lastCommit);}else{found=false;if(lastCommit)commits.push(lastCommit);break;}}}}else{filepath=found;if(lastCommit)commits.push(lastCommit);}}}if(!found){if(isOk&&lastFileOid){commits.push(lastCommit);if(!force)break;}if(!force&&!follow)throw e;}lastCommit=commit;isOk=false;}else throw e;}}else{commits.push(commit);}// Stop the loop if we have enough commits now.
@@ -61614,7 +61623,7 @@ tips.sort((a,b)=>compareAge(a.commit,b.commit));}return commits;}// @ts-check
  * })
  * console.log(commits)
  *
- */async function log(_ref217){let fs=_ref217.fs,dir=_ref217.dir,_ref217$gitdir=_ref217.gitdir,gitdir=_ref217$gitdir===void 0?join(dir,'.git'):_ref217$gitdir,filepath=_ref217.filepath,_ref217$ref=_ref217.ref,ref=_ref217$ref===void 0?'HEAD':_ref217$ref,depth=_ref217.depth,since=_ref217.since,force=_ref217.force,follow=_ref217.follow,_ref217$cache=_ref217.cache,cache=_ref217$cache===void 0?{}:_ref217$cache;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('ref',ref);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _log({fs:fsp,cache,gitdir:updatedGitdir,filepath,ref,depth,since,force,follow});}catch(err){err.caller='git.log';throw err;}}// @ts-check
+ */async function log(_ref218){let fs=_ref218.fs,dir=_ref218.dir,_ref218$gitdir=_ref218.gitdir,gitdir=_ref218$gitdir===void 0?join(dir,'.git'):_ref218$gitdir,filepath=_ref218.filepath,_ref218$ref=_ref218.ref,ref=_ref218$ref===void 0?'HEAD':_ref218$ref,depth=_ref218.depth,since=_ref218.since,force=_ref218.force,follow=_ref218.follow,_ref218$cache=_ref218.cache,cache=_ref218$cache===void 0?{}:_ref218$cache;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('ref',ref);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _log({fs:fsp,cache,gitdir:updatedGitdir,filepath,ref,depth,since,force,follow});}catch(err){err.caller='git.log';throw err;}}// @ts-check
 /**
  *
  * @typedef {Object} MergeResult - Returns an object with a schema like this:
@@ -61724,7 +61733,7 @@ tips.sort((a,b)=>compareAge(a.commit,b.commit));}return commits;}// @ts-check
  * })
  * console.log(m)
  *
- */async function merge(_ref218){let _fs=_ref218.fs,onSign=_ref218.onSign,dir=_ref218.dir,_ref218$gitdir=_ref218.gitdir,gitdir=_ref218$gitdir===void 0?join(dir,'.git'):_ref218$gitdir,ours=_ref218.ours,theirs=_ref218.theirs,_ref218$fastForward=_ref218.fastForward,fastForward=_ref218$fastForward===void 0?true:_ref218$fastForward,_ref218$fastForwardOn=_ref218.fastForwardOnly,fastForwardOnly=_ref218$fastForwardOn===void 0?false:_ref218$fastForwardOn,_ref218$dryRun=_ref218.dryRun,dryRun=_ref218$dryRun===void 0?false:_ref218$dryRun,_ref218$noUpdateBranc=_ref218.noUpdateBranch,noUpdateBranch=_ref218$noUpdateBranc===void 0?false:_ref218$noUpdateBranc,_ref218$abortOnConfli=_ref218.abortOnConflict,abortOnConflict=_ref218$abortOnConfli===void 0?true:_ref218$abortOnConfli,message=_ref218.message,_author=_ref218.author,_committer=_ref218.committer,signingKey=_ref218.signingKey,_ref218$cache=_ref218.cache,cache=_ref218$cache===void 0?{}:_ref218$cache,mergeDriver=_ref218.mergeDriver,_ref218$allowUnrelate=_ref218.allowUnrelatedHistories,allowUnrelatedHistories=_ref218$allowUnrelate===void 0?false:_ref218$allowUnrelate;try{assertParameter('fs',_fs);if(signingKey){assertParameter('onSign',onSign);}const fs=new FileSystem(_fs);const updatedGitdir=await discoverGitdir({fsp:fs,dotgit:gitdir});const author=await normalizeAuthorObject({fs,gitdir:updatedGitdir,author:_author});if(!author&&(!fastForwardOnly||!fastForward)){throw new MissingNameError('author');}const committer=await normalizeCommitterObject({fs,gitdir:updatedGitdir,author,committer:_committer});if(!committer&&(!fastForwardOnly||!fastForward)){throw new MissingNameError('committer');}return await _merge({fs,cache,dir,gitdir:updatedGitdir,ours,theirs,fastForward,fastForwardOnly,dryRun,noUpdateBranch,abortOnConflict,message,author,committer,signingKey,onSign,mergeDriver,allowUnrelatedHistories});}catch(err){err.caller='git.merge';throw err;}}/**
+ */async function merge(_ref219){let _fs=_ref219.fs,onSign=_ref219.onSign,dir=_ref219.dir,_ref219$gitdir=_ref219.gitdir,gitdir=_ref219$gitdir===void 0?join(dir,'.git'):_ref219$gitdir,ours=_ref219.ours,theirs=_ref219.theirs,_ref219$fastForward=_ref219.fastForward,fastForward=_ref219$fastForward===void 0?true:_ref219$fastForward,_ref219$fastForwardOn=_ref219.fastForwardOnly,fastForwardOnly=_ref219$fastForwardOn===void 0?false:_ref219$fastForwardOn,_ref219$dryRun=_ref219.dryRun,dryRun=_ref219$dryRun===void 0?false:_ref219$dryRun,_ref219$noUpdateBranc=_ref219.noUpdateBranch,noUpdateBranch=_ref219$noUpdateBranc===void 0?false:_ref219$noUpdateBranc,_ref219$abortOnConfli=_ref219.abortOnConflict,abortOnConflict=_ref219$abortOnConfli===void 0?true:_ref219$abortOnConfli,message=_ref219.message,_author=_ref219.author,_committer=_ref219.committer,signingKey=_ref219.signingKey,_ref219$cache=_ref219.cache,cache=_ref219$cache===void 0?{}:_ref219$cache,mergeDriver=_ref219.mergeDriver,_ref219$allowUnrelate=_ref219.allowUnrelatedHistories,allowUnrelatedHistories=_ref219$allowUnrelate===void 0?false:_ref219$allowUnrelate;try{assertParameter('fs',_fs);if(signingKey){assertParameter('onSign',onSign);}const fs=new FileSystem(_fs);const updatedGitdir=await discoverGitdir({fsp:fs,dotgit:gitdir});const author=await normalizeAuthorObject({fs,gitdir:updatedGitdir,author:_author});if(!author&&(!fastForwardOnly||!fastForward)){throw new MissingNameError('author');}const committer=await normalizeCommitterObject({fs,gitdir:updatedGitdir,author,committer:_committer});if(!committer&&(!fastForwardOnly||!fastForward)){throw new MissingNameError('committer');}return await _merge({fs,cache,dir,gitdir:updatedGitdir,ours,theirs,fastForward,fastForwardOnly,dryRun,noUpdateBranch,abortOnConflict,message,author,committer,signingKey,onSign,mergeDriver,allowUnrelatedHistories});}catch(err){err.caller='git.merge';throw err;}}/**
  * @enum {number}
  */const types={commit:0b0010000,tree:0b0100000,blob:0b0110000,tag:0b1000000,ofs_delta:0b1100000,ref_delta:0b1110000};/**
  * @param {object} args
@@ -61733,7 +61742,7 @@ tips.sort((a,b)=>compareAge(a.commit,b.commit));}return commits;}// @ts-check
  * @param {string} [args.dir] - The [working tree](dir-vs-gitdir.md) directory path
  * @param {string} [args.gitdir=join(dir, '.git')] - [required] The [git directory](dir-vs-gitdir.md) path
  * @param {string[]} args.oids
- */async function _pack(_ref219){let fs=_ref219.fs,cache=_ref219.cache,dir=_ref219.dir,_ref219$gitdir=_ref219.gitdir,gitdir=_ref219$gitdir===void 0?join(dir,'.git'):_ref219$gitdir,oids=_ref219.oids;const hash=new sha_js_sha1_js__WEBPACK_IMPORTED_MODULE_1___default.a();const outputStream=[];function write(chunk,enc){const buff=Buffer.from(chunk,enc);outputStream.push(buff);hash.update(buff);}async function writeObject(_ref220){let stype=_ref220.stype,object=_ref220.object;// Object type is encoded in bits 654
+ */async function _pack(_ref220){let fs=_ref220.fs,cache=_ref220.cache,dir=_ref220.dir,_ref220$gitdir=_ref220.gitdir,gitdir=_ref220$gitdir===void 0?join(dir,'.git'):_ref220$gitdir,oids=_ref220.oids;const hash=new sha_js_sha1_js__WEBPACK_IMPORTED_MODULE_1___default.a();const outputStream=[];function write(chunk,enc){const buff=Buffer.from(chunk,enc);outputStream.push(buff);hash.update(buff);}async function writeObject(_ref221){let stype=_ref221.stype,object=_ref221.object;// Object type is encoded in bits 654
 const type=types[stype];// The length encoding gets complicated.
 let length=object.length;// Whether the next byte is part of the variable-length encoded number
 // is encoded in bit 7
@@ -61761,7 +61770,7 @@ const digest=hash.digest();outputStream.push(digest);return outputStream;}// @ts
  *
  * @returns {Promise<PackObjectsResult>}
  * @see PackObjectsResult
- */async function _packObjects(_ref221){let fs=_ref221.fs,cache=_ref221.cache,gitdir=_ref221.gitdir,oids=_ref221.oids,write=_ref221.write;const buffers=await _pack({fs,cache,gitdir,oids});const packfile=Buffer.from(await collect(buffers));const packfileSha=packfile.slice(-20).toString('hex');const filename="pack-".concat(packfileSha,".pack");if(write){await fs.write(join(gitdir,"objects/pack/".concat(filename)),packfile);return{filename};}return{filename,packfile:new Uint8Array(packfile)};}// @ts-check
+ */async function _packObjects(_ref222){let fs=_ref222.fs,cache=_ref222.cache,gitdir=_ref222.gitdir,oids=_ref222.oids,write=_ref222.write;const buffers=await _pack({fs,cache,gitdir,oids});const packfile=Buffer.from(await collect(buffers));const packfileSha=packfile.slice(-20).toString('hex');const filename="pack-".concat(packfileSha,".pack");if(write){await fs.write(join(gitdir,"objects/pack/".concat(filename)),packfile);return{filename};}return{filename,packfile:new Uint8Array(packfile)};}// @ts-check
 /**
  *
  * @typedef {Object} PackObjectsResult The packObjects command returns an object with two properties:
@@ -61790,7 +61799,7 @@ const digest=hash.digest();outputStream.push(digest);return outputStream;}// @ts
  * })
  * console.log(packfile)
  *
- */async function packObjects(_ref222){let fs=_ref222.fs,dir=_ref222.dir,_ref222$gitdir=_ref222.gitdir,gitdir=_ref222$gitdir===void 0?join(dir,'.git'):_ref222$gitdir,oids=_ref222.oids,_ref222$write=_ref222.write,write=_ref222$write===void 0?false:_ref222$write,_ref222$cache=_ref222.cache,cache=_ref222$cache===void 0?{}:_ref222$cache;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('oids',oids);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _packObjects({fs:fsp,cache,gitdir:updatedGitdir,oids,write});}catch(err){err.caller='git.packObjects';throw err;}}// @ts-check
+ */async function packObjects(_ref223){let fs=_ref223.fs,dir=_ref223.dir,_ref223$gitdir=_ref223.gitdir,gitdir=_ref223$gitdir===void 0?join(dir,'.git'):_ref223$gitdir,oids=_ref223.oids,_ref223$write=_ref223.write,write=_ref223$write===void 0?false:_ref223$write,_ref223$cache=_ref223.cache,cache=_ref223$cache===void 0?{}:_ref223$cache;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('oids',oids);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _packObjects({fs:fsp,cache,gitdir:updatedGitdir,oids,write});}catch(err){err.caller='git.packObjects';throw err;}}// @ts-check
 /**
  * Fetch and merge commits from a remote repository
  *
@@ -61840,7 +61849,7 @@ const digest=hash.digest();outputStream.push(digest);return outputStream;}// @ts
  * })
  * console.log('done')
  *
- */async function pull(_ref223){let _fs=_ref223.fs,http=_ref223.http,onProgress=_ref223.onProgress,onMessage=_ref223.onMessage,onAuth=_ref223.onAuth,onAuthSuccess=_ref223.onAuthSuccess,onAuthFailure=_ref223.onAuthFailure,dir=_ref223.dir,_ref223$gitdir=_ref223.gitdir,gitdir=_ref223$gitdir===void 0?join(dir,'.git'):_ref223$gitdir,ref=_ref223.ref,url=_ref223.url,remote=_ref223.remote,remoteRef=_ref223.remoteRef,_ref223$prune=_ref223.prune,prune=_ref223$prune===void 0?false:_ref223$prune,_ref223$pruneTags=_ref223.pruneTags,pruneTags=_ref223$pruneTags===void 0?false:_ref223$pruneTags,_ref223$fastForward=_ref223.fastForward,fastForward=_ref223$fastForward===void 0?true:_ref223$fastForward,_ref223$fastForwardOn=_ref223.fastForwardOnly,fastForwardOnly=_ref223$fastForwardOn===void 0?false:_ref223$fastForwardOn,corsProxy=_ref223.corsProxy,singleBranch=_ref223.singleBranch,_ref223$headers=_ref223.headers,headers=_ref223$headers===void 0?{}:_ref223$headers,_author=_ref223.author,_committer=_ref223.committer,signingKey=_ref223.signingKey,_ref223$cache=_ref223.cache,cache=_ref223$cache===void 0?{}:_ref223$cache;try{assertParameter('fs',_fs);assertParameter('gitdir',gitdir);const fs=new FileSystem(_fs);const updatedGitdir=await discoverGitdir({fsp:fs,dotgit:gitdir});const author=await normalizeAuthorObject({fs,gitdir:updatedGitdir,author:_author});if(!author)throw new MissingNameError('author');const committer=await normalizeCommitterObject({fs,gitdir:updatedGitdir,author,committer:_committer});if(!committer)throw new MissingNameError('committer');return await _pull({fs,cache,http,onProgress,onMessage,onAuth,onAuthSuccess,onAuthFailure,dir,gitdir:updatedGitdir,ref,url,remote,remoteRef,fastForward,fastForwardOnly,corsProxy,singleBranch,headers,author,committer,signingKey,prune,pruneTags});}catch(err){err.caller='git.pull';throw err;}}/**
+ */async function pull(_ref224){let _fs=_ref224.fs,http=_ref224.http,onProgress=_ref224.onProgress,onMessage=_ref224.onMessage,onAuth=_ref224.onAuth,onAuthSuccess=_ref224.onAuthSuccess,onAuthFailure=_ref224.onAuthFailure,dir=_ref224.dir,_ref224$gitdir=_ref224.gitdir,gitdir=_ref224$gitdir===void 0?join(dir,'.git'):_ref224$gitdir,ref=_ref224.ref,url=_ref224.url,remote=_ref224.remote,remoteRef=_ref224.remoteRef,_ref224$prune=_ref224.prune,prune=_ref224$prune===void 0?false:_ref224$prune,_ref224$pruneTags=_ref224.pruneTags,pruneTags=_ref224$pruneTags===void 0?false:_ref224$pruneTags,_ref224$fastForward=_ref224.fastForward,fastForward=_ref224$fastForward===void 0?true:_ref224$fastForward,_ref224$fastForwardOn=_ref224.fastForwardOnly,fastForwardOnly=_ref224$fastForwardOn===void 0?false:_ref224$fastForwardOn,corsProxy=_ref224.corsProxy,singleBranch=_ref224.singleBranch,_ref224$headers=_ref224.headers,headers=_ref224$headers===void 0?{}:_ref224$headers,_author=_ref224.author,_committer=_ref224.committer,signingKey=_ref224.signingKey,_ref224$cache=_ref224.cache,cache=_ref224$cache===void 0?{}:_ref224$cache;try{assertParameter('fs',_fs);assertParameter('gitdir',gitdir);const fs=new FileSystem(_fs);const updatedGitdir=await discoverGitdir({fsp:fs,dotgit:gitdir});const author=await normalizeAuthorObject({fs,gitdir:updatedGitdir,author:_author});if(!author)throw new MissingNameError('author');const committer=await normalizeCommitterObject({fs,gitdir:updatedGitdir,author,committer:_committer});if(!committer)throw new MissingNameError('committer');return await _pull({fs,cache,http,onProgress,onMessage,onAuth,onAuthSuccess,onAuthFailure,dir,gitdir:updatedGitdir,ref,url,remote,remoteRef,fastForward,fastForwardOnly,corsProxy,singleBranch,headers,author,committer,signingKey,prune,pruneTags});}catch(err){err.caller='git.pull';throw err;}}/**
  * @param {object} args
  * @param {import('../models/FileSystem.js').FileSystem} args.fs
  * @param {any} args.cache
@@ -61849,7 +61858,7 @@ const digest=hash.digest();outputStream.push(digest);return outputStream;}// @ts
  * @param {Iterable<string>} args.start
  * @param {Iterable<string>} args.finish
  * @returns {Promise<Set<string>>}
- */async function listCommitsAndTags(_ref224){let fs=_ref224.fs,cache=_ref224.cache,dir=_ref224.dir,_ref224$gitdir=_ref224.gitdir,gitdir=_ref224$gitdir===void 0?join(dir,'.git'):_ref224$gitdir,start=_ref224.start,finish=_ref224.finish;const shallows=await GitShallowManager.read({fs,gitdir});const startingSet=new Set();const finishingSet=new Set();for(const ref of start){startingSet.add(await GitRefManager.resolve({fs,gitdir,ref}));}for(const ref of finish){// We may not have these refs locally so we must try/catch
+ */async function listCommitsAndTags(_ref225){let fs=_ref225.fs,cache=_ref225.cache,dir=_ref225.dir,_ref225$gitdir=_ref225.gitdir,gitdir=_ref225$gitdir===void 0?join(dir,'.git'):_ref225$gitdir,start=_ref225.start,finish=_ref225.finish;const shallows=await GitShallowManager.read({fs,gitdir});const startingSet=new Set();const finishingSet=new Set();for(const ref of start){startingSet.add(await GitRefManager.resolve({fs,gitdir,ref}));}for(const ref of finish){// We may not have these refs locally so we must try/catch
 try{const oid=await GitRefManager.resolve({fs,gitdir,ref});finishingSet.add(oid);}catch(err){}}const visited=new Set();// Because git commits are named by their hash, there is no
 // way to construct a cycle. Therefore we won't worry about
 // setting a default recursion limit.
@@ -61863,7 +61872,7 @@ for(const oid of startingSet){await walk(oid);}return visited;}/**
  * @param {string} args.gitdir
  * @param {Iterable<string>} args.oids
  * @returns {Promise<Set<string>>}
- */async function listObjects(_ref225){let fs=_ref225.fs,cache=_ref225.cache,dir=_ref225.dir,_ref225$gitdir=_ref225.gitdir,gitdir=_ref225$gitdir===void 0?join(dir,'.git'):_ref225$gitdir,oids=_ref225.oids;const visited=new Set();// We don't do the purest simplest recursion, because we can
+ */async function listObjects(_ref226){let fs=_ref226.fs,cache=_ref226.cache,dir=_ref226.dir,_ref226$gitdir=_ref226.gitdir,gitdir=_ref226$gitdir===void 0?join(dir,'.git'):_ref226$gitdir,oids=_ref226.oids;const visited=new Set();// We don't do the purest simplest recursion, because we can
 // avoid reading Blob objects entirely since the Tree objects
 // tell us which oids are Blobs and which are Trees.
 async function walk(oid){if(visited.has(oid))return;visited.add(oid);const _await$_readObject13=await _readObject({fs,cache,gitdir,oid}),type=_await$_readObject13.type,object=_await$_readObject13.object;if(type==='tag'){const tag=GitAnnotatedTag.from(object);const obj=tag.headers().object;await walk(obj);}else if(type==='commit'){const commit=GitCommit.from(object);const tree=commit.headers().tree;await walk(tree);}else if(type==='tree'){const tree=GitTree.from(object);for(const entry of tree){// add blobs to the set
@@ -61871,7 +61880,7 @@ async function walk(oid){if(visited.has(oid))return;visited.add(oid);const _awai
 if(entry.type==='blob'){visited.add(entry.oid);}// recurse for trees
 if(entry.type==='tree'){await walk(entry.oid);}}}}// Let's go walking!
 for(const oid of oids){await walk(oid);}return visited;}async function parseReceivePackResponse(packfile){/** @type PushResult */const result={};let response='';const read=GitPktLine.streamReader(packfile);let line=await read();while(line!==true){if(line!==null)response+=line.toString('utf8')+'\n';line=await read();}const lines=response.toString('utf8').split('\n');// We're expecting "unpack {unpack-result}"
-line=lines.shift();if(!line.startsWith('unpack ')){throw new ParseError('unpack ok" or "unpack [error message]',line);}result.ok=line==='unpack ok';if(!result.ok){result.error=line.slice('unpack '.length);}result.refs={};for(const line of lines){if(line.trim()==='')continue;const status=line.slice(0,2);const refAndMessage=line.slice(3);let space=refAndMessage.indexOf(' ');if(space===-1)space=refAndMessage.length;const ref=refAndMessage.slice(0,space);const error=refAndMessage.slice(space+1);result.refs[ref]={ok:status==='ok',error};}return result;}async function writeReceivePackRequest(_ref226){let _ref226$capabilities=_ref226.capabilities,capabilities=_ref226$capabilities===void 0?[]:_ref226$capabilities,_ref226$triplets=_ref226.triplets,triplets=_ref226$triplets===void 0?[]:_ref226$triplets;const packstream=[];let capsFirstLine="\0 ".concat(capabilities.join(' '));for(const trip of triplets){packstream.push(GitPktLine.encode("".concat(trip.oldoid," ").concat(trip.oid," ").concat(trip.fullRef).concat(capsFirstLine,"\n")));capsFirstLine='';}packstream.push(GitPktLine.flush());return packstream;}// @ts-check
+line=lines.shift();if(!line.startsWith('unpack ')){throw new ParseError('unpack ok" or "unpack [error message]',line);}result.ok=line==='unpack ok';if(!result.ok){result.error=line.slice('unpack '.length);}result.refs={};for(const line of lines){if(line.trim()==='')continue;const status=line.slice(0,2);const refAndMessage=line.slice(3);let space=refAndMessage.indexOf(' ');if(space===-1)space=refAndMessage.length;const ref=refAndMessage.slice(0,space);const error=refAndMessage.slice(space+1);result.refs[ref]={ok:status==='ok',error};}return result;}async function writeReceivePackRequest(_ref227){let _ref227$capabilities=_ref227.capabilities,capabilities=_ref227$capabilities===void 0?[]:_ref227$capabilities,_ref227$triplets=_ref227.triplets,triplets=_ref227$triplets===void 0?[]:_ref227$triplets;const packstream=[];let capsFirstLine="\0 ".concat(capabilities.join(' '));for(const trip of triplets){packstream.push(GitPktLine.encode("".concat(trip.oldoid," ").concat(trip.oid," ").concat(trip.fullRef).concat(capsFirstLine,"\n")));capsFirstLine='';}packstream.push(GitPktLine.flush());return packstream;}// @ts-check
 /**
  * @param {object} args
  * @param {import('../models/FileSystem.js').FileSystem} args.fs
@@ -61894,10 +61903,10 @@ line=lines.shift();if(!line.startsWith('unpack ')){throw new ParseError('unpack 
  * @param {Object<string, string>} [args.headers]
  *
  * @returns {Promise<PushResult>}
- */async function _push(_ref227){let fs=_ref227.fs,cache=_ref227.cache,http=_ref227.http,onProgress=_ref227.onProgress,onMessage=_ref227.onMessage,onAuth=_ref227.onAuth,onAuthSuccess=_ref227.onAuthSuccess,onAuthFailure=_ref227.onAuthFailure,onPrePush=_ref227.onPrePush,gitdir=_ref227.gitdir,_ref=_ref227.ref,_remoteRef=_ref227.remoteRef,remote=_ref227.remote,_url=_ref227.url,_ref227$force=_ref227.force,force=_ref227$force===void 0?false:_ref227$force,_ref227$delete=_ref227.delete,_delete=_ref227$delete===void 0?false:_ref227$delete,corsProxy=_ref227.corsProxy,_ref227$headers=_ref227.headers,headers=_ref227$headers===void 0?{}:_ref227$headers;const ref=_ref||(await _currentBranch({fs,gitdir}));if(typeof ref==='undefined'){throw new MissingParameterError('ref');}const config=await GitConfigManager.get({fs,gitdir});// Figure out what remote to use.
+ */async function _push(_ref228){let fs=_ref228.fs,cache=_ref228.cache,http=_ref228.http,onProgress=_ref228.onProgress,onMessage=_ref228.onMessage,onAuth=_ref228.onAuth,onAuthSuccess=_ref228.onAuthSuccess,onAuthFailure=_ref228.onAuthFailure,onPrePush=_ref228.onPrePush,gitdir=_ref228.gitdir,_ref=_ref228.ref,_remoteRef=_ref228.remoteRef,remote=_ref228.remote,_url=_ref228.url,_ref228$force=_ref228.force,force=_ref228$force===void 0?false:_ref228$force,_ref228$delete=_ref228.delete,_delete=_ref228$delete===void 0?false:_ref228$delete,corsProxy=_ref228.corsProxy,_ref228$headers=_ref228.headers,headers=_ref228$headers===void 0?{}:_ref228$headers;const ref=_ref||(await _currentBranch({fs,gitdir}));if(typeof ref==='undefined'){throw new MissingParameterError('ref');}const config=await GitConfigManager.get({fs,gitdir});// Figure out what remote to use.
 remote=remote||(await config.get("branch.".concat(ref,".pushRemote")))||(await config.get('remote.pushDefault'))||(await config.get("branch.".concat(ref,".remote")))||'origin';// Lookup the URL for the given remote.
 const url=_url||(await config.get("remote.".concat(remote,".pushurl")))||(await config.get("remote.".concat(remote,".url")));if(typeof url==='undefined'){throw new MissingParameterError('remote OR url');}// Figure out what remote ref to use.
-const remoteRef=_remoteRef||(await config.get("branch.".concat(ref,".merge")));if(typeof url==='undefined'){throw new MissingParameterError('remoteRef');}if(corsProxy===undefined){corsProxy=await config.get('http.corsProxy');}const fullRef=await GitRefManager.expand({fs,gitdir,ref});const oid=_delete?'0000000000000000000000000000000000000000':await GitRefManager.resolve({fs,gitdir,ref:fullRef});/** @type typeof import("../managers/GitRemoteHTTP").GitRemoteHTTP */const GitRemoteHTTP=GitRemoteManager.getRemoteHelperFor({url});const httpRemote=await GitRemoteHTTP.discover({http,onAuth,onAuthSuccess,onAuthFailure,corsProxy,service:'git-receive-pack',url,headers,protocolVersion:1});const auth=httpRemote.auth;// hack to get new credentials from CredentialManager API
+const remoteRef=_remoteRef||(await config.get("branch.".concat(ref,".merge")));if(typeof url==='undefined'){throw new MissingParameterError('remoteRef');}if(corsProxy===undefined){corsProxy=await config.get('http.corsProxy');}const fullRef=await GitRefManager.expand({fs,gitdir,ref});const oid=_delete?'0000000000000000000000000000000000000000':await GitRefManager.resolve({fs,gitdir,ref:fullRef});/** @type typeof import("../managers/GitRemoteHTTP").GitRemoteHTTP */const GitRemoteHTTP=GitRemoteManager.getRemoteHelperFor({url});const httpRemote=await GitRemoteHTTP.discover({http,onAuth:addCredentialUsername({config,onAuth}),onAuthSuccess,onAuthFailure:addCredentialUsername({config,onAuth:onAuthFailure}),corsProxy,service:'git-receive-pack',url,headers,protocolVersion:1});const auth=httpRemote.auth;// hack to get new credentials from CredentialManager API
 let fullRemoteRef;if(!remoteRef){fullRemoteRef=fullRef;}else{try{fullRemoteRef=await GitRefManager.expandAgainstMap({ref:remoteRef,map:httpRemote.refs});}catch(err){if(err instanceof NotFoundError){// The remote reference doesn't exist yet.
 // If it is fully specified, use that value. Otherwise, treat it as a branch.
 fullRemoteRef=remoteRef.startsWith('refs/')?remoteRef:"refs/heads/".concat(remoteRef);}else{throw err;}}}const oldoid=httpRemote.refs.get(fullRemoteRef)||'0000000000000000000000000000000000000000';if(onPrePush){const hookCancel=await onPrePush({remote,url,localRef:{ref:_delete?'(delete)':fullRef,oid},remoteRef:{ref:fullRemoteRef,oid:oldoid}});if(!hookCancel)throw new UserCanceledError();}// Remotes can always accept thin-packs UNLESS they specify the 'no-thin' capability
@@ -61917,7 +61926,7 @@ if(oid!=='0000000000000000000000000000000000000000'&&oldoid!=='00000000000000000
 const capabilities=filterCapabilities([...httpRemote.capabilities],['report-status','side-band-64k',"agent=".concat(pkg.agent)]);const packstream1=await writeReceivePackRequest({capabilities,triplets:[{oldoid,oid,fullRef:fullRemoteRef}]});const packstream2=_delete?[]:await _pack({fs,cache,gitdir,oids:[...objects]});const res=await GitRemoteHTTP.connect({http,onProgress,corsProxy,service:'git-receive-pack',url,auth,headers,body:[...packstream1,...packstream2]});const _await$GitSideBand$de=await GitSideBand.demux(res.body),packfile=_await$GitSideBand$de.packfile,progress=_await$GitSideBand$de.progress;if(onMessage){const lines=splitLines(progress);forAwait(lines,async line=>{await onMessage(line);});}// Parse the response!
 const result=await parseReceivePackResponse(packfile);if(res.headers){result.headers=res.headers;}// Update the local copy of the remote ref
 if(remote&&result.ok&&result.refs[fullRemoteRef].ok&&!fullRef.startsWith('refs/tags')){// TODO: I think this should actually be using a refspec transform rather than assuming 'refs/remotes/{remote}'
-const ref="refs/remotes/".concat(remote,"/").concat(fullRemoteRef.replace('refs/heads',''));if(_delete){await GitRefManager.deleteRef({fs,gitdir,ref});}else{await GitRefManager.writeRef({fs,gitdir,ref,value:oid});}}if(result.ok&&Object.values(result.refs).every(result=>result.ok)){return result;}else{const prettyDetails=Object.entries(result.refs).filter(_ref228=>{let _ref229=_slicedToArray(_ref228,2),k=_ref229[0],v=_ref229[1];return!v.ok;}).map(_ref230=>{let _ref231=_slicedToArray(_ref230,2),k=_ref231[0],v=_ref231[1];return"\n  - ".concat(k,": ").concat(v.error);}).join('');throw new GitPushError(prettyDetails,result);}}// @ts-check
+const ref="refs/remotes/".concat(remote,"/").concat(fullRemoteRef.replace('refs/heads',''));if(_delete){await GitRefManager.deleteRef({fs,gitdir,ref});}else{await GitRefManager.writeRef({fs,gitdir,ref,value:oid});}}if(result.ok&&Object.values(result.refs).every(result=>result.ok)){return result;}else{const prettyDetails=Object.entries(result.refs).filter(_ref229=>{let _ref230=_slicedToArray(_ref229,2),k=_ref230[0],v=_ref230[1];return!v.ok;}).map(_ref231=>{let _ref232=_slicedToArray(_ref231,2),k=_ref232[0],v=_ref232[1];return"\n  - ".concat(k,": ").concat(v.error);}).join('');throw new GitPushError(prettyDetails,result);}}// @ts-check
 /**
  * Push a branch or tag
  *
@@ -61965,7 +61974,7 @@ const ref="refs/remotes/".concat(remote,"/").concat(fullRemoteRef.replace('refs/
  * })
  * console.log(pushResult)
  *
- */async function push(_ref232){let fs=_ref232.fs,http=_ref232.http,onProgress=_ref232.onProgress,onMessage=_ref232.onMessage,onAuth=_ref232.onAuth,onAuthSuccess=_ref232.onAuthSuccess,onAuthFailure=_ref232.onAuthFailure,onPrePush=_ref232.onPrePush,dir=_ref232.dir,_ref232$gitdir=_ref232.gitdir,gitdir=_ref232$gitdir===void 0?join(dir,'.git'):_ref232$gitdir,ref=_ref232.ref,remoteRef=_ref232.remoteRef,_ref232$remote=_ref232.remote,remote=_ref232$remote===void 0?'origin':_ref232$remote,url=_ref232.url,_ref232$force=_ref232.force,force=_ref232$force===void 0?false:_ref232$force,_ref232$delete=_ref232.delete,_delete=_ref232$delete===void 0?false:_ref232$delete,corsProxy=_ref232.corsProxy,_ref232$headers=_ref232.headers,headers=_ref232$headers===void 0?{}:_ref232$headers,_ref232$cache=_ref232.cache,cache=_ref232$cache===void 0?{}:_ref232$cache;try{assertParameter('fs',fs);assertParameter('http',http);assertParameter('gitdir',gitdir);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _push({fs:fsp,cache,http,onProgress,onMessage,onAuth,onAuthSuccess,onAuthFailure,onPrePush,gitdir:updatedGitdir,ref,remoteRef,remote,url,force,delete:_delete,corsProxy,headers});}catch(err){err.caller='git.push';throw err;}}async function resolveBlob(_ref233){let fs=_ref233.fs,cache=_ref233.cache,gitdir=_ref233.gitdir,oid=_ref233.oid;const _await$_readObject14=await _readObject({fs,cache,gitdir,oid}),type=_await$_readObject14.type,object=_await$_readObject14.object;// Resolve annotated tag objects to whatever
+ */async function push(_ref233){let fs=_ref233.fs,http=_ref233.http,onProgress=_ref233.onProgress,onMessage=_ref233.onMessage,onAuth=_ref233.onAuth,onAuthSuccess=_ref233.onAuthSuccess,onAuthFailure=_ref233.onAuthFailure,onPrePush=_ref233.onPrePush,dir=_ref233.dir,_ref233$gitdir=_ref233.gitdir,gitdir=_ref233$gitdir===void 0?join(dir,'.git'):_ref233$gitdir,ref=_ref233.ref,remoteRef=_ref233.remoteRef,_ref233$remote=_ref233.remote,remote=_ref233$remote===void 0?'origin':_ref233$remote,url=_ref233.url,_ref233$force=_ref233.force,force=_ref233$force===void 0?false:_ref233$force,_ref233$delete=_ref233.delete,_delete=_ref233$delete===void 0?false:_ref233$delete,corsProxy=_ref233.corsProxy,_ref233$headers=_ref233.headers,headers=_ref233$headers===void 0?{}:_ref233$headers,_ref233$cache=_ref233.cache,cache=_ref233$cache===void 0?{}:_ref233$cache;try{assertParameter('fs',fs);assertParameter('http',http);assertParameter('gitdir',gitdir);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _push({fs:fsp,cache,http,onProgress,onMessage,onAuth,onAuthSuccess,onAuthFailure,onPrePush,gitdir:updatedGitdir,ref,remoteRef,remote,url,force,delete:_delete,corsProxy,headers});}catch(err){err.caller='git.push';throw err;}}async function resolveBlob(_ref234){let fs=_ref234.fs,cache=_ref234.cache,gitdir=_ref234.gitdir,oid=_ref234.oid;const _await$_readObject14=await _readObject({fs,cache,gitdir,oid}),type=_await$_readObject14.type,object=_await$_readObject14.object;// Resolve annotated tag objects to whatever
 if(type==='tag'){oid=GitAnnotatedTag.from(object).parse().object;return resolveBlob({fs,cache,gitdir,oid});}if(type!=='blob'){throw new ObjectTypeError(oid,type,'blob');}return{oid,blob:new Uint8Array(object)};}// @ts-check
 /**
  *
@@ -61983,7 +61992,7 @@ if(type==='tag'){oid=GitAnnotatedTag.from(object).parse().object;return resolveB
  *
  * @returns {Promise<ReadBlobResult>} Resolves successfully with a blob object description
  * @see ReadBlobResult
- */async function _readBlob(_ref234){let fs=_ref234.fs,cache=_ref234.cache,gitdir=_ref234.gitdir,oid=_ref234.oid,_ref234$filepath=_ref234.filepath,filepath=_ref234$filepath===void 0?undefined:_ref234$filepath;if(filepath!==undefined){oid=await resolveFilepath({fs,cache,gitdir,oid,filepath});}const blob=await resolveBlob({fs,cache,gitdir,oid});return blob;}// @ts-check
+ */async function _readBlob(_ref235){let fs=_ref235.fs,cache=_ref235.cache,gitdir=_ref235.gitdir,oid=_ref235.oid,_ref235$filepath=_ref235.filepath,filepath=_ref235$filepath===void 0?undefined:_ref235$filepath;if(filepath!==undefined){oid=await resolveFilepath({fs,cache,gitdir,oid,filepath});}const blob=await resolveBlob({fs,cache,gitdir,oid});return blob;}// @ts-check
 /**
  *
  * @typedef {Object} ReadBlobResult - The object returned has the following schema:
@@ -62016,7 +62025,7 @@ if(type==='tag'){oid=GitAnnotatedTag.from(object).parse().object;return resolveB
  * })
  * console.log(Buffer.from(blob).toString('utf8'))
  *
- */async function readBlob(_ref235){let fs=_ref235.fs,dir=_ref235.dir,_ref235$gitdir=_ref235.gitdir,gitdir=_ref235$gitdir===void 0?join(dir,'.git'):_ref235$gitdir,oid=_ref235.oid,filepath=_ref235.filepath,_ref235$cache=_ref235.cache,cache=_ref235$cache===void 0?{}:_ref235$cache;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('oid',oid);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _readBlob({fs:fsp,cache,gitdir:updatedGitdir,oid,filepath});}catch(err){err.caller='git.readBlob';throw err;}}// @ts-check
+ */async function readBlob(_ref236){let fs=_ref236.fs,dir=_ref236.dir,_ref236$gitdir=_ref236.gitdir,gitdir=_ref236$gitdir===void 0?join(dir,'.git'):_ref236$gitdir,oid=_ref236.oid,filepath=_ref236.filepath,_ref236$cache=_ref236.cache,cache=_ref236$cache===void 0?{}:_ref236$cache;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('oid',oid);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _readBlob({fs:fsp,cache,gitdir:updatedGitdir,oid,filepath});}catch(err){err.caller='git.readBlob';throw err;}}// @ts-check
 /**
  * Read a commit object directly
  *
@@ -62038,7 +62047,7 @@ if(type==='tag'){oid=GitAnnotatedTag.from(object).parse().object;return resolveB
  * let commit = await git.readCommit({ fs, dir: '/tutorial', oid: sha })
  * console.log(commit)
  *
- */async function readCommit(_ref236){let fs=_ref236.fs,dir=_ref236.dir,_ref236$gitdir=_ref236.gitdir,gitdir=_ref236$gitdir===void 0?join(dir,'.git'):_ref236$gitdir,oid=_ref236.oid,_ref236$cache=_ref236.cache,cache=_ref236$cache===void 0?{}:_ref236$cache;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('oid',oid);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _readCommit({fs:fsp,cache,gitdir:updatedGitdir,oid});}catch(err){err.caller='git.readCommit';throw err;}}// @ts-check
+ */async function readCommit(_ref237){let fs=_ref237.fs,dir=_ref237.dir,_ref237$gitdir=_ref237.gitdir,gitdir=_ref237$gitdir===void 0?join(dir,'.git'):_ref237$gitdir,oid=_ref237.oid,_ref237$cache=_ref237.cache,cache=_ref237$cache===void 0?{}:_ref237$cache;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('oid',oid);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _readCommit({fs:fsp,cache,gitdir:updatedGitdir,oid});}catch(err){err.caller='git.readCommit';throw err;}}// @ts-check
 /**
  * Read the contents of a note
  *
@@ -62050,7 +62059,7 @@ if(type==='tag'){oid=GitAnnotatedTag.from(object).parse().object;return resolveB
  * @param {string} args.oid
  *
  * @returns {Promise<Uint8Array>} Resolves successfully with note contents as a Buffer.
- */async function _readNote(_ref237){let fs=_ref237.fs,cache=_ref237.cache,gitdir=_ref237.gitdir,_ref237$ref=_ref237.ref,ref=_ref237$ref===void 0?'refs/notes/commits':_ref237$ref,oid=_ref237.oid;const parent=await GitRefManager.resolve({gitdir,fs,ref});const _await$_readBlob=await _readBlob({fs,cache,gitdir,oid:parent,filepath:oid}),blob=_await$_readBlob.blob;return blob;}// @ts-check
+ */async function _readNote(_ref238){let fs=_ref238.fs,cache=_ref238.cache,gitdir=_ref238.gitdir,_ref238$ref=_ref238.ref,ref=_ref238$ref===void 0?'refs/notes/commits':_ref238$ref,oid=_ref238.oid;const parent=await GitRefManager.resolve({gitdir,fs,ref});const _await$_readBlob=await _readBlob({fs,cache,gitdir,oid:parent,filepath:oid}),blob=_await$_readBlob.blob;return blob;}// @ts-check
 /**
  * Read the contents of a note
  *
@@ -62063,7 +62072,7 @@ if(type==='tag'){oid=GitAnnotatedTag.from(object).parse().object;return resolveB
  * @param {object} [args.cache] - a [cache](cache.md) object
  *
  * @returns {Promise<Uint8Array>} Resolves successfully with note contents as a Buffer.
- */async function readNote(_ref238){let fs=_ref238.fs,dir=_ref238.dir,_ref238$gitdir=_ref238.gitdir,gitdir=_ref238$gitdir===void 0?join(dir,'.git'):_ref238$gitdir,_ref238$ref=_ref238.ref,ref=_ref238$ref===void 0?'refs/notes/commits':_ref238$ref,oid=_ref238.oid,_ref238$cache=_ref238.cache,cache=_ref238$cache===void 0?{}:_ref238$cache;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('ref',ref);assertParameter('oid',oid);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _readNote({fs:fsp,cache,gitdir:updatedGitdir,ref,oid});}catch(err){err.caller='git.readNote';throw err;}}// @ts-check
+ */async function readNote(_ref239){let fs=_ref239.fs,dir=_ref239.dir,_ref239$gitdir=_ref239.gitdir,gitdir=_ref239$gitdir===void 0?join(dir,'.git'):_ref239$gitdir,_ref239$ref=_ref239.ref,ref=_ref239$ref===void 0?'refs/notes/commits':_ref239$ref,oid=_ref239.oid,_ref239$cache=_ref239.cache,cache=_ref239$cache===void 0?{}:_ref239$cache;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('ref',ref);assertParameter('oid',oid);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _readNote({fs:fsp,cache,gitdir:updatedGitdir,ref,oid});}catch(err){err.caller='git.readNote';throw err;}}// @ts-check
 /**
  *
  * @typedef {Object} DeflatedObject
@@ -62233,7 +62242,7 @@ if(type==='tag'){oid=GitAnnotatedTag.from(object).parse().object;return resolveB
  *   }
  * }
  *
- */async function readObject(_ref239){let _fs=_ref239.fs,dir=_ref239.dir,_ref239$gitdir=_ref239.gitdir,gitdir=_ref239$gitdir===void 0?join(dir,'.git'):_ref239$gitdir,oid=_ref239.oid,_ref239$format=_ref239.format,format=_ref239$format===void 0?'parsed':_ref239$format,_ref239$filepath=_ref239.filepath,filepath=_ref239$filepath===void 0?undefined:_ref239$filepath,_ref239$encoding=_ref239.encoding,encoding=_ref239$encoding===void 0?undefined:_ref239$encoding,_ref239$cache=_ref239.cache,cache=_ref239$cache===void 0?{}:_ref239$cache;try{assertParameter('fs',_fs);assertParameter('gitdir',gitdir);assertParameter('oid',oid);const fs=new FileSystem(_fs);const updatedGitdir=await discoverGitdir({fsp:fs,dotgit:gitdir});if(filepath!==undefined){oid=await resolveFilepath({fs,cache,gitdir:updatedGitdir,oid,filepath});}// GitObjectManager does not know how to parse content, so we tweak that parameter before passing it.
+ */async function readObject(_ref240){let _fs=_ref240.fs,dir=_ref240.dir,_ref240$gitdir=_ref240.gitdir,gitdir=_ref240$gitdir===void 0?join(dir,'.git'):_ref240$gitdir,oid=_ref240.oid,_ref240$format=_ref240.format,format=_ref240$format===void 0?'parsed':_ref240$format,_ref240$filepath=_ref240.filepath,filepath=_ref240$filepath===void 0?undefined:_ref240$filepath,_ref240$encoding=_ref240.encoding,encoding=_ref240$encoding===void 0?undefined:_ref240$encoding,_ref240$cache=_ref240.cache,cache=_ref240$cache===void 0?{}:_ref240$cache;try{assertParameter('fs',_fs);assertParameter('gitdir',gitdir);assertParameter('oid',oid);const fs=new FileSystem(_fs);const updatedGitdir=await discoverGitdir({fsp:fs,dotgit:gitdir});if(filepath!==undefined){oid=await resolveFilepath({fs,cache,gitdir:updatedGitdir,oid,filepath});}// GitObjectManager does not know how to parse content, so we tweak that parameter before passing it.
 const _format=format==='parsed'?'content':format;const result=await _readObject({fs,cache,gitdir:updatedGitdir,oid,format:_format});result.oid=oid;if(format==='parsed'){result.format='parsed';switch(result.type){case'commit':result.object=GitCommit.from(result.object).parse();break;case'tree':result.object=GitTree.from(result.object).entries();break;case'blob':// Here we consider returning a raw Buffer as the 'content' format
 // and returning a string as the 'parsed' format
 if(encoding){result.object=result.object.toString(encoding);}else{result.object=new Uint8Array(result.object);result.format='content';}break;case'tag':result.object=GitAnnotatedTag.from(result.object).parse();break;default:throw new ObjectTypeError(result.oid,result.type,'blob|commit|tag|tree');}}else if(result.format==='deflated'||result.format==='wrapped'){result.type=result.format;}return result;}catch(err){err.caller='git.readObject';throw err;}}// @ts-check
@@ -62251,7 +62260,7 @@ if(encoding){result.object=result.object.toString(encoding);}else{result.object=
  * @param {string} args.oid
  *
  * @returns {Promise<ReadTagResult>}
- */async function _readTag(_ref240){let fs=_ref240.fs,cache=_ref240.cache,gitdir=_ref240.gitdir,oid=_ref240.oid;const _await$_readObject15=await _readObject({fs,cache,gitdir,oid,format:'content'}),type=_await$_readObject15.type,object=_await$_readObject15.object;if(type!=='tag'){throw new ObjectTypeError(oid,type,'tag');}const tag=GitAnnotatedTag.from(object);const result={oid,tag:tag.parse(),payload:tag.payload()};// @ts-ignore
+ */async function _readTag(_ref241){let fs=_ref241.fs,cache=_ref241.cache,gitdir=_ref241.gitdir,oid=_ref241.oid;const _await$_readObject15=await _readObject({fs,cache,gitdir,oid,format:'content'}),type=_await$_readObject15.type,object=_await$_readObject15.object;if(type!=='tag'){throw new ObjectTypeError(oid,type,'tag');}const tag=GitAnnotatedTag.from(object);const result={oid,tag:tag.parse(),payload:tag.payload()};// @ts-ignore
 return result;}/**
  *
  * @typedef {Object} ReadTagResult - The object returned has the following schema:
@@ -62272,7 +62281,7 @@ return result;}/**
  * @see ReadTagResult
  * @see TagObject
  *
- */async function readTag(_ref241){let fs=_ref241.fs,dir=_ref241.dir,_ref241$gitdir=_ref241.gitdir,gitdir=_ref241$gitdir===void 0?join(dir,'.git'):_ref241$gitdir,oid=_ref241.oid,_ref241$cache=_ref241.cache,cache=_ref241$cache===void 0?{}:_ref241$cache;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('oid',oid);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _readTag({fs:fsp,cache,gitdir:updatedGitdir,oid});}catch(err){err.caller='git.readTag';throw err;}}// @ts-check
+ */async function readTag(_ref242){let fs=_ref242.fs,dir=_ref242.dir,_ref242$gitdir=_ref242.gitdir,gitdir=_ref242$gitdir===void 0?join(dir,'.git'):_ref242$gitdir,oid=_ref242.oid,_ref242$cache=_ref242.cache,cache=_ref242$cache===void 0?{}:_ref242$cache;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('oid',oid);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _readTag({fs:fsp,cache,gitdir:updatedGitdir,oid});}catch(err){err.caller='git.readTag';throw err;}}// @ts-check
 /**
  *
  * @typedef {Object} ReadTreeResult - The object returned has the following schema:
@@ -62294,7 +62303,7 @@ return result;}/**
  * @see TreeObject
  * @see TreeEntry
  *
- */async function readTree(_ref242){let fs=_ref242.fs,dir=_ref242.dir,_ref242$gitdir=_ref242.gitdir,gitdir=_ref242$gitdir===void 0?join(dir,'.git'):_ref242$gitdir,oid=_ref242.oid,_ref242$filepath=_ref242.filepath,filepath=_ref242$filepath===void 0?undefined:_ref242$filepath,_ref242$cache=_ref242.cache,cache=_ref242$cache===void 0?{}:_ref242$cache;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('oid',oid);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _readTree({fs:fsp,cache,gitdir:updatedGitdir,oid,filepath});}catch(err){err.caller='git.readTree';throw err;}}// @ts-check
+ */async function readTree(_ref243){let fs=_ref243.fs,dir=_ref243.dir,_ref243$gitdir=_ref243.gitdir,gitdir=_ref243$gitdir===void 0?join(dir,'.git'):_ref243$gitdir,oid=_ref243.oid,_ref243$filepath=_ref243.filepath,filepath=_ref243$filepath===void 0?undefined:_ref243$filepath,_ref243$cache=_ref243.cache,cache=_ref243$cache===void 0?{}:_ref243$cache;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('oid',oid);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _readTree({fs:fsp,cache,gitdir:updatedGitdir,oid,filepath});}catch(err){err.caller='git.readTree';throw err;}}// @ts-check
 /**
  * Remove a file from the git index (aka staging area)
  *
@@ -62313,7 +62322,7 @@ return result;}/**
  * await git.remove({ fs, dir: '/tutorial', filepath: 'README.md' })
  * console.log('done')
  *
- */async function remove(_ref243){let _fs=_ref243.fs,dir=_ref243.dir,_ref243$gitdir=_ref243.gitdir,gitdir=_ref243$gitdir===void 0?join(dir,'.git'):_ref243$gitdir,filepath=_ref243.filepath,_ref243$cache=_ref243.cache,cache=_ref243$cache===void 0?{}:_ref243$cache;try{assertParameter('fs',_fs);assertParameter('gitdir',gitdir);assertParameter('filepath',filepath);const fsp=new FileSystem(_fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});await GitIndexManager.acquire({fs:fsp,gitdir:updatedGitdir,cache},async function(index){index.delete({filepath});});}catch(err){err.caller='git.remove';throw err;}}// @ts-check
+ */async function remove(_ref244){let _fs=_ref244.fs,dir=_ref244.dir,_ref244$gitdir=_ref244.gitdir,gitdir=_ref244$gitdir===void 0?join(dir,'.git'):_ref244$gitdir,filepath=_ref244.filepath,_ref244$cache=_ref244.cache,cache=_ref244$cache===void 0?{}:_ref244$cache;try{assertParameter('fs',_fs);assertParameter('gitdir',gitdir);assertParameter('filepath',filepath);const fsp=new FileSystem(_fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});await GitIndexManager.acquire({fs:fsp,gitdir:updatedGitdir,cache},async function(index){index.delete({filepath});});}catch(err){err.caller='git.remove';throw err;}}// @ts-check
 /**
  * @param {object} args
  * @param {import('../models/FileSystem.js').FileSystem} args.fs
@@ -62336,7 +62345,7 @@ return result;}/**
  * @param {string} [args.signingKey]
  *
  * @returns {Promise<string>}
- */async function _removeNote(_ref244){let fs=_ref244.fs,cache=_ref244.cache,onSign=_ref244.onSign,gitdir=_ref244.gitdir,_ref244$ref=_ref244.ref,ref=_ref244$ref===void 0?'refs/notes/commits':_ref244$ref,oid=_ref244.oid,author=_ref244.author,committer=_ref244.committer,signingKey=_ref244.signingKey;// Get the current note commit
+ */async function _removeNote(_ref245){let fs=_ref245.fs,cache=_ref245.cache,onSign=_ref245.onSign,gitdir=_ref245.gitdir,_ref245$ref=_ref245.ref,ref=_ref245$ref===void 0?'refs/notes/commits':_ref245$ref,oid=_ref245.oid,author=_ref245.author,committer=_ref245.committer,signingKey=_ref245.signingKey;// Get the current note commit
 let parent;try{parent=await GitRefManager.resolve({gitdir,fs,ref});}catch(err){if(!(err instanceof NotFoundError)){throw err;}}// I'm using the "empty tree" magic number here for brevity
 const result=await _readTree({fs,cache,gitdir,oid:parent||'4b825dc642cb6eb9a060e54bf8d69288fbee4904'});let tree=result.tree;// Remove the note blob entry from the tree
 tree=tree.filter(entry=>entry.path!==oid);// Create the new note tree
@@ -62366,7 +62375,7 @@ const commitOid=await _commit({fs,cache,onSign,gitdir,ref,tree:treeOid,parent:pa
  * @param {object} [args.cache] - a [cache](cache.md) object
  *
  * @returns {Promise<string>} Resolves successfully with the SHA-1 object id of the commit object for the note removal.
- */async function removeNote(_ref245){let _fs=_ref245.fs,onSign=_ref245.onSign,dir=_ref245.dir,_ref245$gitdir=_ref245.gitdir,gitdir=_ref245$gitdir===void 0?join(dir,'.git'):_ref245$gitdir,_ref245$ref=_ref245.ref,ref=_ref245$ref===void 0?'refs/notes/commits':_ref245$ref,oid=_ref245.oid,_author=_ref245.author,_committer=_ref245.committer,signingKey=_ref245.signingKey,_ref245$cache=_ref245.cache,cache=_ref245$cache===void 0?{}:_ref245$cache;try{assertParameter('fs',_fs);assertParameter('gitdir',gitdir);assertParameter('oid',oid);const fs=new FileSystem(_fs);const updatedGitdir=await discoverGitdir({fsp:fs,dotgit:gitdir});const author=await normalizeAuthorObject({fs,gitdir:updatedGitdir,author:_author});if(!author)throw new MissingNameError('author');const committer=await normalizeCommitterObject({fs,gitdir:updatedGitdir,author,committer:_committer});if(!committer)throw new MissingNameError('committer');return await _removeNote({fs,cache,onSign,gitdir:updatedGitdir,ref,oid,author,committer,signingKey});}catch(err){err.caller='git.removeNote';throw err;}}// @ts-check
+ */async function removeNote(_ref246){let _fs=_ref246.fs,onSign=_ref246.onSign,dir=_ref246.dir,_ref246$gitdir=_ref246.gitdir,gitdir=_ref246$gitdir===void 0?join(dir,'.git'):_ref246$gitdir,_ref246$ref=_ref246.ref,ref=_ref246$ref===void 0?'refs/notes/commits':_ref246$ref,oid=_ref246.oid,_author=_ref246.author,_committer=_ref246.committer,signingKey=_ref246.signingKey,_ref246$cache=_ref246.cache,cache=_ref246$cache===void 0?{}:_ref246$cache;try{assertParameter('fs',_fs);assertParameter('gitdir',gitdir);assertParameter('oid',oid);const fs=new FileSystem(_fs);const updatedGitdir=await discoverGitdir({fsp:fs,dotgit:gitdir});const author=await normalizeAuthorObject({fs,gitdir:updatedGitdir,author:_author});if(!author)throw new MissingNameError('author');const committer=await normalizeCommitterObject({fs,gitdir:updatedGitdir,author,committer:_committer});if(!committer)throw new MissingNameError('committer');return await _removeNote({fs,cache,onSign,gitdir:updatedGitdir,ref,oid,author,committer,signingKey});}catch(err){err.caller='git.removeNote';throw err;}}// @ts-check
 /**
  * Rename a branch
  *
@@ -62378,7 +62387,7 @@ const commitOid=await _commit({fs,cache,onSign,gitdir,ref,tree:treeOid,parent:pa
  * @param {boolean} [args.checkout = false]
  *
  * @returns {Promise<void>} Resolves successfully when filesystem operations are complete
- */async function _renameBranch(_ref246){let fs=_ref246.fs,gitdir=_ref246.gitdir,oldref=_ref246.oldref,ref=_ref246.ref,_ref246$checkout=_ref246.checkout,checkout=_ref246$checkout===void 0?false:_ref246$checkout;if(!isValidRef(ref,true)){throw new InvalidRefNameError(ref,clean_git_ref__WEBPACK_IMPORTED_MODULE_6___default.a.clean(ref));}if(!isValidRef(oldref,true)){throw new InvalidRefNameError(oldref,clean_git_ref__WEBPACK_IMPORTED_MODULE_6___default.a.clean(oldref));}const fulloldref="refs/heads/".concat(oldref);const fullnewref="refs/heads/".concat(ref);const newexist=await GitRefManager.exists({fs,gitdir,ref:fullnewref});if(newexist){throw new AlreadyExistsError('branch',ref,false);}const value=await GitRefManager.resolve({fs,gitdir,ref:fulloldref,depth:1});await GitRefManager.writeRef({fs,gitdir,ref:fullnewref,value});await GitRefManager.deleteRef({fs,gitdir,ref:fulloldref});const fullCurrentBranchRef=await _currentBranch({fs,gitdir,fullname:true});const isCurrentBranch=fullCurrentBranchRef===fulloldref;if(checkout||isCurrentBranch){// Update HEAD
+ */async function _renameBranch(_ref247){let fs=_ref247.fs,gitdir=_ref247.gitdir,oldref=_ref247.oldref,ref=_ref247.ref,_ref247$checkout=_ref247.checkout,checkout=_ref247$checkout===void 0?false:_ref247$checkout;if(!isValidRef(ref,true)){throw new InvalidRefNameError(ref,clean_git_ref__WEBPACK_IMPORTED_MODULE_6___default.a.clean(ref));}if(!isValidRef(oldref,true)){throw new InvalidRefNameError(oldref,clean_git_ref__WEBPACK_IMPORTED_MODULE_6___default.a.clean(oldref));}const fulloldref="refs/heads/".concat(oldref);const fullnewref="refs/heads/".concat(ref);const newexist=await GitRefManager.exists({fs,gitdir,ref:fullnewref});if(newexist){throw new AlreadyExistsError('branch',ref,false);}const value=await GitRefManager.resolve({fs,gitdir,ref:fulloldref,depth:1});await GitRefManager.writeRef({fs,gitdir,ref:fullnewref,value});await GitRefManager.deleteRef({fs,gitdir,ref:fulloldref});const fullCurrentBranchRef=await _currentBranch({fs,gitdir,fullname:true});const isCurrentBranch=fullCurrentBranchRef===fulloldref;if(checkout||isCurrentBranch){// Update HEAD
 await GitRefManager.writeSymbolicRef({fs,gitdir,ref:'HEAD',value:fullnewref});}}// @ts-check
 /**
  * Rename a branch
@@ -62397,7 +62406,7 @@ await GitRefManager.writeSymbolicRef({fs,gitdir,ref:'HEAD',value:fullnewref});}}
  * await git.renameBranch({ fs, dir: '/tutorial', ref: 'main', oldref: 'master' })
  * console.log('done')
  *
- */async function renameBranch(_ref247){let fs=_ref247.fs,dir=_ref247.dir,_ref247$gitdir=_ref247.gitdir,gitdir=_ref247$gitdir===void 0?join(dir,'.git'):_ref247$gitdir,ref=_ref247.ref,oldref=_ref247.oldref,_ref247$checkout=_ref247.checkout,checkout=_ref247$checkout===void 0?false:_ref247$checkout;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('ref',ref);assertParameter('oldref',oldref);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _renameBranch({fs:fsp,gitdir:updatedGitdir,ref,oldref,checkout});}catch(err){err.caller='git.renameBranch';throw err;}}async function hashObject$1(_ref248){let gitdir=_ref248.gitdir,type=_ref248.type,object=_ref248.object;return shasum(GitObject.wrap({type,object}));}// @ts-check
+ */async function renameBranch(_ref248){let fs=_ref248.fs,dir=_ref248.dir,_ref248$gitdir=_ref248.gitdir,gitdir=_ref248$gitdir===void 0?join(dir,'.git'):_ref248$gitdir,ref=_ref248.ref,oldref=_ref248.oldref,_ref248$checkout=_ref248.checkout,checkout=_ref248$checkout===void 0?false:_ref248$checkout;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('ref',ref);assertParameter('oldref',oldref);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _renameBranch({fs:fsp,gitdir:updatedGitdir,ref,oldref,checkout});}catch(err){err.caller='git.renameBranch';throw err;}}async function hashObject$1(_ref249){let gitdir=_ref249.gitdir,type=_ref249.type,object=_ref249.object;return shasum(GitObject.wrap({type,object}));}// @ts-check
 /**
  * Reset a file in the git index (aka staging area)
  *
@@ -62417,7 +62426,7 @@ await GitRefManager.writeSymbolicRef({fs,gitdir,ref:'HEAD',value:fullnewref});}}
  * await git.resetIndex({ fs, dir: '/tutorial', filepath: 'README.md' })
  * console.log('done')
  *
- */async function resetIndex(_ref249){let _fs=_ref249.fs,dir=_ref249.dir,_ref249$gitdir=_ref249.gitdir,gitdir=_ref249$gitdir===void 0?join(dir,'.git'):_ref249$gitdir,filepath=_ref249.filepath,ref=_ref249.ref,_ref249$cache=_ref249.cache,cache=_ref249$cache===void 0?{}:_ref249$cache;try{assertParameter('fs',_fs);assertParameter('gitdir',gitdir);assertParameter('filepath',filepath);const fs=new FileSystem(_fs);const updatedGitdir=await discoverGitdir({fsp:fs,dotgit:gitdir});let oid;let workdirOid;try{// Resolve commit
+ */async function resetIndex(_ref250){let _fs=_ref250.fs,dir=_ref250.dir,_ref250$gitdir=_ref250.gitdir,gitdir=_ref250$gitdir===void 0?join(dir,'.git'):_ref250$gitdir,filepath=_ref250.filepath,ref=_ref250.ref,_ref250$cache=_ref250.cache,cache=_ref250$cache===void 0?{}:_ref250$cache;try{assertParameter('fs',_fs);assertParameter('gitdir',gitdir);assertParameter('filepath',filepath);const fs=new FileSystem(_fs);const updatedGitdir=await discoverGitdir({fsp:fs,dotgit:gitdir});let oid;let workdirOid;try{// Resolve commit
 oid=await GitRefManager.resolve({fs,gitdir:updatedGitdir,ref:ref||'HEAD'});}catch(e){if(ref){// Only throw the error if a ref is explicitly provided
 throw e;}}// Not having an oid at this point means `resetIndex()` was called without explicit `ref` on a new git
 // repository. If that happens, we can skip resolving the file path.
@@ -62446,7 +62455,7 @@ stats=await fs.lstat(join(dir,filepath));}}await GitIndexManager.acquire({fs,git
  * let currentBranch = await git.resolveRef({ fs, dir: '/tutorial', ref: 'HEAD', depth: 2 })
  * console.log(currentBranch)
  *
- */async function resolveRef(_ref250){let fs=_ref250.fs,dir=_ref250.dir,_ref250$gitdir=_ref250.gitdir,gitdir=_ref250$gitdir===void 0?join(dir,'.git'):_ref250$gitdir,ref=_ref250.ref,depth=_ref250.depth;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('ref',ref);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});const oid=await GitRefManager.resolve({fs:fsp,gitdir:updatedGitdir,ref,depth});return oid;}catch(err){err.caller='git.resolveRef';throw err;}}// @ts-check
+ */async function resolveRef(_ref251){let fs=_ref251.fs,dir=_ref251.dir,_ref251$gitdir=_ref251.gitdir,gitdir=_ref251$gitdir===void 0?join(dir,'.git'):_ref251$gitdir,ref=_ref251.ref,depth=_ref251.depth;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('ref',ref);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});const oid=await GitRefManager.resolve({fs:fsp,gitdir:updatedGitdir,ref,depth});return oid;}catch(err){err.caller='git.resolveRef';throw err;}}// @ts-check
 /**
  * Write an entry to the git config files.
  *
@@ -62488,7 +62497,7 @@ stats=await fs.lstat(join(dir,filepath));}}await GitIndexManager.acquire({fs,git
  * // Print out config file
  * file = await fs.promises.readFile('/tutorial/.git/config', 'utf8')
  * console.log(file)
- */async function setConfig(_ref251){let _fs=_ref251.fs,dir=_ref251.dir,_ref251$gitdir=_ref251.gitdir,gitdir=_ref251$gitdir===void 0?join(dir,'.git'):_ref251$gitdir,path=_ref251.path,value=_ref251.value,_ref251$append=_ref251.append,append=_ref251$append===void 0?false:_ref251$append;try{assertParameter('fs',_fs);assertParameter('gitdir',gitdir);assertParameter('path',path);// assertParameter('value', value) // We actually allow 'undefined' as a value to unset/delete
+ */async function setConfig(_ref252){let _fs=_ref252.fs,dir=_ref252.dir,_ref252$gitdir=_ref252.gitdir,gitdir=_ref252$gitdir===void 0?join(dir,'.git'):_ref252$gitdir,path=_ref252.path,value=_ref252.value,_ref252$append=_ref252.append,append=_ref252$append===void 0?false:_ref252$append;try{assertParameter('fs',_fs);assertParameter('gitdir',gitdir);assertParameter('path',path);// assertParameter('value', value) // We actually allow 'undefined' as a value to unset/delete
 const fs=new FileSystem(_fs);const updatedGitdir=await discoverGitdir({fsp:fs,dotgit:gitdir});const config=await GitConfigManager.get({fs,gitdir:updatedGitdir});if(append){await config.append(path,value);}else{await config.set(path,value);}await GitConfigManager.save({fs,gitdir:updatedGitdir,config});}catch(err){err.caller='git.setConfig';throw err;}}// @ts-check
 /**
  * @param {object} args
@@ -62499,7 +62508,7 @@ const fs=new FileSystem(_fs);const updatedGitdir=await discoverGitdir({fsp:fs,do
  * @returns {Promise<string>}
  * @see CommitObject
  *
- */async function _writeCommit(_ref252){let fs=_ref252.fs,gitdir=_ref252.gitdir,commit=_ref252.commit;// Convert object to buffer
+ */async function _writeCommit(_ref253){let fs=_ref253.fs,gitdir=_ref253.gitdir,commit=_ref253.commit;// Convert object to buffer
 const object=GitCommit.from(commit).toObject();const oid=await _writeObject({fs,gitdir,type:'commit',object,format:'content'});return oid;}class GitRefStash{// constructor removed
 static get timezoneOffsetForRefLogEntry(){const offsetMinutes=new Date().getTimezoneOffset();const offsetHours=Math.abs(Math.floor(offsetMinutes/60));const offsetMinutesFormatted=Math.abs(offsetMinutes%60).toString().padStart(2,'0');const sign=offsetMinutes>0?'-':'+';return"".concat(sign).concat(offsetHours.toString().padStart(2,'0')).concat(offsetMinutesFormatted);}static createStashReflogEntry(author,stashCommit,message){const nameNoSpace=author.name.replace(/\s/g,'');const z40='0000000000000000000000000000000000000000';// hard code for now, works with `git stash list`
 const timestamp=Math.floor(Date.now()/1000);const timezoneOffset=GitRefStash.timezoneOffsetForRefLogEntry;return"".concat(z40," ").concat(stashCommit," ").concat(nameNoSpace," ").concat(author.email," ").concat(timestamp," ").concat(timezoneOffset,"\t").concat(message,"\n");}static getStashReflogEntry(reflogString){let parsed=arguments.length>1&&arguments[1]!==undefined?arguments[1]:false;const reflogLines=reflogString.split('\n');const entries=reflogLines.filter(l=>l).reverse().map((line,idx)=>parsed?"stash@{".concat(idx,"}: ").concat(line.split('\t')[1]):line);return entries;}}class GitStashManager{/**
@@ -62509,7 +62518,7 @@ const timestamp=Math.floor(Date.now()/1000);const timezoneOffset=GitRefStash.tim
    * @param {FSClient} args.fs - A file system implementation.
    * @param {string} args.dir - The working directory.
    * @param {string}[args.gitdir=join(dir, '.git')] - [required] The [git directory](dir-vs-gitdir.md) path
-   */constructor(_ref253){let fs=_ref253.fs,dir=_ref253.dir,_ref253$gitdir=_ref253.gitdir,gitdir=_ref253$gitdir===void 0?join(dir,'.git'):_ref253$gitdir;Object.assign(this,{fs,dir,gitdir,_author:null});}/**
+   */constructor(_ref254){let fs=_ref254.fs,dir=_ref254.dir,_ref254$gitdir=_ref254.gitdir,gitdir=_ref254$gitdir===void 0?join(dir,'.git'):_ref254$gitdir;Object.assign(this,{fs,dir,gitdir,_author:null});}/**
    * Gets the reference name for the stash.
    *
    * @returns {string} - The stash reference name.
@@ -62544,7 +62553,7 @@ const timestamp=Math.floor(Date.now()/1000);const timezoneOffset=GitRefStash.tim
    * @param {string} args.tree - The tree object ID.
    * @param {string[]} args.parent - The parent commit object IDs.
    * @returns {Promise<string>} - The object ID of the written commit.
-   */async writeStashCommit(_ref254){let message=_ref254.message,tree=_ref254.tree,parent=_ref254.parent;return _writeCommit({fs:this.fs,gitdir:this.gitdir,commit:{message,tree,parent,author:await this.getAuthor(),committer:await this.getAuthor()}});}/**
+   */async writeStashCommit(_ref255){let message=_ref255.message,tree=_ref255.tree,parent=_ref255.parent;return _writeCommit({fs:this.fs,gitdir:this.gitdir,commit:{message,tree,parent,author:await this.getAuthor(),committer:await this.getAuthor()}});}/**
    * Reads a stash commit by its index.
    *
    * @param {number} refIdx - The index of the stash entry.
@@ -62565,37 +62574,37 @@ return _readCommit({fs:this.fs,cache:{},gitdir:this.gitdir,oid:stashSHA});}/**
    * @param {string} args.stashCommit - The object ID of the stash commit.
    * @param {string} args.message - The reflog message.
    * @returns {Promise<void>}
-   */async writeStashReflogEntry(_ref255){let stashCommit=_ref255.stashCommit,message=_ref255.message;const author=await this.getAuthor();const entry=GitRefStash.createStashReflogEntry(author,stashCommit,message);const filepath=this.refLogsStashPath;await acquireLock$1({filepath,entry},async()=>{const appendTo=(await this.fs.exists(filepath))?await this.fs.read(filepath,'utf8'):'';await this.fs.write(filepath,appendTo+entry,'utf8');});}/**
+   */async writeStashReflogEntry(_ref256){let stashCommit=_ref256.stashCommit,message=_ref256.message;const author=await this.getAuthor();const entry=GitRefStash.createStashReflogEntry(author,stashCommit,message);const filepath=this.refLogsStashPath;await acquireLock$1({filepath,entry},async()=>{const appendTo=(await this.fs.exists(filepath))?await this.fs.read(filepath,'utf8'):'';await this.fs.write(filepath,appendTo+entry,'utf8');});}/**
    * Reads the stash reflogs.
    *
    * @param {Object} args
    * @param {boolean} [args.parsed=false] - Whether to parse the reflog entries.
    * @returns {Promise<string[]|Object[]>} - The reflog entries as strings or parsed objects.
-   */async readStashReflogs(_ref256){let _ref256$parsed=_ref256.parsed,parsed=_ref256$parsed===void 0?false:_ref256$parsed;if(!(await this.fs.exists(this.refLogsStashPath))){return[];}const reflogString=await this.fs.read(this.refLogsStashPath,'utf8');return GitRefStash.getStashReflogEntry(reflogString,parsed);}}// @ts-check
+   */async readStashReflogs(_ref257){let _ref257$parsed=_ref257.parsed,parsed=_ref257$parsed===void 0?false:_ref257$parsed;if(!(await this.fs.exists(this.refLogsStashPath))){return[];}const reflogString=await this.fs.read(this.refLogsStashPath,'utf8');return GitRefStash.getStashReflogEntry(reflogString,parsed);}}// @ts-check
 /**
  * Common logic for creating a stash commit
  * @private
- */async function _createStashCommit(_ref257){let fs=_ref257.fs,dir=_ref257.dir,gitdir=_ref257.gitdir,_ref257$message=_ref257.message,message=_ref257$message===void 0?'':_ref257$message;const stashMgr=new GitStashManager({fs,dir,gitdir});await stashMgr.getAuthor();// ensure there is an author
+ */async function _createStashCommit(_ref258){let fs=_ref258.fs,dir=_ref258.dir,gitdir=_ref258.gitdir,_ref258$message=_ref258.message,message=_ref258$message===void 0?'':_ref258$message;const stashMgr=new GitStashManager({fs,dir,gitdir});await stashMgr.getAuthor();// ensure there is an author
 const branch=await _currentBranch({fs,gitdir,fullname:false});// prepare the stash commit: first parent is the current branch HEAD
 const headCommit=await GitRefManager.resolve({fs,gitdir,ref:'HEAD'});const headCommitObj=await readCommit({fs,dir,gitdir,oid:headCommit});const headMsg=headCommitObj.commit.message;const stashCommitParents=[headCommit];let stashCommitTree=null;let workDirCompareBase=TREE({ref:'HEAD'});const indexTree=await writeTreeChanges({fs,dir,gitdir,treePair:[TREE({ref:'HEAD'}),'stage']});if(indexTree){// this indexTree will be the tree of the stash commit
 // create a commit from the index tree, which has one parent, the current branch HEAD
 const stashCommitOne=await stashMgr.writeStashCommit({message:"stash-Index: WIP on ".concat(branch," - ").concat(new Date().toISOString()),tree:indexTree,parent:stashCommitParents});stashCommitParents.push(stashCommitOne);stashCommitTree=indexTree;workDirCompareBase=STAGE();}const workingTree=await writeTreeChanges({fs,dir,gitdir,treePair:[workDirCompareBase,'workdir']});if(workingTree){// create a commit from the working directory tree, which has one parent, either the one we just had, or the headCommit
 const workingHeadCommit=await stashMgr.writeStashCommit({message:"stash-WorkDir: WIP on ".concat(branch," - ").concat(new Date().toISOString()),tree:workingTree,parent:[stashCommitParents[stashCommitParents.length-1]]});stashCommitParents.push(workingHeadCommit);stashCommitTree=workingTree;}if(!stashCommitTree||!indexTree&&!workingTree){throw new NotFoundError('changes, nothing to stash');}// create another commit from the tree, which has three parents: HEAD and the commit we just made:
-const stashMsg=(message.trim()||"WIP on ".concat(branch))+": ".concat(headCommit.substring(0,7)," ").concat(headMsg);const stashCommit=await stashMgr.writeStashCommit({message:stashMsg,tree:stashCommitTree,parent:stashCommitParents});return{stashCommit,stashMsg,branch,stashMgr};}async function _stashPush(_ref258){let fs=_ref258.fs,dir=_ref258.dir,gitdir=_ref258.gitdir,_ref258$message=_ref258.message,message=_ref258$message===void 0?'':_ref258$message;const _await$_createStashCo=await _createStashCommit({fs,dir,gitdir,message}),stashCommit=_await$_createStashCo.stashCommit,stashMsg=_await$_createStashCo.stashMsg,branch=_await$_createStashCo.branch,stashMgr=_await$_createStashCo.stashMgr;// next, write this commit into .git/refs/stash:
+const stashMsg=(message.trim()||"WIP on ".concat(branch))+": ".concat(headCommit.substring(0,7)," ").concat(headMsg);const stashCommit=await stashMgr.writeStashCommit({message:stashMsg,tree:stashCommitTree,parent:stashCommitParents});return{stashCommit,stashMsg,branch,stashMgr};}async function _stashPush(_ref259){let fs=_ref259.fs,dir=_ref259.dir,gitdir=_ref259.gitdir,_ref259$message=_ref259.message,message=_ref259$message===void 0?'':_ref259$message;const _await$_createStashCo=await _createStashCommit({fs,dir,gitdir,message}),stashCommit=_await$_createStashCo.stashCommit,stashMsg=_await$_createStashCo.stashMsg,branch=_await$_createStashCo.branch,stashMgr=_await$_createStashCo.stashMgr;// next, write this commit into .git/refs/stash:
 await stashMgr.writeStashRef(stashCommit);// write the stash commit to the logs
 await stashMgr.writeStashReflogEntry({stashCommit,message:stashMsg});// finally, go back to a clean working directory
 await checkout({fs,dir,gitdir,ref:branch,track:false,force:true// force checkout to discard changes
-});return stashCommit;}async function _stashCreate(_ref259){let fs=_ref259.fs,dir=_ref259.dir,gitdir=_ref259.gitdir,_ref259$message=_ref259.message,message=_ref259$message===void 0?'':_ref259$message;const _await$_createStashCo2=await _createStashCommit({fs,dir,gitdir,message}),stashCommit=_await$_createStashCo2.stashCommit;// Return the stash commit hash without modifying refs or working directory
-return stashCommit;}async function _stashApply(_ref260){let fs=_ref260.fs,dir=_ref260.dir,gitdir=_ref260.gitdir,_ref260$refIdx=_ref260.refIdx,refIdx=_ref260$refIdx===void 0?0:_ref260$refIdx;const stashMgr=new GitStashManager({fs,dir,gitdir});// get the stash commit object
-const stashCommit=await stashMgr.readStashCommit(refIdx);const _ref261=stashCommit.commit?stashCommit.commit:{},_ref261$parent=_ref261.parent,stashParents=_ref261$parent===void 0?null:_ref261$parent;if(!stashParents||!Array.isArray(stashParents)){return;// no stash found
+});return stashCommit;}async function _stashCreate(_ref260){let fs=_ref260.fs,dir=_ref260.dir,gitdir=_ref260.gitdir,_ref260$message=_ref260.message,message=_ref260$message===void 0?'':_ref260$message;const _await$_createStashCo2=await _createStashCommit({fs,dir,gitdir,message}),stashCommit=_await$_createStashCo2.stashCommit;// Return the stash commit hash without modifying refs or working directory
+return stashCommit;}async function _stashApply(_ref261){let fs=_ref261.fs,dir=_ref261.dir,gitdir=_ref261.gitdir,_ref261$refIdx=_ref261.refIdx,refIdx=_ref261$refIdx===void 0?0:_ref261$refIdx;const stashMgr=new GitStashManager({fs,dir,gitdir});// get the stash commit object
+const stashCommit=await stashMgr.readStashCommit(refIdx);const _ref262=stashCommit.commit?stashCommit.commit:{},_ref262$parent=_ref262.parent,stashParents=_ref262$parent===void 0?null:_ref262$parent;if(!stashParents||!Array.isArray(stashParents)){return;// no stash found
 }// compare the stash commit tree with its parent commit
-for(let i=0;i<stashParents.length-1;i++){const applyingCommit=await _readCommit({fs,cache:{},gitdir,oid:stashParents[i+1]});const wasStaged=applyingCommit.commit.message.startsWith('stash-Index');await applyTreeChanges({fs,dir,gitdir,stashCommit:stashParents[i+1],parentCommit:stashParents[i],wasStaged});}}async function _stashDrop(_ref262){let fs=_ref262.fs,dir=_ref262.dir,gitdir=_ref262.gitdir,_ref262$refIdx=_ref262.refIdx,refIdx=_ref262$refIdx===void 0?0:_ref262$refIdx;const stashMgr=new GitStashManager({fs,dir,gitdir});const stashCommit=await stashMgr.readStashCommit(refIdx);if(!stashCommit.commit){return;// no stash found
+for(let i=0;i<stashParents.length-1;i++){const applyingCommit=await _readCommit({fs,cache:{},gitdir,oid:stashParents[i+1]});const wasStaged=applyingCommit.commit.message.startsWith('stash-Index');await applyTreeChanges({fs,dir,gitdir,stashCommit:stashParents[i+1],parentCommit:stashParents[i],wasStaged});}}async function _stashDrop(_ref263){let fs=_ref263.fs,dir=_ref263.dir,gitdir=_ref263.gitdir,_ref263$refIdx=_ref263.refIdx,refIdx=_ref263$refIdx===void 0?0:_ref263$refIdx;const stashMgr=new GitStashManager({fs,dir,gitdir});const stashCommit=await stashMgr.readStashCommit(refIdx);if(!stashCommit.commit){return;// no stash found
 }// remove stash ref first
 const stashRefPath=stashMgr.refStashPath;await acquireLock$1(stashRefPath,async()=>{if(await fs.exists(stashRefPath)){await fs.rm(stashRefPath);}});// read from stash reflog and list the stash commits
 const reflogEntries=await stashMgr.readStashReflogs({parsed:false});if(!reflogEntries.length){return;// no stash reflog entry
 }// remove the specified stash reflog entry from reflogEntries, then update the stash reflog
 reflogEntries.splice(refIdx,1);const stashReflogPath=stashMgr.refLogsStashPath;await acquireLock$1({reflogEntries,stashReflogPath,stashMgr},async()=>{if(reflogEntries.length){await fs.write(stashReflogPath,reflogEntries.reverse().join('\n')+'\n','utf8');const lastStashCommit=reflogEntries[reflogEntries.length-1].split(' ')[1];await stashMgr.writeStashRef(lastStashCommit);}else{// remove the stash reflog file if no entry left
-await fs.rm(stashReflogPath);}});}async function _stashList(_ref263){let fs=_ref263.fs,dir=_ref263.dir,gitdir=_ref263.gitdir;const stashMgr=new GitStashManager({fs,dir,gitdir});return stashMgr.readStashReflogs({parsed:true});}async function _stashClear(_ref264){let fs=_ref264.fs,dir=_ref264.dir,gitdir=_ref264.gitdir;const stashMgr=new GitStashManager({fs,dir,gitdir});const stashRefPath=[stashMgr.refStashPath,stashMgr.refLogsStashPath];await acquireLock$1(stashRefPath,async()=>{await Promise.all(stashRefPath.map(async path=>{if(await fs.exists(path)){return fs.rm(path);}}));});}async function _stashPop(_ref265){let fs=_ref265.fs,dir=_ref265.dir,gitdir=_ref265.gitdir,_ref265$refIdx=_ref265.refIdx,refIdx=_ref265$refIdx===void 0?0:_ref265$refIdx;await _stashApply({fs,dir,gitdir,refIdx});await _stashDrop({fs,dir,gitdir,refIdx});}// @ts-check
+await fs.rm(stashReflogPath);}});}async function _stashList(_ref264){let fs=_ref264.fs,dir=_ref264.dir,gitdir=_ref264.gitdir;const stashMgr=new GitStashManager({fs,dir,gitdir});return stashMgr.readStashReflogs({parsed:true});}async function _stashClear(_ref265){let fs=_ref265.fs,dir=_ref265.dir,gitdir=_ref265.gitdir;const stashMgr=new GitStashManager({fs,dir,gitdir});const stashRefPath=[stashMgr.refStashPath,stashMgr.refLogsStashPath];await acquireLock$1(stashRefPath,async()=>{await Promise.all(stashRefPath.map(async path=>{if(await fs.exists(path)){return fs.rm(path);}}));});}async function _stashPop(_ref266){let fs=_ref266.fs,dir=_ref266.dir,gitdir=_ref266.gitdir,_ref266$refIdx=_ref266.refIdx,refIdx=_ref266$refIdx===void 0?0:_ref266$refIdx;await _stashApply({fs,dir,gitdir,refIdx});await _stashDrop({fs,dir,gitdir,refIdx});}// @ts-check
 /**
  * stash api, supports  {'push' | 'pop' | 'apply' | 'drop' | 'list' | 'clear' | 'create'} StashOp
  * _note_,
@@ -62651,7 +62660,7 @@ await fs.rm(stashReflogPath);}});}async function _stashList(_ref263){let fs=_ref
  * // create a stash commit without modifying working directory
  * const stashCommitHash = await git.stash({ fs, dir, op: 'create', message: 'my stash' })
  * console.log(stashCommitHash) // returns the stash commit hash
- */async function stash(_ref266){let fs=_ref266.fs,dir=_ref266.dir,_ref266$gitdir=_ref266.gitdir,gitdir=_ref266$gitdir===void 0?join(dir,'.git'):_ref266$gitdir,_ref266$op=_ref266.op,op=_ref266$op===void 0?'push':_ref266$op,_ref266$message=_ref266.message,message=_ref266$message===void 0?'':_ref266$message,_ref266$refIdx=_ref266.refIdx,refIdx=_ref266$refIdx===void 0?0:_ref266$refIdx;assertParameter('fs',fs);assertParameter('dir',dir);assertParameter('gitdir',gitdir);assertParameter('op',op);const stashMap={push:_stashPush,apply:_stashApply,drop:_stashDrop,list:_stashList,clear:_stashClear,pop:_stashPop,create:_stashCreate};const opsNeedRefIdx=['apply','drop','pop'];try{const _fs=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp:_fs,dotgit:gitdir});const folders=['refs','logs','logs/refs'];folders.map(f=>join(updatedGitdir,f)).forEach(async folder=>{if(!(await _fs.exists(folder))){await _fs.mkdir(folder);}});const opFunc=stashMap[op];if(opFunc){if(opsNeedRefIdx.includes(op)&&refIdx<0){throw new InvalidRefNameError("stash@".concat(refIdx),'number that is in range of [0, num of stash pushed]');}return await opFunc({fs:_fs,dir,gitdir:updatedGitdir,message,refIdx});}throw new Error("To be implemented: ".concat(op));}catch(err){err.caller='git.stash';throw err;}}// @ts-check
+ */async function stash(_ref267){let fs=_ref267.fs,dir=_ref267.dir,_ref267$gitdir=_ref267.gitdir,gitdir=_ref267$gitdir===void 0?join(dir,'.git'):_ref267$gitdir,_ref267$op=_ref267.op,op=_ref267$op===void 0?'push':_ref267$op,_ref267$message=_ref267.message,message=_ref267$message===void 0?'':_ref267$message,_ref267$refIdx=_ref267.refIdx,refIdx=_ref267$refIdx===void 0?0:_ref267$refIdx;assertParameter('fs',fs);assertParameter('dir',dir);assertParameter('gitdir',gitdir);assertParameter('op',op);const stashMap={push:_stashPush,apply:_stashApply,drop:_stashDrop,list:_stashList,clear:_stashClear,pop:_stashPop,create:_stashCreate};const opsNeedRefIdx=['apply','drop','pop'];try{const _fs=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp:_fs,dotgit:gitdir});const folders=['refs','logs','logs/refs'];folders.map(f=>join(updatedGitdir,f)).forEach(async folder=>{if(!(await _fs.exists(folder))){await _fs.mkdir(folder);}});const opFunc=stashMap[op];if(opFunc){if(opsNeedRefIdx.includes(op)&&refIdx<0){throw new InvalidRefNameError("stash@".concat(refIdx),'number that is in range of [0, num of stash pushed]');}return await opFunc({fs:_fs,dir,gitdir:updatedGitdir,message,refIdx});}throw new Error("To be implemented: ".concat(op));}catch(err){err.caller='git.stash';throw err;}}// @ts-check
 /**
  * Tell whether a file has been changed
  *
@@ -62691,7 +62700,7 @@ await fs.rm(stashReflogPath);}});}async function _stashList(_ref263){let fs=_ref
  * let status = await git.status({ fs, dir: '/tutorial', filepath: 'README.md' })
  * console.log(status)
  *
- */async function status(_ref267){let _fs=_ref267.fs,dir=_ref267.dir,_ref267$gitdir=_ref267.gitdir,gitdir=_ref267$gitdir===void 0?join(dir,'.git'):_ref267$gitdir,filepath=_ref267.filepath,_ref267$cache=_ref267.cache,cache=_ref267$cache===void 0?{}:_ref267$cache,_ref267$refresh=_ref267.refresh,refresh=_ref267$refresh===void 0?true:_ref267$refresh;try{assertParameter('fs',_fs);assertParameter('gitdir',gitdir);assertParameter('filepath',filepath);const fs=new FileSystem(_fs);const updatedGitdir=await discoverGitdir({fsp:fs,dotgit:gitdir});const ignored=await GitIgnoreManager.isIgnored({fs,gitdir:updatedGitdir,dir,filepath});if(ignored){return'ignored';}const headTree=await getHeadTree({fs,cache,gitdir:updatedGitdir});const treeOid=await getOidAtPath({fs,cache,gitdir:updatedGitdir,tree:headTree,path:filepath});const indexEntry=await GitIndexManager.acquire({fs,gitdir:updatedGitdir,cache},async function(index){for(const entry of index){if(entry.path===filepath)return entry;}return null;});const stats=await fs.lstat(join(dir,filepath));const H=treeOid!==null;// head
+ */async function status(_ref268){let _fs=_ref268.fs,dir=_ref268.dir,_ref268$gitdir=_ref268.gitdir,gitdir=_ref268$gitdir===void 0?join(dir,'.git'):_ref268$gitdir,filepath=_ref268.filepath,_ref268$cache=_ref268.cache,cache=_ref268$cache===void 0?{}:_ref268$cache,_ref268$refresh=_ref268.refresh,refresh=_ref268$refresh===void 0?true:_ref268$refresh;try{assertParameter('fs',_fs);assertParameter('gitdir',gitdir);assertParameter('filepath',filepath);const fs=new FileSystem(_fs);const updatedGitdir=await discoverGitdir({fsp:fs,dotgit:gitdir});const ignored=await GitIgnoreManager.isIgnored({fs,gitdir:updatedGitdir,dir,filepath});if(ignored){return'ignored';}const headTree=await getHeadTree({fs,cache,gitdir:updatedGitdir});const treeOid=await getOidAtPath({fs,cache,gitdir:updatedGitdir,tree:headTree,path:filepath});const indexEntry=await GitIndexManager.acquire({fs,gitdir:updatedGitdir,cache},async function(index){for(const entry of index){if(entry.path===filepath)return entry;}return null;});const stats=await fs.lstat(join(dir,filepath));const H=treeOid!==null;// head
 const I=indexEntry!==null;// index
 const W=stats!==null;// working dir
 const getWorkdirOid=async()=>{if(I&&!compareStats(indexEntry,stats)){return indexEntry.oid;}else{const object=await fs.read(join(dir,filepath));const workdirOid=await hashObject$1({gitdir:updatedGitdir,type:'blob',object});// If the oid in the index === working dir oid but stats differed update cache
@@ -62727,7 +62736,7 @@ return workdirOid===indexEntry.oid?'modified':'*modified';// ABB : AAB
     ABA
     ABB
     AAB
-    */}catch(err){err.caller='git.status';throw err;}}async function getOidAtPath(_ref268){let fs=_ref268.fs,cache=_ref268.cache,updatedGitdir=_ref268.gitdir,tree=_ref268.tree,path=_ref268.path;if(typeof path==='string')path=path.split('/');const dirname=path.shift();for(const entry of tree){if(entry.path===dirname){if(path.length===0){return entry.oid;}const _await$_readObject16=await _readObject({fs,cache,gitdir:updatedGitdir,oid:entry.oid}),type=_await$_readObject16.type,object=_await$_readObject16.object;if(type==='tree'){const tree=GitTree.from(object);return getOidAtPath({fs,cache,gitdir:updatedGitdir,tree,path});}if(type==='blob'){throw new ObjectTypeError(entry.oid,type,'blob',path.join('/'));}}}return null;}async function getHeadTree(_ref269){let fs=_ref269.fs,cache=_ref269.cache,updatedGitdir=_ref269.gitdir;// Get the tree from the HEAD commit.
+    */}catch(err){err.caller='git.status';throw err;}}async function getOidAtPath(_ref269){let fs=_ref269.fs,cache=_ref269.cache,updatedGitdir=_ref269.gitdir,tree=_ref269.tree,path=_ref269.path;if(typeof path==='string')path=path.split('/');const dirname=path.shift();for(const entry of tree){if(entry.path===dirname){if(path.length===0){return entry.oid;}const _await$_readObject16=await _readObject({fs,cache,gitdir:updatedGitdir,oid:entry.oid}),type=_await$_readObject16.type,object=_await$_readObject16.object;if(type==='tree'){const tree=GitTree.from(object);return getOidAtPath({fs,cache,gitdir:updatedGitdir,tree,path});}if(type==='blob'){throw new ObjectTypeError(entry.oid,type,'blob',path.join('/'));}}}return null;}async function getHeadTree(_ref270){let fs=_ref270.fs,cache=_ref270.cache,updatedGitdir=_ref270.gitdir;// Get the tree from the HEAD commit.
 let oid;try{oid=await GitRefManager.resolve({fs,gitdir:updatedGitdir,ref:'HEAD'});}catch(e){// Handle fresh branches with no commits
 if(e instanceof NotFoundError){return[];}}const _await$_readTree2=await _readTree({fs,cache,gitdir:updatedGitdir,oid}),tree=_await$_readTree2.tree;return tree;}// @ts-check
 /**
@@ -62877,7 +62886,7 @@ if(e instanceof NotFoundError){return[];}}const _await$_readTree2=await _readTre
  *
  * @returns {Promise<Array<StatusRow>>} Resolves with a status matrix, described below.
  * @see StatusRow
- */async function statusMatrix(_ref270){let _fs=_ref270.fs,dir=_ref270.dir,_ref270$gitdir=_ref270.gitdir,gitdir=_ref270$gitdir===void 0?join(dir,'.git'):_ref270$gitdir,_ref270$ref=_ref270.ref,ref=_ref270$ref===void 0?'HEAD':_ref270$ref,_ref270$filepaths=_ref270.filepaths,filepaths=_ref270$filepaths===void 0?['.']:_ref270$filepaths,filter=_ref270.filter,_ref270$cache=_ref270.cache,cache=_ref270$cache===void 0?{}:_ref270$cache,_ref270$ignored=_ref270.ignored,shouldIgnore=_ref270$ignored===void 0?false:_ref270$ignored,_ref270$refresh=_ref270.refresh,refresh=_ref270$refresh===void 0?true:_ref270$refresh;try{assertParameter('fs',_fs);assertParameter('gitdir',gitdir);assertParameter('ref',ref);const fs=new FileSystem(_fs);const updatedGitdir=await discoverGitdir({fsp:fs,dotgit:gitdir});return await _walk({fs,cache,dir,gitdir:updatedGitdir,trees:[TREE({ref}),WORKDIR({refresh}),STAGE()],map:async function map(filepath,_ref271){let _ref272=_slicedToArray(_ref271,3),head=_ref272[0],workdir=_ref272[1],stage=_ref272[2];// Ignore ignored files, but only if they are not already tracked.
+ */async function statusMatrix(_ref271){let _fs=_ref271.fs,dir=_ref271.dir,_ref271$gitdir=_ref271.gitdir,gitdir=_ref271$gitdir===void 0?join(dir,'.git'):_ref271$gitdir,_ref271$ref=_ref271.ref,ref=_ref271$ref===void 0?'HEAD':_ref271$ref,_ref271$filepaths=_ref271.filepaths,filepaths=_ref271$filepaths===void 0?['.']:_ref271$filepaths,filter=_ref271.filter,_ref271$cache=_ref271.cache,cache=_ref271$cache===void 0?{}:_ref271$cache,_ref271$ignored=_ref271.ignored,shouldIgnore=_ref271$ignored===void 0?false:_ref271$ignored,_ref271$refresh=_ref271.refresh,refresh=_ref271$refresh===void 0?true:_ref271$refresh;try{assertParameter('fs',_fs);assertParameter('gitdir',gitdir);assertParameter('ref',ref);const fs=new FileSystem(_fs);const updatedGitdir=await discoverGitdir({fsp:fs,dotgit:gitdir});return await _walk({fs,cache,dir,gitdir:updatedGitdir,trees:[TREE({ref}),WORKDIR({refresh}),STAGE()],map:async function map(filepath,_ref272){let _ref273=_slicedToArray(_ref272,3),head=_ref273[0],workdir=_ref273[1],stage=_ref273[2];// Ignore ignored files, but only if they are not already tracked.
 if(!head&&!stage&&workdir){if(!shouldIgnore){const isIgnored=await GitIgnoreManager.isIgnored({fs,dir,filepath});if(isIgnored){return null;}}}// match against base paths
 if(!filepaths.some(base=>worthWalking(filepath,base))){return null;}// Late filter against file names
 if(filter){if(!filter(filepath))return;}const _await$Promise$all3=await Promise.all([head&&head.type(),workdir&&workdir.type(),stage&&stage.type()]),_await$Promise$all4=_slicedToArray(_await$Promise$all3,3),headType=_await$Promise$all4[0],workdirType=_await$Promise$all4[1],stageType=_await$Promise$all4[2];const isBlob=[headType,workdirType,stageType].includes('blob');// For now, bail on directories unless the file is also a blob in another tree
@@ -62903,7 +62912,7 @@ return[filepath,...result];}});}catch(err){err.caller='git.statusMatrix';throw e
  * await git.tag({ fs, dir: '/tutorial', ref: 'test-tag' })
  * console.log('done')
  *
- */async function tag(_ref273){let _fs=_ref273.fs,dir=_ref273.dir,_ref273$gitdir=_ref273.gitdir,gitdir=_ref273$gitdir===void 0?join(dir,'.git'):_ref273$gitdir,ref=_ref273.ref,object=_ref273.object,_ref273$force=_ref273.force,force=_ref273$force===void 0?false:_ref273$force;try{assertParameter('fs',_fs);assertParameter('gitdir',gitdir);assertParameter('ref',ref);const fs=new FileSystem(_fs);if(ref===undefined){throw new MissingParameterError('ref');}ref=ref.startsWith('refs/tags/')?ref:"refs/tags/".concat(ref);// Resolve passed object
+ */async function tag(_ref274){let _fs=_ref274.fs,dir=_ref274.dir,_ref274$gitdir=_ref274.gitdir,gitdir=_ref274$gitdir===void 0?join(dir,'.git'):_ref274$gitdir,ref=_ref274.ref,object=_ref274.object,_ref274$force=_ref274.force,force=_ref274$force===void 0?false:_ref274$force;try{assertParameter('fs',_fs);assertParameter('gitdir',gitdir);assertParameter('ref',ref);const fs=new FileSystem(_fs);if(ref===undefined){throw new MissingParameterError('ref');}ref=ref.startsWith('refs/tags/')?ref:"refs/tags/".concat(ref);// Resolve passed object
 const updatedGitdir=await discoverGitdir({fsp:fs,dotgit:gitdir});const value=await GitRefManager.resolve({fs,gitdir:updatedGitdir,ref:object||'HEAD'});if(!force&&(await GitRefManager.exists({fs,gitdir:updatedGitdir,ref}))){throw new AlreadyExistsError('tag',ref);}await GitRefManager.writeRef({fs,gitdir:updatedGitdir,ref,value});}catch(err){err.caller='git.tag';throw err;}}// @ts-check
 /**
  * Register file contents in the working tree or object database to the git index (aka staging area).
@@ -62945,7 +62954,7 @@ const updatedGitdir=await discoverGitdir({fsp:fs,dotgit:gitdir});const value=awa
  *   filepath: 'readme.md',
  *   oid
  * })
- */async function updateIndex$1(_ref274){let _fs=_ref274.fs,dir=_ref274.dir,_ref274$gitdir=_ref274.gitdir,gitdir=_ref274$gitdir===void 0?join(dir,'.git'):_ref274$gitdir,_ref274$cache=_ref274.cache,cache=_ref274$cache===void 0?{}:_ref274$cache,filepath=_ref274.filepath,oid=_ref274.oid,mode=_ref274.mode,add=_ref274.add,remove=_ref274.remove,force=_ref274.force;try{assertParameter('fs',_fs);assertParameter('gitdir',gitdir);assertParameter('filepath',filepath);const fs=new FileSystem(_fs);const updatedGitdir=await discoverGitdir({fsp:fs,dotgit:gitdir});if(remove){return await GitIndexManager.acquire({fs,gitdir:updatedGitdir,cache},async function(index){if(!force){// Check if the file is still present in the working directory
+ */async function updateIndex$1(_ref275){let _fs=_ref275.fs,dir=_ref275.dir,_ref275$gitdir=_ref275.gitdir,gitdir=_ref275$gitdir===void 0?join(dir,'.git'):_ref275$gitdir,_ref275$cache=_ref275.cache,cache=_ref275$cache===void 0?{}:_ref275$cache,filepath=_ref275.filepath,oid=_ref275.oid,mode=_ref275.mode,add=_ref275.add,remove=_ref275.remove,force=_ref275.force;try{assertParameter('fs',_fs);assertParameter('gitdir',gitdir);assertParameter('filepath',filepath);const fs=new FileSystem(_fs);const updatedGitdir=await discoverGitdir({fsp:fs,dotgit:gitdir});if(remove){return await GitIndexManager.acquire({fs,gitdir:updatedGitdir,cache},async function(index){if(!force){// Check if the file is still present in the working directory
 const fileStats=await fs.lstat(join(dir,filepath));if(fileStats){if(fileStats.isDirectory()){// Removing directories should not work
 throw new InvalidFilepathError('directory');}// Do nothing if we don't force and the file still exists in the workdir
 return;}}// Directories are not allowed, so we make sure the provided filepath exists in the index
@@ -63202,7 +63211,7 @@ stats={ctime:new Date(0),mtime:new Date(0),dev:0,ino:0,mode,uid:0,gid:0,size:0};
  * @param {object} [args.cache] - a [cache](cache.md) object
  *
  * @returns {Promise<any>} The finished tree-walking result
- */async function walk(_ref275){let fs=_ref275.fs,dir=_ref275.dir,_ref275$gitdir=_ref275.gitdir,gitdir=_ref275$gitdir===void 0?join(dir,'.git'):_ref275$gitdir,trees=_ref275.trees,map=_ref275.map,reduce=_ref275.reduce,iterate=_ref275.iterate,_ref275$cache=_ref275.cache,cache=_ref275$cache===void 0?{}:_ref275$cache;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('trees',trees);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _walk({fs:fsp,cache,dir,gitdir:updatedGitdir,trees,map,reduce,iterate});}catch(err){err.caller='git.walk';throw err;}}// @ts-check
+ */async function walk(_ref276){let fs=_ref276.fs,dir=_ref276.dir,_ref276$gitdir=_ref276.gitdir,gitdir=_ref276$gitdir===void 0?join(dir,'.git'):_ref276$gitdir,trees=_ref276.trees,map=_ref276.map,reduce=_ref276.reduce,iterate=_ref276.iterate,_ref276$cache=_ref276.cache,cache=_ref276$cache===void 0?{}:_ref276$cache;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('trees',trees);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _walk({fs:fsp,cache,dir,gitdir:updatedGitdir,trees,map,reduce,iterate});}catch(err){err.caller='git.walk';throw err;}}// @ts-check
 /**
  * Write a blob object directly
  *
@@ -63224,7 +63233,7 @@ stats={ctime:new Date(0),mtime:new Date(0),dev:0,ino:0,mode,uid:0,gid:0,size:0};
  *
  * console.log('oid', oid) // should be 'e69de29bb2d1d6434b8b29ae775ad8c2e48c5391'
  *
- */async function writeBlob(_ref276){let fs=_ref276.fs,dir=_ref276.dir,_ref276$gitdir=_ref276.gitdir,gitdir=_ref276$gitdir===void 0?join(dir,'.git'):_ref276$gitdir,blob=_ref276.blob;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('blob',blob);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _writeObject({fs:fsp,gitdir:updatedGitdir,type:'blob',object:blob,format:'content'});}catch(err){err.caller='git.writeBlob';throw err;}}// @ts-check
+ */async function writeBlob(_ref277){let fs=_ref277.fs,dir=_ref277.dir,_ref277$gitdir=_ref277.gitdir,gitdir=_ref277$gitdir===void 0?join(dir,'.git'):_ref277$gitdir,blob=_ref277.blob;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('blob',blob);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _writeObject({fs:fsp,gitdir:updatedGitdir,type:'blob',object:blob,format:'content'});}catch(err){err.caller='git.writeBlob';throw err;}}// @ts-check
 /**
  * Write a commit object directly
  *
@@ -63237,7 +63246,7 @@ stats={ctime:new Date(0),mtime:new Date(0),dev:0,ino:0,mode,uid:0,gid:0,size:0};
  * @returns {Promise<string>} Resolves successfully with the SHA-1 object id of the newly written object
  * @see CommitObject
  *
- */async function writeCommit(_ref277){let fs=_ref277.fs,dir=_ref277.dir,_ref277$gitdir=_ref277.gitdir,gitdir=_ref277$gitdir===void 0?join(dir,'.git'):_ref277$gitdir,commit=_ref277.commit;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('commit',commit);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _writeCommit({fs:fsp,gitdir:updatedGitdir,commit});}catch(err){err.caller='git.writeCommit';throw err;}}// @ts-check
+ */async function writeCommit(_ref278){let fs=_ref278.fs,dir=_ref278.dir,_ref278$gitdir=_ref278.gitdir,gitdir=_ref278$gitdir===void 0?join(dir,'.git'):_ref278$gitdir,commit=_ref278.commit;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('commit',commit);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _writeCommit({fs:fsp,gitdir:updatedGitdir,commit});}catch(err){err.caller='git.writeCommit';throw err;}}// @ts-check
 /**
  * Write a git object directly
  *
@@ -63302,7 +63311,7 @@ stats={ctime:new Date(0),mtime:new Date(0),dev:0,ino:0,mode,uid:0,gid:0,size:0};
  *
  * console.log('tag', oid)
  *
- */async function writeObject(_ref278){let _fs=_ref278.fs,dir=_ref278.dir,_ref278$gitdir=_ref278.gitdir,gitdir=_ref278$gitdir===void 0?join(dir,'.git'):_ref278$gitdir,type=_ref278.type,object=_ref278.object,_ref278$format=_ref278.format,format=_ref278$format===void 0?'parsed':_ref278$format,oid=_ref278.oid,_ref278$encoding=_ref278.encoding,encoding=_ref278$encoding===void 0?undefined:_ref278$encoding;try{const fs=new FileSystem(_fs);const updatedGitdir=await discoverGitdir({fsp:fs,dotgit:gitdir});// Convert object to buffer
+ */async function writeObject(_ref279){let _fs=_ref279.fs,dir=_ref279.dir,_ref279$gitdir=_ref279.gitdir,gitdir=_ref279$gitdir===void 0?join(dir,'.git'):_ref279$gitdir,type=_ref279.type,object=_ref279.object,_ref279$format=_ref279.format,format=_ref279$format===void 0?'parsed':_ref279$format,oid=_ref279.oid,_ref279$encoding=_ref279.encoding,encoding=_ref279$encoding===void 0?undefined:_ref279$encoding;try{const fs=new FileSystem(_fs);const updatedGitdir=await discoverGitdir({fsp:fs,dotgit:gitdir});// Convert object to buffer
 if(format==='parsed'){switch(type){case'commit':object=GitCommit.from(object).toObject();break;case'tree':object=GitTree.from(object).toObject();break;case'blob':object=Buffer.from(object,encoding);break;case'tag':object=GitAnnotatedTag.from(object).toObject();break;default:throw new ObjectTypeError(oid||'',type,'blob|commit|tag|tree');}// GitObjectManager does not know how to serialize content, so we tweak that parameter before passing it.
 format='content';}oid=await _writeObject({fs,gitdir:updatedGitdir,type,object,oid,format});return oid;}catch(err){err.caller='git.writeObject';throw err;}}// @ts-check
 /**
@@ -63336,7 +63345,7 @@ format='content';}oid=await _writeObject({fs,gitdir:updatedGitdir,type,object,oi
  * })
  * console.log('done')
  *
- */async function writeRef(_ref279){let _fs=_ref279.fs,dir=_ref279.dir,_ref279$gitdir=_ref279.gitdir,gitdir=_ref279$gitdir===void 0?join(dir,'.git'):_ref279$gitdir,ref=_ref279.ref,value=_ref279.value,_ref279$force=_ref279.force,force=_ref279$force===void 0?false:_ref279$force,_ref279$symbolic=_ref279.symbolic,symbolic=_ref279$symbolic===void 0?false:_ref279$symbolic;try{assertParameter('fs',_fs);assertParameter('gitdir',gitdir);assertParameter('ref',ref);assertParameter('value',value);const fs=new FileSystem(_fs);if(!isValidRef(ref,true)){throw new InvalidRefNameError(ref,clean_git_ref__WEBPACK_IMPORTED_MODULE_6___default.a.clean(ref));}const updatedGitdir=await discoverGitdir({fsp:fs,dotgit:gitdir});if(!force&&(await GitRefManager.exists({fs,gitdir:updatedGitdir,ref}))){throw new AlreadyExistsError('ref',ref);}if(symbolic){await GitRefManager.writeSymbolicRef({fs,gitdir:updatedGitdir,ref,value});}else{value=await GitRefManager.resolve({fs,gitdir:updatedGitdir,ref:value});await GitRefManager.writeRef({fs,gitdir:updatedGitdir,ref,value});}}catch(err){err.caller='git.writeRef';throw err;}}// @ts-check
+ */async function writeRef(_ref280){let _fs=_ref280.fs,dir=_ref280.dir,_ref280$gitdir=_ref280.gitdir,gitdir=_ref280$gitdir===void 0?join(dir,'.git'):_ref280$gitdir,ref=_ref280.ref,value=_ref280.value,_ref280$force=_ref280.force,force=_ref280$force===void 0?false:_ref280$force,_ref280$symbolic=_ref280.symbolic,symbolic=_ref280$symbolic===void 0?false:_ref280$symbolic;try{assertParameter('fs',_fs);assertParameter('gitdir',gitdir);assertParameter('ref',ref);assertParameter('value',value);const fs=new FileSystem(_fs);if(!isValidRef(ref,true)){throw new InvalidRefNameError(ref,clean_git_ref__WEBPACK_IMPORTED_MODULE_6___default.a.clean(ref));}const updatedGitdir=await discoverGitdir({fsp:fs,dotgit:gitdir});if(!force&&(await GitRefManager.exists({fs,gitdir:updatedGitdir,ref}))){throw new AlreadyExistsError('ref',ref);}if(symbolic){await GitRefManager.writeSymbolicRef({fs,gitdir:updatedGitdir,ref,value});}else{value=await GitRefManager.resolve({fs,gitdir:updatedGitdir,ref:value});await GitRefManager.writeRef({fs,gitdir:updatedGitdir,ref,value});}}catch(err){err.caller='git.writeRef';throw err;}}// @ts-check
 /**
  * @param {object} args
  * @param {import('../models/FileSystem.js').FileSystem} args.fs
@@ -63344,7 +63353,7 @@ format='content';}oid=await _writeObject({fs,gitdir:updatedGitdir,type,object,oi
  * @param {TagObject} args.tag
  *
  * @returns {Promise<string>}
- */async function _writeTag(_ref280){let fs=_ref280.fs,gitdir=_ref280.gitdir,tag=_ref280.tag;// Convert object to buffer
+ */async function _writeTag(_ref281){let fs=_ref281.fs,gitdir=_ref281.gitdir,tag=_ref281.tag;// Convert object to buffer
 const object=GitAnnotatedTag.from(tag).toObject();const oid=await _writeObject({fs,gitdir,type:'tag',object,format:'content'});return oid;}// @ts-check
 /**
  * Write an annotated tag object directly
@@ -63382,7 +63391,7 @@ const object=GitAnnotatedTag.from(tag).toObject();const oid=await _writeObject({
  *
  * console.log('tag', oid)
  *
- */async function writeTag(_ref281){let fs=_ref281.fs,dir=_ref281.dir,_ref281$gitdir=_ref281.gitdir,gitdir=_ref281$gitdir===void 0?join(dir,'.git'):_ref281$gitdir,tag=_ref281.tag;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('tag',tag);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _writeTag({fs:fsp,gitdir:updatedGitdir,tag});}catch(err){err.caller='git.writeTag';throw err;}}// @ts-check
+ */async function writeTag(_ref282){let fs=_ref282.fs,dir=_ref282.dir,_ref282$gitdir=_ref282.gitdir,gitdir=_ref282$gitdir===void 0?join(dir,'.git'):_ref282$gitdir,tag=_ref282.tag;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('tag',tag);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _writeTag({fs:fsp,gitdir:updatedGitdir,tag});}catch(err){err.caller='git.writeTag';throw err;}}// @ts-check
 /**
  * Write a tree object directly
  *
@@ -63396,7 +63405,7 @@ const object=GitAnnotatedTag.from(tag).toObject();const oid=await _writeObject({
  * @see TreeObject
  * @see TreeEntry
  *
- */async function writeTree(_ref282){let fs=_ref282.fs,dir=_ref282.dir,_ref282$gitdir=_ref282.gitdir,gitdir=_ref282$gitdir===void 0?join(dir,'.git'):_ref282$gitdir,tree=_ref282.tree;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('tree',tree);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _writeTree({fs:fsp,gitdir:updatedGitdir,tree});}catch(err){err.caller='git.writeTree';throw err;}}// default export
+ */async function writeTree(_ref283){let fs=_ref283.fs,dir=_ref283.dir,_ref283$gitdir=_ref283.gitdir,gitdir=_ref283$gitdir===void 0?join(dir,'.git'):_ref283$gitdir,tree=_ref283.tree;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('tree',tree);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _writeTree({fs:fsp,gitdir:updatedGitdir,tree});}catch(err){err.caller='git.writeTree';throw err;}}// default export
 var index={Errors,STAGE,TREE,WORKDIR,add,abortMerge,addNote,addRemote,annotatedTag,branch,cherryPick,checkout,clone,commit,getConfig,getConfigAll,setConfig,currentBranch,deleteBranch,deleteRef,deleteRemote,deleteTag,expandOid,expandRef,fastForward,fetch,findMergeBase,findRoot,getRemoteInfo,getRemoteInfo2,hashBlob,indexPack,init,isDescendent,isIgnored,listBranches,listFiles,listNotes,listRefs,listRemotes,listServerRefs,listTags,log,merge,packObjects,pull,push,readBlob,readCommit,readNote,readObject,readTag,readTree,remove,removeNote,renameBranch,resetIndex,updateIndex:updateIndex$1,resolveRef,status,statusMatrix,tag,version,walk,writeBlob,writeCommit,writeObject,writeRef,writeTag,writeTree,stash};/* harmony default export */ __webpack_exports__["default"] = (index);
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../buffer/index.js */ "./node_modules/buffer/index.js").Buffer, __webpack_require__(/*! ./../process/browser.js */ "./node_modules/process/browser.js")))
 
@@ -392655,6 +392664,9 @@ var typedArrays = availableTypedArrays();
 
 var $slice = callBound('String.prototype.slice');
 
+/** @import { BoundSet, BoundSlice, Cache, Getter } from './types' */
+/** @import { TypedArrayName } from '.' */
+
 /** @type {<T = unknown>(array: readonly T[], value: unknown) => number} */
 var $indexOf = callBound('Array.prototype.indexOf', true) || function indexOf(array, value) {
 	for (var i = 0; i < array.length; i += 1) {
@@ -392665,8 +392677,7 @@ var $indexOf = callBound('Array.prototype.indexOf', true) || function indexOf(ar
 	return -1;
 };
 
-/** @typedef {import('./types').Getter} Getter */
-/** @type {import('./types').Cache} */
+/** @type {Cache} */
 var cache = { __proto__: null };
 if (hasToStringTag && gOPD && getProto) {
 	forEach(typedArrays, function (typedArray) {
@@ -392683,7 +392694,8 @@ if (hasToStringTag && gOPD && getProto) {
 			if (descriptor && descriptor.get) {
 				var bound = callBind(descriptor.get);
 				cache[
-					/** @type {`$${import('.').TypedArrayName}`} */ ('$' + typedArray)
+					/** @type {`$${TypedArrayName}`} */
+					('$' + typedArray)
 				] = bound;
 			}
 		}
@@ -392693,62 +392705,72 @@ if (hasToStringTag && gOPD && getProto) {
 		var arr = new g[typedArray]();
 		var fn = arr.slice || arr.set;
 		if (fn) {
-			var bound = /** @type {import('./types').BoundSlice | import('./types').BoundSet} */ (
+			var bound = /** @type {BoundSlice | BoundSet} */ (
 				// @ts-expect-error TODO FIXME
 				callBind(fn)
 			);
 			cache[
-				/** @type {`$${import('.').TypedArrayName}`} */ ('$' + typedArray)
+				/** @type {`$${TypedArrayName}`} */
+				('$' + typedArray)
 			] = bound;
 		}
 	});
 }
 
-/** @type {(value: object) => false | import('.').TypedArrayName} */
-var tryTypedArrays = function tryAllTypedArrays(value) {
-	/** @type {ReturnType<typeof tryAllTypedArrays>} */ var found = false;
+/** @type {(value: object) => false | TypedArrayName} */
+function tryTypedArrays(value) {
+	/** @type {ReturnType<typeof tryTypedArrays>} */ var found = false;
 	forEach(
-		/** @type {Record<`\$${import('.').TypedArrayName}`, Getter>} */ (cache),
-		/** @type {(getter: Getter, name: `\$${import('.').TypedArrayName}`) => void} */
+		/** @type {Record<`$${TypedArrayName}`, Getter>} */ (cache),
+		/** @param {Getter} getter @param {`$${TypedArrayName}`} typedArray */
 		function (getter, typedArray) {
 			if (!found) {
 				try {
 					// @ts-expect-error a throw is fine here
 					if ('$' + getter(value) === typedArray) {
-						found = /** @type {import('.').TypedArrayName} */ ($slice(typedArray, 1));
+						found = /** @type {TypedArrayName} */ ($slice(typedArray, 1));
 					}
 				} catch (e) { /**/ }
 			}
 		}
 	);
 	return found;
-};
+}
 
-/** @type {(value: object) => false | import('.').TypedArrayName} */
-var trySlices = function tryAllSlices(value) {
-	/** @type {ReturnType<typeof tryAllSlices>} */ var found = false;
+/** @type {(value: object) => false | TypedArrayName} */
+function trySlices(value) {
+	/** @type {ReturnType<typeof trySlices>} */ var found = false;
 	forEach(
-		/** @type {Record<`\$${import('.').TypedArrayName}`, Getter>} */(cache),
-		/** @type {(getter: Getter, name: `\$${import('.').TypedArrayName}`) => void} */ function (getter, name) {
+		/** @type {Record<`$${TypedArrayName}`, Getter>} */(cache),
+		/** @param {Getter} getter @param {`$${TypedArrayName}`} name */ function (getter, name) {
 			if (!found) {
 				try {
 					// @ts-expect-error a throw is fine here
 					getter(value);
-					found = /** @type {import('.').TypedArrayName} */ ($slice(name, 1));
+					found = /** @type {TypedArrayName} */ ($slice(name, 1));
 				} catch (e) { /**/ }
 			}
 		}
 	);
 	return found;
-};
+}
 
-/** @type {import('.')} */
+/** @type {(tag: unknown) => tag is typeof typedArrays[number]} */
+function isTATag(tag) {
+	return $indexOf(typedArrays, tag) > -1;
+}
+
+/**
+ * @type {import('.')}
+ * @param {unknown} value
+ */
 module.exports = function whichTypedArray(value) {
-	if (!value || typeof value !== 'object') { return false; }
+	if (!value || typeof value !== 'object') {
+		return false;
+	}
 	if (!hasToStringTag) {
-		/** @type {string} */
 		var tag = $slice($toString(value), 8, -1);
-		if ($indexOf(typedArrays, tag) > -1) {
+		if (isTATag(tag)) {
 			return tag;
 		}
 		if (tag !== 'Object') {
