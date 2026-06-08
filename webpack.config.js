@@ -197,6 +197,10 @@ const base = {
                     from: 'src/lib/themes/blocks/high-contrast-media/blocks-media',
                     to: 'static/blocks-media/high-contrast',
                     force: true
+                },
+                {
+                    from: 'static/credits',
+                    to: 'static/credits'
                 }
             ]
         })
