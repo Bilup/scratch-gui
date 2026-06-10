@@ -2217,7 +2217,7 @@ __webpack_require__.r(__webpack_exports__);
 
 const onExportSettings = settings => {
   const blob = new Blob([JSON.stringify(settings)]);
-  Object(_lib_utils_download_blob_js__WEBPACK_IMPORTED_MODULE_1__["default"])('turbowarp-addon-settings.json', blob);
+  Object(_lib_utils_download_blob_js__WEBPACK_IMPORTED_MODULE_1__["default"])('bilup-addon-settings.json', blob);
 };
 Object(_app_target__WEBPACK_IMPORTED_MODULE_3__["default"])(/*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_addons_settings_settings_jsx__WEBPACK_IMPORTED_MODULE_2__["default"], {
   onExportSettings: onExportSettings

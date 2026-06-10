@@ -128,9 +128,16 @@ __webpack_require__.r(__webpack_exports__);
     } else {
       svg = allBlocks(isExportPNG);
     }
-    // resolve nbsp whitespace
+    // resolve nbsp whitespace and preserve text attributes
     svg.querySelectorAll("text").forEach(text => {
       text.innerHTML = text.innerHTML.replace(/&nbsp;/g, " ");
+      // Ensure text elements have proper attributes for SVG import
+      if (!text.hasAttribute("dominant-baseline")) {
+        text.setAttribute("dominant-baseline", "middle");
+      }
+      if (!text.hasAttribute("text-anchor")) {
+        text.setAttribute("text-anchor", "middle");
+      }
     });
 
     // replace external images with data URIs (with intelligent caching)
@@ -227,7 +234,7 @@ __webpack_require__.r(__webpack_exports__);
     console.log("Image processing complete! Fetched ".concat(uniqueImages, " unique images, used cache for ").concat(cacheHits, " duplicates"));
     console.log("Cache efficiency: ".concat(cacheHits > 0 ? (cacheHits / (uniqueImages + cacheHits) * 100).toFixed(1) : 0, "% cache hit rate"));
     if (!isExportPNG) {
-      exportData(new XMLSerializer().serializeToString(svg));
+      exportData(svg);
     } else {
       exportPNG(svg);
     }
@@ -273,11 +280,37 @@ __webpack_require__.r(__webpack_exports__);
     svg.append(svgchild);
     return svg;
   }
-  function exportData(text) {
+  function exportData(svg) {
+    // First, ensure the SVG has explicit dimensions and viewBox
+    const serializer = new XMLSerializer();
+    const svgString = serializer.serializeToString(svg);
+
+    // Create a temporary div to accurately measure SVG dimensions
+    const measureDiv = document.createElement("div");
+    measureDiv.style.position = "absolute";
+    measureDiv.style.visibility = "hidden";
+    measureDiv.style.pointerEvents = "none";
+    measureDiv.innerHTML = svgString;
+    document.body.appendChild(measureDiv);
+
+    // Get real dimensions from the rendered SVG
+    const svgElement = measureDiv.querySelector("svg");
+    const svgBounds = measureDiv.querySelector("svg g").getBoundingClientRect();
+
+    // Set explicit dimensions and viewBox on original SVG
+    svg.setAttribute("width", "".concat(svgBounds.width, "px"));
+    svg.setAttribute("height", "".concat(svgBounds.height, "px"));
+    svg.setAttribute("viewBox", "0 0 ".concat(svgBounds.width, " ").concat(svgBounds.height));
+
+    // Clean up measurement div
+    document.body.removeChild(measureDiv);
+
+    // Serialize the updated SVG
+    const updatedSvgString = serializer.serializeToString(svg);
     const saveLink = document.createElement("a");
     document.body.appendChild(saveLink);
-    const data = new Blob([text], {
-      type: "text"
+    const data = new Blob([updatedSvgString], {
+      type: "image/svg+xml"
     });
     const url = window.URL.createObjectURL(data);
     saveLink.href = url;
