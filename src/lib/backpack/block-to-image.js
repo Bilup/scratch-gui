@@ -22,6 +22,17 @@ export default function (blockId) {
             // Strip &nbsp; entities that cannot be inlined
             blockSvg.innerHTML = blockSvg.innerHTML.replace(/&nbsp;/g, ' ');
 
+            // Ensure text elements have proper attributes for SVG import
+            const textElements = blockSvg.querySelectorAll('text');
+            textElements.forEach(text => {
+                if (!text.hasAttribute('dominant-baseline')) {
+                    text.setAttribute('dominant-baseline', 'middle');
+                }
+                if (!text.hasAttribute('text-anchor')) {
+                    text.setAttribute('text-anchor', 'middle');
+                }
+            });
+
             // Create an <svg> element to put the cloned blockSvg inside
             const NS = 'http://www.w3.org/2000/svg';
             const svg = document.createElementNS(NS, 'svg');
