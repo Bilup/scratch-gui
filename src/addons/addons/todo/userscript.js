@@ -128,7 +128,7 @@ export default async function ({ addon, msg }) {
     }
     const alpha = 'a0';
 
-    // 这个 ReduxStore 到底是哪里来的？？？
+    // 这个 ReduxStore 到底是哪里来的???
     await ReduxStore.subscribe(() => {
         PROJECT_NAME = ReduxStore.getState().scratchGui.projectTitle;
     })

@@ -751,5 +751,9 @@
   "novatheai/max-tokens": "Max Tokens",
   "novatheai/delete": "Delete",
   "novatheai/config-saved-locally": "Configuration is only saved in local addon storage.",
-  "novatheai/im-not-amazon":"Bilup Nova is not affiliated with Amazon Nova."
+  "novatheai/im-not-amazon":"Bilup Nova is not affiliated with Amazon Nova.",
+  "tw-comment-markdown-editor/edit": "Edit",
+  "tw-comment-markdown-editor/preview": "Preview",
+  "tw-comment-markdown-editor/toggle-to-preview": "Switch to Preview Mode (Ctrl+M)",
+  "tw-comment-markdown-editor/toggle-to-edit": "Switch to Edit Mode (Ctrl+M)"
 }
