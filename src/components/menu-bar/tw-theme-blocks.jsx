@@ -29,7 +29,7 @@ const options = defineMessages({
         id: 'tw.blockColors.highContrast'
     },
     [BLOCKS_DARK]: {
-        defaultMessage: 'Dark (Beta)',
+        defaultMessage: 'Dark',
         description: 'Name of the dark block colors',
         id: 'tw.blockColors.dark'
     },
