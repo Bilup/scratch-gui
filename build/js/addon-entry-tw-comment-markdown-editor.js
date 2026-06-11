@@ -53,7 +53,8 @@ const resources = {
 __webpack_require__.r(__webpack_exports__);
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
   let addon = _ref.addon,
-    console = _ref.console;
+    console = _ref.console,
+    msg = _ref.msg;
   const vm = addon.tab.traps.vm;
 
   // 等待Blockly加载
@@ -102,20 +103,14 @@ __webpack_require__.r(__webpack_exports__);
       const toggleContainer = document.createElement('div');
       toggleContainer.className = 'tw-md-toggle-container';
 
-      // 创建模式指示器
-      const modeIndicator = document.createElement('span');
-      modeIndicator.className = 'tw-md-mode-indicator';
-      modeIndicator.textContent = '编辑模式';
-
       // 创建切换按钮
       const toggleButton = document.createElement('button');
       toggleButton.className = 'tw-md-toggle-button';
-      toggleButton.innerHTML = '编辑';
+      toggleButton.innerHTML = msg('edit');
       toggleButton.dataset.mode = 'edit';
-      toggleButton.title = '切换到预览模式 (Ctrl+M)';
+      toggleButton.title = msg('toggle-to-preview');
 
       // 将元素添加到容器
-      toggleContainer.appendChild(modeIndicator);
       toggleContainer.appendChild(toggleButton);
 
       // 创建预览容器
@@ -162,10 +157,8 @@ __webpack_require__.r(__webpack_exports__);
         if (mode === 'edit') {
           // 切换到预览模式
           toggleButton.dataset.mode = 'preview';
-          toggleButton.innerHTML = '预览';
-          toggleButton.title = '切换到编辑模式 (Ctrl+M)';
-          modeIndicator.textContent = '预览模式';
-          modeIndicator.classList.add('preview-mode');
+          toggleButton.innerHTML = msg('preview');
+          toggleButton.title = msg('toggle-to-edit');
           textarea.style.display = 'none';
           previewContainer.style.display = 'block';
 
@@ -174,10 +167,8 @@ __webpack_require__.r(__webpack_exports__);
         } else {
           // 切换到编辑模式
           toggleButton.dataset.mode = 'edit';
-          toggleButton.innerHTML = '编辑';
-          toggleButton.title = '切换到预览模式 (Ctrl+M)';
-          modeIndicator.textContent = '编辑模式';
-          modeIndicator.classList.remove('preview-mode');
+          toggleButton.innerHTML = msg('edit');
+          toggleButton.title = msg('toggle-to-preview');
           textarea.style.display = 'block';
           previewContainer.style.display = 'none';
 
@@ -305,7 +296,9 @@ __webpack_require__.r(__webpack_exports__);
     // 标题
     .replace(/^### (.*$)/gm, '<h3>$1</h3>').replace(/^## (.*$)/gm, '<h2>$1</h2>').replace(/^# (.*$)/gm, '<h1>$1</h1>')
     // 粗体和斜体
-    .replace(/\*\*(.*?)\*\*/gm, '<strong>$1</strong>').replace(/\*(.*?)\*/gm, '<em>$1</em>')
+    .replace(/\*\*\*(.*?)\*\*\*/gm, '<strong><em>$1</em></strong>').replace(/\*\*(.*?)\*\*/gm, '<strong>$1</strong>').replace(/\*(.*?)\*/gm, '<em>$1</em>')
+    // 删除线和下划线
+    .replace(/~~(.*?)~~/gm, '<del>$1</del>').replace(/__(.*?)__/gm, '<u>$1</u>')
     // 代码块
     .replace(/```([\s\S]*?)```/gm, '<pre><code>$1</code></pre>')
     // 行内代码
@@ -316,6 +309,8 @@ __webpack_require__.r(__webpack_exports__);
     .replace(/\[([^\]]+)\]\(([^)]+)\)/gm, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
     // 列表项
     .replace(/^\* (.*$)/gm, '<li>$1</li>').replace(/^- (.*$)/gm, '<li>$1</li>')
+    // 水平线
+    .replace(/^---$/gm, '<hr>').replace(/^\*\*\*$/gm, '<hr>')
     // 换行
     .replace(/\n/g, '<br>');
 
