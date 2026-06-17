@@ -113,7 +113,25 @@ const bindCursorEvents = service => {
     container.addEventListener('mouseleave', service._onMouseLeave);
 
     service._onKeyDown = e => {
-        if (e.key === '/' && !service.isChatting) {
+        // 获取自定义快捷键，默认为 '/'
+        const chatShortcut = service.customShortcuts?.collaborationChat || '/';
+        
+        // 构建当前按键组合（支持功能键，顺序与设置中一致）
+        const parts = [];
+        if (e.ctrlKey || e.metaKey) parts.push('Ctrl');
+        if (e.altKey) parts.push('Alt');
+        if (e.shiftKey) parts.push('Shift');
+        
+        // 只添加有效的非修饰键，并转换为大写（与设置中保存的格式一致）
+        const keyName = e.key;
+        if (keyName && !['Control', 'Alt', 'Shift', 'Meta'].includes(keyName)) {
+            parts.push(keyName.toUpperCase());
+        }
+        
+        const currentKeyCombo = parts.join('+');
+        
+        // 统一转换为大写进行比较
+        if (currentKeyCombo.toUpperCase() === chatShortcut.toUpperCase() && !service.isChatting) {
             const activeTag = document.activeElement ? document.activeElement.tagName : '';
             if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || document.activeElement.isContentEditable) {
                 return;
@@ -132,7 +150,7 @@ const bindCursorEvents = service => {
             }
         }
     };
-    window.addEventListener('keydown', service._onKeyDown);
+    window.addEventListener('keydown', service._onKeyDown, true);
 };
 
 const unbindCursorEvents = service => {

@@ -6,7 +6,8 @@ export const SHORTCUT_CATEGORIES = {
     EDITOR_NAVIGATION: 'editorNavigation',
     LIBRARY_ACCESS: 'libraryAccess',
     SPRITE_MANAGEMENT: 'spriteManagement',
-    WINDOW_MANAGEMENT: 'windowManagement'
+    WINDOW_MANAGEMENT: 'windowManagement',
+    COLLABORATION: 'collaboration'
 };
 
 export const getCategoryLabel = category => {
@@ -18,7 +19,8 @@ export const getCategoryLabel = category => {
         [SHORTCUT_CATEGORIES.EDITOR_NAVIGATION]: 'Editor Navigation',
         [SHORTCUT_CATEGORIES.LIBRARY_ACCESS]: 'Library Access',
         [SHORTCUT_CATEGORIES.SPRITE_MANAGEMENT]: 'Sprite Management',
-        [SHORTCUT_CATEGORIES.WINDOW_MANAGEMENT]: 'Windows'
+        [SHORTCUT_CATEGORIES.WINDOW_MANAGEMENT]: 'Windows',
+        [SHORTCUT_CATEGORIES.COLLABORATION]: 'Collaboration'
     };
     return labels[category] || category;
 };
@@ -287,6 +289,14 @@ export const getDefaultShortcuts = () => [
         action: 'closeTopWindow',
         params: [],
         label: 'Close Window'
+    },
+    {
+        id: 'collaborationChat',
+        key: '/',
+        defaultKey: '/',
+        category: SHORTCUT_CATEGORIES.COLLABORATION,
+        actionType: null,
+        label: 'Collaboration Chat'
     }
 ];
 

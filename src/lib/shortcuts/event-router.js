@@ -382,6 +382,10 @@ const executeCallbackAction = shortcut => {
 };
 
 const executeShortcut = shortcut => {
+    if (shortcut.actionType === null) {
+        return;
+    }
+    
     if (shortcut.actionType === 'redux') {
         executeReduxAction(shortcut);
     } else if (shortcut.actionType === 'vm') {
@@ -400,12 +404,12 @@ const handleKeyDown = event => {
     const matchingShortcut = findMatchingShortcut(keyCombo);
 
     if (matchingShortcut) {
-		if (matchingShortcut.actionType !== null) {
-			event.preventDefault();
-			event.stopPropagation();
-		}
-		executeShortcut(matchingShortcut);
-	}
+        if (matchingShortcut.actionType !== null) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        executeShortcut(matchingShortcut);
+    }
 };
 
 const updateShortcuts = customShortcuts => {

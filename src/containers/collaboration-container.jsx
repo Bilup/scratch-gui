@@ -85,6 +85,9 @@ class CollaborationContainer extends Component {
             chatPlaceholder: this.props.intl.formatMessage(messages.chatPlaceholder)
         };
 
+        // Set up custom shortcuts for collaboration service
+        this.collaborationService.customShortcuts = this.props.customShortcuts;
+
         // Set up event listeners
         this.collaborationService.on('user-joined', this.handleUserJoined);
         this.collaborationService.on('user-left', this.handleUserLeft);
@@ -112,6 +115,15 @@ class CollaborationContainer extends Component {
 
         this.projectSyncProgress = 0;
         this.projectSyncLoadingBar = null;
+    }
+
+    componentDidUpdate (prevProps) {
+        // Sync custom shortcuts to collaboration service when they change
+        if (prevProps.customShortcuts !== this.props.customShortcuts) {
+            console.log('Shortcuts updated in Redux:', this.props.customShortcuts);
+            this.collaborationService.customShortcuts = this.props.customShortcuts;
+            console.log('CollaborationService customShortcuts updated:', this.collaborationService.customShortcuts);
+        }
     }
 
     componentWillUnmount () {
@@ -656,6 +668,7 @@ class CollaborationContainer extends Component {
                 roomPrivacy={this.props.roomPrivacy}
                 connectedUsers={this.props.connectedUsers}
                 connectionError={this.props.connectionError}
+                customShortcuts={this.props.customShortcuts}
                 onRequestClose={this.props.onRequestClose}
                 onJoinRoom={this.handleJoinRoom}
                 onCreateRoom={this.handleCreateRoom}
@@ -702,7 +715,8 @@ const mapStateToProps = state => ({
     connectedUsers: state.scratchGui.collaboration.connectedUsers,
     connectionError: state.scratchGui.collaboration.connectionError,
     currentUsername: state.scratchGui.tw.username,
-    vm: state.scratchGui.vm
+    vm: state.scratchGui.vm,
+    customShortcuts: state.scratchGui.shortcuts.customShortcuts
 });
 
 const mapDispatchToProps = dispatch => ({

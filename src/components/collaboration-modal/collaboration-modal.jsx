@@ -1001,9 +1001,12 @@ class CollaborationModal extends Component {
                     </div>
                     <h4>
                         <FormattedMessage
-                            defaultMessage="Press '/' to chat while collaborating"
+                            defaultMessage="Press {shortcut} to chat while collaborating"
                             description="Chat hint"
                             id="gui.collaboration.chatHint"
+                            values={{
+                                shortcut: this.props.customShortcuts?.collaborationChat || '/'
+                            }}
                         />
                     </h4>
                 </div>
