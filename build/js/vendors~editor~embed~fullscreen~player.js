@@ -293909,11 +293909,11 @@ const FillHorzGradientEnabled = props => /*#__PURE__*/react__WEBPACK_IMPORTED_MO
   version: "1.1",
   xmlns: "http://www.w3.org/2000/svg"
 }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("title", null, "fill-horz-gradient-enabled"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("desc", null, "Created with Sketch."), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("defs", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("linearGradient", {
-  x1: "100%",
+  x1: "0%",
   y1: "50%",
-  x2: "0%",
+  x2: "100%",
   y2: "50%",
-  id: "linearGradient-1"
+  id: "linearGradient-horz"
 }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("stop", {
   stopColor: "#FFFFFF",
   offset: "0%"
@@ -293933,7 +293933,7 @@ const FillHorzGradientEnabled = props => /*#__PURE__*/react__WEBPACK_IMPORTED_MO
 }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("rect", {
   id: "Horizontal",
   stroke: "#000000",
-  fill: "url(#linearGradient-1)",
+  fill: "url(#linearGradient-horz)",
   x: "0.5",
   y: "0.5",
   width: "19",
@@ -294064,15 +294064,18 @@ const FillVertGradientEnabled = props => /*#__PURE__*/react__WEBPACK_IMPORTED_MO
   xmlns: "http://www.w3.org/2000/svg"
 }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("title", null, "fill-vert-gradient-enabled"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("desc", null, "Created with Sketch."), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("defs", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("linearGradient", {
   x1: "50%",
-  y1: "100%",
+  y1: "0%",
   x2: "50%",
-  y2: "3.061617e-15%",
-  id: "linearGradient-1"
+  y2: "100%",
+  id: "linearGradient-vert"
 }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("stop", {
   stopColor: "#FFFFFF",
   offset: "0%"
 }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("stop", {
-  stopColor: "#00c3ff",
+  stopColor: "currentColor",
+  style: {
+    color: 'var(--paint-looks-secondary-default, #FF8C1A)'
+  },
   offset: "100%"
 }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("g", {
   id: "fill-vert-gradient-enabled",
@@ -294084,7 +294087,7 @@ const FillVertGradientEnabled = props => /*#__PURE__*/react__WEBPACK_IMPORTED_MO
 }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("rect", {
   id: "Vertical",
   stroke: "#000000",
-  fill: "url(#linearGradient-1)",
+  fill: "url(#linearGradient-vert)",
   x: "0.5",
   y: "0.5",
   width: "19",
@@ -300171,8 +300174,7 @@ class EraserMode extends react__WEBPACK_IMPORTED_MODULE_1___default.a.Component 
     } else if (!nextProps.isEraserModeActive && this.props.isEraserModeActive) {
       this.deactivateTool();
     } else if (nextProps.isEraserModeActive && this.props.isEraserModeActive) {
-      var _this$props$brushMode;
-      this.props.eraserModeState.brushType = (_this$props$brushMode = this.props.brushModeState) === null || _this$props$brushMode === void 0 ? void 0 : _this$props$brushMode.brushType;
+      this.props.eraserModeState.brushType = this.props.brushModeState && this.props.brushModeState.brushType;
       this.blob.setOptions(_objectSpread({
         isEraser: true
       }, nextProps.eraserModeState));
@@ -300187,8 +300189,7 @@ class EraserMode extends react__WEBPACK_IMPORTED_MODULE_1___default.a.Component 
     }
   }
   activateTool() {
-    var _this$props$brushMode2;
-    this.props.eraserModeState.brushType = (_this$props$brushMode2 = this.props.brushModeState) === null || _this$props$brushMode2 === void 0 ? void 0 : _this$props$brushMode2.brushType;
+    this.props.eraserModeState.brushType = this.props.brushModeState && this.props.brushModeState.brushType;
     this.blob.activateTool(_objectSpread({
       isEraser: true
     }, this.props.eraserModeState));
