@@ -107,6 +107,11 @@ const messages = defineMessages({
         description: 'Shortcut category name',
         id: 'shortcut.category.windowManagement'
     },
+    categoryCollaboration: {
+        defaultMessage: 'Collaboration',
+        description: 'Shortcut category name',
+        id: 'shortcut.category.collaboration'
+    },
     save: {
         defaultMessage: 'Save',
         description: 'Shortcut label',
@@ -241,6 +246,11 @@ const messages = defineMessages({
         defaultMessage: 'Close Window',
         description: 'Shortcut label',
         id: 'shortcut.closeWindow'
+    },
+    collaborationChat: {
+        defaultMessage: 'Collaboration Chat',
+        description: 'Shortcut label',
+        id: 'shortcut.collaborationChat'
     }
 });
 
@@ -326,7 +336,8 @@ class ShortcutManager extends React.Component {
             'copy': messages.copy,
             'paste': messages.paste,
             'cut': messages.cut,
-            'closeWindow': messages.closeWindow
+            'closeWindow': messages.closeWindow,
+            'collaborationChat': messages.collaborationChat
         };
 
         return defaultShortcuts.map(shortcut => {
@@ -375,7 +386,8 @@ class ShortcutManager extends React.Component {
             'editorNavigation': messages.categoryEditorNavigation,
             'libraryAccess': messages.categoryLibraryAccess,
             'spriteManagement': messages.categorySpriteManagement,
-            'windowManagement': messages.categoryWindowManagement
+            'windowManagement': messages.categoryWindowManagement,
+            'collaboration': messages.categoryCollaboration
         };
 
         allShortcuts.forEach(shortcut => {
@@ -421,7 +433,8 @@ class ShortcutManager extends React.Component {
             'editorNavigation': messages.categoryEditorNavigation,
             'libraryAccess': messages.categoryLibraryAccess,
             'spriteManagement': messages.categorySpriteManagement,
-            'windowManagement': messages.categoryWindowManagement
+            'windowManagement': messages.categoryWindowManagement,
+            'collaboration': messages.categoryCollaboration
         };
 
         return (
@@ -452,6 +465,11 @@ class ShortcutManager extends React.Component {
 
     // Handle key input for the new shortcut
     handleKeyInput (e) {
+        // Ignore composition events (IME input)
+        if (e.nativeEvent && e.nativeEvent.isComposing) {
+            return;
+        }
+        
         e.preventDefault();
         
         // Get the key combination
@@ -464,8 +482,11 @@ class ShortcutManager extends React.Component {
         const keyCode = e.keyCode || e.which;
         const keyName = e.key;
         
-        // Only add valid keys (not modifier keys)
-        if (keyName && !['Control', 'Alt', 'Shift', 'Meta'].includes(keyName)) {
+        // Ignore invalid keys from IME (like "Process", "Dead", etc.)
+        const invalidKeys = ['Control', 'Alt', 'Shift', 'Meta', 'Process', 'Dead', 'Unidentified'];
+        
+        // Only add valid keys (not modifier keys or IME special keys)
+        if (keyName && !invalidKeys.includes(keyName)) {
             key += keyName.toUpperCase();
             this.setState({editingKey: key});
         }
