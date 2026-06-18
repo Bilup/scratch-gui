@@ -510,7 +510,7 @@ class Tab extends EventTargetShim {
                         const block = this.procCode_ && vm.runtime.getAddonBlock(this.procCode_);
                         if (block) {
                             const theme = reduxInstance.state.scratchGui.theme.theme;
-                            const colors = theme.getBlockColors().addons;
+                            const colors = theme.getBlockColors().more;
                             this.colour_ = colors.primary;
                             this.colourSecondary_ = colors.secondary;
                             this.colourTertiary_ = colors.tertiary;
