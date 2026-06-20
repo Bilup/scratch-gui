@@ -1786,7 +1786,7 @@ class Tab extends _event_target__WEBPACK_IMPORTED_MODULE_3__["default"] {
             const block = this.procCode_ && vm.runtime.getAddonBlock(this.procCode_);
             if (block) {
               const theme = _redux__WEBPACK_IMPORTED_MODULE_14__["default"].state.scratchGui.theme.theme;
-              const colors = theme.getBlockColors().more;
+              const colors = theme.getBlockColors().addons;
               this.colour_ = colors.primary;
               this.colourSecondary_ = colors.secondary;
               this.colourTertiary_ = colors.tertiary;
