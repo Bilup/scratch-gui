@@ -280,6 +280,20 @@ const GradientCreatorApp = injectIntl(props => {
                                 />
                                 <div className={styles.gradientTrack}>
                                     {gradientColors.map((stop, index) => (
+                                        <span
+                                            key={`pos-${index}`}
+                                            className={styles.colorStopPosition}
+                                            style={{
+                                                position: 'absolute',
+                                                left: `${stop.position <= 3 ? 3 : stop.position >= 97 ? 97 : stop.position}%`,
+                                                bottom: '28px',
+                                                transform: 'translateX(-50%)'
+                                            }}
+                                        >
+                                            {Math.round(stop.position)}%
+                                        </span>
+                                    ))}
+                                    {gradientColors.map((stop, index) => (
                                         <div
                                             key={index}
                                             className={classNames(styles.colorStopMarker, isDragging === index && styles.colorStopMarkerDragging)}
@@ -299,7 +313,6 @@ const GradientCreatorApp = injectIntl(props => {
                                                 onTouchEnd={() => setIsDragging(null)}
                                                 style={{background: stop.color}}
                                             />
-                                            <span className={styles.colorStopPosition}>{Math.round(stop.position)}%</span>
                                         </div>
                                     ))}
                                 </div>
@@ -430,7 +443,7 @@ const GradientCreatorApp = injectIntl(props => {
                                             className={classNames(styles.dirPresetBtn, direction === dir && styles.dirPresetBtnActive)}
                                             title={`${dir}°`}
                                         >
-                                            {['→', '↗', '↓', '↘', '←', '↙', '↑', '↖'][dir / 45]}
+                                            {['↑', '↗', '→', '↘', '↓', '↙', '←', '↖'][dir / 45]}
                                         </button>
                                     ))}
                                 </div>
@@ -685,6 +698,20 @@ const GradientEditorApp = injectIntl(props => {
                                 />
                                 <div className={styles.gradientTrack}>
                                     {gradientColors.map((stop, index) => (
+                                        <span
+                                            key={`pos-${index}`}
+                                            className={styles.colorStopPosition}
+                                            style={{
+                                                position: 'absolute',
+                                                left: `${stop.position <= 1 ? 3 : stop.position >= 99 ? 97 : stop.position}%`,
+                                                bottom: '28px',
+                                                transform: 'translateX(-50%)'
+                                            }}
+                                        >
+                                            {Math.round(stop.position)}%
+                                        </span>
+                                    ))}
+                                    {gradientColors.map((stop, index) => (
                                         <div
                                             key={index}
                                             className={classNames(styles.colorStopMarker, isDragging === index && styles.colorStopMarkerDragging)}
@@ -704,7 +731,6 @@ const GradientEditorApp = injectIntl(props => {
                                                 onTouchEnd={() => setIsDragging(null)}
                                                 style={{background: stop.color}}
                                             />
-                                            <span className={styles.colorStopPosition}>{Math.round(stop.position)}%</span>
                                         </div>
                                     ))}
                                 </div>
@@ -835,7 +861,7 @@ const GradientEditorApp = injectIntl(props => {
                                             className={classNames(styles.dirPresetBtn, direction === dir && styles.dirPresetBtnActive)}
                                             title={`${dir}°`}
                                         >
-                                            {['→', '↗', '↓', '↘', '←', '↙', '↑', '↖'][dir / 45]}
+                                            {['↑', '↗', '→', '↘', '↓', '↙', '←', '↖'][dir / 45]}
                                         </button>
                                     ))}
                                 </div>
