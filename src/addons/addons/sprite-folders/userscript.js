@@ -205,13 +205,14 @@ export default async ({ addon, console, msg }) => {
                 } catch (e) {
                 }
 
-                // Fallback to asset URL
+                // TW: Fallback to asset URL using storage.assetHost
+                const assetHost = vm?.runtime?.storage?.getAssetHost?.() || 'https://assets.r2.bilup.org';
                 if (costume.asset.assetId) {
-                    const url = `https://assets.r2.bilup.org/${costume.asset.assetId}.${costume.dataFormat || 'png'}`;
+                    const url = `${assetHost}/${costume.asset.assetId}.${costume.dataFormat || 'png'}`;
                     return url;
                 }
                 if (costume.md5ext) {
-                    return `https://assets.r2.bilup.org/${costume.md5ext}`;
+                    return `${assetHost}/${costume.md5ext}`;
                 }
             }
         }
