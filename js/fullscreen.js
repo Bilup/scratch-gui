@@ -43845,6 +43845,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_2__);
 /* harmony import */ var react_intl__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! react-intl */ "./node_modules/react-intl/lib/index.es.js");
 /* harmony import */ var _components_library_item_library_item_jsx__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../components/library-item/library-item.jsx */ "./src/components/library-item/library-item.jsx");
+/* harmony import */ var _lib_persistence_storage_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../lib/persistence/storage.js */ "./src/lib/persistence/storage.js");
+
 
 
 
@@ -43952,7 +43954,9 @@ class LibraryItem extends react__WEBPACK_IMPORTED_MODULE_2___default.a.PureCompo
   }
   render() {
     const iconMd5 = this.curIconMd5();
-    const iconURL = iconMd5 ? "https://assets.r2.bilup.org/".concat(iconMd5) : this.props.iconRawURL;
+    // TW: Use storage.assetHost instead of hardcoded URL
+    const assetHost = _lib_persistence_storage_js__WEBPACK_IMPORTED_MODULE_5__["default"].getAssetHost() || 'https://assets.r2.bilup.org';
+    const iconURL = iconMd5 ? "".concat(assetHost, "/").concat(iconMd5) : this.props.iconRawURL;
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(_components_library_item_library_item_jsx__WEBPACK_IMPORTED_MODULE_4__["default"], {
       intl: this.props.intl,
       bluetoothRequired: this.props.bluetoothRequired,
@@ -61826,6 +61830,51 @@ const fetchProjectToken = async projectId => {
   }
 };
 
+// TW: Determine asset host based on project source
+const SCRATCH_ASSET_HOST = 'https://assets.scratch.mit.edu';
+const BILUP_ASSET_HOST = 'https://assets.r2.bilup.org';
+const determineAssetHost = (projectUrl, projectId) => {
+  // If loading from project_url, determine based on URL domain
+  if (projectUrl) {
+    try {
+      const url = new URL(projectUrl);
+      const hostname = url.hostname;
+
+      // Scratch official sources
+      if (hostname === 'scratch.mit.edu' || hostname.endsWith('.scratch.mit.edu') || hostname === 'projects.scratch.mit.edu') {
+        return SCRATCH_ASSET_HOST;
+      }
+
+      // Bilup sources
+      if (hostname === 'bilup.org' || hostname.endsWith('.bilup.org')) {
+        return BILUP_ASSET_HOST;
+      }
+
+      // TurboWarp sources - use Scratch assets as fallback
+      if (hostname === 'turbowarp.org' || hostname.endsWith('.turbowarp.org')) {
+        return SCRATCH_ASSET_HOST;
+      }
+
+      // For other URLs, use default Bilup CDN (may not work for all)
+      return BILUP_ASSET_HOST;
+    } catch (e) {
+      // Invalid URL, use default
+      return BILUP_ASSET_HOST;
+    }
+  }
+
+  // If loading by projectId (from Scratch API), use Scratch assets
+  if (projectId && projectId !== '0') {
+    // Numeric project IDs are from Scratch
+    if (/^\d+$/.test(projectId)) {
+      return SCRATCH_ASSET_HOST;
+    }
+  }
+
+  // Default to Bilup CDN
+  return BILUP_ASSET_HOST;
+};
+
 /* Higher Order Component to provide behavior for loading projects by id. If
  * there's no id, the default project is loaded.
  * @param {React.Component} WrappedComponent component to receive projectData prop
@@ -61881,6 +61930,11 @@ const ProjectFetcherHOC = function ProjectFetcherHOC(WrappedComponent) {
         if (!projectUrl.startsWith('http:') && !projectUrl.startsWith('https:') && !projectUrl.startsWith('data:')) {
           projectUrl = "https://".concat(projectUrl);
         }
+
+        // TW: Determine asset host based on project URL source
+        const determinedAssetHost = determineAssetHost(projectUrl, projectId);
+        _persistence_storage_js__WEBPACK_IMPORTED_MODULE_9__["default"].setAssetHost(determinedAssetHost);
+        _utils_log_js__WEBPACK_IMPORTED_MODULE_8__["default"].info("Project from URL, using asset host: ".concat(determinedAssetHost));
         assetPromise = fetch(projectUrl).then(r => {
           if (!r.ok) {
             throw new Error("Request returned status ".concat(r.status));
@@ -61890,6 +61944,11 @@ const ProjectFetcherHOC = function ProjectFetcherHOC(WrappedComponent) {
           data: buffer
         }));
       } else {
+        // TW: Determine asset host based on project ID source
+        const determinedAssetHost = determineAssetHost(null, projectId);
+        _persistence_storage_js__WEBPACK_IMPORTED_MODULE_9__["default"].setAssetHost(determinedAssetHost);
+        _utils_log_js__WEBPACK_IMPORTED_MODULE_8__["default"].info("Project from ID ".concat(projectId, ", using asset host: ").concat(determinedAssetHost));
+
         // TW: Temporary hack for project tokens
         assetPromise = fetchProjectToken(projectId).then(token => {
           _persistence_storage_js__WEBPACK_IMPORTED_MODULE_9__["default"].setProjectToken(token);
@@ -70668,6 +70727,9 @@ class Storage extends _bilup_scratch_storage__WEBPACK_IMPORTED_MODULE_0___defaul
   }
   setAssetHost(assetHost) {
     this.assetHost = assetHost;
+  }
+  getAssetHost() {
+    return this.assetHost;
   }
   getAssetGetConfig(asset) {
     return "".concat(this.assetHost, "/").concat(asset.assetId, ".").concat(asset.dataFormat);

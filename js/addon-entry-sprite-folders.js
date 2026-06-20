@@ -343,18 +343,20 @@ __webpack_require__.r(__webpack_exports__);
       const index = actualSprite.currentCostumeIndex || 0;
       const costume = costumes[Math.min(index, costumes.length - 1)];
       if (costume && costume.asset) {
+        var _vm, _vm$runtime, _vm$runtime$storage, _vm$runtime$storage$g;
         try {
           const dataUri = await costume.asset.encodeDataURI();
           if (dataUri) return dataUri;
         } catch (e) {}
 
-        // Fallback to asset URL
+        // TW: Fallback to asset URL using storage.assetHost
+        const assetHost = ((_vm = vm) === null || _vm === void 0 ? void 0 : (_vm$runtime = _vm.runtime) === null || _vm$runtime === void 0 ? void 0 : (_vm$runtime$storage = _vm$runtime.storage) === null || _vm$runtime$storage === void 0 ? void 0 : (_vm$runtime$storage$g = _vm$runtime$storage.getAssetHost) === null || _vm$runtime$storage$g === void 0 ? void 0 : _vm$runtime$storage$g.call(_vm$runtime$storage)) || 'https://assets.r2.bilup.org';
         if (costume.asset.assetId) {
-          const url = "https://assets.r2.bilup.org/".concat(costume.asset.assetId, ".").concat(costume.dataFormat || 'png');
+          const url = "".concat(assetHost, "/").concat(costume.asset.assetId, ".").concat(costume.dataFormat || 'png');
           return url;
         }
         if (costume.md5ext) {
-          return "https://assets.r2.bilup.org/".concat(costume.md5ext);
+          return "".concat(assetHost, "/").concat(costume.md5ext);
         }
       }
     }
