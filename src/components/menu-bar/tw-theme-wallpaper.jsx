@@ -171,6 +171,7 @@ const WallpaperInputForm = injectIntl(({intl, onSubmit, onOpacityChange, onDarkn
                     value={opacity}
                     onChange={handleOpacityChange}
                     onClick={e => e.stopPropagation()}
+                    className={styles.opacitySlider}
                     onPointerDown={e => {
                         const target = e.currentTarget || e.target;
                         if (target && e.pointerId && target.setPointerCapture) {
@@ -221,6 +222,7 @@ const WallpaperInputForm = injectIntl(({intl, onSubmit, onOpacityChange, onDarkn
                     value={darkness}
                     onChange={handleDarknessChange}
                     onClick={e => e.stopPropagation()}
+                    className={styles.opacitySlider}
                     onPointerDown={e => {
                         const target = e.currentTarget || e.target;
                         if (target && e.pointerId && target.setPointerCapture) {
