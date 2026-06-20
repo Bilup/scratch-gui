@@ -4,6 +4,7 @@ import React from 'react';
 import {injectIntl, intlShape, defineMessages} from 'react-intl';
 
 import LibraryItemComponent from '../components/library-item/library-item.jsx';
+import storage from '../lib/persistence/storage.js';
 
 
 class LibraryItem extends React.PureComponent {
@@ -120,8 +121,10 @@ class LibraryItem extends React.PureComponent {
     }
     render () {
         const iconMd5 = this.curIconMd5();
+        // TW: Use storage.assetHost instead of hardcoded URL
+        const assetHost = storage.getAssetHost() || 'https://assets.r2.bilup.org';
         const iconURL = iconMd5 ?
-            `https://assets.r2.bilup.org/${iconMd5}` :
+            `${assetHost}/${iconMd5}` :
             this.props.iconRawURL;
         return (
             <LibraryItemComponent

@@ -50,6 +50,56 @@ const fetchProjectToken = async projectId => {
     }
 };
 
+// TW: Determine asset host based on project source
+const SCRATCH_ASSET_HOST = 'https://assets.scratch.mit.edu';
+const BILUP_ASSET_HOST = 'https://assets.r2.bilup.org';
+
+const determineAssetHost = (projectUrl, projectId) => {
+    // If loading from project_url, determine based on URL domain
+    if (projectUrl) {
+        try {
+            const url = new URL(projectUrl);
+            const hostname = url.hostname;
+            
+            // Scratch official sources
+            if (hostname === 'scratch.mit.edu' || 
+                hostname.endsWith('.scratch.mit.edu') ||
+                hostname === 'projects.scratch.mit.edu') {
+                return SCRATCH_ASSET_HOST;
+            }
+            
+            // Bilup sources
+            if (hostname === 'bilup.org' || 
+                hostname.endsWith('.bilup.org')) {
+                return BILUP_ASSET_HOST;
+            }
+            
+            // TurboWarp sources - use Scratch assets as fallback
+            if (hostname === 'turbowarp.org' || 
+                hostname.endsWith('.turbowarp.org')) {
+                return SCRATCH_ASSET_HOST;
+            }
+            
+            // For other URLs, use default Bilup CDN (may not work for all)
+            return BILUP_ASSET_HOST;
+        } catch (e) {
+            // Invalid URL, use default
+            return BILUP_ASSET_HOST;
+        }
+    }
+    
+    // If loading by projectId (from Scratch API), use Scratch assets
+    if (projectId && projectId !== '0') {
+        // Numeric project IDs are from Scratch
+        if (/^\d+$/.test(projectId)) {
+            return SCRATCH_ASSET_HOST;
+        }
+    }
+    
+    // Default to Bilup CDN
+    return BILUP_ASSET_HOST;
+};
+
 /* Higher Order Component to provide behavior for loading projects by id. If
  * there's no id, the default project is loaded.
  * @param {React.Component} WrappedComponent component to receive projectData prop
@@ -118,6 +168,12 @@ const ProjectFetcherHOC = function (WrappedComponent) {
                 ) {
                     projectUrl = `https://${projectUrl}`;
                 }
+                
+                // TW: Determine asset host based on project URL source
+                const determinedAssetHost = determineAssetHost(projectUrl, projectId);
+                storage.setAssetHost(determinedAssetHost);
+                log.info(`Project from URL, using asset host: ${determinedAssetHost}`);
+                
                 assetPromise = fetch(projectUrl)
                     .then(r => {
                         if (!r.ok) {
@@ -127,6 +183,11 @@ const ProjectFetcherHOC = function (WrappedComponent) {
                     })
                     .then(buffer => ({data: buffer}));
             } else {
+                // TW: Determine asset host based on project ID source
+                const determinedAssetHost = determineAssetHost(null, projectId);
+                storage.setAssetHost(determinedAssetHost);
+                log.info(`Project from ID ${projectId}, using asset host: ${determinedAssetHost}`);
+                
                 // TW: Temporary hack for project tokens
                 assetPromise = fetchProjectToken(projectId)
                     .then(token => {
