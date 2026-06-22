@@ -40798,223 +40798,218 @@ const translateGalleryItem = (extension, locale) => _objectSpread(_objectSpread(
   description: extension.descriptionTranslations[locale] || extension.description
 });
 let cachedGallery = null;
-const fetchLibrary = async () => {
+const fetchLibrary = async onProgress => {
   const emptyBanner = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAACXBIWXMAAAsTAAALEwEAmpwYAAADGWlDQ1BQaG90b3Nob3AgSUNDIHByb2ZpbGUAAHjaY2BgnuDo4uTKJMDAUFBUUuQe5BgZERmlwH6egY2BmYGBgYGBITG5uMAxIMCHgYGBIS8/L5UBA3y7xsDIwMDAcFnX0cXJlYE0wJpcUFTCwMBwgIGBwSgltTiZgYHhCwMDQ3p5SUEJAwNjDAMDg0hSdkEJAwNjAQMDg0h2SJAzAwNjCwMDE09JakUJAwMDg3N+QWVRZnpGiYKhpaWlgmNKflKqQnBlcUlqbrGCZ15yflFBflFiSWoKAwMD1A4GBgYGXpf8EgX3xMw8BUNTVQYqg4jIKAX08EGIIUByaVEZhMXIwMDAIMCgxeDHUMmwiuEBozRjFOM8xqdMhkwNTJeYNZgbme+y2LDMY2VmzWa9yubEtoldhX0mhwBHJycrZzMXM1cbNzf3RB4pnqW8xryH+IL5nvFXCwgJrBZ0E3wk1CisKHxYJF2UV3SrWJw4p/hWiRRJYcmjUhXSutJPZObIhsoJyp2V71HwUeRVvKA0RTlKRUnltepWtUZ1Pw1Zjbea+7QmaqfqWOsK6b7SO6I/36DGMMrI0ljS+LfJPdPDZivM+y0qLBOtfKwtbFRtRexY7L7aP3e47XjB6ZjzXpetruvdVrov9VjkudBrgfdCn8W+y/xW+a8P2Bq4N+hY8PmQW6HPwr5EMEUKRilFG8e4xUbF5cW3JMxO3Jx0Nvl5KlOaXLpNRlRmVdas7D059/KY8tULfAqLi2YXHy55WyZR7lJRWDmv6mz131q9uvj6SQ3HGn83G7Skt85ru94h2Ond1d59uJehz76/bsK+if8nO05pnXpiOu+M4JmzZj2aozW3ZN6+BVwLwxYtXvxxqcOyCcsfrjRe1br65lrddU3rb2402NSx+cFWq21Tt3/Y6btr1R6Oven7jh9QP9h56PURv6Obj4ufqD355LT3mS3nZM+3X/h0Ke7yqasW15bdEL3ZeuvrnfS7N+/7PDjwyPTx6qeKz2a+EHzZ9Zr5Td3bn+9LP3z6VPD53de8b+9+5P/88Lv4z7d/Vf//AwAqvx2K829RWwAAACBjSFJNAAB6JQAAgIMAAPn/AACA6QAAdTAAAOpgAAA6mAAAF2+SX8VGAAAAEUlEQVR42mL4zwAAAAD//wMAAgEBAJlUum0AAAAASUVORK5CYII=";
-  let twExtensions = [];
-  let mistiumExtensions = [];
-  let sharkpoolExtensions = [];
-  let bilupExtensions = [];
-  let aeExtensions = [];
-  try {
+  const allExtensions = [];
+  const fetchAndAdd = async (sourceName, fetchFn) => {
+    try {
+      const extensions = await fetchFn();
+      allExtensions.push(...extensions);
+      if (onProgress) {
+        onProgress([...allExtensions]);
+      }
+    } catch (error) {
+      console.warn("Failed to load ".concat(sourceName, " extensions:"), error);
+    }
+  };
+
+  // 并行加载所有扩展源，但每个源加载完成后立即更新
+  await Promise.all([fetchAndAdd('TurboWarp', async () => {
     const twRes = await fetch('https://extensions.turbowarp.org/generated-metadata/extensions-v0.json');
     if (!twRes.ok) {
       console.warn("TurboWarp extensions: HTTP status ".concat(twRes.status));
-    } else {
-      const twData = await twRes.json();
-      twExtensions = twData.extensions.map(extension => ({
-        name: extension.name,
-        nameTranslations: extension.nameTranslations || {},
-        description: extension.description,
-        descriptionTranslations: extension.descriptionTranslations || {},
-        extensionId: extension.id,
-        extensionURL: "https://extensions.turbowarp.org/".concat(extension.slug, ".js"),
-        iconURL: "https://extensions.turbowarp.org/".concat(extension.image || 'images/unknown.svg'),
-        tags: ['tw'],
-        credits: [...(extension.by || []), ...(extension.original || [])].map(credit => {
-          if (credit.link) {
-            return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("a", {
-              href: credit.link,
-              target: "_blank",
-              rel: "noreferrer",
-              key: credit.name
-            }, credit.name);
-          }
-          return credit.name;
-        }),
-        docsURI: extension.docs ? "https://extensions.turbowarp.org/".concat(extension.slug) : null,
-        samples: extension.samples ? extension.samples.map(sample => ({
-          href: "".concat("", "editor?project_url=https://extensions.turbowarp.org/samples/").concat(encodeURIComponent(sample), ".sb3"),
-          text: sample
-        })) : null,
-        incompatibleWithScratch: true,
-        featured: true
-      }));
+      return [];
     }
-  } catch (error) {
-    console.warn('Failed to load TurboWarp extensions:', error);
-  }
-  try {
+    const twData = await twRes.json();
+    return twData.extensions.map(extension => ({
+      name: extension.name,
+      nameTranslations: extension.nameTranslations || {},
+      description: extension.description,
+      descriptionTranslations: extension.descriptionTranslations || {},
+      extensionId: extension.id,
+      extensionURL: "https://extensions.turbowarp.org/".concat(extension.slug, ".js"),
+      iconURL: "https://extensions.turbowarp.org/".concat(extension.image || 'images/unknown.svg'),
+      tags: ['tw'],
+      credits: [...(extension.by || []), ...(extension.original || [])].map(credit => {
+        if (credit.link) {
+          return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("a", {
+            href: credit.link,
+            target: "_blank",
+            rel: "noreferrer",
+            key: credit.name
+          }, credit.name);
+        }
+        return credit.name;
+      }),
+      docsURI: extension.docs ? "https://extensions.turbowarp.org/".concat(extension.slug) : null,
+      samples: extension.samples ? extension.samples.map(sample => ({
+        href: "".concat("", "editor?project_url=https://extensions.turbowarp.org/samples/").concat(encodeURIComponent(sample), ".sb3"),
+        text: sample
+      })) : null,
+      incompatibleWithScratch: true,
+      featured: true
+    }));
+  }), fetchAndAdd('Mistium', async () => {
     const mistiumRes = await fetch('https://extensions.mistium.com/generated-metadata/extensions-v0.json');
     if (!mistiumRes.ok) {
       console.warn("Mistium extensions: HTTP status ".concat(mistiumRes.status));
-    } else {
-      const mistiumData = await mistiumRes.json();
-      mistiumExtensions = mistiumData.extensions.filter(ext => ext.featured).map(extension => ({
-        name: extension.name,
-        nameTranslations: extension.nameTranslations || {},
-        description: extension.description,
-        descriptionTranslations: extension.descriptionTranslations || {},
-        extensionId: extension.id,
-        extensionURL: "https://extensions.mistium.com/featured/".concat(extension.name, ".js"),
-        iconURL: extension.image ? "https://extensions.mistium.com/".concat(extension.image) : emptyBanner,
-        tags: ['mistium'],
-        credits: [...(extension.by || []), ...(extension.original || [])].map(credit => {
-          if (credit.link) {
-            return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("a", {
-              href: credit.link,
-              target: "_blank",
-              rel: "noreferrer",
-              key: credit.name
-            }, credit.name);
-          }
-          return credit.name;
-        }),
-        docsURI: null,
-        samples: extension.samples ? extension.samples.map(sample => ({
-          href: "".concat("", "editor?project_url=https://extensions-mistium.pages.dev/samples/").concat(encodeURIComponent(sample), ".sb3"),
-          text: sample
-        })) : null,
-        incompatibleWithScratch: true,
-        featured: true
-      }));
+      return [];
     }
-  } catch (error) {
-    console.warn('Failed to load Mistium extensions:', error);
-  }
-  try {
+    const mistiumData = await mistiumRes.json();
+    return mistiumData.extensions.filter(ext => ext.featured).map(extension => ({
+      name: extension.name,
+      nameTranslations: extension.nameTranslations || {},
+      description: extension.description,
+      descriptionTranslations: extension.descriptionTranslations || {},
+      extensionId: extension.id,
+      extensionURL: "https://extensions.mistium.com/featured/".concat(extension.name, ".js"),
+      iconURL: extension.image ? "https://extensions.mistium.com/".concat(extension.image) : emptyBanner,
+      tags: ['mistium'],
+      credits: [...(extension.by || []), ...(extension.original || [])].map(credit => {
+        if (credit.link) {
+          return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("a", {
+            href: credit.link,
+            target: "_blank",
+            rel: "noreferrer",
+            key: credit.name
+          }, credit.name);
+        }
+        return credit.name;
+      }),
+      docsURI: null,
+      samples: extension.samples ? extension.samples.map(sample => ({
+        href: "".concat("", "editor?project_url=https://extensions-mistium.pages.dev/samples/").concat(encodeURIComponent(sample), ".sb3"),
+        text: sample
+      })) : null,
+      incompatibleWithScratch: true,
+      featured: true
+    }));
+  }), fetchAndAdd('SharkPools', async () => {
     const sharkpoolRes = await fetch('https://sharkpools-extensions.vercel.app/Gallery%20Files/Extension-Keys.json');
     if (!sharkpoolRes.ok) {
       console.warn("SharkPool extensions: HTTP status ".concat(sharkpoolRes.status));
-    } else {
-      const sharkpoolData = await sharkpoolRes.json();
-      const rawExtensions = sharkpoolData.extensions;
-      let normalizedExtensions = [];
-      if (Array.isArray(rawExtensions)) {
-        normalizedExtensions = rawExtensions;
-      } else if (rawExtensions && typeof rawExtensions === 'object') {
-        normalizedExtensions = Object.entries(rawExtensions).map(_ref => {
-          var _value$id, _value$name;
-          let _ref2 = _slicedToArray(_ref, 2),
-            key = _ref2[0],
-            value = _ref2[1];
-          return _objectSpread({
-            id: (_value$id = value.id) !== null && _value$id !== void 0 ? _value$id : key,
-            name: (_value$name = value.name) !== null && _value$name !== void 0 ? _value$name : key
-          }, value);
-        });
-      } else {
-        console.warn('[SharkPools] Invalid extensions format:', rawExtensions);
-        normalizedExtensions = [];
-      }
-      console.log('[SharkPools] Normalized extensions:', normalizedExtensions);
-      sharkpoolExtensions = normalizedExtensions.filter(ext => !ext.isDeprecated).map(extension => ({
-        name: extension.name,
-        nameTranslations: extension.nameTranslations || {},
-        description: extension.description || extension.desc,
-        descriptionTranslations: extension.descriptionTranslations || {},
-        extensionId: extension.id,
-        extensionURL: "https://sharkpools-extensions.vercel.app/extension-code/".concat(extension.url),
-        iconURL: extension.banner ? "https://sharkpools-extensions.vercel.app/extension-thumbs/".concat(extension.banner) : emptyBanner,
-        tags: ['sharkpool'],
-        credits: [...(extension.by || []), ...(extension.original || (extension.creator ? [{
-          name: extension.creator
-        }] : []))].map(credit => {
-          if (credit.link) {
-            return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("a", {
-              href: credit.link,
-              target: "_blank",
-              rel: "noreferrer",
-              key: credit.name
-            }, credit.name);
-          }
-          return credit.name;
-        }),
-        docsURI: null,
-        samples: null,
-        incompatibleWithScratch: true,
-        featured: true
-      }));
+      return [];
     }
-  } catch (error) {
-    console.warn('Failed to load SharkPools extensions:', error);
-  }
-  try {
+    const sharkpoolData = await sharkpoolRes.json();
+    const rawExtensions = sharkpoolData.extensions;
+    let normalizedExtensions = [];
+    if (Array.isArray(rawExtensions)) {
+      normalizedExtensions = rawExtensions;
+    } else if (rawExtensions && typeof rawExtensions === 'object') {
+      normalizedExtensions = Object.entries(rawExtensions).map(_ref => {
+        var _value$id, _value$name;
+        let _ref2 = _slicedToArray(_ref, 2),
+          key = _ref2[0],
+          value = _ref2[1];
+        return _objectSpread({
+          id: (_value$id = value.id) !== null && _value$id !== void 0 ? _value$id : key,
+          name: (_value$name = value.name) !== null && _value$name !== void 0 ? _value$name : key
+        }, value);
+      });
+    } else {
+      console.warn('[SharkPools] Invalid extensions format:', rawExtensions);
+      return [];
+    }
+    console.log('[SharkPools] Normalized extensions:', normalizedExtensions);
+    return normalizedExtensions.filter(ext => !ext.isDeprecated).map(extension => ({
+      name: extension.name,
+      nameTranslations: extension.nameTranslations || {},
+      description: extension.description || extension.desc,
+      descriptionTranslations: extension.descriptionTranslations || {},
+      extensionId: extension.id,
+      extensionURL: "https://sharkpools-extensions.vercel.app/extension-code/".concat(extension.url),
+      iconURL: extension.banner ? "https://sharkpools-extensions.vercel.app/extension-thumbs/".concat(extension.banner) : emptyBanner,
+      tags: ['sharkpool'],
+      credits: [...(extension.by || []), ...(extension.original || (extension.creator ? [{
+        name: extension.creator
+      }] : []))].map(credit => {
+        if (credit.link) {
+          return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("a", {
+            href: credit.link,
+            target: "_blank",
+            rel: "noreferrer",
+            key: credit.name
+          }, credit.name);
+        }
+        return credit.name;
+      }),
+      docsURI: null,
+      samples: null,
+      incompatibleWithScratch: true,
+      featured: true
+    }));
+  }), fetchAndAdd('Bilup', async () => {
     const bilupRes = await fetch('https://extensions.bilup.org/generated-metadata/extensions-v0.json');
     if (!bilupRes.ok) {
       console.warn("Bilup extensions: HTTP status ".concat(bilupRes.status));
-    } else {
-      const bilupData = await bilupRes.json();
-      bilupExtensions = bilupData.extensions.map(extension => ({
-        name: extension.name,
-        nameTranslations: extension.nameTranslations || {},
-        description: extension.description,
-        descriptionTranslations: extension.descriptionTranslations || {},
-        extensionId: extension.id,
-        extensionURL: "https://extensions.bilup.org/".concat(extension.slug, ".js"),
-        iconURL: "https://extensions.bilup.org/".concat(extension.image || 'images/unknown.svg'),
-        tags: ['bilup'],
-        credits: [...(extension.by || []), ...(extension.original || [])].map(credit => {
-          if (credit.link) {
-            return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("a", {
-              href: credit.link,
-              target: "_blank",
-              rel: "noreferrer",
-              key: credit.name
-            }, credit.name);
-          }
-          return credit.name;
-        }),
-        docsURI: extension.docs ? "https://extensions.bilup.org/".concat(extension.slug) : null,
-        samples: extension.samples ? extension.samples.map(sample => ({
-          href: "".concat("", "editor?project_url=https://extensions.bilup.org/samples/").concat(encodeURIComponent(sample), ".sb3"),
-          text: sample
-        })) : null,
-        incompatibleWithScratch: true,
-        featured: true
-      }));
+      return [];
     }
-  } catch (error) {
-    console.warn('Failed to load Bilup extensions:', error);
-  }
-  try {
+    const bilupData = await bilupRes.json();
+    return bilupData.extensions.map(extension => ({
+      name: extension.name,
+      nameTranslations: extension.nameTranslations || {},
+      description: extension.description,
+      descriptionTranslations: extension.descriptionTranslations || {},
+      extensionId: extension.id,
+      extensionURL: "https://extensions.bilup.org/".concat(extension.slug, ".js"),
+      iconURL: "https://extensions.bilup.org/".concat(extension.image || 'images/unknown.svg'),
+      tags: ['bilup'],
+      credits: [...(extension.by || []), ...(extension.original || [])].map(credit => {
+        if (credit.link) {
+          return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("a", {
+            href: credit.link,
+            target: "_blank",
+            rel: "noreferrer",
+            key: credit.name
+          }, credit.name);
+        }
+        return credit.name;
+      }),
+      docsURI: extension.docs ? "https://extensions.bilup.org/".concat(extension.slug) : null,
+      samples: extension.samples ? extension.samples.map(sample => ({
+        href: "".concat("", "editor?project_url=https://extensions.bilup.org/samples/").concat(encodeURIComponent(sample), ".sb3"),
+        text: sample
+      })) : null,
+      incompatibleWithScratch: true,
+      featured: true
+    }));
+  }), fetchAndAdd('AstraEditor', async () => {
     const aeRes = await fetch('https://editors.astras.top/extensions/generated-metadata/extensions-v0.json');
     if (!aeRes.ok) {
       console.warn("AE extensions: HTTP status ".concat(aeRes.status));
-    } else {
-      const aeData = await aeRes.json();
-      aeExtensions = aeData.extensions.filter(extension => extension.id !== 'shangcloud').map(extension => ({
-        name: extension.name,
-        nameTranslations: extension.nameTranslations || {},
-        description: extension.description,
-        descriptionTranslations: extension.descriptionTranslations || {},
-        extensionId: extension.id,
-        extensionURL: "https://editors.astras.top/extensions/".concat(extension.slug, ".js"),
-        iconURL: "https://editors.astras.top/extensions/".concat(extension.image || 'images/unknown.svg'),
-        tags: ['ae'],
-        credits: [...(extension.by || []), ...(extension.original || [])].map(credit => {
-          if (credit.link) {
-            return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("a", {
-              href: credit.link,
-              target: "_blank",
-              rel: "noreferrer",
-              key: credit.name
-            }, credit.name);
-          }
-          return credit.name;
-        }),
-        docsURI: extension.docs ? "https://editors.astras.top/extensions/".concat(extension.slug) : null,
-        samples: extension.samples ? extension.samples.map(sample => ({
-          href: "".concat("", "editor?project_url=https://editors.astras.top/extensions/s/").concat(encodeURIComponent(sample), ".sb3"),
-          text: sample
-        })) : null,
-        incompatibleWithScratch: true,
-        featured: true
-      }));
+      return [];
     }
-  } catch (error) {
-    console.warn('Failed to load AstraEditor extensions:', error);
-  }
-  return [...twExtensions, ...mistiumExtensions, ...sharkpoolExtensions, ...bilupExtensions, ...aeExtensions];
+    const aeData = await aeRes.json();
+    return aeData.extensions.filter(extension => extension.id !== 'shangcloud').map(extension => ({
+      name: extension.name,
+      nameTranslations: extension.nameTranslations || {},
+      description: extension.description,
+      descriptionTranslations: extension.descriptionTranslations || {},
+      extensionId: extension.id,
+      extensionURL: "https://editors.astras.top/extensions/".concat(extension.slug, ".js"),
+      iconURL: "https://editors.astras.top/extensions/".concat(extension.image || 'images/unknown.svg'),
+      tags: ['ae'],
+      credits: [...(extension.by || []), ...(extension.original || [])].map(credit => {
+        if (credit.link) {
+          return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("a", {
+            href: credit.link,
+            target: "_blank",
+            rel: "noreferrer",
+            key: credit.name
+          }, credit.name);
+        }
+        return credit.name;
+      }),
+      docsURI: extension.docs ? "https://editors.astras.top/extensions/".concat(extension.slug) : null,
+      samples: extension.samples ? extension.samples.map(sample => ({
+        href: "".concat("", "editor?project_url=https://editors.astras.top/extensions/s/").concat(encodeURIComponent(sample), ".sb3"),
+        text: sample
+      })) : null,
+      incompatibleWithScratch: true,
+      featured: true
+    }));
+  })]);
+  return allExtensions;
 };
 class ExtensionLibrary extends react__WEBPACK_IMPORTED_MODULE_2___default.a.PureComponent {
   constructor(props) {
@@ -41033,10 +41028,11 @@ class ExtensionLibrary extends react__WEBPACK_IMPORTED_MODULE_2___default.a.Pure
           galleryTimedOut: true
         });
       }, 750);
-      fetchLibrary().then(gallery => {
-        cachedGallery = gallery;
+      fetchLibrary(progressGallery => {
+        // 每当有新的扩展加载完成时，立即更新显示
+        cachedGallery = progressGallery;
         this.setState({
-          gallery
+          gallery: progressGallery
         });
         clearTimeout(timeout);
       }).catch(error => {

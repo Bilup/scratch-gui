@@ -49620,10 +49620,17 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "urlAlphabet", function() { return _url_alphabet_index_js__WEBPACK_IMPORTED_MODULE_0__["urlAlphabet"]; });
 
 
+
+
 let random = bytes => crypto.getRandomValues(new Uint8Array(bytes))
+
 let customRandom = (alphabet, defaultSize, getRandom) => {
   let mask = (2 << (Math.log(alphabet.length - 1) / Math.LN2)) - 1
+
+
+
   let step = -~((1.6 * mask * defaultSize) / alphabet.length)
+
   return (size = defaultSize) => {
     let id = ''
     while (true) {
@@ -49636,8 +49643,10 @@ let customRandom = (alphabet, defaultSize, getRandom) => {
     }
   }
 }
+
 let customAlphabet = (alphabet, size = 21) =>
   customRandom(alphabet, size, random)
+
 let nanoid = (size = 21) =>
   crypto.getRandomValues(new Uint8Array(size)).reduce((id, byte) => {
     byte &= 63
@@ -49655,6 +49664,7 @@ let nanoid = (size = 21) =>
 
 
 
+
 /***/ }),
 
 /***/ "./node_modules/nanoid/url-alphabet/index.js":
@@ -49669,6 +49679,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "urlAlphabet", function() { return urlAlphabet; });
 let urlAlphabet =
   'useandom-26T198340PX75pxJACKVERYMINDBUSHWOLF_GQZbfghjklqvwyzrict'
+
 
 
 

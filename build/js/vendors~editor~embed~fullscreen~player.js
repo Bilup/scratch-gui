@@ -58707,8 +58707,31 @@ const _a=a.replace(/\^\{\}$/,'');const _b=b.replace(/\^\{\}$/,'');const tmp=-(_a
  * This code for `path.join` is directly copied from @zenfs/core/path for bundle size improvements.
  * SPDX-License-Identifier: LGPL-3.0-or-later
  * Copyright (c) James Prevett and other ZenFS contributors.
+ *
+ * Windows support added:
+ *   - Backslashes are normalised to forward slashes before processing.
+ *   - Drive-letter prefixes (e.g. "C:") are detected and preserved through
+ *     normalisation, so absolute Windows paths are handled correctly.
+ *   - An absolute argument passed to join() resets the accumulated path,
+ *     matching Node behaviour and handling worktree gitdir paths properly.
+ *
+ * Limitation: UNC paths (e.g. \\server\share) are not supported. The leading
+ *   backslashes are normalised to forward slashes and then collapsed by
+ *   normalizeString, losing the UNC root. Git on Windows works with
+ *   drive-letter paths, so this is not expected to be a practical issue.
  */function normalizeString(path,aar){let res='';let lastSegmentLength=0;let lastSlash=-1;let dots=0;let char='\x00';for(let i=0;i<=path.length;++i){if(i<path.length)char=path[i];else if(char==='/')break;else char='/';if(char==='/'){if(lastSlash===i-1||dots===1){// NOOP
-}else if(dots===2){if(res.length<2||lastSegmentLength!==2||res.at(-1)!=='.'||res.at(-2)!=='.'){if(res.length>2){const lastSlashIndex=res.lastIndexOf('/');if(lastSlashIndex===-1){res='';lastSegmentLength=0;}else{res=res.slice(0,lastSlashIndex);lastSegmentLength=res.length-1-res.lastIndexOf('/');}lastSlash=i;dots=0;continue;}else if(res.length!==0){res='';lastSegmentLength=0;lastSlash=i;dots=0;continue;}}if(aar){res+=res.length>0?'/..':'..';lastSegmentLength=2;}}else{if(res.length>0)res+='/'+path.slice(lastSlash+1,i);else res=path.slice(lastSlash+1,i);lastSegmentLength=i-lastSlash-1;}lastSlash=i;dots=0;}else if(char==='.'&&dots!==-1){++dots;}else{dots=-1;}}return res;}function normalize(path){if(!path.length)return'.';const isAbsolute=path[0]==='/';const trailingSeparator=path.at(-1)==='/';path=normalizeString(path,!isAbsolute);if(!path.length){if(isAbsolute)return'/';return trailingSeparator?'./':'.';}if(trailingSeparator)path+='/';return isAbsolute?"/".concat(path):path;}function join(){if(arguments.length===0)return'.';let joined;for(let i=0;i<arguments.length;++i){const arg=i<0||arguments.length<=i?undefined:arguments[i];if(arg.length>0){if(joined===undefined)joined=arg;else joined+='/'+arg;}}if(joined===undefined)return'.';return normalize(joined);}// This is straight from parse_unit_factor in config.c of canonical git
+}else if(dots===2){if(res.length<2||lastSegmentLength!==2||res.at(-1)!=='.'||res.at(-2)!=='.'){if(res.length>2){const lastSlashIndex=res.lastIndexOf('/');if(lastSlashIndex===-1){res='';lastSegmentLength=0;}else{res=res.slice(0,lastSlashIndex);lastSegmentLength=res.length-1-res.lastIndexOf('/');}lastSlash=i;dots=0;continue;}else if(res.length!==0){res='';lastSegmentLength=0;lastSlash=i;dots=0;continue;}}if(aar){res+=res.length>0?'/..':'..';lastSegmentLength=2;}}else{if(res.length>0)res+='/'+path.slice(lastSlash+1,i);else res=path.slice(lastSlash+1,i);lastSegmentLength=i-lastSlash-1;}lastSlash=i;dots=0;}else if(char==='.'&&dots!==-1){++dots;}else{dots=-1;}}return res;}// Returns the Windows drive prefix ("C:") if present, otherwise null.
+function getWindowsDrivePrefix(path){if(path.length>=2&&/^[a-zA-Z]:/.test(path)){return path.slice(0,2);// e.g. "C:"
+}return null;}function normalize(path){if(!path.length)return'.';// Normalise backslashes to forward slashes before any other processing.
+path=path.replace(/\\/g,'/');const drivePrefix=getWindowsDrivePrefix(path);// isAbsolute: Unix root ('/foo') OR Windows drive+slash ('C:/foo').
+const isAbsolute=path[0]==='/'||drivePrefix!==null&&path[2]==='/';const trailingSeparator=path.at(-1)==='/';// Strip the drive prefix before feeding into normalizeString so that the
+// core algorithm only ever sees a plain POSIX-style string.
+const pathBody=drivePrefix?path.slice(2):path;let normalized=normalizeString(pathBody,!isAbsolute);if(!normalized.length){const root=drivePrefix?isAbsolute?drivePrefix+'/':drivePrefix:isAbsolute?'/':'.';return trailingSeparator&&!isAbsolute?root+'/':root;}if(trailingSeparator)normalized+='/';if(drivePrefix){return isAbsolute?"".concat(drivePrefix,"/").concat(normalized):"".concat(drivePrefix).concat(normalized);}return isAbsolute?"/".concat(normalized):normalized;}function join(){for(var _len=arguments.length,args=new Array(_len),_key2=0;_key2<_len;_key2++){args[_key2]=arguments[_key2];}if(args.length===0)return'.';let joined;for(let i=0;i<args.length;++i){// Normalise separators before processing.
+const arg=args[i].replace(/\\/g,'/');if(arg.length===0)continue;// A Windows drive-letter path (e.g. "C:/worktrees/foo") cannot be
+// meaningfully appended to any base, so it resets the accumulator.
+// Unix absolute paths (leading '/') are NOT reset here — that would be
+// path.resolve() semantics; path.join('foo', '/bar') must yield 'foo/bar'.
+if(/^[a-zA-Z]:\//.test(arg)){joined=arg;}else{if(joined===undefined)joined=arg;else joined+='/'+arg;}}if(joined===undefined)return'.';return normalize(joined);}// This is straight from parse_unit_factor in config.c of canonical git
 const num=val=>{if(typeof val==='number'){return val;}val=val.toLowerCase();let n=parseInt(val);if(val.endsWith('k'))n*=1024;if(val.endsWith('m'))n*=1024*1024;if(val.endsWith('g'))n*=1024*1024*1024;return n;};// This is straight from git_parse_maybe_bool_text in config.c of canonical git
 const bool=val=>{if(typeof val==='boolean'){return val;}val=val.trim().toLowerCase();if(val==='true'||val==='yes'||val==='on')return true;if(val==='false'||val==='no'||val==='off')return false;throw Error("Expected 'true', 'false', 'yes', 'no', 'on', or 'off', but got ".concat(val));};const schema={core:{filemode:bool,bare:bool,logallrefupdates:bool,symlinks:bool,ignorecase:bool,bigFileThreshold:num}};// https://git-scm.com/docs/git-config#_syntax
 // section starts with [ and ends with ]
@@ -59446,7 +59469,7 @@ filepath=Array.isArray(filepath)?filepath:[filepath];const promises=filepath.map
  *
  */async function _getConfig(_ref66){let fs=_ref66.fs,gitdir=_ref66.gitdir,path=_ref66.path;const config=await GitConfigManager.get({fs,gitdir});return config.get(path);}// Like Object.assign but ignore properties with undefined values
 // ref: https://stackoverflow.com/q/39513815
-function assignDefined(target){for(var _len=arguments.length,sources=new Array(_len>1?_len-1:0),_key2=1;_key2<_len;_key2++){sources[_key2-1]=arguments[_key2];}for(const source of sources){if(source){for(const key of Object.keys(source)){const val=source[key];if(val!==undefined){target[key]=val;}}}}return target;}/**
+function assignDefined(target){for(var _len2=arguments.length,sources=new Array(_len2>1?_len2-1:0),_key3=1;_key3<_len2;_key3++){sources[_key3-1]=arguments[_key3];}for(const source of sources){if(source){for(const key of Object.keys(source)){const val=source[key];if(val!==undefined){target[key]=val;}}}}return target;}/**
  * Return author object by using properties following this priority:
  * (1) provided author object
  * -> (2) author of provided commit object
@@ -60295,7 +60318,7 @@ const getExternalRefDelta=oid=>_readObject({fs,cache,gitdir,oid});// Look for it
 let result=await hasObjectLoose({fs,gitdir,oid});// Check to see if it's in a packfile.
 if(!result){result=await hasObjectPacked({fs,cache,gitdir,oid,getExternalRefDelta});}// Finally
 return result;}function addCredentialUsername(_ref151){let config=_ref151.config,onAuth=_ref151.onAuth;if(!onAuth)return onAuth;return async(url,auth)=>{const username=auth.username||(await config.get("credential.".concat(url,".username")));return onAuth(url,username?_objectSpread(_objectSpread({},auth),{},{username}):auth);};}// TODO: make a function that just returns obCount. then emptyPackfile = () => sizePack(pack) === 0
-function emptyPackfile(pack){const pheader='5041434b';const version='00000002';const obCount='00000000';const header=pheader+version+obCount;return pack.slice(0,12).toString('hex')===header;}function filterCapabilities(server,client){const serverNames=server.map(cap=>cap.split('=',1)[0]);return client.filter(cap=>{const name=cap.split('=',1)[0];return serverNames.includes(name);});}const pkg={name:'isomorphic-git',version:'1.38.4',agent:'git/isomorphic-git@1.38.4'};class FIFO{constructor(){this._queue=[];}write(chunk){if(this._ended){throw Error('You cannot write to a FIFO that has already been ended!');}if(this._waiting){const resolve=this._waiting;this._waiting=null;resolve({value:chunk});}else{this._queue.push(chunk);}}end(){this._ended=true;if(this._waiting){const resolve=this._waiting;this._waiting=null;resolve({done:true});}}destroy(err){this.error=err;this.end();}async next(){if(this._queue.length>0){return{value:this._queue.shift()};}if(this._ended){return{done:true};}if(this._waiting){throw Error('You cannot call read until the previous call to read has returned!');}return new Promise(resolve=>{this._waiting=resolve;});}}// Note: progress messages are designed to be written directly to the terminal,
+function emptyPackfile(pack){const pheader='5041434b';const version='00000002';const obCount='00000000';const header=pheader+version+obCount;return pack.slice(0,12).toString('hex')===header;}function filterCapabilities(server,client){const serverNames=server.map(cap=>cap.split('=',1)[0]);return client.filter(cap=>{const name=cap.split('=',1)[0];return serverNames.includes(name);});}const pkg={name:'isomorphic-git',version:'1.38.5',agent:'git/isomorphic-git@1.38.5'};class FIFO{constructor(){this._queue=[];}write(chunk){if(this._ended){throw Error('You cannot write to a FIFO that has already been ended!');}if(this._waiting){const resolve=this._waiting;this._waiting=null;resolve({value:chunk});}else{this._queue.push(chunk);}}end(){this._ended=true;if(this._waiting){const resolve=this._waiting;this._waiting=null;resolve({done:true});}}destroy(err){this.error=err;this.end();}async next(){if(this._queue.length>0){return{value:this._queue.shift()};}if(this._ended){return{done:true};}if(this._waiting){throw Error('You cannot call read until the previous call to read has returned!');}return new Promise(resolve=>{this._waiting=resolve;});}}// Note: progress messages are designed to be written directly to the terminal,
 // so they are often sent with just a carriage return to overwrite the last line of output.
 // But there are also messages delimited with newlines.
 // I also include CRLF just in case.
@@ -293915,13 +293938,13 @@ const FillHorzGradientEnabled = props => /*#__PURE__*/react__WEBPACK_IMPORTED_MO
   y2: "50%",
   id: "linearGradient-horz"
 }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("stop", {
-  stopColor: "#FFFFFF",
-  offset: "0%"
-}), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("stop", {
   stopColor: "currentColor",
   style: {
     color: 'var(--paint-looks-secondary-default, #FF8C1A)'
   },
+  offset: "0%"
+}), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("stop", {
+  stopColor: "#FFFFFF",
   offset: "100%"
 }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("g", {
   id: "fill-horz-gradient-enabled",
@@ -294069,13 +294092,13 @@ const FillVertGradientEnabled = props => /*#__PURE__*/react__WEBPACK_IMPORTED_MO
   y2: "100%",
   id: "linearGradient-vert"
 }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("stop", {
-  stopColor: "#FFFFFF",
-  offset: "0%"
-}), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("stop", {
   stopColor: "currentColor",
   style: {
     color: 'var(--paint-looks-secondary-default, #FF8C1A)'
   },
+  offset: "0%"
+}), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("stop", {
+  stopColor: "#FFFFFF",
   offset: "100%"
 }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("g", {
   id: "fill-vert-gradient-enabled",
@@ -302828,8 +302851,6 @@ class PaperCanvas extends react__WEBPACK_IMPORTED_MODULE_2___default.a.Component
     Object(_lib_tw_is_importing_image__WEBPACK_IMPORTED_MODULE_19__["setImportingImage"])(false);
     this.clearPaperCanvas();
     if (this.queuedImport) this.queuedImport = null;
-    const itemWidth = item.bounds.width;
-    const itemHeight = item.bounds.height;
 
     // Get reference to viewbox
     let mask;
@@ -302869,8 +302890,8 @@ class PaperCanvas extends react__WEBPACK_IMPORTED_MODULE_2___default.a.Component
       }
       item.translate(_helper_view__WEBPACK_IMPORTED_MODULE_12__["CENTER"].subtract(rotationPoint.multiply(2)));
     } else {
-      // Center
-      item.translate(_helper_view__WEBPACK_IMPORTED_MODULE_12__["CENTER"].subtract(itemWidth, itemHeight));
+      // Center the item using the scaled bounds
+      item.translate(_helper_view__WEBPACK_IMPORTED_MODULE_12__["CENTER"].subtract(item.bounds.center));
     }
     _turbowarp_paper__WEBPACK_IMPORTED_MODULE_4___default.a.project.activeLayer.insertChild(0, item);
     if (Object(_helper_group__WEBPACK_IMPORTED_MODULE_9__["isGroup"])(item)) {
