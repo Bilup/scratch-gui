@@ -103,6 +103,13 @@ const setRecordElem = elem => {
       reduxEvents: ['scratch-gui/mode/SET_PLAYER', 'fontsLoaded/SET_FONTS_LOADED', 'scratch-gui/locales/SELECT_LOCALE']
     });
     const getOptions = async () => new Promise(async resolve => {
+      // Check if window already exists and close it
+      if (optionsWindow) {
+        optionsWindow.close();
+        optionsWindow = null;
+        return;
+      }
+
       // Initialize window manager
       const WM = await initWindowManager();
 
