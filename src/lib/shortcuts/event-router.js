@@ -373,6 +373,14 @@ const executeCallbackAction = shortcut => {
                 }
             }
             break;
+        case 'toggleWindowFullScreen':
+            if (WindowManager) {
+                const top = WindowManager.getAllWindows().sort((a, b) => b.zIndex - a.zIndex)[0];
+                if (top) {
+                    top.toggleMaximize();
+                }
+            }
+            break;
         default:
             console.warn(`Unknown callback action: ${shortcut.action}`);
         }

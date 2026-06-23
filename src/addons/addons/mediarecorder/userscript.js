@@ -57,6 +57,13 @@ export default async ({addon, console, msg}) => {
                     'scratch-gui/locales/SELECT_LOCALE']
             });
         const getOptions = async () => new Promise(async resolve => {
+            // Check if window already exists and close it
+            if (optionsWindow) {
+                optionsWindow.close();
+                optionsWindow = null;
+                return;
+            }
+
             // Initialize window manager
             const WM = await initWindowManager();
 
@@ -294,7 +301,7 @@ export default async ({addon, console, msg}) => {
             // Stop buttons
             const stopButtonContainer = document.createElement('div');
             stopButtonContainer.className = 'media-recorder-buttons';
-      
+
             // Cancel button (doesn't save)
             const cancelButton = document.createElement('button');
             cancelButton.className = 'media-recorder-button media-recorder-button-cancel';
@@ -302,7 +309,7 @@ export default async ({addon, console, msg}) => {
             cancelButton.addEventListener('click', () => {
                 stopRecording(true); // Force stop without saving
             });
-      
+
             // End and save button
             const saveButton = document.createElement('button');
             saveButton.className = 'media-recorder-button media-recorder-button-save';
@@ -310,13 +317,13 @@ export default async ({addon, console, msg}) => {
             saveButton.addEventListener('click', () => {
                 stopRecording(false); // Normal stop with saving
             });
-      
+
             stopButtonContainer.appendChild(cancelButton);
             stopButtonContainer.appendChild(saveButton);
             statusContent.appendChild(stopButtonContainer);      
             // Update window content
             optionsWindow.setContent(statusContent);
-      
+
             // Return elements for updating
             return {
                 timeElement: statusContent.querySelector('#recording-time'),
@@ -336,7 +343,7 @@ export default async ({addon, console, msg}) => {
                 addon.tab.traps.vm.runtime.off('PROJECT_STOP_ALL', stopSignFunc);
                 stopSignFunc = null;
             }
-      
+
             // Close the options window if it's still open
             if (optionsWindow) {
                 optionsWindow.close();

@@ -291,6 +291,16 @@ export const getDefaultShortcuts = () => [
         label: 'Close Window'
     },
     {
+        id: 'toggleWindowFullScreen',
+        key: 'Alt+W',
+        defaultKey: 'Alt+W',
+        category: SHORTCUT_CATEGORIES.WINDOW_MANAGEMENT,
+        actionType: 'callback',
+        action: 'toggleWindowFullScreen',
+        params: [],
+        label: 'Toggle Window Fullscreen'
+    },
+    {
         id: 'collaborationChat',
         key: '/',
         defaultKey: '/',

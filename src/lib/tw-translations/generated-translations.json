@@ -705,6 +705,7 @@
         "shortcut.paste": "粘贴",
         "shortcut.cut": "剪切",
         "shortcut.closeWindow": "关闭窗口",
+        "shortcut.toggleWindowFullScreen": "切换窗口全屏",
         "shortcut.collaborationChat": "协作聊天",
         "tw.customThemes.createDialog.createButton": "创建",
         "bl.menu.bilme": "Bilme 商城",
