@@ -247,6 +247,11 @@ const messages = defineMessages({
         description: 'Shortcut label',
         id: 'shortcut.closeWindow'
     },
+    toggleWindowFullScreen: {
+        defaultMessage: 'Toggle Window Fullscreen',
+        description: 'Shortcut label',
+        id: 'shortcut.toggleWindowFullScreen'
+    },
     collaborationChat: {
         defaultMessage: 'Collaboration Chat',
         description: 'Shortcut label',
@@ -337,6 +342,7 @@ class ShortcutManager extends React.Component {
             'paste': messages.paste,
             'cut': messages.cut,
             'closeWindow': messages.closeWindow,
+            'toggleWindowFullScreen': messages.toggleWindowFullScreen,
             'collaborationChat': messages.collaborationChat
         };
 
