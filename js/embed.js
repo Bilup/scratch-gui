@@ -13334,7 +13334,7 @@ class FindBarController {
     const workspaceVersion = this._getWorkspaceVersion();
     switch (tabIndex) {
       case 0:
-        if (this._cachedScratchBlocks && this._lastWorkspaceVersion === workspaceVersion) {
+        if (this._cachedScratchBlocks && this._cachedScratchBlocks.length > 0 && this._lastWorkspaceVersion === workspaceVersion) {
           scratchBlocks = this._cachedScratchBlocks;
         } else {
           scratchBlocks = this.getScratchBlocks();
@@ -13343,7 +13343,7 @@ class FindBarController {
         }
         break;
       case 1:
-        if (this._cachedScratchCostumes) {
+        if (this._cachedScratchCostumes && this._cachedScratchCostumes.length > 0) {
           scratchBlocks = this._cachedScratchCostumes;
         } else {
           scratchBlocks = this.getScratchCostumes();
@@ -13351,7 +13351,7 @@ class FindBarController {
         }
         break;
       case 2:
-        if (this._cachedScratchSounds) {
+        if (this._cachedScratchSounds && this._cachedScratchSounds.length > 0) {
           scratchBlocks = this._cachedScratchSounds;
         } else {
           scratchBlocks = this.getScratchSounds();
