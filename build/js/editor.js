@@ -56467,6 +56467,16 @@ class CollaborationService {
   shouldSuppressEvents() {
     return this.isSyncOperation || this.isApplyingRemoteChange || this.isLoadingProject || this.isSwitchingTarget;
   }
+  beginApplyingRemoteChange() {
+    this._applyingRemoteChangeCount++;
+    this.isApplyingRemoteChange = true;
+  }
+  endApplyingRemoteChange() {
+    this._applyingRemoteChangeCount = Math.max(0, this._applyingRemoteChangeCount - 1);
+    if (this._applyingRemoteChangeCount === 0) {
+      this.isApplyingRemoteChange = false;
+    }
+  }
   init(vm) {
     this.vm = vm;
     this.collaborationBlockListener = this.collaborationBlockListener.bind(this);
@@ -56617,7 +56627,7 @@ class CollaborationService {
     if (!this.vm || !this.vm.extensionManager) return;
     if (payload.sender === this.peer.id) return;
     const extensionManager = this.vm.extensionManager;
-    this.isApplyingRemoteChange = true;
+    this.beginApplyingRemoteChange();
     const loadExtension = async () => {
       try {
         const extId = payload.extensionId;
@@ -56640,7 +56650,7 @@ class CollaborationService {
         // ignore
       } finally {
         setTimeout(() => {
-          this.isApplyingRemoteChange = false;
+          this.endApplyingRemoteChange();
         }, 100);
       }
     };
@@ -56843,19 +56853,22 @@ class CollaborationService {
   handleTargetsUpdate(payload, conn) {
     if (!this.vm || !this.vm.runtime) return;
     if (payload.sender === this.peer.id) return;
-    this.isApplyingRemoteChange = true;
-    const updates = payload.updates || [];
-    updates.forEach(update => {
-      const targetId = this.isHost ? update.targetId : this.targetMapping[update.targetId] || update.targetId;
-      const target = this.vm.runtime.getTargetById(targetId);
-      if (target) {
-        if ('x' in update && 'y' in update) target.setXY(update.x, update.y);
-        if ('direction' in update) target.setDirection(update.direction);
-        if ('size' in update) target.setSize(update.size);
-        if ('visible' in update) target.setVisible(update.visible);
-      }
-    });
-    this.isApplyingRemoteChange = false;
+    this.beginApplyingRemoteChange();
+    try {
+      const updates = payload.updates || [];
+      updates.forEach(update => {
+        const targetId = this.isHost ? update.targetId : this.targetMapping[update.targetId] || update.targetId;
+        const target = this.vm.runtime.getTargetById(targetId);
+        if (target) {
+          if ('x' in update && 'y' in update) target.setXY(update.x, update.y);
+          if ('direction' in update) target.setDirection(update.direction);
+          if ('size' in update) target.setSize(update.size);
+          if ('visible' in update) target.setVisible(update.visible);
+        }
+      });
+    } finally {
+      this.endApplyingRemoteChange();
+    }
     if (this.isHost) {
       this.connections.forEach(connection => {
         if (connection !== conn && connection.open) {
@@ -57342,7 +57355,7 @@ class CollaborationService {
       return;
     }
     if (target.isStage) return;
-    this.isApplyingRemoteChange = true;
+    this.beginApplyingRemoteChange();
     const changedProps = payload.changedProps || {};
     let newX = target.x;
     let newY = target.y;
@@ -57355,7 +57368,7 @@ class CollaborationService {
     if ('size' in changedProps) target.setSize(changedProps.size);
     if ('visible' in changedProps) target.setVisible(changedProps.visible);
     if ('rotationStyle' in changedProps) target.setRotationStyle(changedProps.rotationStyle);
-    this.isApplyingRemoteChange = false;
+    this.endApplyingRemoteChange();
     if (this.isHost && payload.sender !== this.peer.id) {
       this.connections.forEach(connection => {
         if (connection !== conn && connection.open) {
@@ -58093,7 +58106,7 @@ const handleAssetEvent = (service, payload, conn) => {
       service._eventDedupeCache.delete(oldestKey);
     }
   }
-  service.isApplyingRemoteChange = true;
+  service.beginApplyingRemoteChange();
   try {
     if (kind === 'sprite-create') {
       const json = payload.jsonData;
@@ -58323,7 +58336,7 @@ const handleAssetEvent = (service, payload, conn) => {
     }
   } finally {
     setTimeout(() => {
-      service.isApplyingRemoteChange = false;
+      service.endApplyingRemoteChange();
     }, 50);
   }
   if (service.isHost && payload.sender !== service.peer.id) {
@@ -58915,26 +58928,26 @@ const handleBlockEvent = function handleBlockEvent(service, payload, conn) {
       service.seenEventTimestamps.set(payload.eventId, Date.now());
     }
   }
-  service.isApplyingRemoteChange = true;
+  service.beginApplyingRemoteChange();
   try {
     const reconstructedEvent = Object(_event_serialization_js__WEBPACK_IMPORTED_MODULE_0__["reconstructEvent"])(service, payload.event);
     if (reconstructedEvent === null) {
       if (isRetry) {
-        service.isApplyingRemoteChange = false;
+        service.endApplyingRemoteChange();
         return;
       }
       service.queuePendingEvent(payload);
-      service.isApplyingRemoteChange = false;
+      service.endApplyingRemoteChange();
       return;
     }
     if (!validateBlockEvent(reconstructedEvent)) {
-      service.isApplyingRemoteChange = false;
+      service.endApplyingRemoteChange();
       return;
     }
     reconstructedEvent._syncOriginated = true;
     reconstructedEvent._eventOrigin = eventOrigin;
     if (!service.vm.blockListener) {
-      service.isApplyingRemoteChange = false;
+      service.endApplyingRemoteChange();
       return;
     }
     let targetForEvent = null;
@@ -58954,7 +58967,7 @@ const handleBlockEvent = function handleBlockEvent(service, payload, conn) {
       if (!isRetry) {
         service.queuePendingEvent(payload);
       }
-      service.isApplyingRemoteChange = false;
+      service.endApplyingRemoteChange();
       return;
     }
     const isCurrentlyEditingTarget = targetForEvent === service.vm.editingTarget;
@@ -58967,7 +58980,7 @@ const handleBlockEvent = function handleBlockEvent(service, payload, conn) {
     // Handle error
   } finally {
     setTimeout(() => {
-      service.isApplyingRemoteChange = false;
+      service.endApplyingRemoteChange();
     }, 50);
   }
   if (service.isHost && payload.sender !== service.peer.id) {
@@ -59045,8 +59058,6 @@ const sendMessage = (service, type, payload, targetConn) => {
             error
           });
         }
-      } else {
-        return;
       }
     }
     if (targetConn.open) {
@@ -59060,6 +59071,7 @@ const sendMessage = (service, type, payload, targetConn) => {
       }
       return;
     }
+    return;
   }
   service.connections.forEach(conn => {
     if (conn.open) {
@@ -60196,34 +60208,29 @@ const handleUserJoin = (service, payload, conn) => {
     return;
   }
   if (payload.id === service.peer.id) return;
-  service.pendingJoinRequests.set(payload.id, {
-    id: payload.id,
-    username: payload.username,
-    connection: conn
-  });
-  service.emit('join-request-received', {
-    requesterId: payload.id,
-    requesterUsername: payload.username
-  });
+  const isJoinRequest = payload.sender === payload.id;
+  const isHostBroadcast = conn && conn.peer === service.hostId && payload.sender === service.hostId;
   if (service.isHost) {
-    if (service.roomPrivacy === 'private') return;
-    if (service.roomPrivacy === 'public') approveJoinRequest(service, payload.id, payload.username, conn);
-  }
-  service.users.set(payload.id, payload);
-  service.emit('user-joined', payload);
-  if (service.isHost) {
-    const currentUsers = Array.from(service.users.values());
-    service.sendMessage('users-list', {
-      users: currentUsers
-    }, conn ? conn : payload.id);
-    service.connections.forEach(connection => {
-      if (connection !== conn && connection.open) {
-        service.sendMessage('user-join', payload, connection.peer);
-      }
-    });
-    service.emit('users-updated', {
-      users: currentUsers
-    });
+    if (isJoinRequest) {
+      service.pendingJoinRequests.set(payload.id, {
+        id: payload.id,
+        username: payload.username,
+        connection: conn
+      });
+      service.emit('join-request-received', {
+        requesterId: payload.id,
+        requesterUsername: payload.username
+      });
+      if (service.roomPrivacy === 'private') return;
+      if (service.roomPrivacy === 'public') approveJoinRequest(service, payload.id, payload.username, conn);
+    }
+  } else {
+    if (isHostBroadcast) {
+      service.users.set(payload.id, payload);
+      service.emit('user-joined', payload);
+    } else if (isJoinRequest) {
+      // ignore
+    }
   }
 };
 const handleJoinDenied = (service, data) => {
@@ -60393,7 +60400,7 @@ class StreamProcessor {
 /*!***********************************************!*\
   !*** ./src/lib/collaboration/sync-manager.js ***!
   \***********************************************/
-/*! exports provided: sendProjectSync, handleProjectSyncStart, handleProjectSyncChunk, handleProjectStreamEnd, debugTargetStates */
+/*! exports provided: sendProjectSync, handleProjectSyncStart, handleProjectSyncChunk, handleProjectStreamEnd, debugTargetStates, resetSyncState */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -60403,6 +60410,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "handleProjectSyncChunk", function() { return handleProjectStreamData; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "handleProjectStreamEnd", function() { return handleProjectStreamEnd; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "debugTargetStates", function() { return debugTargetStates; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "resetSyncState", function() { return resetSyncState; });
 /* harmony import */ var _stream_utils_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./stream-utils.js */ "./src/lib/collaboration/stream-utils.js");
 
 const SYNC_COOLDOWN_MS = 5000;
@@ -60412,6 +60420,11 @@ const syncState = {
   active: false,
   sequence: 0,
   lastClientSyncId: null
+};
+const resetSyncState = () => {
+  syncState.active = false;
+  syncState.lastClientSyncId = null;
+  _syncPendingPromise = null;
 };
 const sendProjectSync = async (service, conn) => {
   if (service.vm) {
@@ -60715,22 +60728,25 @@ const processCompleteProject = (service, projectData, targetInfo, currentEditing
       message: 'Waiting for host...'
     });
     await new Promise(resolve => {
-      const handler = () => {
-        service.off('session-ready', handler);
-        resolve();
-      };
       const timeout = setTimeout(() => {
         service.off('session-ready', handler);
         console.warn('[Sync Barrier] Timed out waiting for host!');
         resolve();
       }, 30000);
-      service.on('session-ready', () => {
+      const handler = () => {
         clearTimeout(timeout);
-        handler();
-      });
+        resolve();
+      };
+      service.on('session-ready', handler);
     });
     service.emit('session-ready');
     service.isLoadingProject = false;
+    setTimeout(() => {
+      if (service.isLoadingProject && !service.isSyncOperation && !service.isApplyingRemoteChange) {
+        console.warn('[Sync] Safety timeout: clearing stuck isLoadingProject');
+        service.isLoadingProject = false;
+      }
+    }, 35000);
   }).catch(error => {
     service.vm.off('ASSET_PROGRESS', progressHandler);
     console.error('[Stream Sync] Failed to load project:', error);
