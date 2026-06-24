@@ -15,8 +15,6 @@ const sendMessage = (service, type, payload, targetConn) => {
                 } catch (error) {
                     service.emit('message-send-failed', {type, targetId: targetConn, error});
                 }
-            } else {
-                return;
             }
         }
 
@@ -28,6 +26,7 @@ const sendMessage = (service, type, payload, targetConn) => {
             }
             return;
         }
+        return;
     }
 
     service.connections.forEach(conn => {

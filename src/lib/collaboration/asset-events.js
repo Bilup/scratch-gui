@@ -613,7 +613,9 @@ const handleAssetEvent = (service, payload, conn) => {
         }
     }
 
-    service.isApplyingRemoteChange = true;
+    service.beginApplyingRemoteChange();
+
+
 
     try {
         if (kind === 'sprite-create') {
@@ -911,7 +913,7 @@ const handleAssetEvent = (service, payload, conn) => {
         }
     } finally {
         setTimeout(() => {
-            service.isApplyingRemoteChange = false;
+            service.endApplyingRemoteChange();
         }, 50);
     }
 
