@@ -51,6 +51,7 @@ import gdxforConnectionSmallIconURL from './gdxfor/gdxfor-small.svg';
 
 import twIcon from './tw/tw.svg';
 import customExtensionIcon from './custom/custom.svg';
+import customURLIcon from './custom/customURL.svg';
 import galleryIcon from './gallery/gallery.svg';
 import {APP_NAME} from '../../constants/brand';
 
@@ -99,6 +100,26 @@ export default [
         tags: ['tw'],
         featured: true
         // Not marked as incompatible with Scratch so that clicking on it doesn't show a prompt
+    },
+    {
+        name: (
+            <FormattedMessage
+                defaultMessage="Custom Extension Gallery"
+                description="Name of library item to load a custom extension gallery from a URL"
+                id="tw.customExtensionGallery.name"
+            />
+        ),
+        extensionId: 'custom_extension_gallery',
+        iconURL: customURLIcon,
+        description: (
+            <FormattedMessage
+                defaultMessage="Load extensions from a custom extension gallery URL."
+                description="Description of library item to load extensions from a custom gallery source"
+                id="tw.customExtensionGallery.description"
+            />
+        ),
+        tags: ['tw'],
+        featured: true
     },
     {
         name: (
