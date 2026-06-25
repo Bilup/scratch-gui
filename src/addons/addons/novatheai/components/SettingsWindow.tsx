@@ -549,18 +549,28 @@ const AboutSettings: React.FC<{ msg: (key: string) => string }> = ({ msg }) => (
     <div className={styles.card}>
       <div className={styles.cardHeader}>
         <div>
-          <h5>{msg("ui-architecture")}</h5>
-          <p>{msg("ui-architecture-description")}</p>
+          <h5>{msg("about-title")}</h5>
+          <p>{msg("about-description")}</p>
         </div>
       </div>
       <div className={styles.cardBody}>
-        <p className={styles.hint}>
-          {msg("ui-architecture-hint")}
-        </p>
-        <br/>
-        <p className={styles.hint}>
-          {msg("im-not-amazon")}
-        </p>
+        <div className={styles.toolbar}>
+          <strong>{msg("about-author")}</strong>
+          <div className={styles.actions}>
+            <a className={styles.button} href="https://www.ccw.site/student/6173f57f48cf8f4796fc860e" target="_blank" rel="noreferrer">白猫@CCW</a>
+            <a className={styles.button} href="https://www.ccw.site/student/610b508176415b2f27e0f851" target="_blank" rel="noreferrer">酷可@CCW</a>
+            <a className={styles.button} href="https://github.com/ddguan2010/" target="_blank" rel="noreferrer">PPN-design</a>
+            <a className={styles.button} href="https://github.com/RyaninCn11/" target="_blank" rel="noreferrer">RyaninCn11</a>
+          </div>
+        </div>
+        <div className={styles.toolbar}>
+          <strong>{msg("about-license")}</strong>
+          <span className={styles.hint}>GNU Affero General Public License v3.0 or later（AGPL-3.0-or-later）</span>
+        </div>
+        <div className={styles.toolbar}>
+          <strong>{msg("about-repo")}</strong>
+          <a className={styles.button} href="https://github.com/little-starts/gandi-plugins/tree/main/src/plugins/ai-assistant" target="_blank" rel="noreferrer">{msg("about-repo-button")}</a>
+        </div>
       </div>
     </div>
   </div>
