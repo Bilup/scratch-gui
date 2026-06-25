@@ -20,6 +20,11 @@ const messages = defineMessages({
         defaultMessage: 'Choose an Extension',
         description: 'Heading for the extension library',
         id: 'gui.extensionLibrary.chooseAnExtension'
+    },
+    customGalleryPrompt: {
+        defaultMessage: 'Enter custom extension gallery URL:',
+        description: 'Prompt for entering custom extension gallery URL',
+        id: 'tw.customExtensionGallery.prompt'
     }
 });
 
@@ -350,6 +355,69 @@ class ExtensionLibrary extends React.PureComponent {
 
         if (extensionId === 'custom_extension') {
             this.props.onOpenCustomExtensionModal();
+            return;
+        }
+
+        if (extensionId === 'custom_extension_gallery') {
+            const galleryURL = prompt(this.props.intl.formatMessage(messages.customGalleryPrompt));
+            if (!galleryURL) return;
+
+            fetch(galleryURL)
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error(`HTTP status ${res.status}`);
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    if (!data.extensions || !Array.isArray(data.extensions)) {
+                        throw new Error('Invalid gallery format: expected extensions array');
+                    }
+                    const newExtensions = data.extensions.map(extension => ({
+                        name: extension.name,
+                        nameTranslations: extension.nameTranslations || {},
+                        description: extension.description,
+                        descriptionTranslations: extension.descriptionTranslations || {},
+                        extensionId: extension.id,
+                        extensionURL: extension.extensionURL || (extension.slug ? `https://extensions.bilup.org/${extension.slug}.js` : null),
+                        iconURL: extension.iconURL || (extension.image ? `https://extensions.bilup.org/${extension.image}` : null),
+                        tags: ['custom'],
+                        credits: [
+                            ...(extension.by || []),
+                            ...(extension.original || [])
+                        ].map(credit => {
+                            if (credit.link) {
+                                return (
+                                    <a
+                                        href={credit.link}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        key={credit.name}
+                                    >
+                                        {credit.name}
+                                    </a>
+                                );
+                            }
+                            return credit.name;
+                        }),
+                        docsURI: extension.docs ? extension.docs : null,
+                        samples: extension.samples ? extension.samples.map(sample => ({
+                            href: sample.href || `${process.env.ROOT}editor?project_url=${sample}`,
+                            text: sample.text || sample
+                        })) : null,
+                        incompatibleWithScratch: true,
+                        featured: true
+                    }));
+
+                    this.setState(prev => ({
+                        gallery: prev.gallery ? [...prev.gallery, ...newExtensions] : newExtensions
+                    }));
+                })
+                .catch(err => {
+                    log.error(err);
+                    alert(`Failed to load custom extension gallery: ${err.message}`);
+                });
+
             return;
         }
 
