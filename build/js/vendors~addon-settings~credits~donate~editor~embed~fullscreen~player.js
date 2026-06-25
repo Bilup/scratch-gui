@@ -1,4 +1,4 @@
-(window["webpackJsonpGUI"] = window["webpackJsonpGUI"] || []).push([["vendors~addon-settings~credits~editor~embed~fullscreen~player"],{
+(window["webpackJsonpGUI"] = window["webpackJsonpGUI"] || []).push([["vendors~addon-settings~credits~donate~editor~embed~fullscreen~player"],{
 
 /***/ "./node_modules/css-loader/lib/css-base.js":
 /*!*************************************************!*\
@@ -33794,4 +33794,4 @@ module.exports = function(module) {
 /***/ })
 
 }]);
-//# sourceMappingURL=vendors~addon-settings~credits~editor~embed~fullscreen~player.js.map
+//# sourceMappingURL=vendors~addon-settings~credits~donate~editor~embed~fullscreen~player.js.map
