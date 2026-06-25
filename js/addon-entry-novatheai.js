@@ -83146,13 +83146,44 @@ const AboutSettings = _ref4 => {
     className: _ui_SettingsNew_module_less__WEBPACK_IMPORTED_MODULE_2___default.a.card
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", {
     className: _ui_SettingsNew_module_less__WEBPACK_IMPORTED_MODULE_2___default.a.cardHeader
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("h5", null, msg("ui-architecture")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("p", null, msg("ui-architecture-description")))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", {
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("h5", null, msg("about-title")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("p", null, msg("about-description")))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", {
     className: _ui_SettingsNew_module_less__WEBPACK_IMPORTED_MODULE_2___default.a.cardBody
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("p", {
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", {
+    className: _ui_SettingsNew_module_less__WEBPACK_IMPORTED_MODULE_2___default.a.toolbar
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("strong", null, msg("about-author")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", {
+    className: _ui_SettingsNew_module_less__WEBPACK_IMPORTED_MODULE_2___default.a.actions
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("a", {
+    className: _ui_SettingsNew_module_less__WEBPACK_IMPORTED_MODULE_2___default.a.button,
+    href: "https://www.ccw.site/student/6173f57f48cf8f4796fc860e",
+    target: "_blank",
+    rel: "noreferrer"
+  }, "\u767D\u732B@CCW"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("a", {
+    className: _ui_SettingsNew_module_less__WEBPACK_IMPORTED_MODULE_2___default.a.button,
+    href: "https://www.ccw.site/student/610b508176415b2f27e0f851",
+    target: "_blank",
+    rel: "noreferrer"
+  }, "\u9177\u53EF@CCW"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("a", {
+    className: _ui_SettingsNew_module_less__WEBPACK_IMPORTED_MODULE_2___default.a.button,
+    href: "https://github.com/ddguan2010/",
+    target: "_blank",
+    rel: "noreferrer"
+  }, "PPN-design"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("a", {
+    className: _ui_SettingsNew_module_less__WEBPACK_IMPORTED_MODULE_2___default.a.button,
+    href: "https://github.com/RyaninCn11/",
+    target: "_blank",
+    rel: "noreferrer"
+  }, "RyaninCn11"))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", {
+    className: _ui_SettingsNew_module_less__WEBPACK_IMPORTED_MODULE_2___default.a.toolbar
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("strong", null, msg("about-license")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("span", {
     className: _ui_SettingsNew_module_less__WEBPACK_IMPORTED_MODULE_2___default.a.hint
-  }, msg("ui-architecture-hint")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("br", null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("p", {
-    className: _ui_SettingsNew_module_less__WEBPACK_IMPORTED_MODULE_2___default.a.hint
-  }, msg("im-not-amazon")))));
+  }, "GNU Affero General Public License v3.0 or later\uFF08AGPL-3.0-or-later\uFF09")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", {
+    className: _ui_SettingsNew_module_less__WEBPACK_IMPORTED_MODULE_2___default.a.toolbar
+  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("strong", null, msg("about-repo")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("a", {
+    className: _ui_SettingsNew_module_less__WEBPACK_IMPORTED_MODULE_2___default.a.button,
+    href: "https://github.com/little-starts/gandi-plugins/tree/main/src/plugins/ai-assistant",
+    target: "_blank",
+    rel: "noreferrer"
+  }, msg("about-repo-button"))))));
 };
 const SettingsContent = _ref5 => {
   let msg = _ref5.msg,
