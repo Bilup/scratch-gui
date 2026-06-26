@@ -26,6 +26,12 @@ jobs:
           cache: true
       - name: Install dependencies
         run: bun install
+      # Update version.json
+      - name: Update version.json
+        run: |
+          COMMIT_DATE=$(TZ='Asia/Shanghai' git log -1 --format=%cd --date=format:%Y-%m-%d)
+          jq --arg date "$COMMIT_DATE" '.latest-date = $date' src/playground/about/version.json > tmp.json && mv tmp.json src/playground/about/version.json
+          jq '.version_little = ((.version_little | tonumber) + 1 | tostring)' src/playground/about/version.json > tmp.json && mv tmp.json src/playground/about/version.json
       - run: npm run build
       # Save dist as artifact
       - name: Upload dist
