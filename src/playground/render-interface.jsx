@@ -274,6 +274,13 @@ const Footer = () => (
                             id="tw.privacy"
                         />
                     </a>
+                    <a href="about.html">
+                        <FormattedMessage
+                            defaultMessage="About"
+                            description="Link to about page"
+                            id="tw.about"
+                        />
+                    </a>
                 </div>
             </div>
         </div>

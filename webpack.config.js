@@ -221,7 +221,8 @@ module.exports = [
             'embed': './src/playground/embed.jsx',
             'addon-settings': './src/playground/addon-settings.jsx',
             'credits': './src/playground/credits/credits.jsx',
-            'donate': './src/playground/donate/donate.jsx'
+            'donate': './src/playground/donate/donate.jsx',
+            'about': './src/playground/about/about.jsx'
         },
         output: {
             path: path.resolve(__dirname, 'build')
@@ -303,6 +304,13 @@ module.exports = [
                 template: 'src/playground/simple.ejs',
                 filename: 'donate.html',
                 title: `${APP_NAME} Donate`,
+                ...htmlWebpackPluginCommon
+            }),
+            new HtmlWebpackPlugin({
+                chunks: ['about'],
+                template: 'src/playground/simple.ejs',
+                filename: 'about.html',
+                title: `${APP_NAME} About`,
                 ...htmlWebpackPluginCommon
             }),
             new CopyWebpackPlugin({
