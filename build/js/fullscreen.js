@@ -21319,24 +21319,26 @@ function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = 
 
 
 
-const startDrag = (index, e, dragging, setGradientColors, previewRef) => {
+const startDrag = (index, e, dragging, setGradientColors, previewRef, gradientColors) => {
   e.preventDefault();
+  if (dragging.current && dragging.current.color) {
+    return;
+  }
   const rect = previewRef.current && previewRef.current.getBoundingClientRect();
+  const colorToDrag = gradientColors[index].color;
   dragging.current = {
-    index,
+    color: colorToDrag,
     rect
   };
   const move = ev => {
     const clientX = typeof ev.clientX === 'number' ? ev.clientX : ev.touches && ev.touches[0] && ev.touches[0].clientX;
-    if (!clientX || !dragging.current.rect) return;
+    if (!clientX || !dragging.current.rect || !dragging.current.color) return;
     const val = (clientX - dragging.current.rect.left) / dragging.current.rect.width;
     const pct = Math.max(0, Math.min(100, val * 100));
     setGradientColors(prev => {
-      const next = prev.slice();
-      next[dragging.current.index] = _objectSpread(_objectSpread({}, next[dragging.current.index]), {}, {
+      return prev.map(s => s.color === dragging.current.color ? _objectSpread(_objectSpread({}, s), {}, {
         position: pct
-      });
-      return next;
+      }) : s);
     });
   };
   const up = () => {
@@ -21346,7 +21348,7 @@ const startDrag = (index, e, dragging, setGradientColors, previewRef) => {
     document.removeEventListener('touchend', up);
     setGradientColors(prev => prev.slice().sort((a, b) => a.position - b.position));
     dragging.current = {
-      index: null,
+      color: null,
       rect: null
     };
   };
@@ -21615,11 +21617,11 @@ const GradientCreatorApp = Object(react_intl__WEBPACK_IMPORTED_MODULE_3__["injec
     className: _settings_menu_css__WEBPACK_IMPORTED_MODULE_12___default.a.colorStopHandle,
     onMouseDown: e => {
       setIsDragging(index);
-      startDrag(index, e, dragging, setGradientColors, previewRef);
+      startDrag(index, e, dragging, setGradientColors, previewRef, gradientColors);
     },
     onTouchStart: e => {
       setIsDragging(index);
-      startDrag(index, e, dragging, setGradientColors, previewRef);
+      startDrag(index, e, dragging, setGradientColors, previewRef, gradientColors);
     },
     onMouseUp: () => setIsDragging(null),
     onTouchEnd: () => setIsDragging(null),
@@ -21980,11 +21982,11 @@ const GradientEditorApp = Object(react_intl__WEBPACK_IMPORTED_MODULE_3__["inject
     className: _settings_menu_css__WEBPACK_IMPORTED_MODULE_12___default.a.colorStopHandle,
     onMouseDown: e => {
       setIsDragging(index);
-      startDrag(index, e, dragging, setGradientColors, previewRef);
+      startDrag(index, e, dragging, setGradientColors, previewRef, gradientColors);
     },
     onTouchStart: e => {
       setIsDragging(index);
-      startDrag(index, e, dragging, setGradientColors, previewRef);
+      startDrag(index, e, dragging, setGradientColors, previewRef, gradientColors);
     },
     onMouseUp: () => setIsDragging(null),
     onTouchEnd: () => setIsDragging(null),
