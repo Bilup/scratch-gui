@@ -19,22 +19,28 @@ import WindowManager from '../../addons/window-system/window-manager';
 import showAlert from '../../addons/window-system/alert';
 import ReactDOM from 'react-dom';
 
-const startDrag = (index, e, dragging, setGradientColors, previewRef) => {
+const startDrag = (index, e, dragging, setGradientColors, previewRef, gradientColors) => {
     e.preventDefault();
+    if (dragging.current && dragging.current.color) {
+        return;
+    }
     const rect = previewRef.current && previewRef.current.getBoundingClientRect();
-    dragging.current = {index, rect};
+    const colorToDrag = gradientColors[index].color;
+    dragging.current = {color: colorToDrag, rect};
 
     const move = ev => {
         const clientX = typeof ev.clientX === 'number' ?
             ev.clientX : (ev.touches && ev.touches[0] && ev.touches[0].clientX);
-        if (!clientX || !dragging.current.rect) return;
+        if (!clientX || !dragging.current.rect || !dragging.current.color) return;
 
         const val = ((clientX - dragging.current.rect.left) / dragging.current.rect.width);
         const pct = Math.max(0, Math.min(100, val * 100));
         setGradientColors(prev => {
-            const next = prev.slice();
-            next[dragging.current.index] = {...next[dragging.current.index], position: pct};
-            return next;
+            return prev.map(s => 
+                s.color === dragging.current.color
+                    ? {...s, position: pct}
+                    : s
+            );
         });
     };
 
@@ -44,7 +50,7 @@ const startDrag = (index, e, dragging, setGradientColors, previewRef) => {
         document.removeEventListener('touchmove', move);
         document.removeEventListener('touchend', up);
         setGradientColors(prev => prev.slice().sort((a, b) => a.position - b.position));
-        dragging.current = {index: null, rect: null};
+        dragging.current = {color: null, rect: null};
     };
 
     dragging.current.moveHandler = move;
@@ -303,11 +309,11 @@ const GradientCreatorApp = injectIntl(props => {
                                                 className={styles.colorStopHandle}
                                                 onMouseDown={e => {
                                                     setIsDragging(index);
-                                                    startDrag(index, e, dragging, setGradientColors, previewRef);
+                                                    startDrag(index, e, dragging, setGradientColors, previewRef, gradientColors);
                                                 }}
                                                 onTouchStart={e => {
                                                     setIsDragging(index);
-                                                    startDrag(index, e, dragging, setGradientColors, previewRef);
+                                                    startDrag(index, e, dragging, setGradientColors, previewRef, gradientColors);
                                                 }}
                                                 onMouseUp={() => setIsDragging(null)}
                                                 onTouchEnd={() => setIsDragging(null)}
@@ -721,11 +727,11 @@ const GradientEditorApp = injectIntl(props => {
                                                 className={styles.colorStopHandle}
                                                 onMouseDown={e => {
                                                     setIsDragging(index);
-                                                    startDrag(index, e, dragging, setGradientColors, previewRef);
+                                                    startDrag(index, e, dragging, setGradientColors, previewRef, gradientColors);
                                                 }}
                                                 onTouchStart={e => {
                                                     setIsDragging(index);
-                                                    startDrag(index, e, dragging, setGradientColors, previewRef);
+                                                    startDrag(index, e, dragging, setGradientColors, previewRef, gradientColors);
                                                 }}
                                                 onMouseUp={() => setIsDragging(null)}
                                                 onTouchEnd={() => setIsDragging(null)}
