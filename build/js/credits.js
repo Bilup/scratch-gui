@@ -149,71 +149,12 @@ var GUI =
 /******/
 /******/
 /******/ 	// add entry module to deferred list
-/******/ 	deferredModules.push(["./src/playground/credits/credits.jsx","vendors~addon-settings~credits~donate~editor~embed~fullscreen~player","addon-settings~credits~donate~editor~embed~fullscreen~player"]);
+/******/ 	deferredModules.push(["./src/playground/credits/credits.jsx","vendors~about~addon-settings~credits~donate~editor~embed~fullscreen~player","about~addon-settings~credits~donate~editor~embed~fullscreen~player"]);
 /******/ 	// run deferred modules when ready
 /******/ 	return checkDeferredModules();
 /******/ })
 /************************************************************************/
 /******/ ({
-
-/***/ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./src/playground/credits/credits.css":
-/*!***************************************************************************************************************************!*\
-  !*** ./node_modules/css-loader??ref--6-1!./node_modules/postcss-loader/src??postcss!./src/playground/credits/credits.css ***!
-  \***************************************************************************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loader/lib/css-base.js */ "./node_modules/css-loader/lib/css-base.js")(false);
-// imports
-
-
-// module
-exports.push([module.i, "/* overridden by src/lib/themes/guiHelpers.js */\n\n* {\n    box-sizing: border-box;\n}\n\nbody {\n    font-family: \"Helvetica Neue\", Helvetica, Arial, sans-serif;\n    margin: 0;\n    padding: 0;\n    background: var(--page-background);\n    color: var(--page-foreground);\n}\n\na {\n    color: var(--link-color);\n}\n\n.credits_main_1Rb15 section {\n    max-width: 900px;\n    margin: auto;\n    margin-bottom: 30px;\n}\n\n.credits_header-container_10IXn {\n    background-color: var(--looks-secondary);\n    padding: 20px 0;\n    text-align: center;\n    margin-bottom: 30px;\n}\n\n.credits_header-text_2vWAl {\n\n}\n\n.credits_users_2AuwB {\n    display: flex;\n    flex-direction: row;\n    flex-wrap: wrap;\n}\n\n.credits_user-image_2rw9X {\n    margin-right: 12px;\n}\n\n.credits_user_2nYLS {\n    display: flex;\n    align-items: center;\n    width: 300px;\n    padding: 4px;\n    border-radius: 4px;\n    font-size: 1.25rem;\n    color: inherit !important;\n    text-decoration: none;\n    transition: background .2s;\n}\n\n.credits_user_2nYLS:link:hover {\n    background: var(--ui-black-transparent);\n}", ""]);
-
-// exports
-exports.locals = {
-	"main": "credits_main_1Rb15",
-	"header-container": "credits_header-container_10IXn",
-	"headerContainer": "credits_header-container_10IXn",
-	"header-text": "credits_header-text_2vWAl",
-	"headerText": "credits_header-text_2vWAl",
-	"users": "credits_users_2AuwB",
-	"user-image": "credits_user-image_2rw9X",
-	"userImage": "credits_user-image_2rw9X",
-	"user": "credits_user_2nYLS"
-};
-
-/***/ }),
-
-/***/ "./src/playground/credits/credits.css":
-/*!********************************************!*\
-  !*** ./src/playground/credits/credits.css ***!
-  \********************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-
-var content = __webpack_require__(/*! !../../../node_modules/css-loader??ref--6-1!../../../node_modules/postcss-loader/src??postcss!./credits.css */ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./src/playground/credits/credits.css");
-
-if(typeof content === 'string') content = [[module.i, content, '']];
-
-var transform;
-var insertInto;
-
-
-
-var options = {"hmr":true}
-
-options.transform = transform
-options.insertInto = undefined;
-
-var update = __webpack_require__(/*! ../../../node_modules/style-loader/lib/addStyles.js */ "./node_modules/style-loader/lib/addStyles.js")(content, options);
-
-if(content.locals) module.exports = content.locals;
-
-if(false) {}
-
-/***/ }),
 
 /***/ "./src/playground/credits/credits.jsx":
 /*!********************************************!*\
@@ -229,13 +170,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! prop-types */ "./node_modules/prop-types/index.js");
 /* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(prop_types__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var _app_target__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../app-target */ "./src/playground/app-target.js");
-/* harmony import */ var _credits_css__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./credits.css */ "./src/playground/credits/credits.css");
-/* harmony import */ var _credits_css__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_credits_css__WEBPACK_IMPORTED_MODULE_3__);
+/* harmony import */ var _users__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./users */ "./src/playground/credits/users.js");
 /* harmony import */ var _lib_constants_brand__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../lib/constants/brand */ "./src/lib/constants/brand.js");
 /* harmony import */ var _lib_constants_brand__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(_lib_constants_brand__WEBPACK_IMPORTED_MODULE_4__);
-/* harmony import */ var _lib_themes_guiHelpers__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../lib/themes/guiHelpers */ "./src/lib/themes/guiHelpers.js");
-/* harmony import */ var _lib_themes_themePersistance__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../lib/themes/themePersistance */ "./src/lib/themes/themePersistance.js");
-/* harmony import */ var _users__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./users */ "./src/playground/credits/users.js");
+/* harmony import */ var _lib_themes_themePersistance__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../lib/themes/themePersistance */ "./src/lib/themes/themePersistance.js");
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 
 
@@ -243,12 +181,8 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
 
 
 
-
-
-
-/* eslint-disable react/jsx-no-literals */
-
-Object(_lib_themes_guiHelpers__WEBPACK_IMPORTED_MODULE_5__["applyGuiColors"])(Object(_lib_themes_themePersistance__WEBPACK_IMPORTED_MODULE_6__["detectTheme"])());
+const theme = Object(_lib_themes_themePersistance__WEBPACK_IMPORTED_MODULE_5__["detectTheme"])();
+document.documentElement.setAttribute('data-theme', theme.id || (theme.isDark ? 'dark' : 'light'));
 document.documentElement.lang = 'en';
 const User = _ref => {
   let image = _ref.image,
@@ -258,15 +192,15 @@ const User = _ref => {
     href: href,
     target: "_blank",
     rel: "noreferrer",
-    className: _credits_css__WEBPACK_IMPORTED_MODULE_3___default.a.user
+    className: "user"
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("img", {
     loading: "lazy",
-    className: _credits_css__WEBPACK_IMPORTED_MODULE_3___default.a.userImage,
+    className: "user-image",
     src: image,
     width: "60",
     height: "60"
   }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-    className: _credits_css__WEBPACK_IMPORTED_MODULE_3___default.a.userInfo
+    className: "user-info"
   }, text));
 };
 User.propTypes = {
@@ -277,7 +211,7 @@ User.propTypes = {
 const UserList = _ref2 => {
   let users = _ref2.users;
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
-    className: _credits_css__WEBPACK_IMPORTED_MODULE_3___default.a.users
+    className: "users"
   }, users.map((data, index) => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(User, _extends({
     key: index
   }, data))));
@@ -285,32 +219,27 @@ const UserList = _ref2 => {
 UserList.propTypes = {
   users: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.arrayOf(prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.object)
 };
-const Credits = () => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("main", {
-  className: _credits_css__WEBPACK_IMPORTED_MODULE_3___default.a.main
-}, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("header", {
-  className: _credits_css__WEBPACK_IMPORTED_MODULE_3___default.a.headerContainer
-}, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h1", {
-  className: _credits_css__WEBPACK_IMPORTED_MODULE_3___default.a.headerText
-}, _lib_constants_brand__WEBPACK_IMPORTED_MODULE_4__["APP_NAME"], " Credits")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("section", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", null, "The ", _lib_constants_brand__WEBPACK_IMPORTED_MODULE_4__["APP_NAME"], " project is made possible by the work of many volunteers.")), _lib_constants_brand__WEBPACK_IMPORTED_MODULE_4__["APP_NAME"] !== 'TurboWarp' &&
-/*#__PURE__*/
-// Be kind and considerate. Don't remove this :)
-react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("section", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h2", null, "TurboWarp"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", null, _lib_constants_brand__WEBPACK_IMPORTED_MODULE_4__["APP_NAME"], " is based on ", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("a", {
+const Credits = () => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_0___default.a.Fragment, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("style", null, "\n            :root,\n            [data-theme=\"dark\"] {\n                --bg-color: #1a1a2e;\n                --text-color: #e4e4e7;\n                --accent-color: #75C1C4;\n                --secondary-bg: #252542;\n                --card-bg: rgba(37, 37, 66, 0.8);\n                --border-color: rgba(117, 193, 196, 0.2);\n                --hover-bg: rgba(117, 193, 196, 0.1);\n            }\n\n            [data-theme=\"light\"] {\n                --bg-color: #f8fafc;\n                --text-color: #1e293b;\n                --accent-color: #75C1C4;\n                --secondary-bg: #e2e8f0;\n                --card-bg: rgba(255, 255, 255, 0.95);\n                --border-color: rgba(117, 193, 196, 0.3);\n                --hover-bg: rgba(117, 193, 196, 0.08);\n            }\n\n            * {\n                margin: 0;\n                padding: 0;\n                box-sizing: border-box;\n            }\n\n            body {\n                background: var(--bg-color);\n                background-image: \n                    radial-gradient(circle at 20% 80%, rgba(117, 193, 196, 0.05) 0%, transparent 50%),\n                    radial-gradient(circle at 80% 20%, rgba(117, 193, 196, 0.03) 0%, transparent 50%),\n                    radial-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px);\n                background-size: 100% 100%, 100% 100%, 32px 32px;\n                font-family: \"Inter\", system-ui, -apple-system, \"Segoe UI\", \"Helvetica Neue\", \"Noto Sans\", Helvetica, Arial, sans-serif;\n                color: var(--text-color);\n                line-height: 1.6;\n                min-height: 100vh;\n                padding: 2rem;\n            }\n\n            [data-theme=\"light\"] body {\n                background-image: \n                    radial-gradient(circle at 20% 80%, rgba(117, 193, 196, 0.08) 0%, transparent 50%),\n                    radial-gradient(circle at 80% 20%, rgba(117, 193, 196, 0.05) 0%, transparent 50%),\n                    radial-gradient(rgba(0, 0, 0, 0.02) 1px, transparent 1px);\n            }\n\n            main {\n                max-width: 700px;\n                width: 100%;\n                margin: 0 auto;\n            }\n\n            .card {\n                background: var(--card-bg);\n                border: 1px solid var(--border-color);\n                border-radius: 24px;\n                padding: 3rem;\n                box-shadow: \n                    0 8px 32px rgba(0, 0, 0, 0.15),\n                    0 0 0 1px rgba(117, 193, 196, 0.1);\n                position: relative;\n                overflow: hidden;\n            }\n\n            .header {\n                margin-bottom: 2rem;\n                text-align: center;\n            }\n\n            h1 {\n                font-size: 2.5rem;\n                font-weight: 700;\n                letter-spacing: -0.02em;\n                margin-top: 0;\n                margin-bottom: 0.5rem;\n                background: linear-gradient(135deg, var(--accent-color), #98D8C8);\n                -webkit-background-clip: text;\n                -webkit-text-fill-color: transparent;\n                background-clip: text;\n            }\n\n            section {\n                margin-bottom: 2rem;\n            }\n\n            section:last-child {\n                margin-bottom: 0;\n            }\n\n            h2 {\n                font-size: 1.3rem;\n                font-weight: 600;\n                color: var(--accent-color);\n                margin-bottom: 0.75rem;\n                padding-bottom: 0.25rem;\n                border-bottom: 2px solid var(--border-color);\n            }\n\n            p {\n                margin: 0.75rem 0;\n                font-weight: 450;\n                color: var(--text-color);\n                font-size: 1rem;\n                opacity: 0.9;\n            }\n\n            a {\n                color: var(--accent-color);\n                text-decoration: none;\n                font-weight: 600;\n                border-bottom: 2px solid transparent;\n                transition: all 0.25s ease;\n                padding-bottom: 2px;\n            }\n\n            a:hover {\n                color: #98D8C8;\n                border-bottom-color: var(--accent-color);\n            }\n\n            .users {\n                display: flex;\n                flex-direction: row;\n                flex-wrap: wrap;\n                gap: 12px;\n            }\n\n            .user {\n                display: flex;\n                align-items: center;\n                width: calc(50% - 6px);\n                padding: 12px;\n                border-radius: 12px;\n                font-size: 1.1rem;\n                color: var(--text-color) !important;\n                text-decoration: none;\n                transition: all 0.25s ease;\n                background: var(--secondary-bg);\n                border: 1px solid transparent;\n            }\n\n            .user:hover {\n                background: var(--hover-bg);\n                border-color: var(--accent-color);\n                transform: translateY(-2px);\n            }\n\n            .user-image {\n                margin-right: 12px;\n                border-radius: 50%;\n                object-fit: cover;\n                border: 2px solid var(--accent-color);\n            }\n\n            .user-info {\n                font-weight: 500;\n            }\n\n            @media (max-width: 720px) {\n                body {\n                    padding: 1rem;\n                }\n\n                .card {\n                    padding: 2rem 1.5rem;\n                    border-radius: 20px;\n                }\n\n                h1 {\n                    font-size: 2rem;\n                }\n\n                .user {\n                    width: 100%;\n                }\n            }\n        "), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("main", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+  className: "card"
+}, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+  className: "header"
+}, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h1", null, _lib_constants_brand__WEBPACK_IMPORTED_MODULE_4__["APP_NAME"], " Credits")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("section", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", null, "The ", _lib_constants_brand__WEBPACK_IMPORTED_MODULE_4__["APP_NAME"], " project is made possible by the work of many volunteers.")), _lib_constants_brand__WEBPACK_IMPORTED_MODULE_4__["APP_NAME"] !== 'TurboWarp' && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("section", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h2", null, "TurboWarp"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", null, _lib_constants_brand__WEBPACK_IMPORTED_MODULE_4__["APP_NAME"], " is based on ", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("a", {
   href: "https://turbowarp.org/"
 }, "TurboWarp"), ".")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("section", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h2", null, "Scratch"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", null, _lib_constants_brand__WEBPACK_IMPORTED_MODULE_4__["APP_NAME"], " is based on the work of the ", /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("a", {
   href: "https://scratch.mit.edu/credits"
 }, "Scratch contributors"), " but is not endorsed by Scratch in any way."), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("a", {
   href: "https://scratch.mit.edu/donate"
 }, "Donate to support Scratch."))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("section", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h2", null, "Contributors"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(UserList, {
-  users: _users__WEBPACK_IMPORTED_MODULE_7__["default"].contributors
+  users: _users__WEBPACK_IMPORTED_MODULE_3__["default"].contributors
 })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("section", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h2", null, "Addons"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(UserList, {
-  users: _users__WEBPACK_IMPORTED_MODULE_7__["default"].addonDevelopers
+  users: _users__WEBPACK_IMPORTED_MODULE_3__["default"].addonDevelopers
 })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("section", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h2", null, "Bilup Extension Gallery"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(UserList, {
-  users: _users__WEBPACK_IMPORTED_MODULE_7__["default"].extensionDevelopers
+  users: _users__WEBPACK_IMPORTED_MODULE_3__["default"].extensionDevelopers
 })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("section", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h2", null, "Documentation"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(UserList, {
-  users: _users__WEBPACK_IMPORTED_MODULE_7__["default"].docs
+  users: _users__WEBPACK_IMPORTED_MODULE_3__["default"].docs
 })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("section", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h2", null, "Translators"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(UserList, {
-  users: _users__WEBPACK_IMPORTED_MODULE_7__["default"].translators
-})), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("section", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("i", null, "Individual contributors and organizations are listed in no particular order. The order is randomized each visit."))));
+  users: _users__WEBPACK_IMPORTED_MODULE_3__["default"].translators
+})), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("section", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("i", null, "Individual contributors and organizations are listed in no particular order. The order is randomized each visit."))))));
 Object(_app_target__WEBPACK_IMPORTED_MODULE_2__["default"])(/*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(Credits, null));
 
 /***/ }),

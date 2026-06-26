@@ -1,4 +1,4 @@
-(window["webpackJsonpGUI"] = window["webpackJsonpGUI"] || []).push([["addon-settings~credits~donate~editor~embed~fullscreen~player"],{
+(window["webpackJsonpGUI"] = window["webpackJsonpGUI"] || []).push([["about~addon-settings~credits~donate~editor~embed~fullscreen~player"],{
 
 /***/ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./src/lib/themes/global-styles.css":
 /*!*************************************************************************************************************************!*\
@@ -3897,4 +3897,4 @@ const render = children => {
 /***/ })
 
 }]);
-//# sourceMappingURL=addon-settings~credits~donate~editor~embed~fullscreen~player.js.map
+//# sourceMappingURL=about~addon-settings~credits~donate~editor~embed~fullscreen~player.js.map
