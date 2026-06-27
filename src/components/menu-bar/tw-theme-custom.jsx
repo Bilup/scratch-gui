@@ -21,12 +21,13 @@ import ReactDOM from 'react-dom';
 
 const startDrag = (index, e, dragging, setGradientColors, previewRef, gradientColors) => {
     e.preventDefault();
+    e.stopPropagation();
     if (dragging.current && dragging.current.color) {
         return;
     }
     const rect = previewRef.current && previewRef.current.getBoundingClientRect();
-    const colorToDrag = gradientColors[index].color;
-    dragging.current = {color: colorToDrag, rect};
+    const stop = gradientColors[index];
+    dragging.current = {color: stop.color, position: stop.position, rect, initialPosition: stop.position};
 
     const move = ev => {
         const clientX = typeof ev.clientX === 'number' ?
@@ -36,12 +37,17 @@ const startDrag = (index, e, dragging, setGradientColors, previewRef, gradientCo
         const val = ((clientX - dragging.current.rect.left) / dragging.current.rect.width);
         const pct = Math.max(0, Math.min(100, val * 100));
         setGradientColors(prev => {
-            return prev.map(s => 
-                s.color === dragging.current.color
-                    ? {...s, position: pct}
-                    : s
-            );
+            return prev.map(s => {
+                // 使用初始位置来精确匹配被拖动的标记
+                if (s.color === dragging.current.color && 
+                    Math.abs(s.position - dragging.current.initialPosition) < 0.01) {
+                    return {...s, position: pct};
+                }
+                return s;
+            });
         });
+        // 更新当前跟踪的位置
+        dragging.current.initialPosition = pct;
     };
 
     const up = () => {
@@ -50,7 +56,7 @@ const startDrag = (index, e, dragging, setGradientColors, previewRef, gradientCo
         document.removeEventListener('touchmove', move);
         document.removeEventListener('touchend', up);
         setGradientColors(prev => prev.slice().sort((a, b) => a.position - b.position));
-        dragging.current = {color: null, rect: null};
+        dragging.current = {color: null, position: null, rect: null, initialPosition: null};
     };
 
     dragging.current.moveHandler = move;
