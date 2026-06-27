@@ -21321,14 +21321,17 @@ function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = 
 
 const startDrag = (index, e, dragging, setGradientColors, previewRef, gradientColors) => {
   e.preventDefault();
+  e.stopPropagation();
   if (dragging.current && dragging.current.color) {
     return;
   }
   const rect = previewRef.current && previewRef.current.getBoundingClientRect();
-  const colorToDrag = gradientColors[index].color;
+  const stop = gradientColors[index];
   dragging.current = {
-    color: colorToDrag,
-    rect
+    color: stop.color,
+    position: stop.position,
+    rect,
+    initialPosition: stop.position
   };
   const move = ev => {
     const clientX = typeof ev.clientX === 'number' ? ev.clientX : ev.touches && ev.touches[0] && ev.touches[0].clientX;
@@ -21336,10 +21339,18 @@ const startDrag = (index, e, dragging, setGradientColors, previewRef, gradientCo
     const val = (clientX - dragging.current.rect.left) / dragging.current.rect.width;
     const pct = Math.max(0, Math.min(100, val * 100));
     setGradientColors(prev => {
-      return prev.map(s => s.color === dragging.current.color ? _objectSpread(_objectSpread({}, s), {}, {
-        position: pct
-      }) : s);
+      return prev.map(s => {
+        // 使用初始位置来精确匹配被拖动的标记
+        if (s.color === dragging.current.color && Math.abs(s.position - dragging.current.initialPosition) < 0.01) {
+          return _objectSpread(_objectSpread({}, s), {}, {
+            position: pct
+          });
+        }
+        return s;
+      });
     });
+    // 更新当前跟踪的位置
+    dragging.current.initialPosition = pct;
   };
   const up = () => {
     document.removeEventListener('mousemove', move);
@@ -21349,7 +21360,9 @@ const startDrag = (index, e, dragging, setGradientColors, previewRef, gradientCo
     setGradientColors(prev => prev.slice().sort((a, b) => a.position - b.position));
     dragging.current = {
       color: null,
-      rect: null
+      position: null,
+      rect: null,
+      initialPosition: null
     };
   };
   dragging.current.moveHandler = move;
