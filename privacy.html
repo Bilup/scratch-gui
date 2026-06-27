@@ -5,7 +5,18 @@
         <meta charset="utf8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <style>
-            :root {
+            :root,
+            [data-theme="dark"] {
+                --bg-color: #1a1a2e;
+                --text-color: #e4e4e7;
+                --accent-color: #75C1C4;
+                --secondary-bg: #252542;
+                --card-bg: rgba(37, 37, 66, 0.8);
+                --border-color: rgba(117, 193, 196, 0.2);
+                --hover-bg: rgba(117, 193, 196, 0.1);
+            }
+
+            [data-theme="light"] {
                 --bg-color: #f8fafc;
                 --text-color: #1e293b;
                 --accent-color: #75C1C4;
@@ -13,18 +24,6 @@
                 --card-bg: rgba(255, 255, 255, 0.95);
                 --border-color: rgba(117, 193, 196, 0.3);
                 --hover-bg: rgba(117, 193, 196, 0.08);
-            }
-
-            @media (prefers-color-scheme: dark) {
-                :root {
-                    --bg-color: #1a1a2e;
-                    --text-color: #e4e4e7;
-                    --accent-color: #75C1C4;
-                    --secondary-bg: #252542;
-                    --card-bg: rgba(37, 37, 66, 0.8);
-                    --border-color: rgba(117, 193, 196, 0.2);
-                    --hover-bg: rgba(117, 193, 196, 0.1);
-                }
             }
 
             * {
@@ -36,15 +35,22 @@
             body {
                 background: var(--bg-color);
                 background-image: 
-                    radial-gradient(circle at 20% 80%, rgba(117, 193, 196, 0.08) 0%, transparent 50%),
-                    radial-gradient(circle at 80% 20%, rgba(117, 193, 196, 0.05) 0%, transparent 50%),
-                    radial-gradient(rgba(0, 0, 0, 0.02) 1px, transparent 1px);
+                    radial-gradient(circle at 20% 80%, rgba(117, 193, 196, 0.05) 0%, transparent 50%),
+                    radial-gradient(circle at 80% 20%, rgba(117, 193, 196, 0.03) 0%, transparent 50%),
+                    radial-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px);
                 background-size: 100% 100%, 100% 100%, 32px 32px;
                 font-family: "Inter", system-ui, -apple-system, "Segoe UI", "Helvetica Neue", "Noto Sans", Helvetica, Arial, sans-serif;
                 color: var(--text-color);
                 line-height: 1.6;
                 min-height: 100vh;
                 padding: 2rem;
+            }
+
+            [data-theme="light"] body {
+                background-image: 
+                    radial-gradient(circle at 20% 80%, rgba(117, 193, 196, 0.08) 0%, transparent 50%),
+                    radial-gradient(circle at 80% 20%, rgba(117, 193, 196, 0.05) 0%, transparent 50%),
+                    radial-gradient(rgba(0, 0, 0, 0.02) 1px, transparent 1px);
             }
 
             main {
@@ -68,6 +74,22 @@
             .header {
                 margin-bottom: 2rem;
                 text-align: center;
+            }
+
+            .update-date {
+                font-size: 0.875rem;
+                font-family: 'SF Mono', 'Fira Code', monospace;
+                background: var(--secondary-bg);
+                display: inline-block;
+                padding: 0.3rem 1rem;
+                margin-top: 0.75rem;
+                border-radius: 32px;
+                border: 1px solid var(--border-color);
+                color: rgba(255, 255, 255, 0.5);
+            }
+
+            [data-theme="dark"] .update-date {
+                color: rgba(255, 255, 255, 0.6);
             }
 
             h1 {
@@ -141,6 +163,35 @@
                 }
             }
         </style>
+        <script>
+            (function() {
+                var detectTheme = function() {
+                    var prefersDarkQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+                    var storageKey = 'tw:theme';
+                    
+                    try {
+                        var local = localStorage.getItem(storageKey);
+                        if (local === 'dark') {
+                            return 'dark';
+                        }
+                        if (local === 'light') {
+                            return 'light';
+                        }
+                        var parsed = JSON.parse(local);
+                        if (parsed && parsed.gui) {
+                            return parsed.gui;
+                        }
+                    } catch (e) {
+                        // ignore
+                    }
+                    
+                    return prefersDarkQuery && prefersDarkQuery.matches ? 'dark' : 'light';
+                };
+                
+                var theme = detectTheme();
+                document.documentElement.setAttribute('data-theme', theme);
+            })();
+        </script>
     </head>
 
     <body>
@@ -151,7 +202,7 @@
                 </div>
 
                 <section>
-                    <p><i>Updated June 3, 2026</i></p>
+                    <p><span class="update-date">Updated June 3, 2026</span></p>
                 </section>
 
                 <section>
