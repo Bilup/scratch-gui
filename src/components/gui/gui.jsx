@@ -38,6 +38,7 @@ import TWUsernameModal from '../../containers/tw-username-modal.jsx';
 import TWSettingsModal from '../../containers/tw-settings-modal.jsx';
 import TWSecurityManager from '../../containers/tw-security-manager.jsx';
 import TWCustomExtensionModal from '../../containers/tw-custom-extension-modal.jsx';
+import CustomGalleryModal from '../../containers/custom-gallery-modal.jsx';
 import TWRestorePointManager from '../../containers/tw-restore-point-manager.jsx';
 import TWFontsModal from '../../containers/tw-fonts-modal.jsx';
 import TWUnknownPlatformModal from '../../containers/tw-unknown-platform-modal.jsx';
@@ -482,6 +483,7 @@ const GUIComponent = props => {
         onClickLogo,
         onExtensionButtonClick,
         onOpenCustomExtensionModal,
+        onOpenCustomGalleryModal,
         onProjectTelemetryEvent,
         onRequestCloseBackdropLibrary,
         onRequestCloseCostumeLibrary,
@@ -512,6 +514,7 @@ const GUIComponent = props => {
         usernameModalVisible,
         settingsModalVisible,
         customExtensionModalVisible,
+        customGalleryModalVisible,
         fontsModalVisible,
         unknownPlatformModalVisible,
         invalidProjectModalVisible,
@@ -580,6 +583,7 @@ const GUIComponent = props => {
                 />
             )}
             {customExtensionModalVisible && <TWCustomExtensionModal />}
+            {customGalleryModalVisible && <CustomGalleryModal />}
             {fontsModalVisible && <TWFontsModal />}
             {unknownPlatformModalVisible && <TWUnknownPlatformModal />}
             {invalidProjectModalVisible && <TWInvalidProjectModal />}
@@ -593,6 +597,7 @@ const GUIComponent = props => {
         settingsModalVisible,
         isRtl,
         customExtensionModalVisible,
+        customGalleryModalVisible,
         fontsModalVisible,
         unknownPlatformModalVisible,
         invalidProjectModalVisible,
@@ -899,6 +904,7 @@ const GUIComponent = props => {
                         visible={extensionLibraryVisible}
                         onRequestClose={onRequestCloseExtensionLibrary}
                         onOpenCustomExtensionModal={onOpenCustomExtensionModal}
+                        onOpenCustomGalleryModal={onOpenCustomGalleryModal}
                         onEnableProcedureReturns={handleEnableProcedureReturns}
                     />
                 ) : null}
@@ -964,6 +970,7 @@ GUIComponent.propTypes = {
     onCloseAccountNav: PropTypes.func,
     onExtensionButtonClick: PropTypes.func,
     onOpenCustomExtensionModal: PropTypes.func,
+    onOpenCustomGalleryModal: PropTypes.func,
     onLogOut: PropTypes.func,
     onOpenExtensionLibrary: PropTypes.func,
     onOpenExtensionManagerModal: PropTypes.func,
@@ -1001,6 +1008,7 @@ GUIComponent.propTypes = {
     settingsModalVisible: PropTypes.bool,
     shortcutManagerModalVisible: PropTypes.bool,
     customExtensionModalVisible: PropTypes.bool,
+    customGalleryModalVisible: PropTypes.bool,
     fontsModalVisible: PropTypes.bool,
     unknownPlatformModalVisible: PropTypes.bool,
     invalidProjectModalVisible: PropTypes.bool,

@@ -45,6 +45,22 @@ const translateGalleryItem = (extension, locale) => ({
 });
 
 let cachedGallery = null;
+let galleryUpdateListeners = [];
+
+const addGalleryUpdateListener = listener => {
+    galleryUpdateListeners.push(listener);
+    return () => {
+        const index = galleryUpdateListeners.indexOf(listener);
+        if (index > -1) {
+            galleryUpdateListeners.splice(index, 1);
+        }
+    };
+};
+
+const updateGallery = newGallery => {
+    cachedGallery = newGallery;
+    galleryUpdateListeners.forEach(listener => listener(newGallery));
+};
 
 const fetchLibrary = async (onProgress) => {
     const emptyBanner = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAACXBIWXMAAAsTAAALEwEAmpwYAAADGWlDQ1BQaG90b3Nob3AgSUNDIHByb2ZpbGUAAHjaY2BgnuDo4uTKJMDAUFBUUuQe5BgZERmlwH6egY2BmYGBgYGBITG5uMAxIMCHgYGBIS8/L5UBA3y7xsDIwMDAcFnX0cXJlYE0wJpcUFTCwMBwgIGBwSgltTiZgYHhCwMDQ3p5SUEJAwNjDAMDg0hSdkEJAwNjAQMDg0h2SJAzAwNjCwMDE09JakUJAwMDg3N+QWVRZnpGiYKhpaWlgmNKflKqQnBlcUlqbrGCZ15yflFBflFiSWoKAwMD1A4GBgYGXpf8EgX3xMw8BUNTVQYqg4jIKAX08EGIIUByaVEZhMXIwMDAIMCgxeDHUMmwiuEBozRjFOM8xqdMhkwNTJeYNZgbme+y2LDMY2VmzWa9yubEtoldhX0mhwBHJycrZzMXM1cbNzf3RB4pnqW8xryH+IL5nvFXCwgJrBZ0E3wk1CisKHxYJF2UV3SrWJw4p/hWiRRJYcmjUhXSutJPZObIhsoJyp2V71HwUeRVvKA0RTlKRUnltepWtUZ1Pw1Zjbea+7QmaqfqWOsK6b7SO6I/36DGMMrI0ljS+LfJPdPDZivM+y0qLBOtfKwtbFRtRexY7L7aP3e47XjB6ZjzXpetruvdVrov9VjkudBrgfdCn8W+y/xW+a8P2Bq4N+hY8PmQW6HPwr5EMEUKRilFG8e4xUbF5cW3JMxO3Jx0Nvl5KlOaXLpNRlRmVdas7D059/KY8tULfAqLi2YXHy55WyZR7lJRWDmv6mz131q9uvj6SQ3HGn83G7Skt85ru94h2Ond1d59uJehz76/bsK+if8nO05pnXpiOu+M4JmzZj2aozW3ZN6+BVwLwxYtXvxxqcOyCcsfrjRe1br65lrddU3rb2402NSx+cFWq21Tt3/Y6btr1R6Oven7jh9QP9h56PURv6Obj4ufqD355LT3mS3nZM+3X/h0Ke7yqasW15bdEL3ZeuvrnfS7N+/7PDjwyPTx6qeKz2a+EHzZ9Zr5Td3bn+9LP3z6VPD53de8b+9+5P/88Lv4z7d/Vf//AwAqvx2K829RWwAAACBjSFJNAAB6JQAAgIMAAPn/AACA6QAAdTAAAOpgAAA6mAAAF2+SX8VGAAAAEUlEQVR42mL4zwAAAAD//wMAAgEBAJlUum0AAAAASUVORK5CYII=";
@@ -321,7 +337,12 @@ class ExtensionLibrary extends React.PureComponent {
             galleryTimedOut: false
         };
     }
+    
     componentDidMount() {
+        this.unsubscribeGalleryUpdate = addGalleryUpdateListener(newGallery => {
+            this.setState({ gallery: newGallery });
+        });
+        
         if (!this.state.gallery) {
             const timeout = setTimeout(() => {
                 this.setState({
@@ -330,7 +351,6 @@ class ExtensionLibrary extends React.PureComponent {
             }, 750);
 
             fetchLibrary((progressGallery) => {
-                // 每当有新的扩展加载完成时，立即更新显示
                 cachedGallery = progressGallery;
                 this.setState({
                     gallery: progressGallery
@@ -346,6 +366,12 @@ class ExtensionLibrary extends React.PureComponent {
                 });
         }
     }
+    
+    componentWillUnmount() {
+        if (this.unsubscribeGalleryUpdate) {
+            this.unsubscribeGalleryUpdate();
+        }
+    }
     handleItemSelect(item) {
         if (item.href) {
             return;
@@ -359,65 +385,9 @@ class ExtensionLibrary extends React.PureComponent {
         }
 
         if (extensionId === 'custom_extension_gallery') {
-            const galleryURL = prompt(this.props.intl.formatMessage(messages.customGalleryPrompt));
-            if (!galleryURL) return;
-
-            fetch(galleryURL)
-                .then(res => {
-                    if (!res.ok) {
-                        throw new Error(`HTTP status ${res.status}`);
-                    }
-                    return res.json();
-                })
-                .then(data => {
-                    if (!data.extensions || !Array.isArray(data.extensions)) {
-                        throw new Error('Invalid gallery format: expected extensions array');
-                    }
-                    const newExtensions = data.extensions.map(extension => ({
-                        name: extension.name,
-                        nameTranslations: extension.nameTranslations || {},
-                        description: extension.description,
-                        descriptionTranslations: extension.descriptionTranslations || {},
-                        extensionId: extension.id,
-                        extensionURL: extension.extensionURL || (extension.slug ? `https://extensions.bilup.org/${extension.slug}.js` : null),
-                        iconURL: extension.iconURL || (extension.image ? `https://extensions.bilup.org/${extension.image}` : null),
-                        tags: ['custom'],
-                        credits: [
-                            ...(extension.by || []),
-                            ...(extension.original || [])
-                        ].map(credit => {
-                            if (credit.link) {
-                                return (
-                                    <a
-                                        href={credit.link}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        key={credit.name}
-                                    >
-                                        {credit.name}
-                                    </a>
-                                );
-                            }
-                            return credit.name;
-                        }),
-                        docsURI: extension.docs ? extension.docs : null,
-                        samples: extension.samples ? extension.samples.map(sample => ({
-                            href: sample.href || `${process.env.ROOT}editor?project_url=${sample}`,
-                            text: sample.text || sample
-                        })) : null,
-                        incompatibleWithScratch: true,
-                        featured: true
-                    }));
-
-                    this.setState(prev => ({
-                        gallery: prev.gallery ? [...prev.gallery, ...newExtensions] : newExtensions
-                    }));
-                })
-                .catch(err => {
-                    log.error(err);
-                    alert(`Failed to load custom extension gallery: ${err.message}`);
-                });
-
+            if (this.props.onOpenCustomGalleryModal) {
+                this.props.onOpenCustomGalleryModal();
+            }
             return;
         }
 
@@ -502,9 +472,14 @@ ExtensionLibrary.propTypes = {
     onCategorySelected: PropTypes.func,
     onEnableProcedureReturns: PropTypes.func,
     onOpenCustomExtensionModal: PropTypes.func,
+    onOpenCustomGalleryModal: PropTypes.func,
     onRequestClose: PropTypes.func,
     visible: PropTypes.bool,
     vm: PropTypes.instanceOf(VM).isRequired // eslint-disable-line react/no-unused-prop-types
 };
 
 export default injectIntl(ExtensionLibrary);
+
+export {
+    updateGallery
+};
