@@ -1172,6 +1172,38 @@ exports.locals = {
 
 /***/ }),
 
+/***/ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./src/components/custom-gallery-modal/custom-gallery-modal.css":
+/*!*****************************************************************************************************************************************************!*\
+  !*** ./node_modules/css-loader??ref--6-1!./node_modules/postcss-loader/src??postcss!./src/components/custom-gallery-modal/custom-gallery-modal.css ***!
+  \*****************************************************************************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loader/lib/css-base.js */ "./node_modules/css-loader/lib/css-base.js")(false);
+// imports
+
+
+// module
+exports.push([module.i, ".custom-gallery-modal_modal-content_THAUm {\n    max-width: 550px;\n    margin-top: 50px;\n}\n\n.custom-gallery-modal_body_1sce9 {\n    background: var(--ui-white);\n    padding: 1.5rem 2.25rem;\n}\n\n.custom-gallery-modal_field_15eq8 {\n    margin-bottom: 1rem;\n}\n\n.custom-gallery-modal_label_6LxKV {\n    display: block;\n    font-size: 0.875rem;\n    font-weight: 500;\n    color: var(--text-primary);\n    margin-bottom: 0.25rem;\n}\n\n.custom-gallery-modal_input_1UOfQ {\n    width: 100%;\n    padding: 0.5rem;\n    border: 2px solid var(--ui-tertiary, #ccc);\n    border-radius: 4px;\n    font-size: 1rem;\n    font-family: inherit;\n    box-sizing: border-box;\n}\n\n.custom-gallery-modal_input_1UOfQ:focus {\n    outline: none;\n    border-color: var(--ui-primary, #4d97ff);\n}\n\n.custom-gallery-modal_button-row_28eJD {\n    display: flex;\n    justify-content: flex-end;\n    gap: 0.5rem;\n    margin-top: 1.5rem;\n}\n\n.custom-gallery-modal_ok-button_8GMh8,\n.custom-gallery-modal_cancel-button_3yzYR {\n    padding: 0.5rem 1rem;\n    border: 2px solid transparent;\n    border-radius: 4px;\n    font-size: 0.875rem;\n    font-family: inherit;\n    cursor: pointer;\n    transition: all 0.1s ease;\n}\n\n.custom-gallery-modal_ok-button_8GMh8 {\n    background-color: var(--looks-secondary);\n    color: white;\n}\n\n.custom-gallery-modal_ok-button_8GMh8:hover {\n    background-color: color-mix(in srgb, var(--looks-secondary) 75%, black);\n}\n\n.custom-gallery-modal_ok-button_8GMh8:active {\n    transform: scale(0.98);\n}\n\n.custom-gallery-modal_ok-button_8GMh8:focus,\n.custom-gallery-modal_cancel-button_3yzYR:focus {\n    outline: 2px solid var(--ui-primary, #4d97ff);\n    outline-offset: 2px;\n}\n\n.custom-gallery-modal_cancel-button_3yzYR {\n    background-color: var(--ui-secondary, #e6e6e6);\n    color: var(--ui-secondary-foreground, #575e75);\n}\n\n.custom-gallery-modal_cancel-button_3yzYR:hover {\n    background-color: var(--ui-secondary-hover, #d9d9d9);\n}\n\n.custom-gallery-modal_cancel-button_3yzYR:active {\n    transform: scale(0.98);\n}", ""]);
+
+// exports
+exports.locals = {
+	"modal-content": "custom-gallery-modal_modal-content_THAUm",
+	"modalContent": "custom-gallery-modal_modal-content_THAUm",
+	"body": "custom-gallery-modal_body_1sce9",
+	"field": "custom-gallery-modal_field_15eq8",
+	"label": "custom-gallery-modal_label_6LxKV",
+	"input": "custom-gallery-modal_input_1UOfQ",
+	"button-row": "custom-gallery-modal_button-row_28eJD",
+	"buttonRow": "custom-gallery-modal_button-row_28eJD",
+	"ok-button": "custom-gallery-modal_ok-button_8GMh8",
+	"okButton": "custom-gallery-modal_ok-button_8GMh8",
+	"cancel-button": "custom-gallery-modal_cancel-button_3yzYR",
+	"cancelButton": "custom-gallery-modal_cancel-button_3yzYR"
+};
+
+/***/ }),
+
 /***/ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./src/components/custom-procedures/custom-procedures.css":
 /*!***********************************************************************************************************************************************!*\
   !*** ./node_modules/css-loader??ref--6-1!./node_modules/postcss-loader/src??postcss!./src/components/custom-procedures/custom-procedures.css ***!
@@ -12543,6 +12575,241 @@ module.exports = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGlu
 
 /***/ }),
 
+/***/ "./src/components/custom-gallery-modal/custom-gallery-modal.css":
+/*!**********************************************************************!*\
+  !*** ./src/components/custom-gallery-modal/custom-gallery-modal.css ***!
+  \**********************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+
+var content = __webpack_require__(/*! !../../../node_modules/css-loader??ref--6-1!../../../node_modules/postcss-loader/src??postcss!./custom-gallery-modal.css */ "./node_modules/css-loader/index.js?!./node_modules/postcss-loader/src/index.js?!./src/components/custom-gallery-modal/custom-gallery-modal.css");
+
+if(typeof content === 'string') content = [[module.i, content, '']];
+
+var transform;
+var insertInto;
+
+
+
+var options = {"hmr":true}
+
+options.transform = transform
+options.insertInto = undefined;
+
+var update = __webpack_require__(/*! ../../../node_modules/style-loader/lib/addStyles.js */ "./node_modules/style-loader/lib/addStyles.js")(content, options);
+
+if(content.locals) module.exports = content.locals;
+
+if(false) {}
+
+/***/ }),
+
+/***/ "./src/components/custom-gallery-modal/custom-gallery-modal.jsx":
+/*!**********************************************************************!*\
+  !*** ./src/components/custom-gallery-modal/custom-gallery-modal.jsx ***!
+  \**********************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var react_intl__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react-intl */ "./node_modules/react-intl/lib/index.es.js");
+/* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! prop-types */ "./node_modules/prop-types/index.js");
+/* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(prop_types__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _box_box_jsx__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../box/box.jsx */ "./src/components/box/box.jsx");
+/* harmony import */ var _containers_modal_jsx__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../containers/modal.jsx */ "./src/containers/modal.jsx");
+/* harmony import */ var _custom_gallery_modal_css__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./custom-gallery-modal.css */ "./src/components/custom-gallery-modal/custom-gallery-modal.css");
+/* harmony import */ var _custom_gallery_modal_css__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(_custom_gallery_modal_css__WEBPACK_IMPORTED_MODULE_5__);
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == typeof i ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != typeof t || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != typeof i) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+
+
+
+
+
+
+const messages = Object(react_intl__WEBPACK_IMPORTED_MODULE_0__["defineMessages"])({
+  title: {
+    "id": "tw.customExtensionGallery.title",
+    "defaultMessage": "Add Custom Extension"
+  },
+  extensionId: {
+    "id": "tw.customExtensionGallery.extensionId",
+    "defaultMessage": "Extension ID"
+  },
+  name: {
+    "id": "tw.customExtensionGallery.name",
+    "defaultMessage": "Name"
+  },
+  description: {
+    "id": "tw.customExtensionGallery.description",
+    "defaultMessage": "Description"
+  },
+  extensionUrl: {
+    "id": "tw.customExtensionGallery.extensionUrl",
+    "defaultMessage": "Extension URL"
+  },
+  iconUrl: {
+    "id": "tw.customExtensionGallery.iconUrl",
+    "defaultMessage": "Icon URL (optional)"
+  },
+  author: {
+    "id": "tw.customExtensionGallery.author",
+    "defaultMessage": "Author"
+  },
+  ok: {
+    "id": "tw.customExtensionGallery.add",
+    "defaultMessage": "Add"
+  },
+  cancel: {
+    "id": "tw.simpleDialog.cancel",
+    "defaultMessage": "Cancel"
+  }
+});
+class CustomGalleryModalComponent extends react__WEBPACK_IMPORTED_MODULE_2___default.a.Component {
+  constructor(props) {
+    super(props);
+    _defineProperty(this, "handleChange", field => e => {
+      this.setState({
+        [field]: e.target.value
+      });
+    });
+    _defineProperty(this, "handleKeyPress", e => {
+      if (e.key === 'Escape') {
+        this.props.onCancel();
+      }
+    });
+    _defineProperty(this, "handleAdd", () => {
+      const _this$state = this.state,
+        extensionId = _this$state.extensionId,
+        name = _this$state.name,
+        description = _this$state.description,
+        extensionUrl = _this$state.extensionUrl,
+        iconUrl = _this$state.iconUrl,
+        author = _this$state.author;
+      if (!extensionId || !name || !extensionUrl) {
+        return;
+      }
+      const extension = {
+        id: extensionId,
+        name: name,
+        nameTranslations: {},
+        description: description || '',
+        descriptionTranslations: {},
+        extensionURL: extensionUrl,
+        iconURL: iconUrl || 'https://extensions.bilup.org/images/unknown.svg',
+        tags: ['custom'],
+        credits: author ? [author] : [],
+        featured: true,
+        incompatibleWithScratch: true
+      };
+      this.props.onOk(extension);
+    });
+    this.state = {
+      extensionId: '',
+      name: '',
+      description: '',
+      extensionUrl: '',
+      iconUrl: '',
+      author: ''
+    };
+  }
+  render() {
+    const intl = this.props.intl;
+    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(_containers_modal_jsx__WEBPACK_IMPORTED_MODULE_4__["default"], {
+      className: _custom_gallery_modal_css__WEBPACK_IMPORTED_MODULE_5___default.a.modalContent,
+      onRequestClose: this.props.onCancel,
+      contentLabel: intl.formatMessage(messages.title),
+      id: "customGalleryModal"
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_3__["default"], {
+      className: _custom_gallery_modal_css__WEBPACK_IMPORTED_MODULE_5___default.a.body,
+      onKeyPress: this.handleKeyPress
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", {
+      className: _custom_gallery_modal_css__WEBPACK_IMPORTED_MODULE_5___default.a.field
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("label", {
+      className: _custom_gallery_modal_css__WEBPACK_IMPORTED_MODULE_5___default.a.label
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_0__["FormattedMessage"], messages.extensionId)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("input", {
+      className: _custom_gallery_modal_css__WEBPACK_IMPORTED_MODULE_5___default.a.input,
+      type: "text",
+      value: this.state.extensionId,
+      onChange: this.handleChange('extensionId'),
+      placeholder: "my-extension"
+    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", {
+      className: _custom_gallery_modal_css__WEBPACK_IMPORTED_MODULE_5___default.a.field
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("label", {
+      className: _custom_gallery_modal_css__WEBPACK_IMPORTED_MODULE_5___default.a.label
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_0__["FormattedMessage"], messages.name)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("input", {
+      className: _custom_gallery_modal_css__WEBPACK_IMPORTED_MODULE_5___default.a.input,
+      type: "text",
+      value: this.state.name,
+      onChange: this.handleChange('name'),
+      placeholder: "My Extension"
+    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", {
+      className: _custom_gallery_modal_css__WEBPACK_IMPORTED_MODULE_5___default.a.field
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("label", {
+      className: _custom_gallery_modal_css__WEBPACK_IMPORTED_MODULE_5___default.a.label
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_0__["FormattedMessage"], messages.description)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("input", {
+      className: _custom_gallery_modal_css__WEBPACK_IMPORTED_MODULE_5___default.a.input,
+      type: "text",
+      value: this.state.description,
+      onChange: this.handleChange('description'),
+      placeholder: "Adds cool features"
+    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", {
+      className: _custom_gallery_modal_css__WEBPACK_IMPORTED_MODULE_5___default.a.field
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("label", {
+      className: _custom_gallery_modal_css__WEBPACK_IMPORTED_MODULE_5___default.a.label
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_0__["FormattedMessage"], messages.extensionUrl)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("input", {
+      className: _custom_gallery_modal_css__WEBPACK_IMPORTED_MODULE_5___default.a.input,
+      type: "text",
+      value: this.state.extensionUrl,
+      onChange: this.handleChange('extensionUrl'),
+      placeholder: "https://example.com/extension.js"
+    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", {
+      className: _custom_gallery_modal_css__WEBPACK_IMPORTED_MODULE_5___default.a.field
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("label", {
+      className: _custom_gallery_modal_css__WEBPACK_IMPORTED_MODULE_5___default.a.label
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_0__["FormattedMessage"], messages.iconUrl)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("input", {
+      className: _custom_gallery_modal_css__WEBPACK_IMPORTED_MODULE_5___default.a.input,
+      type: "text",
+      value: this.state.iconUrl,
+      onChange: this.handleChange('iconUrl'),
+      placeholder: "https://example.com/icon.png"
+    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", {
+      className: _custom_gallery_modal_css__WEBPACK_IMPORTED_MODULE_5___default.a.field
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("label", {
+      className: _custom_gallery_modal_css__WEBPACK_IMPORTED_MODULE_5___default.a.label
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_0__["FormattedMessage"], messages.author)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("input", {
+      className: _custom_gallery_modal_css__WEBPACK_IMPORTED_MODULE_5___default.a.input,
+      type: "text",
+      value: this.state.author,
+      onChange: this.handleChange('author'),
+      placeholder: "Author Name"
+    })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", {
+      className: _custom_gallery_modal_css__WEBPACK_IMPORTED_MODULE_5___default.a.buttonRow
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("button", {
+      className: _custom_gallery_modal_css__WEBPACK_IMPORTED_MODULE_5___default.a.cancelButton,
+      onClick: this.props.onCancel,
+      type: "button"
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_0__["FormattedMessage"], messages.cancel)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("button", {
+      className: _custom_gallery_modal_css__WEBPACK_IMPORTED_MODULE_5___default.a.okButton,
+      onClick: this.handleAdd,
+      type: "button"
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_0__["FormattedMessage"], messages.ok)))));
+  }
+}
+CustomGalleryModalComponent.propTypes = {
+  intl: react_intl__WEBPACK_IMPORTED_MODULE_0__["intlShape"],
+  onOk: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.func.isRequired,
+  onCancel: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.func.isRequired
+};
+/* harmony default export */ __webpack_exports__["default"] = (Object(react_intl__WEBPACK_IMPORTED_MODULE_0__["injectIntl"])(CustomGalleryModalComponent));
+
+/***/ }),
+
 /***/ "./src/components/custom-procedures/color-picker.jsx":
 /*!***********************************************************!*\
   !*** ./src/components/custom-procedures/color-picker.jsx ***!
@@ -15522,29 +15789,30 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _containers_tw_settings_modal_jsx__WEBPACK_IMPORTED_MODULE_35__ = __webpack_require__(/*! ../../containers/tw-settings-modal.jsx */ "./src/containers/tw-settings-modal.jsx");
 /* harmony import */ var _containers_tw_security_manager_jsx__WEBPACK_IMPORTED_MODULE_36__ = __webpack_require__(/*! ../../containers/tw-security-manager.jsx */ "./src/containers/tw-security-manager.jsx");
 /* harmony import */ var _containers_tw_custom_extension_modal_jsx__WEBPACK_IMPORTED_MODULE_37__ = __webpack_require__(/*! ../../containers/tw-custom-extension-modal.jsx */ "./src/containers/tw-custom-extension-modal.jsx");
-/* harmony import */ var _containers_tw_restore_point_manager_jsx__WEBPACK_IMPORTED_MODULE_38__ = __webpack_require__(/*! ../../containers/tw-restore-point-manager.jsx */ "./src/containers/tw-restore-point-manager.jsx");
-/* harmony import */ var _containers_tw_fonts_modal_jsx__WEBPACK_IMPORTED_MODULE_39__ = __webpack_require__(/*! ../../containers/tw-fonts-modal.jsx */ "./src/containers/tw-fonts-modal.jsx");
-/* harmony import */ var _containers_tw_unknown_platform_modal_jsx__WEBPACK_IMPORTED_MODULE_40__ = __webpack_require__(/*! ../../containers/tw-unknown-platform-modal.jsx */ "./src/containers/tw-unknown-platform-modal.jsx");
-/* harmony import */ var _containers_tw_invalid_project_modal_jsx__WEBPACK_IMPORTED_MODULE_41__ = __webpack_require__(/*! ../../containers/tw-invalid-project-modal.jsx */ "./src/containers/tw-invalid-project-modal.jsx");
-/* harmony import */ var _containers_mw_git_modal_jsx__WEBPACK_IMPORTED_MODULE_42__ = __webpack_require__(/*! ../../containers/mw-git-modal.jsx */ "./src/containers/mw-git-modal.jsx");
-/* harmony import */ var _containers_mw_extension_manager_modal_jsx__WEBPACK_IMPORTED_MODULE_43__ = __webpack_require__(/*! ../../containers/mw-extension-manager-modal.jsx */ "./src/containers/mw-extension-manager-modal.jsx");
-/* harmony import */ var _containers_mw_project_theme_modal_jsx__WEBPACK_IMPORTED_MODULE_44__ = __webpack_require__(/*! ../../containers/mw-project-theme-modal.jsx */ "./src/containers/mw-project-theme-modal.jsx");
-/* harmony import */ var _containers_bl_bilme_modal_jsx__WEBPACK_IMPORTED_MODULE_45__ = __webpack_require__(/*! ../../containers/bl-bilme-modal.jsx */ "./src/containers/bl-bilme-modal.jsx");
-/* harmony import */ var _shortcut_manager_shortcut_manager_jsx__WEBPACK_IMPORTED_MODULE_46__ = __webpack_require__(/*! ../shortcut-manager/shortcut-manager.jsx */ "./src/components/shortcut-manager/shortcut-manager.jsx");
-/* harmony import */ var _containers_simple_dialog_jsx__WEBPACK_IMPORTED_MODULE_47__ = __webpack_require__(/*! ../../containers/simple-dialog.jsx */ "./src/containers/simple-dialog.jsx");
-/* harmony import */ var _addons_hooks_js__WEBPACK_IMPORTED_MODULE_48__ = __webpack_require__(/*! ../../addons/hooks.js */ "./src/addons/hooks.js");
-/* harmony import */ var _find_bar_find_bar_jsx__WEBPACK_IMPORTED_MODULE_49__ = __webpack_require__(/*! ../find-bar/find-bar.jsx */ "./src/components/find-bar/find-bar.jsx");
-/* harmony import */ var _containers_onboarding_jsx__WEBPACK_IMPORTED_MODULE_50__ = __webpack_require__(/*! ../../containers/onboarding.jsx */ "./src/containers/onboarding.jsx");
-/* harmony import */ var _lib_constants_layout_constants__WEBPACK_IMPORTED_MODULE_51__ = __webpack_require__(/*! ../../lib/constants/layout-constants */ "./src/lib/constants/layout-constants.js");
-/* harmony import */ var _lib_utils_screen__WEBPACK_IMPORTED_MODULE_52__ = __webpack_require__(/*! ../../lib/utils/screen */ "./src/lib/utils/screen.js");
-/* harmony import */ var _lib_themes__WEBPACK_IMPORTED_MODULE_53__ = __webpack_require__(/*! ../../lib/themes */ "./src/lib/themes/index.js");
-/* harmony import */ var _reducers_stage_size__WEBPACK_IMPORTED_MODULE_54__ = __webpack_require__(/*! ../../reducers/stage-size */ "./src/reducers/stage-size.js");
-/* harmony import */ var _reducers_onboarding__WEBPACK_IMPORTED_MODULE_55__ = __webpack_require__(/*! ../../reducers/onboarding */ "./src/reducers/onboarding.js");
-/* harmony import */ var _lib_utils_tw_environment_support_prober_js__WEBPACK_IMPORTED_MODULE_56__ = __webpack_require__(/*! ../../lib/utils/tw-environment-support-prober.js */ "./src/lib/utils/tw-environment-support-prober.js");
-/* harmony import */ var _gui_css__WEBPACK_IMPORTED_MODULE_57__ = __webpack_require__(/*! ./gui.css */ "./src/components/gui/gui.css");
-/* harmony import */ var _gui_css__WEBPACK_IMPORTED_MODULE_57___default = /*#__PURE__*/__webpack_require__.n(_gui_css__WEBPACK_IMPORTED_MODULE_57__);
-/* harmony import */ var lucide_react__WEBPACK_IMPORTED_MODULE_58__ = __webpack_require__(/*! lucide-react */ "./node_modules/lucide-react/dist/esm/lucide-react.js");
-const _excluded = ["ur_mom", "accountNavOpen", "activeTabIndex", "alertsVisible", "authorId", "authorThumbnailUrl", "authorUsername", "basePath", "backdropLibraryVisible", "backpackHost", "backpackVisible", "blocksId", "blocksTabVisible", "cardsVisible", "canChangeLanguage", "canChangeTheme", "canCreateNew", "canEditTitle", "canManageFiles", "canRemix", "canSave", "canCreateCopy", "canShare", "canUseCloud", "children", "connectionModalVisible", "costumeLibraryVisible", "soundLibraryVisible", "costumesTabVisible", "customStageSize", "enableCommunity", "intl", "extensionLibraryVisible", "isCreating", "isEmbedded", "isFullScreen", "isPlayerOnly", "isRtl", "isShared", "isWindowFullScreen", "isTelemetryEnabled", "isTotallyNormal", "loading", "locale", "logo", "renderLogin", "onClickAbout", "onClickAccountNav", "onCloseAccountNav", "onClickAddonSettings", "onClickDesktopSettings", "onClickNewWindow", "onClickPackager", "onLogOut", "onOpenExtensionLibrary", "onOpenExtensionManagerModal", "onOpenRegistration", "onToggleLoginOpen", "onActivateCostumesTab", "onActivateSoundsTab", "onActivateTab", "onClickLogo", "onExtensionButtonClick", "onOpenCustomExtensionModal", "onProjectTelemetryEvent", "onRequestCloseBackdropLibrary", "onRequestCloseCostumeLibrary", "onRequestCloseExtensionLibrary", "onRequestCloseSoundLibrary", "onRequestCloseTelemetryModal", "onSeeCommunity", "onSetStageSize", "onSetFullScreen", "onShare", "onShowPrivacyPolicy", "onStartSelectingFileUpload", "onTelemetryModalCancel", "onTelemetryModalOptIn", "onTelemetryModalOptOut", "securityManager", "showComingSoon", "showOpenFilePicker", "showSaveFilePicker", "soundsTabVisible", "stageSizeMode", "targetIsStage", "telemetryModalVisible", "theme", "tipsLibraryVisible", "onOpenOnboarding", "onboardingVisible", "usernameModalVisible", "settingsModalVisible", "customExtensionModalVisible", "fontsModalVisible", "unknownPlatformModalVisible", "invalidProjectModalVisible", "gitModalVisible", "shortcutManagerModalVisible", "vm"];
+/* harmony import */ var _containers_custom_gallery_modal_jsx__WEBPACK_IMPORTED_MODULE_38__ = __webpack_require__(/*! ../../containers/custom-gallery-modal.jsx */ "./src/containers/custom-gallery-modal.jsx");
+/* harmony import */ var _containers_tw_restore_point_manager_jsx__WEBPACK_IMPORTED_MODULE_39__ = __webpack_require__(/*! ../../containers/tw-restore-point-manager.jsx */ "./src/containers/tw-restore-point-manager.jsx");
+/* harmony import */ var _containers_tw_fonts_modal_jsx__WEBPACK_IMPORTED_MODULE_40__ = __webpack_require__(/*! ../../containers/tw-fonts-modal.jsx */ "./src/containers/tw-fonts-modal.jsx");
+/* harmony import */ var _containers_tw_unknown_platform_modal_jsx__WEBPACK_IMPORTED_MODULE_41__ = __webpack_require__(/*! ../../containers/tw-unknown-platform-modal.jsx */ "./src/containers/tw-unknown-platform-modal.jsx");
+/* harmony import */ var _containers_tw_invalid_project_modal_jsx__WEBPACK_IMPORTED_MODULE_42__ = __webpack_require__(/*! ../../containers/tw-invalid-project-modal.jsx */ "./src/containers/tw-invalid-project-modal.jsx");
+/* harmony import */ var _containers_mw_git_modal_jsx__WEBPACK_IMPORTED_MODULE_43__ = __webpack_require__(/*! ../../containers/mw-git-modal.jsx */ "./src/containers/mw-git-modal.jsx");
+/* harmony import */ var _containers_mw_extension_manager_modal_jsx__WEBPACK_IMPORTED_MODULE_44__ = __webpack_require__(/*! ../../containers/mw-extension-manager-modal.jsx */ "./src/containers/mw-extension-manager-modal.jsx");
+/* harmony import */ var _containers_mw_project_theme_modal_jsx__WEBPACK_IMPORTED_MODULE_45__ = __webpack_require__(/*! ../../containers/mw-project-theme-modal.jsx */ "./src/containers/mw-project-theme-modal.jsx");
+/* harmony import */ var _containers_bl_bilme_modal_jsx__WEBPACK_IMPORTED_MODULE_46__ = __webpack_require__(/*! ../../containers/bl-bilme-modal.jsx */ "./src/containers/bl-bilme-modal.jsx");
+/* harmony import */ var _shortcut_manager_shortcut_manager_jsx__WEBPACK_IMPORTED_MODULE_47__ = __webpack_require__(/*! ../shortcut-manager/shortcut-manager.jsx */ "./src/components/shortcut-manager/shortcut-manager.jsx");
+/* harmony import */ var _containers_simple_dialog_jsx__WEBPACK_IMPORTED_MODULE_48__ = __webpack_require__(/*! ../../containers/simple-dialog.jsx */ "./src/containers/simple-dialog.jsx");
+/* harmony import */ var _addons_hooks_js__WEBPACK_IMPORTED_MODULE_49__ = __webpack_require__(/*! ../../addons/hooks.js */ "./src/addons/hooks.js");
+/* harmony import */ var _find_bar_find_bar_jsx__WEBPACK_IMPORTED_MODULE_50__ = __webpack_require__(/*! ../find-bar/find-bar.jsx */ "./src/components/find-bar/find-bar.jsx");
+/* harmony import */ var _containers_onboarding_jsx__WEBPACK_IMPORTED_MODULE_51__ = __webpack_require__(/*! ../../containers/onboarding.jsx */ "./src/containers/onboarding.jsx");
+/* harmony import */ var _lib_constants_layout_constants__WEBPACK_IMPORTED_MODULE_52__ = __webpack_require__(/*! ../../lib/constants/layout-constants */ "./src/lib/constants/layout-constants.js");
+/* harmony import */ var _lib_utils_screen__WEBPACK_IMPORTED_MODULE_53__ = __webpack_require__(/*! ../../lib/utils/screen */ "./src/lib/utils/screen.js");
+/* harmony import */ var _lib_themes__WEBPACK_IMPORTED_MODULE_54__ = __webpack_require__(/*! ../../lib/themes */ "./src/lib/themes/index.js");
+/* harmony import */ var _reducers_stage_size__WEBPACK_IMPORTED_MODULE_55__ = __webpack_require__(/*! ../../reducers/stage-size */ "./src/reducers/stage-size.js");
+/* harmony import */ var _reducers_onboarding__WEBPACK_IMPORTED_MODULE_56__ = __webpack_require__(/*! ../../reducers/onboarding */ "./src/reducers/onboarding.js");
+/* harmony import */ var _lib_utils_tw_environment_support_prober_js__WEBPACK_IMPORTED_MODULE_57__ = __webpack_require__(/*! ../../lib/utils/tw-environment-support-prober.js */ "./src/lib/utils/tw-environment-support-prober.js");
+/* harmony import */ var _gui_css__WEBPACK_IMPORTED_MODULE_58__ = __webpack_require__(/*! ./gui.css */ "./src/components/gui/gui.css");
+/* harmony import */ var _gui_css__WEBPACK_IMPORTED_MODULE_58___default = /*#__PURE__*/__webpack_require__.n(_gui_css__WEBPACK_IMPORTED_MODULE_58__);
+/* harmony import */ var lucide_react__WEBPACK_IMPORTED_MODULE_59__ = __webpack_require__(/*! lucide-react */ "./node_modules/lucide-react/dist/esm/lucide-react.js");
+const _excluded = ["ur_mom", "accountNavOpen", "activeTabIndex", "alertsVisible", "authorId", "authorThumbnailUrl", "authorUsername", "basePath", "backdropLibraryVisible", "backpackHost", "backpackVisible", "blocksId", "blocksTabVisible", "cardsVisible", "canChangeLanguage", "canChangeTheme", "canCreateNew", "canEditTitle", "canManageFiles", "canRemix", "canSave", "canCreateCopy", "canShare", "canUseCloud", "children", "connectionModalVisible", "costumeLibraryVisible", "soundLibraryVisible", "costumesTabVisible", "customStageSize", "enableCommunity", "intl", "extensionLibraryVisible", "isCreating", "isEmbedded", "isFullScreen", "isPlayerOnly", "isRtl", "isShared", "isWindowFullScreen", "isTelemetryEnabled", "isTotallyNormal", "loading", "locale", "logo", "renderLogin", "onClickAbout", "onClickAccountNav", "onCloseAccountNav", "onClickAddonSettings", "onClickDesktopSettings", "onClickNewWindow", "onClickPackager", "onLogOut", "onOpenExtensionLibrary", "onOpenExtensionManagerModal", "onOpenRegistration", "onToggleLoginOpen", "onActivateCostumesTab", "onActivateSoundsTab", "onActivateTab", "onClickLogo", "onExtensionButtonClick", "onOpenCustomExtensionModal", "onOpenCustomGalleryModal", "onProjectTelemetryEvent", "onRequestCloseBackdropLibrary", "onRequestCloseCostumeLibrary", "onRequestCloseExtensionLibrary", "onRequestCloseSoundLibrary", "onRequestCloseTelemetryModal", "onSeeCommunity", "onSetStageSize", "onSetFullScreen", "onShare", "onShowPrivacyPolicy", "onStartSelectingFileUpload", "onTelemetryModalCancel", "onTelemetryModalOptIn", "onTelemetryModalOptOut", "securityManager", "showComingSoon", "showOpenFilePicker", "showSaveFilePicker", "soundsTabVisible", "stageSizeMode", "targetIsStage", "telemetryModalVisible", "theme", "tipsLibraryVisible", "onOpenOnboarding", "onboardingVisible", "usernameModalVisible", "settingsModalVisible", "customExtensionModalVisible", "customGalleryModalVisible", "fontsModalVisible", "unknownPlatformModalVisible", "invalidProjectModalVisible", "gitModalVisible", "shortcutManagerModalVisible", "vm"];
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 function _objectWithoutProperties(e, t) { if (null == e) return {}; var o, r, i = _objectWithoutPropertiesLoose(e, t); if (Object.getOwnPropertySymbols) { var n = Object.getOwnPropertySymbols(e); for (r = 0; r < n.length; r++) o = n[r], -1 === t.indexOf(o) && {}.propertyIsEnumerable.call(e, o) && (i[o] = e[o]); } return i; }
 function _objectWithoutPropertiesLoose(r, e) { if (null == r) return {}; var t = {}; for (var n in r) if ({}.hasOwnProperty.call(r, n)) { if (-1 !== e.indexOf(n)) continue; t[n] = r[n]; } return t; }
@@ -15554,6 +15822,7 @@ function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) 
 function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
 function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
 function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
+
 
 
 
@@ -15630,8 +15899,8 @@ const getFullscreenBackgroundColor = () => {
   return 'white';
 };
 const fullscreenBackgroundColor = getFullscreenBackgroundColor();
-const AUTO_SMALL_STAGE_INNER_WIDTH = Math.round(_lib_constants_layout_constants__WEBPACK_IMPORTED_MODULE_51__["FIXED_WIDTH"]);
-const AUTO_RESTORE_STAGE_INNER_WIDTH = Math.round(_lib_constants_layout_constants__WEBPACK_IMPORTED_MODULE_51__["FIXED_WIDTH"] * 0.875);
+const AUTO_SMALL_STAGE_INNER_WIDTH = Math.round(_lib_constants_layout_constants__WEBPACK_IMPORTED_MODULE_52__["FIXED_WIDTH"]);
+const AUTO_RESTORE_STAGE_INNER_WIDTH = Math.round(_lib_constants_layout_constants__WEBPACK_IMPORTED_MODULE_52__["FIXED_WIDTH"] * 0.875);
 const MIN_EDITOR_PANE_WIDTH = 598;
 const MIN_TARGET_PANE_HEIGHT = 180;
 const cachedStyleValues = new WeakMap();
@@ -15650,7 +15919,7 @@ const getCachedBorderWidth = element => {
 const GUIComponent = props => {
   const handleEnableProcedureReturns = Object(react__WEBPACK_IMPORTED_MODULE_3__["useCallback"])(() => {
     try {
-      const workspace = _addons_hooks_js__WEBPACK_IMPORTED_MODULE_48__["default"].blocklyWorkspace;
+      const workspace = _addons_hooks_js__WEBPACK_IMPORTED_MODULE_49__["default"].blocklyWorkspace;
       if (workspace && workspace.enableProcedureReturns) {
         workspace.enableProcedureReturns();
         if (workspace.refreshToolboxSelection_) {
@@ -15703,7 +15972,7 @@ const GUIComponent = props => {
   const measureRafRef = Object(react__WEBPACK_IMPORTED_MODULE_3__["useRef"])(null);
   const autoSmallStageRequestedRef = Object(react__WEBPACK_IMPORTED_MODULE_3__["useRef"])(false);
   const autoSmallStageActiveRef = Object(react__WEBPACK_IMPORTED_MODULE_3__["useRef"])(false);
-  const lastNonSmallStageSizeModeRef = Object(react__WEBPACK_IMPORTED_MODULE_3__["useRef"])(_lib_constants_layout_constants__WEBPACK_IMPORTED_MODULE_51__["STAGE_SIZE_MODES"].large);
+  const lastNonSmallStageSizeModeRef = Object(react__WEBPACK_IMPORTED_MODULE_3__["useRef"])(_lib_constants_layout_constants__WEBPACK_IMPORTED_MODULE_52__["STAGE_SIZE_MODES"].large);
   const _useState3 = Object(react__WEBPACK_IMPORTED_MODULE_3__["useState"])(null),
     _useState4 = _slicedToArray(_useState3, 2),
     stagePanelWidth = _useState4[0],
@@ -15760,21 +16029,21 @@ const GUIComponent = props => {
     if (!enableStageResize) return;
     if (props.isFullScreen) return;
     if (typeof stageContainerWidth !== 'number') return;
-    if (props.stageSizeMode !== _lib_constants_layout_constants__WEBPACK_IMPORTED_MODULE_51__["STAGE_SIZE_MODES"].small) {
+    if (props.stageSizeMode !== _lib_constants_layout_constants__WEBPACK_IMPORTED_MODULE_52__["STAGE_SIZE_MODES"].small) {
       lastNonSmallStageSizeModeRef.current = props.stageSizeMode;
     }
     if (stageContainerWidth < AUTO_SMALL_STAGE_INNER_WIDTH) {
-      if (props.stageSizeMode !== _lib_constants_layout_constants__WEBPACK_IMPORTED_MODULE_51__["STAGE_SIZE_MODES"].small) {
+      if (props.stageSizeMode !== _lib_constants_layout_constants__WEBPACK_IMPORTED_MODULE_52__["STAGE_SIZE_MODES"].small) {
         if (autoSmallStageRequestedRef.current) return;
         autoSmallStageRequestedRef.current = true;
         autoSmallStageActiveRef.current = true;
         if (typeof props.onSetStageSize === 'function') {
-          props.onSetStageSize(_lib_constants_layout_constants__WEBPACK_IMPORTED_MODULE_51__["STAGE_SIZE_MODES"].small);
+          props.onSetStageSize(_lib_constants_layout_constants__WEBPACK_IMPORTED_MODULE_52__["STAGE_SIZE_MODES"].small);
         }
       }
     } else {
       autoSmallStageRequestedRef.current = false;
-      if (autoSmallStageActiveRef.current && props.stageSizeMode === _lib_constants_layout_constants__WEBPACK_IMPORTED_MODULE_51__["STAGE_SIZE_MODES"].small && stageContainerWidth >= AUTO_RESTORE_STAGE_INNER_WIDTH && typeof props.onSetStageSize === 'function') {
+      if (autoSmallStageActiveRef.current && props.stageSizeMode === _lib_constants_layout_constants__WEBPACK_IMPORTED_MODULE_52__["STAGE_SIZE_MODES"].small && stageContainerWidth >= AUTO_RESTORE_STAGE_INNER_WIDTH && typeof props.onSetStageSize === 'function') {
         autoSmallStageActiveRef.current = false;
         props.onSetStageSize(lastNonSmallStageSizeModeRef.current);
       }
@@ -15821,7 +16090,7 @@ const GUIComponent = props => {
         // ignore
       }
     }
-    const minWidth = Math.max(0, _lib_constants_layout_constants__WEBPACK_IMPORTED_MODULE_51__["FIXED_WIDTH"] * 0.5 + paddingLeft + paddingRight + borderExtra);
+    const minWidth = Math.max(0, _lib_constants_layout_constants__WEBPACK_IMPORTED_MODULE_52__["FIXED_WIDTH"] * 0.5 + paddingLeft + paddingRight + borderExtra);
     const containerEl = editorEl ? editorEl.parentElement : null;
     const containerRect = containerEl ? containerEl.getBoundingClientRect() : null;
     const containerWidth = containerRect && Number.isFinite(containerRect.width) ? containerRect.width : window.innerWidth;
@@ -15861,9 +16130,9 @@ const GUIComponent = props => {
           }
           return nextInnerWidth;
         });
-        if (!props.isFullScreen && props.stageSizeMode !== _lib_constants_layout_constants__WEBPACK_IMPORTED_MODULE_51__["STAGE_SIZE_MODES"].small && typeof props.onSetStageSize === 'function' && nextInnerWidth < AUTO_SMALL_STAGE_INNER_WIDTH) {
+        if (!props.isFullScreen && props.stageSizeMode !== _lib_constants_layout_constants__WEBPACK_IMPORTED_MODULE_52__["STAGE_SIZE_MODES"].small && typeof props.onSetStageSize === 'function' && nextInnerWidth < AUTO_SMALL_STAGE_INNER_WIDTH) {
           autoSmallStageActiveRef.current = true;
-          props.onSetStageSize(_lib_constants_layout_constants__WEBPACK_IMPORTED_MODULE_51__["STAGE_SIZE_MODES"].small);
+          props.onSetStageSize(_lib_constants_layout_constants__WEBPACK_IMPORTED_MODULE_52__["STAGE_SIZE_MODES"].small);
         }
       });
     };
@@ -15947,6 +16216,7 @@ const GUIComponent = props => {
     onClickLogo = _omit.onClickLogo,
     onExtensionButtonClick = _omit.onExtensionButtonClick,
     onOpenCustomExtensionModal = _omit.onOpenCustomExtensionModal,
+    onOpenCustomGalleryModal = _omit.onOpenCustomGalleryModal,
     onProjectTelemetryEvent = _omit.onProjectTelemetryEvent,
     onRequestCloseBackdropLibrary = _omit.onRequestCloseBackdropLibrary,
     onRequestCloseCostumeLibrary = _omit.onRequestCloseCostumeLibrary,
@@ -15977,6 +16247,7 @@ const GUIComponent = props => {
     usernameModalVisible = _omit.usernameModalVisible,
     settingsModalVisible = _omit.settingsModalVisible,
     customExtensionModalVisible = _omit.customExtensionModalVisible,
+    customGalleryModalVisible = _omit.customGalleryModalVisible,
     fontsModalVisible = _omit.fontsModalVisible,
     unknownPlatformModalVisible = _omit.unknownPlatformModalVisible,
     invalidProjectModalVisible = _omit.invalidProjectModalVisible,
@@ -16011,24 +16282,24 @@ const GUIComponent = props => {
     }
   }, [onStartSelectingFileUpload, onClickPackager]);
   const tabClassNames = Object(react__WEBPACK_IMPORTED_MODULE_3__["useMemo"])(() => ({
-    tabs: _gui_css__WEBPACK_IMPORTED_MODULE_57___default.a.tabs,
-    tab: classnames__WEBPACK_IMPORTED_MODULE_0___default()(react_tabs_style_react_tabs_css__WEBPACK_IMPORTED_MODULE_8___default.a.reactTabsTab, _gui_css__WEBPACK_IMPORTED_MODULE_57___default.a.tab),
-    tabList: classnames__WEBPACK_IMPORTED_MODULE_0___default()(react_tabs_style_react_tabs_css__WEBPACK_IMPORTED_MODULE_8___default.a.reactTabsTabList, _gui_css__WEBPACK_IMPORTED_MODULE_57___default.a.tabList),
-    tabPanel: classnames__WEBPACK_IMPORTED_MODULE_0___default()(react_tabs_style_react_tabs_css__WEBPACK_IMPORTED_MODULE_8___default.a.reactTabsTabPanel, _gui_css__WEBPACK_IMPORTED_MODULE_57___default.a.tabPanel),
-    tabPanelSelected: classnames__WEBPACK_IMPORTED_MODULE_0___default()(react_tabs_style_react_tabs_css__WEBPACK_IMPORTED_MODULE_8___default.a.reactTabsTabPanelSelected, _gui_css__WEBPACK_IMPORTED_MODULE_57___default.a.isSelected),
-    tabSelected: classnames__WEBPACK_IMPORTED_MODULE_0___default()(react_tabs_style_react_tabs_css__WEBPACK_IMPORTED_MODULE_8___default.a.reactTabsTabSelected, _gui_css__WEBPACK_IMPORTED_MODULE_57___default.a.isSelected)
+    tabs: _gui_css__WEBPACK_IMPORTED_MODULE_58___default.a.tabs,
+    tab: classnames__WEBPACK_IMPORTED_MODULE_0___default()(react_tabs_style_react_tabs_css__WEBPACK_IMPORTED_MODULE_8___default.a.reactTabsTab, _gui_css__WEBPACK_IMPORTED_MODULE_58___default.a.tab),
+    tabList: classnames__WEBPACK_IMPORTED_MODULE_0___default()(react_tabs_style_react_tabs_css__WEBPACK_IMPORTED_MODULE_8___default.a.reactTabsTabList, _gui_css__WEBPACK_IMPORTED_MODULE_58___default.a.tabList),
+    tabPanel: classnames__WEBPACK_IMPORTED_MODULE_0___default()(react_tabs_style_react_tabs_css__WEBPACK_IMPORTED_MODULE_8___default.a.reactTabsTabPanel, _gui_css__WEBPACK_IMPORTED_MODULE_58___default.a.tabPanel),
+    tabPanelSelected: classnames__WEBPACK_IMPORTED_MODULE_0___default()(react_tabs_style_react_tabs_css__WEBPACK_IMPORTED_MODULE_8___default.a.reactTabsTabPanelSelected, _gui_css__WEBPACK_IMPORTED_MODULE_58___default.a.isSelected),
+    tabSelected: classnames__WEBPACK_IMPORTED_MODULE_0___default()(react_tabs_style_react_tabs_css__WEBPACK_IMPORTED_MODULE_8___default.a.reactTabsTabSelected, _gui_css__WEBPACK_IMPORTED_MODULE_58___default.a.isSelected)
   }), []);
-  const unconstrainedWidth = Object(react__WEBPACK_IMPORTED_MODULE_3__["useMemo"])(() => _lib_constants_layout_constants__WEBPACK_IMPORTED_MODULE_51__["UNCONSTRAINED_NON_STAGE_WIDTH"] + _lib_constants_layout_constants__WEBPACK_IMPORTED_MODULE_51__["FIXED_WIDTH"] + Math.max(0, customStageSize.width - _lib_constants_layout_constants__WEBPACK_IMPORTED_MODULE_51__["FIXED_WIDTH"]), [customStageSize.width]);
+  const unconstrainedWidth = Object(react__WEBPACK_IMPORTED_MODULE_3__["useMemo"])(() => _lib_constants_layout_constants__WEBPACK_IMPORTED_MODULE_52__["UNCONSTRAINED_NON_STAGE_WIDTH"] + _lib_constants_layout_constants__WEBPACK_IMPORTED_MODULE_52__["FIXED_WIDTH"] + Math.max(0, customStageSize.width - _lib_constants_layout_constants__WEBPACK_IMPORTED_MODULE_52__["FIXED_WIDTH"]), [customStageSize.width]);
   const alwaysEnabledModals = Object(react__WEBPACK_IMPORTED_MODULE_3__["useMemo"])(() => /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_3___default.a.Fragment, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_lib_notifications_provider_jsx__WEBPACK_IMPORTED_MODULE_28__["default"], null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_tw_security_manager_jsx__WEBPACK_IMPORTED_MODULE_36__["default"], {
     securityManager: securityManager
-  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_tw_restore_point_manager_jsx__WEBPACK_IMPORTED_MODULE_38__["default"], null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_mw_extension_manager_modal_jsx__WEBPACK_IMPORTED_MODULE_43__["default"], null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_mw_project_theme_modal_jsx__WEBPACK_IMPORTED_MODULE_44__["default"], null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_bl_bilme_modal_jsx__WEBPACK_IMPORTED_MODULE_45__["default"], null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_shortcut_manager_shortcut_manager_jsx__WEBPACK_IMPORTED_MODULE_46__["default"], {
+  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_tw_restore_point_manager_jsx__WEBPACK_IMPORTED_MODULE_39__["default"], null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_mw_extension_manager_modal_jsx__WEBPACK_IMPORTED_MODULE_44__["default"], null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_mw_project_theme_modal_jsx__WEBPACK_IMPORTED_MODULE_45__["default"], null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_bl_bilme_modal_jsx__WEBPACK_IMPORTED_MODULE_46__["default"], null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_shortcut_manager_shortcut_manager_jsx__WEBPACK_IMPORTED_MODULE_47__["default"], {
     visible: shortcutManagerModalVisible
   }), usernameModalVisible && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_tw_username_modal_jsx__WEBPACK_IMPORTED_MODULE_34__["default"], {
     visible: usernameModalVisible
   }), settingsModalVisible && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_tw_settings_modal_jsx__WEBPACK_IMPORTED_MODULE_35__["default"], {
     isRtl: isRtl,
     visible: settingsModalVisible
-  }), customExtensionModalVisible && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_tw_custom_extension_modal_jsx__WEBPACK_IMPORTED_MODULE_37__["default"], null), fontsModalVisible && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_tw_fonts_modal_jsx__WEBPACK_IMPORTED_MODULE_39__["default"], null), unknownPlatformModalVisible && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_tw_unknown_platform_modal_jsx__WEBPACK_IMPORTED_MODULE_40__["default"], null), invalidProjectModalVisible && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_tw_invalid_project_modal_jsx__WEBPACK_IMPORTED_MODULE_41__["default"], null), gitModalVisible && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_mw_git_modal_jsx__WEBPACK_IMPORTED_MODULE_42__["default"], null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_simple_dialog_jsx__WEBPACK_IMPORTED_MODULE_47__["default"], null), onboardingVisible && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_onboarding_jsx__WEBPACK_IMPORTED_MODULE_50__["default"], null)), [securityManager, usernameModalVisible, settingsModalVisible, isRtl, customExtensionModalVisible, fontsModalVisible, unknownPlatformModalVisible, invalidProjectModalVisible, gitModalVisible, shortcutManagerModalVisible, onboardingVisible]);
+  }), customExtensionModalVisible && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_tw_custom_extension_modal_jsx__WEBPACK_IMPORTED_MODULE_37__["default"], null), customGalleryModalVisible && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_custom_gallery_modal_jsx__WEBPACK_IMPORTED_MODULE_38__["default"], null), fontsModalVisible && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_tw_fonts_modal_jsx__WEBPACK_IMPORTED_MODULE_40__["default"], null), unknownPlatformModalVisible && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_tw_unknown_platform_modal_jsx__WEBPACK_IMPORTED_MODULE_41__["default"], null), invalidProjectModalVisible && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_tw_invalid_project_modal_jsx__WEBPACK_IMPORTED_MODULE_42__["default"], null), gitModalVisible && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_mw_git_modal_jsx__WEBPACK_IMPORTED_MODULE_43__["default"], null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_simple_dialog_jsx__WEBPACK_IMPORTED_MODULE_48__["default"], null), onboardingVisible && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_onboarding_jsx__WEBPACK_IMPORTED_MODULE_51__["default"], null)), [securityManager, usernameModalVisible, settingsModalVisible, isRtl, customExtensionModalVisible, customGalleryModalVisible, fontsModalVisible, unknownPlatformModalVisible, invalidProjectModalVisible, gitModalVisible, shortcutManagerModalVisible, onboardingVisible]);
 
   // const minDimensions = useMemo(() => ({
   //     minWidth: typeof stagePanelWidth === 'number' ?
@@ -16048,24 +16319,24 @@ const GUIComponent = props => {
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_responsive__WEBPACK_IMPORTED_MODULE_6___default.a, {
     minWidth: unconstrainedWidth
   }, isUnconstrained => {
-    const stageSize = Object(_lib_utils_screen__WEBPACK_IMPORTED_MODULE_52__["resolveStageSize"])(stageSizeMode, isUnconstrained);
+    const stageSize = Object(_lib_utils_screen__WEBPACK_IMPORTED_MODULE_53__["resolveStageSize"])(stageSizeMode, isUnconstrained);
     return isPlayerOnly ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_3___default.a.Fragment, null, isWindowFullScreen ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
-      className: _gui_css__WEBPACK_IMPORTED_MODULE_57___default.a.fullscreenBackground,
+      className: _gui_css__WEBPACK_IMPORTED_MODULE_58___default.a.fullscreenBackground,
       style: {
         backgroundColor: fullscreenBackgroundColor
       }
     }) : null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_stage_wrapper_jsx__WEBPACK_IMPORTED_MODULE_15__["default"], {
       isFullScreen: isFullScreen,
       isEmbedded: isEmbedded,
-      isRendererSupported: Object(_lib_utils_tw_environment_support_prober_js__WEBPACK_IMPORTED_MODULE_56__["isRendererSupported"])(),
+      isRendererSupported: Object(_lib_utils_tw_environment_support_prober_js__WEBPACK_IMPORTED_MODULE_57__["isRendererSupported"])(),
       isRtl: isRtl,
       loading: loading,
-      stageSize: _lib_constants_layout_constants__WEBPACK_IMPORTED_MODULE_51__["STAGE_SIZE_MODES"].full,
+      stageSize: _lib_constants_layout_constants__WEBPACK_IMPORTED_MODULE_52__["STAGE_SIZE_MODES"].full,
       vm: vm
     }, alertsVisible ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_alerts_jsx__WEBPACK_IMPORTED_MODULE_27__["default"], {
-      className: _gui_css__WEBPACK_IMPORTED_MODULE_57___default.a.alertsContainer
+      className: _gui_css__WEBPACK_IMPORTED_MODULE_58___default.a.alertsContainer
     }) : null), alwaysEnabledModals) : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_17__["default"], _extends({
-      className: _gui_css__WEBPACK_IMPORTED_MODULE_57___default.a.pageWrapper,
+      className: _gui_css__WEBPACK_IMPORTED_MODULE_58___default.a.pageWrapper,
       dir: isRtl ? 'rtl' : 'ltr'
       // style={minDimensions}
     }, componentProps), alwaysEnabledModals, telemetryModalVisible ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_telemetry_modal_telemetry_modal_jsx__WEBPACK_IMPORTED_MODULE_33__["default"], {
@@ -16081,11 +16352,11 @@ const GUIComponent = props => {
     }) : null, isCreating ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_loader_loader_jsx__WEBPACK_IMPORTED_MODULE_16__["default"], {
       isFullScreen: true,
       messageId: "gui.loader.creating"
-    }) : null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_collab_loader_collab_loader_jsx__WEBPACK_IMPORTED_MODULE_32__["default"], null), Object(_lib_utils_tw_environment_support_prober_js__WEBPACK_IMPORTED_MODULE_56__["isBrowserSupported"])() ? null : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_browser_modal_browser_modal_jsx__WEBPACK_IMPORTED_MODULE_24__["default"], {
+    }) : null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_collab_loader_collab_loader_jsx__WEBPACK_IMPORTED_MODULE_32__["default"], null), Object(_lib_utils_tw_environment_support_prober_js__WEBPACK_IMPORTED_MODULE_57__["isBrowserSupported"])() ? null : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_browser_modal_browser_modal_jsx__WEBPACK_IMPORTED_MODULE_24__["default"], {
       isRtl: isRtl,
       onClickDesktopSettings: onClickDesktopSettings
     }), tipsLibraryVisible ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_tips_library_jsx__WEBPACK_IMPORTED_MODULE_25__["default"], null) : null, cardsVisible ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_cards_jsx__WEBPACK_IMPORTED_MODULE_26__["default"], null) : null, alertsVisible ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_alerts_jsx__WEBPACK_IMPORTED_MODULE_27__["default"], {
-      className: _gui_css__WEBPACK_IMPORTED_MODULE_57___default.a.alertsContainer
+      className: _gui_css__WEBPACK_IMPORTED_MODULE_58___default.a.alertsContainer
     }) : null, connectionModalVisible ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_connection_modal_jsx__WEBPACK_IMPORTED_MODULE_30__["default"], {
       vm: vm
     }) : null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_collaboration_container_jsx__WEBPACK_IMPORTED_MODULE_31__["default"], null), costumeLibraryVisible ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_costume_library_jsx__WEBPACK_IMPORTED_MODULE_19__["default"], {
@@ -16111,7 +16382,7 @@ const GUIComponent = props => {
       canRemix: canRemix,
       canSave: canSave,
       canShare: canShare,
-      className: _gui_css__WEBPACK_IMPORTED_MODULE_57___default.a.menuBarPosition,
+      className: _gui_css__WEBPACK_IMPORTED_MODULE_58___default.a.menuBarPosition,
       enableCommunity: enableCommunity,
       isShared: isShared,
       isTotallyNormal: isTotallyNormal,
@@ -16138,13 +16409,13 @@ const GUIComponent = props => {
       onStartSelectingFileUpload: onStartSelectingFileUpload,
       onToggleLoginOpen: onToggleLoginOpen
     }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_17__["default"], {
-      className: _gui_css__WEBPACK_IMPORTED_MODULE_57___default.a.bodyWrapper
+      className: _gui_css__WEBPACK_IMPORTED_MODULE_58___default.a.bodyWrapper
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_17__["default"], {
-      className: _gui_css__WEBPACK_IMPORTED_MODULE_57___default.a.flexWrapper
+      className: _gui_css__WEBPACK_IMPORTED_MODULE_58___default.a.flexWrapper
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_17__["default"], {
-      className: _gui_css__WEBPACK_IMPORTED_MODULE_57___default.a.editorWrapper
+      className: _gui_css__WEBPACK_IMPORTED_MODULE_58___default.a.editorWrapper
       // ref={editorWrapperRef}
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_find_bar_find_bar_jsx__WEBPACK_IMPORTED_MODULE_49__["default"], {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_find_bar_find_bar_jsx__WEBPACK_IMPORTED_MODULE_50__["default"], {
       activeTabIndex: activeTabIndex,
       isPlayerOnly: isPlayerOnly,
       locale: locale,
@@ -16160,7 +16431,7 @@ const GUIComponent = props => {
       className: tabClassNames.tabList
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_tabs__WEBPACK_IMPORTED_MODULE_7__["Tab"], {
       className: tabClassNames.tab
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(lucide_react__WEBPACK_IMPORTED_MODULE_58__["Blocks"], {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(lucide_react__WEBPACK_IMPORTED_MODULE_59__["Blocks"], {
       size: 20
     }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_4__["FormattedMessage"], {
       defaultMessage: "Code",
@@ -16168,7 +16439,7 @@ const GUIComponent = props => {
     })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_tabs__WEBPACK_IMPORTED_MODULE_7__["Tab"], {
       className: tabClassNames.tab,
       onClick: onActivateCostumesTab
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(lucide_react__WEBPACK_IMPORTED_MODULE_58__["PaintbrushVertical"], {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(lucide_react__WEBPACK_IMPORTED_MODULE_59__["PaintbrushVertical"], {
       size: 20
     }), targetIsStage ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_4__["FormattedMessage"], {
       defaultMessage: "Backdrops",
@@ -16179,7 +16450,7 @@ const GUIComponent = props => {
     })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_tabs__WEBPACK_IMPORTED_MODULE_7__["Tab"], {
       className: tabClassNames.tab,
       onClick: onActivateSoundsTab
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(lucide_react__WEBPACK_IMPORTED_MODULE_58__["Volume2"], {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(lucide_react__WEBPACK_IMPORTED_MODULE_59__["Volume2"], {
       size: 20
     }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_intl__WEBPACK_IMPORTED_MODULE_4__["FormattedMessage"], {
       defaultMessage: "Sounds",
@@ -16187,7 +16458,7 @@ const GUIComponent = props => {
     }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_tabs__WEBPACK_IMPORTED_MODULE_7__["TabPanel"], {
       className: tabClassNames.tabPanel
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_17__["default"], {
-      className: _gui_css__WEBPACK_IMPORTED_MODULE_57___default.a.blocksWrapper
+      className: _gui_css__WEBPACK_IMPORTED_MODULE_58___default.a.blocksWrapper
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_blocks_jsx__WEBPACK_IMPORTED_MODULE_10__["default"], {
       key: "".concat(blocksId, "/").concat(theme.id),
       canUseCloud: canUseCloud,
@@ -16201,16 +16472,16 @@ const GUIComponent = props => {
       theme: theme,
       vm: vm
     })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_17__["default"], {
-      className: _gui_css__WEBPACK_IMPORTED_MODULE_57___default.a.extensionButtonContainer
+      className: _gui_css__WEBPACK_IMPORTED_MODULE_58___default.a.extensionButtonContainer
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("button", {
-      className: _gui_css__WEBPACK_IMPORTED_MODULE_57___default.a.extensionButton,
+      className: _gui_css__WEBPACK_IMPORTED_MODULE_58___default.a.extensionButton,
       title: intl.formatMessage(messages.addExtension),
       onClick: onExtensionButtonClick
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(lucide_react__WEBPACK_IMPORTED_MODULE_58__["PackagePlus"], {
-      className: _gui_css__WEBPACK_IMPORTED_MODULE_57___default.a.extensionButtonIcon,
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(lucide_react__WEBPACK_IMPORTED_MODULE_59__["PackagePlus"], {
+      className: _gui_css__WEBPACK_IMPORTED_MODULE_58___default.a.extensionButtonIcon,
       draggable: false
     }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_17__["default"], {
-      className: _gui_css__WEBPACK_IMPORTED_MODULE_57___default.a.watermark
+      className: _gui_css__WEBPACK_IMPORTED_MODULE_58___default.a.watermark
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_watermark_jsx__WEBPACK_IMPORTED_MODULE_22__["default"], null))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(react_tabs__WEBPACK_IMPORTED_MODULE_7__["TabPanel"], {
       className: tabClassNames.tabPanel
     }, costumesTabVisible ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_costume_tab_jsx__WEBPACK_IMPORTED_MODULE_11__["default"], {
@@ -16222,25 +16493,25 @@ const GUIComponent = props => {
     }) : null)), backpackVisible ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_backpack_jsx__WEBPACK_IMPORTED_MODULE_23__["default"], {
       host: backpackHost
     }) : null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_17__["default"], {
-      className: _gui_css__WEBPACK_IMPORTED_MODULE_57___default.a.stagePaneResizer,
+      className: _gui_css__WEBPACK_IMPORTED_MODULE_58___default.a.stagePaneResizer,
       onPointerDown: enableStageResize ? handleStagePanelResizePointerDown : undefined,
       onDoubleClick: enableStageResize ? handleStagePanelResizeDoubleClick : undefined,
       role: "separator",
       "aria-orientation": "vertical",
       tabIndex: -1
     }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_17__["default"], {
-      className: classnames__WEBPACK_IMPORTED_MODULE_0___default()(_gui_css__WEBPACK_IMPORTED_MODULE_57___default.a.stageAndTargetWrapper, _gui_css__WEBPACK_IMPORTED_MODULE_57___default.a[stageSize]),
+      className: classnames__WEBPACK_IMPORTED_MODULE_0___default()(_gui_css__WEBPACK_IMPORTED_MODULE_58___default.a.stageAndTargetWrapper, _gui_css__WEBPACK_IMPORTED_MODULE_58___default.a[stageSize]),
       ref: stageAndTargetWrapperRef,
       style: enableStageResize ? stagePanelStyle : undefined
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_stage_wrapper_jsx__WEBPACK_IMPORTED_MODULE_15__["default"], {
       isFullScreen: isFullScreen,
-      isRendererSupported: Object(_lib_utils_tw_environment_support_prober_js__WEBPACK_IMPORTED_MODULE_56__["isRendererSupported"])(),
+      isRendererSupported: Object(_lib_utils_tw_environment_support_prober_js__WEBPACK_IMPORTED_MODULE_57__["isRendererSupported"])(),
       isRtl: isRtl,
       stageSize: stageSize,
       stageContainerWidth: typeof stageContainerWidth === 'number' ? stageContainerWidth : null,
       vm: vm
     }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_box_box_jsx__WEBPACK_IMPORTED_MODULE_17__["default"], {
-      className: _gui_css__WEBPACK_IMPORTED_MODULE_57___default.a.targetWrapper
+      className: _gui_css__WEBPACK_IMPORTED_MODULE_58___default.a.targetWrapper
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_target_pane_jsx__WEBPACK_IMPORTED_MODULE_14__["default"], {
       stageSize: stageSize,
       vm: vm
@@ -16249,6 +16520,7 @@ const GUIComponent = props => {
       visible: extensionLibraryVisible,
       onRequestClose: onRequestCloseExtensionLibrary,
       onOpenCustomExtensionModal: onOpenCustomExtensionModal,
+      onOpenCustomGalleryModal: onOpenCustomGalleryModal,
       onEnableProcedureReturns: handleEnableProcedureReturns
     }) : null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement(_containers_drag_layer_jsx__WEBPACK_IMPORTED_MODULE_29__["default"], null));
   });
@@ -16309,6 +16581,7 @@ GUIComponent.propTypes = {
   onCloseAccountNav: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.func,
   onExtensionButtonClick: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.func,
   onOpenCustomExtensionModal: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.func,
+  onOpenCustomGalleryModal: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.func,
   onLogOut: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.func,
   onOpenExtensionLibrary: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.func,
   onOpenExtensionManagerModal: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.func,
@@ -16335,10 +16608,10 @@ GUIComponent.propTypes = {
   showOpenFilePicker: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.func,
   showSaveFilePicker: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.func,
   soundsTabVisible: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.bool,
-  stageSizeMode: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.oneOf(Object.keys(_lib_constants_layout_constants__WEBPACK_IMPORTED_MODULE_51__["STAGE_SIZE_MODES"])),
+  stageSizeMode: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.oneOf(Object.keys(_lib_constants_layout_constants__WEBPACK_IMPORTED_MODULE_52__["STAGE_SIZE_MODES"])),
   targetIsStage: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.bool,
   telemetryModalVisible: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.bool,
-  theme: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.instanceOf(_lib_themes__WEBPACK_IMPORTED_MODULE_53__["Theme"]),
+  theme: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.instanceOf(_lib_themes__WEBPACK_IMPORTED_MODULE_54__["Theme"]),
   tipsLibraryVisible: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.bool,
   onOpenOnboarding: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.func,
   onboardingVisible: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.bool,
@@ -16346,6 +16619,7 @@ GUIComponent.propTypes = {
   settingsModalVisible: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.bool,
   shortcutManagerModalVisible: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.bool,
   customExtensionModalVisible: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.bool,
+  customGalleryModalVisible: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.bool,
   fontsModalVisible: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.bool,
   unknownPlatformModalVisible: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.bool,
   invalidProjectModalVisible: prop_types__WEBPACK_IMPORTED_MODULE_2___default.a.bool,
@@ -16373,7 +16647,7 @@ GUIComponent.defaultProps = {
   isTotallyNormal: false,
   loading: false,
   showComingSoon: false,
-  stageSizeMode: _lib_constants_layout_constants__WEBPACK_IMPORTED_MODULE_51__["STAGE_SIZE_MODES"].large
+  stageSizeMode: _lib_constants_layout_constants__WEBPACK_IMPORTED_MODULE_52__["STAGE_SIZE_MODES"].large
 };
 const mapStateToProps = state => ({
   customStageSize: state.scratchGui.customStageSize,
@@ -16386,8 +16660,8 @@ const mapStateToProps = state => ({
   shortcutManagerModalVisible: state.scratchGui.modals.shortcutManagerModal
 });
 const mapDispatchToProps = dispatch => ({
-  onSetStageSize: stageSize => dispatch(Object(_reducers_stage_size__WEBPACK_IMPORTED_MODULE_54__["setStageSize"])(stageSize)),
-  onOpenOnboarding: () => dispatch(Object(_reducers_onboarding__WEBPACK_IMPORTED_MODULE_55__["showOnboarding"])())
+  onSetStageSize: stageSize => dispatch(Object(_reducers_stage_size__WEBPACK_IMPORTED_MODULE_55__["setStageSize"])(stageSize)),
+  onOpenOnboarding: () => dispatch(Object(_reducers_onboarding__WEBPACK_IMPORTED_MODULE_56__["showOnboarding"])())
 });
 /* harmony default export */ __webpack_exports__["default"] = (Object(react_intl__WEBPACK_IMPORTED_MODULE_4__["injectIntl"])(Object(react_redux__WEBPACK_IMPORTED_MODULE_5__["connect"])(mapStateToProps, mapDispatchToProps)(GUIComponent)));
 
@@ -42298,6 +42572,88 @@ const mapDispatchToProps = dispatch => ({
 
 /***/ }),
 
+/***/ "./src/containers/custom-gallery-modal.jsx":
+/*!*************************************************!*\
+  !*** ./src/containers/custom-gallery-modal.jsx ***!
+  \*************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! prop-types */ "./node_modules/prop-types/index.js");
+/* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(prop_types__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var lodash_bindall__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! lodash.bindall */ "./node_modules/lodash.bindall/index.js");
+/* harmony import */ var lodash_bindall__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(lodash_bindall__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var react_redux__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! react-redux */ "./node_modules/react-redux/es/index.js");
+/* harmony import */ var _lib_utils_log__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../lib/utils/log */ "./src/lib/utils/log.js");
+/* harmony import */ var _components_custom_gallery_modal_custom_gallery_modal_jsx__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../components/custom-gallery-modal/custom-gallery-modal.jsx */ "./src/components/custom-gallery-modal/custom-gallery-modal.jsx");
+/* harmony import */ var _reducers_modals__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../reducers/modals */ "./src/reducers/modals.js");
+/* harmony import */ var _extension_library_jsx__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./extension-library.jsx */ "./src/containers/extension-library.jsx");
+
+
+
+
+
+
+
+
+class CustomGalleryModal extends react__WEBPACK_IMPORTED_MODULE_1___default.a.Component {
+  constructor(props) {
+    super(props);
+    lodash_bindall__WEBPACK_IMPORTED_MODULE_2___default()(this, ['handleOk', 'handleCancel']);
+  }
+  handleOk(extension) {
+    this.props.onClose();
+    if (!extension || !extension.id || !extension.name || !extension.extensionURL) {
+      _lib_utils_log__WEBPACK_IMPORTED_MODULE_4__["default"].warn('Invalid extension data');
+      return;
+    }
+    const processedExtension = {
+      name: extension.name,
+      nameTranslations: extension.nameTranslations || {},
+      description: extension.description || '',
+      descriptionTranslations: extension.descriptionTranslations || {},
+      extensionId: extension.id,
+      extensionURL: extension.extensionURL,
+      iconURL: extension.iconURL || 'https://extensions.bilup.org/images/unknown.svg',
+      tags: ['custom'],
+      credits: extension.credits || [],
+      incompatibleWithScratch: true,
+      featured: true
+    };
+    Object(_extension_library_jsx__WEBPACK_IMPORTED_MODULE_7__["updateGallery"])([processedExtension]);
+  }
+  handleCancel() {
+    this.props.onClose();
+  }
+  render() {
+    if (!this.props.visible) {
+      return null;
+    }
+    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_components_custom_gallery_modal_custom_gallery_modal_jsx__WEBPACK_IMPORTED_MODULE_5__["default"], {
+      onOk: this.handleOk,
+      onCancel: this.handleCancel
+    });
+  }
+}
+CustomGalleryModal.propTypes = {
+  visible: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.bool,
+  onClose: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.func.isRequired,
+  onGalleryLoaded: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.func
+};
+const mapStateToProps = state => ({
+  visible: state.scratchGui.modals.customGalleryModal
+});
+const mapDispatchToProps = dispatch => ({
+  onClose: () => dispatch(Object(_reducers_modals__WEBPACK_IMPORTED_MODULE_6__["closeCustomGalleryModal"])())
+});
+/* harmony default export */ __webpack_exports__["default"] = (Object(react_redux__WEBPACK_IMPORTED_MODULE_3__["connect"])(mapStateToProps, mapDispatchToProps)(CustomGalleryModal));
+
+/***/ }),
+
 /***/ "./src/containers/custom-procedures.jsx":
 /*!**********************************************!*\
   !*** ./src/containers/custom-procedures.jsx ***!
@@ -42977,11 +43333,12 @@ const mapStateToProps = state => ({
 /*!**********************************************!*\
   !*** ./src/containers/extension-library.jsx ***!
   \**********************************************/
-/*! exports provided: default */
+/*! exports provided: default, updateGallery */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "updateGallery", function() { return updateGallery; });
 /* harmony import */ var lodash_bindall__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! lodash.bindall */ "./node_modules/lodash.bindall/index.js");
 /* harmony import */ var lodash_bindall__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(lodash_bindall__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var prop_types__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! prop-types */ "./node_modules/prop-types/index.js");
@@ -43041,6 +43398,20 @@ const translateGalleryItem = (extension, locale) => _objectSpread(_objectSpread(
   description: extension.descriptionTranslations[locale] || extension.description
 });
 let cachedGallery = null;
+let galleryUpdateListeners = [];
+const addGalleryUpdateListener = listener => {
+  galleryUpdateListeners.push(listener);
+  return () => {
+    const index = galleryUpdateListeners.indexOf(listener);
+    if (index > -1) {
+      galleryUpdateListeners.splice(index, 1);
+    }
+  };
+};
+const updateGallery = newGallery => {
+  cachedGallery = newGallery;
+  galleryUpdateListeners.forEach(listener => listener(newGallery));
+};
 const fetchLibrary = async onProgress => {
   const emptyBanner = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAACXBIWXMAAAsTAAALEwEAmpwYAAADGWlDQ1BQaG90b3Nob3AgSUNDIHByb2ZpbGUAAHjaY2BgnuDo4uTKJMDAUFBUUuQe5BgZERmlwH6egY2BmYGBgYGBITG5uMAxIMCHgYGBIS8/L5UBA3y7xsDIwMDAcFnX0cXJlYE0wJpcUFTCwMBwgIGBwSgltTiZgYHhCwMDQ3p5SUEJAwNjDAMDg0hSdkEJAwNjAQMDg0h2SJAzAwNjCwMDE09JakUJAwMDg3N+QWVRZnpGiYKhpaWlgmNKflKqQnBlcUlqbrGCZ15yflFBflFiSWoKAwMD1A4GBgYGXpf8EgX3xMw8BUNTVQYqg4jIKAX08EGIIUByaVEZhMXIwMDAIMCgxeDHUMmwiuEBozRjFOM8xqdMhkwNTJeYNZgbme+y2LDMY2VmzWa9yubEtoldhX0mhwBHJycrZzMXM1cbNzf3RB4pnqW8xryH+IL5nvFXCwgJrBZ0E3wk1CisKHxYJF2UV3SrWJw4p/hWiRRJYcmjUhXSutJPZObIhsoJyp2V71HwUeRVvKA0RTlKRUnltepWtUZ1Pw1Zjbea+7QmaqfqWOsK6b7SO6I/36DGMMrI0ljS+LfJPdPDZivM+y0qLBOtfKwtbFRtRexY7L7aP3e47XjB6ZjzXpetruvdVrov9VjkudBrgfdCn8W+y/xW+a8P2Bq4N+hY8PmQW6HPwr5EMEUKRilFG8e4xUbF5cW3JMxO3Jx0Nvl5KlOaXLpNRlRmVdas7D059/KY8tULfAqLi2YXHy55WyZR7lJRWDmv6mz131q9uvj6SQ3HGn83G7Skt85ru94h2Ond1d59uJehz76/bsK+if8nO05pnXpiOu+M4JmzZj2aozW3ZN6+BVwLwxYtXvxxqcOyCcsfrjRe1br65lrddU3rb2402NSx+cFWq21Tt3/Y6btr1R6Oven7jh9QP9h56PURv6Obj4ufqD355LT3mS3nZM+3X/h0Ke7yqasW15bdEL3ZeuvrnfS7N+/7PDjwyPTx6qeKz2a+EHzZ9Zr5Td3bn+9LP3z6VPD53de8b+9+5P/88Lv4z7d/Vf//AwAqvx2K829RWwAAACBjSFJNAAB6JQAAgIMAAPn/AACA6QAAdTAAAOpgAAA6mAAAF2+SX8VGAAAAEUlEQVR42mL4zwAAAAD//wMAAgEBAJlUum0AAAAASUVORK5CYII=";
   const allExtensions = [];
@@ -43265,6 +43636,11 @@ class ExtensionLibrary extends react__WEBPACK_IMPORTED_MODULE_2___default.a.Pure
     };
   }
   componentDidMount() {
+    this.unsubscribeGalleryUpdate = addGalleryUpdateListener(newGallery => {
+      this.setState({
+        gallery: newGallery
+      });
+    });
     if (!this.state.gallery) {
       const timeout = setTimeout(() => {
         this.setState({
@@ -43272,7 +43648,6 @@ class ExtensionLibrary extends react__WEBPACK_IMPORTED_MODULE_2___default.a.Pure
         });
       }, 750);
       fetchLibrary(progressGallery => {
-        // 每当有新的扩展加载完成时，立即更新显示
         cachedGallery = progressGallery;
         this.setState({
           gallery: progressGallery
@@ -43287,6 +43662,11 @@ class ExtensionLibrary extends react__WEBPACK_IMPORTED_MODULE_2___default.a.Pure
       });
     }
   }
+  componentWillUnmount() {
+    if (this.unsubscribeGalleryUpdate) {
+      this.unsubscribeGalleryUpdate();
+    }
+  }
   handleItemSelect(item) {
     if (item.href) {
       return;
@@ -43297,52 +43677,9 @@ class ExtensionLibrary extends react__WEBPACK_IMPORTED_MODULE_2___default.a.Pure
       return;
     }
     if (extensionId === 'custom_extension_gallery') {
-      const galleryURL = prompt(this.props.intl.formatMessage(messages.customGalleryPrompt));
-      if (!galleryURL) return;
-      fetch(galleryURL).then(res => {
-        if (!res.ok) {
-          throw new Error("HTTP status ".concat(res.status));
-        }
-        return res.json();
-      }).then(data => {
-        if (!data.extensions || !Array.isArray(data.extensions)) {
-          throw new Error('Invalid gallery format: expected extensions array');
-        }
-        const newExtensions = data.extensions.map(extension => ({
-          name: extension.name,
-          nameTranslations: extension.nameTranslations || {},
-          description: extension.description,
-          descriptionTranslations: extension.descriptionTranslations || {},
-          extensionId: extension.id,
-          extensionURL: extension.extensionURL || (extension.slug ? "https://extensions.bilup.org/".concat(extension.slug, ".js") : null),
-          iconURL: extension.iconURL || (extension.image ? "https://extensions.bilup.org/".concat(extension.image) : null),
-          tags: ['custom'],
-          credits: [...(extension.by || []), ...(extension.original || [])].map(credit => {
-            if (credit.link) {
-              return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("a", {
-                href: credit.link,
-                target: "_blank",
-                rel: "noreferrer",
-                key: credit.name
-              }, credit.name);
-            }
-            return credit.name;
-          }),
-          docsURI: extension.docs ? extension.docs : null,
-          samples: extension.samples ? extension.samples.map(sample => ({
-            href: sample.href || "".concat("", "editor?project_url=").concat(sample),
-            text: sample.text || sample
-          })) : null,
-          incompatibleWithScratch: true,
-          featured: true
-        }));
-        this.setState(prev => ({
-          gallery: prev.gallery ? [...prev.gallery, ...newExtensions] : newExtensions
-        }));
-      }).catch(err => {
-        _lib_utils_log__WEBPACK_IMPORTED_MODULE_5__["default"].error(err);
-        alert("Failed to load custom extension gallery: ".concat(err.message));
-      });
+      if (this.props.onOpenCustomGalleryModal) {
+        this.props.onOpenCustomGalleryModal();
+      }
       return;
     }
     if (extensionId === 'procedures_enable_return') {
@@ -43414,11 +43751,13 @@ ExtensionLibrary.propTypes = {
   onCategorySelected: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.func,
   onEnableProcedureReturns: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.func,
   onOpenCustomExtensionModal: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.func,
+  onOpenCustomGalleryModal: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.func,
   onRequestClose: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.func,
   visible: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.bool,
   vm: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.instanceOf(scratch_vm__WEBPACK_IMPORTED_MODULE_3___default.a).isRequired // eslint-disable-line react/no-unused-prop-types
 };
 /* harmony default export */ __webpack_exports__["default"] = (Object(react_intl__WEBPACK_IMPORTED_MODULE_4__["injectIntl"])(ExtensionLibrary));
+
 
 /***/ }),
 
@@ -43789,6 +44128,7 @@ const mapStateToProps = state => {
     usernameModalVisible: state.scratchGui.modals.usernameModal,
     settingsModalVisible: state.scratchGui.modals.settingsModal,
     customExtensionModalVisible: state.scratchGui.modals.customExtensionModal,
+    customGalleryModalVisible: state.scratchGui.modals.customGalleryModal,
     fontsModalVisible: state.scratchGui.modals.fontsModal,
     unknownPlatformModalVisible: state.scratchGui.modals.unknownPlatformModal,
     invalidProjectModalVisible: state.scratchGui.modals.invalidProjectModal,
@@ -43805,6 +44145,7 @@ const mapDispatchToProps = dispatch => ({
   onOpenExtensionLibrary: () => dispatch(Object(_reducers_modals__WEBPACK_IMPORTED_MODULE_14__["openExtensionLibrary"])()),
   onOpenExtensionManagerModal: () => dispatch(Object(_reducers_modals__WEBPACK_IMPORTED_MODULE_14__["openExtensionManagerModal"])()),
   onOpenCustomExtensionModal: () => dispatch(Object(_reducers_modals__WEBPACK_IMPORTED_MODULE_14__["openCustomExtensionModal"])()),
+  onOpenCustomGalleryModal: () => dispatch(Object(_reducers_modals__WEBPACK_IMPORTED_MODULE_14__["openCustomGalleryModal"])()),
   onRequestCloseBackdropLibrary: () => dispatch(Object(_reducers_modals__WEBPACK_IMPORTED_MODULE_14__["closeBackdropLibrary"])()),
   onRequestCloseCostumeLibrary: () => dispatch(Object(_reducers_modals__WEBPACK_IMPORTED_MODULE_14__["closeCostumeLibrary"])()),
   onRequestCloseSoundLibrary: () => dispatch(Object(_reducers_modals__WEBPACK_IMPORTED_MODULE_14__["closeSoundLibrary"])()),
@@ -77228,7 +77569,7 @@ const updateMicIndicator = function updateMicIndicator(visible) {
 /*!********************************!*\
   !*** ./src/reducers/modals.js ***!
   \********************************/
-/*! exports provided: default, modalsInitialState, closeModal, openBackdropLibrary, openCostumeLibrary, openExtensionLibrary, openLoadingProject, openSoundLibrary, openSpriteLibrary, openSoundRecorder, openTelemetryModal, openTipsLibrary, openConnectionModal, openUsernameModal, openSettingsModal, openCustomExtensionModal, openRestorePointModal, openFontsModal, openUnknownPlatformModal, openInvalidProjectModal, openExtensionManagerModal, openGitModal, openPreferencesModal, openOnboardingModal, openShortcutManagerModal, openBilmeModal, openSimpleDialog, closeBackdropLibrary, closeCostumeLibrary, closeExtensionLibrary, closeLoadingProject, closeSpriteLibrary, closeSoundLibrary, closeSoundRecorder, closeTelemetryModal, closeTipsLibrary, closeConnectionModal, closeUsernameModal, closeSettingsModal, closeCustomExtensionModal, closeRestorePointModal, closeFontsModal, closeUnknownPlatformModal, closeInvalidProjectModal, closeExtensionManagerModal, closeGitModal, closePreferencesModal, closeOnboardingModal, closeShortcutManagerModal, closeBilmeModal */
+/*! exports provided: default, modalsInitialState, closeModal, openBackdropLibrary, openCostumeLibrary, openExtensionLibrary, openLoadingProject, openSoundLibrary, openSpriteLibrary, openSoundRecorder, openTelemetryModal, openTipsLibrary, openConnectionModal, openUsernameModal, openSettingsModal, openCustomExtensionModal, openRestorePointModal, openFontsModal, openUnknownPlatformModal, openInvalidProjectModal, openExtensionManagerModal, openGitModal, openPreferencesModal, openOnboardingModal, openShortcutManagerModal, openBilmeModal, openSimpleDialog, closeBackdropLibrary, closeCostumeLibrary, closeExtensionLibrary, closeLoadingProject, closeSpriteLibrary, closeSoundLibrary, closeSoundRecorder, closeTelemetryModal, closeTipsLibrary, closeConnectionModal, closeUsernameModal, closeSettingsModal, closeCustomExtensionModal, closeRestorePointModal, closeFontsModal, closeUnknownPlatformModal, closeInvalidProjectModal, closeExtensionManagerModal, closeGitModal, closePreferencesModal, closeOnboardingModal, closeShortcutManagerModal, closeBilmeModal, closeCustomGalleryModal, openCustomGalleryModal */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -77283,6 +77624,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "closeOnboardingModal", function() { return closeOnboardingModal; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "closeShortcutManagerModal", function() { return closeShortcutManagerModal; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "closeBilmeModal", function() { return closeBilmeModal; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "closeCustomGalleryModal", function() { return closeCustomGalleryModal; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "openCustomGalleryModal", function() { return openCustomGalleryModal; });
 const OPEN_MODAL = 'scratch-gui/modals/OPEN_MODAL';
 const CLOSE_MODAL = 'scratch-gui/modals/CLOSE_MODAL';
 const MODAL_BACKDROP_LIBRARY = 'backdropLibrary';
@@ -77309,6 +77652,7 @@ const MODAL_SIMPLE_DIALOG = 'simpleDialog';
 const MODAL_ONBOARDING = 'onboardingModal';
 const MODAL_SHORTCUT_MANAGER = 'shortcutManagerModal';
 const MODAL_WARPTHEME = 'bilmeModal';
+const MODAL_CUSTOM_GALLERY = 'customGalleryModal';
 const initialState = {
   [MODAL_BACKDROP_LIBRARY]: false,
   [MODAL_COSTUME_LIBRARY]: false,
@@ -77333,7 +77677,8 @@ const initialState = {
   [MODAL_SIMPLE_DIALOG]: false,
   [MODAL_ONBOARDING]: false,
   [MODAL_SHORTCUT_MANAGER]: false,
-  [MODAL_WARPTHEME]: false
+  [MODAL_WARPTHEME]: false,
+  [MODAL_CUSTOM_GALLERY]: false
 };
 const reducer = function reducer(state, action) {
   if (typeof state === 'undefined') state = initialState;
@@ -77437,6 +77782,9 @@ const openShortcutManagerModal = function openShortcutManagerModal() {
 const openBilmeModal = function openBilmeModal() {
   return openModal(MODAL_WARPTHEME);
 };
+const openCustomGalleryModal = function openCustomGalleryModal() {
+  return openModal(MODAL_CUSTOM_GALLERY);
+};
 const openSimpleDialog = function openSimpleDialog(dialogConfig) {
   return {
     type: 'scratch-gui/modals/SHOW_SIMPLE_DIALOG',
@@ -77511,6 +77859,9 @@ const closeShortcutManagerModal = function closeShortcutManagerModal() {
 };
 const closeBilmeModal = function closeBilmeModal() {
   return closeModal(MODAL_WARPTHEME);
+};
+const closeCustomGalleryModal = function closeCustomGalleryModal() {
+  return closeModal(MODAL_CUSTOM_GALLERY);
 };
 
 
