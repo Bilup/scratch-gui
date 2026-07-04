@@ -2877,7 +2877,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, ".simple-dialog_modalContent_1AqH6 .simple-dialog_body_GW1Yv {\n    padding: 1.5rem;\n    min-width: 300px;\n    max-width: 500px;\n}\n\n.simple-dialog_message_2FpFy {\n    margin: 0 0 1rem 0;\n    font-size: 1rem;\n    line-height: 1.5;\n}\n\n.simple-dialog_input_2pTHN {\n    width: 100%;\n    padding: 0.5rem;\n    border: 2px solid var(--ui-tertiary, #ccc);\n    border-radius: 4px;\n    font-size: 1rem;\n    font-family: inherit;\n    margin-bottom: 1rem;\n    box-sizing: border-box;\n}\n\n.simple-dialog_input_2pTHN:focus {\n    outline: none;\n    border-color: var(--ui-primary, #4d97ff);\n}\n\n.simple-dialog_buttonRow_2Vv4t {\n    display: flex;\n    justify-content: flex-end;\n    gap: 0.5rem;\n    margin-top: 1rem;\n}\n\n.simple-dialog_okButton_36siK,\n.simple-dialog_cancelButton_fAhPu {\n    padding: 0.5rem 1rem;\n    border: 2px solid transparent;\n    border-radius: 4px;\n    font-size: 0.875rem;\n    font-family: inherit;\n    cursor: pointer;\n    transition: all 0.1s ease;\n}\n\n.simple-dialog_okButton_36siK {\n    background-color: var(--looks-secondary);\n    color: white;\n}\n\n.simple-dialog_okButton_36siK:hover {\n    background-color: color-mix(in srgb, var(--looks-secondary) 75%, black);\n}\n\n.simple-dialog_okButton_36siK:active {\n    transform: scale(0.98);\n}\n\n.simple-dialog_okButton_36siK:focus,\n.simple-dialog_cancelButton_fAhPu:focus {\n    outline: 2px solid var(--ui-primary, #4d97ff);\n    outline-offset: 2px;\n}\n\n.simple-dialog_cancelButton_fAhPu {\n    background-color: var(--ui-secondary, #e6e6e6);\n    color: var(--ui-secondary-foreground, #575e75);\n}\n\n.simple-dialog_cancelButton_fAhPu:hover {\n    background-color: var(--ui-secondary-hover, #d9d9d9);\n}\n\n.simple-dialog_cancelButton_fAhPu:active {\n    transform: scale(0.98);\n}\n\n.simple-dialog_input_2pTHN:focus {\n    outline: 2px solid var(--ui-primary, #4d97ff);\n    outline-offset: 2px;\n}\n", ""]);
+exports.push([module.i, ".simple-dialog_modalContent_1AqH6 .simple-dialog_body_GW1Yv {\n    padding: 1rem;\n    min-width: 300px;\n    max-width: 500px;\n}\n\n.simple-dialog_message_2FpFy {\n    margin: 0 0 1rem 0;\n    font-size: 1rem;\n    line-height: 1.5;\n}\n\n.simple-dialog_input_2pTHN {\n    width: 100%;\n    padding: 0.5rem;\n    border: 2px solid var(--ui-tertiary, #ccc);\n    border-radius: 4px;\n    font-size: 1rem;\n    font-family: inherit;\n    margin-bottom: 1rem;\n    box-sizing: border-box;\n}\n\n.simple-dialog_input_2pTHN:focus {\n    outline: none;\n    border-color: var(--ui-primary, #4d97ff);\n}\n\n.simple-dialog_buttonRow_2Vv4t {\n    display: flex;\n    justify-content: flex-end;\n    gap: 0.5rem;\n    margin-top: 1rem;\n}\n\n.simple-dialog_okButton_36siK,\n.simple-dialog_cancelButton_fAhPu {\n    padding: 0.5rem 1rem;\n    border: 2px solid transparent;\n    border-radius: 4px;\n    font-size: 0.875rem;\n    font-family: inherit;\n    cursor: pointer;\n    transition: all 0.1s ease;\n}\n\n.simple-dialog_okButton_36siK {\n    background-color: var(--looks-secondary);\n    color: white;\n}\n\n.simple-dialog_okButton_36siK:hover {\n    background-color: color-mix(in srgb, var(--looks-secondary) 75%, black);\n}\n\n.simple-dialog_okButton_36siK:active {\n    transform: scale(0.98);\n}\n\n.simple-dialog_okButton_36siK:focus,\n.simple-dialog_cancelButton_fAhPu:focus {\n    outline: 2px solid var(--ui-primary, #4d97ff);\n    outline-offset: 2px;\n}\n\n.simple-dialog_cancelButton_fAhPu {\n    background-color: var(--ui-secondary, #e6e6e6);\n    color: var(--ui-secondary-foreground, #575e75);\n}\n\n.simple-dialog_cancelButton_fAhPu:hover {\n    background-color: var(--ui-secondary-hover, #d9d9d9);\n}\n\n.simple-dialog_cancelButton_fAhPu:active {\n    transform: scale(0.98);\n}\n\n.simple-dialog_input_2pTHN:focus {\n    outline: 2px solid var(--ui-primary, #4d97ff);\n    outline-offset: 2px;\n}\n", ""]);
 
 // exports
 exports.locals = {
@@ -5665,7 +5665,7 @@ class AddonWindow {
     // Create main window element
     this.element = document.createElement('div');
     this.element.className = "addon-window ".concat(this.className);
-    this.element.style.cssText = "\n            position: fixed;\n            left: ".concat(this.x, "px;\n            top: ").concat(this.y, "px;\n            width: ").concat(this.width, "px;\n            height: ").concat(this.height, "px;\n            z-index: ").concat(this.zIndex, ";\n            background: linear-gradient(135deg, \n                var(--ui-modal-background, #ffffff) 0%, \n                var(--ui-primary, #f8f9fa) 100%);\n            border: 1px solid var(--ui-black-transparent, rgba(0, 0, 0, 0.08));\n            border-radius: 12px;\n            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1), \n                        0 15px 12px rgba(0, 0, 0, 0.05),\n                        0 0 0 1px rgba(255, 255, 255, 0.2) inset;\n            font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Helvetica Neue\", Helvetica, Arial, sans-serif;\n            display: none;\n            flex-direction: column;\n            overflow: hidden;\n            backdrop-filter: blur(20px);\n            transition: opacity 0.25s ease, transform 0.25s ease, left 0.3s ease, top 0.3s ease, width 0.3s ease, height 0.3s ease, border-radius 0.3s ease;\n        ");
+    this.element.style.cssText = "\n            position: fixed;\n            left: ".concat(this.x, "px;\n            top: ").concat(this.y, "px;\n            width: ").concat(this.width, "px;\n            height: ").concat(this.height, "px;\n            z-index: ").concat(this.zIndex, ";\n            background: linear-gradient(135deg, \n                var(--ui-modal-background, #ffffff) 0%, \n                var(--ui-primary, #f8f9fa) 100%);\n            border: 1px solid var(--ui-black-transparent, rgba(0, 0, 0, 0.08));\n            border-radius: 12px;\n            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1), \n                        0 15px 12px rgba(0, 0, 0, 0.05),\n                        0 0 0 1px rgba(255, 255, 255, 0.2) inset;\n            font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Helvetica Neue\", Helvetica, Arial, sans-serif;\n            display: none;\n            flex-direction: column;\n            overflow: hidden;\n            backdrop-filter: blur(20px);\n            will-change: opacity, transform, left, top, width, height, border-radius;\n            transition: opacity 0.2s ease-out, transform 0.2s ease-out, left 0.3s ease-out, top 0.3s ease-out, width 0.3s ease-out, height 0.3s ease-out, border-radius 0.3s ease-out;\n        ");
     this.element.addEventListener('mousedown', () => this.bringToFront());
 
     // Add focus enhancement when window becomes active
@@ -5982,16 +5982,20 @@ class AddonWindow {
       clearTimeout(this._hideTimer);
       this._hideTimer = null;
     }
+    if (this.isVisible) {
+      this.bringToFront();
+      return this;
+    }
     this.isVisible = true;
     this.element.style.display = 'flex';
     this.element.style.opacity = '0';
-    this.element.style.transform = 'scale(0.95)';
+    this.element.style.transform = 'scale(0.95) translateY(-8px)';
+    this.element.style.transition = 'none';
     this.bringToFront();
     requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        this.element.style.opacity = '1';
-        this.element.style.transform = 'scale(1)';
-      });
+      this.element.style.transition = 'opacity 0.2s ease-out, transform 0.2s ease-out, left 0.3s ease-out, top 0.3s ease-out, width 0.3s ease-out, height 0.3s ease-out, border-radius 0.3s ease-out';
+      this.element.style.opacity = '1';
+      this.element.style.transform = 'scale(1) translateY(0)';
     });
     return this;
   }
@@ -6000,13 +6004,18 @@ class AddonWindow {
       clearTimeout(this._hideTimer);
       this._hideTimer = null;
     }
+    if (!this.isVisible) {
+      return this;
+    }
     this.isVisible = false;
     this.element.style.opacity = '0';
-    this.element.style.transform = 'scale(0.95)';
+    this.element.style.transform = 'scale(0.95) translateY(-8px)';
     this._hideTimer = setTimeout(() => {
       this._hideTimer = null;
-      this.element.style.display = 'none';
-    }, 250);
+      if (!this.isVisible) {
+        this.element.style.display = 'none';
+      }
+    }, 200);
     return this;
   }
   destroy() {
@@ -6020,7 +6029,7 @@ class AddonWindow {
       this.onClose();
     }
     this.element.style.opacity = '0';
-    this.element.style.transform = 'scale(0.95)';
+    this.element.style.transform = 'scale(0.95) translateY(-8px)';
     setTimeout(() => {
       activeWindows.delete(this.id);
       if (this.scrollbarStyle && this.scrollbarStyle.parentNode) {
@@ -6029,7 +6038,7 @@ class AddonWindow {
       if (this.element && this.element.parentNode) {
         this.element.parentNode.removeChild(this.element);
       }
-    }, 250);
+    }, 200);
   }
   close() {
     this.destroy(true);
@@ -18667,9 +18676,12 @@ class MenuBar extends react__WEBPACK_IMPORTED_MODULE_7___default.a.Component {
       workspaceBookmarks: [],
       workspaceBookmarksCategories: [],
       workspaceBookmarksCollapsedCategories: [],
+      isEditingWorkspaceBookmark: false,
       canUndo: true,
       canRedo: true
     };
+    this.isEditingWorkspaceBookmark = false;
+    this.workspaceBookmarksMenuLabelRef = /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_7___default.a.createRef();
     this.workspaceBookmarksProjectListener = null;
     this.autosaveCountdownInterval = null;
     this.undoRedoChangeListener = null;
@@ -19011,75 +19023,92 @@ class MenuBar extends react__WEBPACK_IMPORTED_MODULE_7___default.a.Component {
   async handleAddWorkspaceBookmark() {
     const maxTabs = 20;
     const enableCategories = true;
-    if (this.state.workspaceBookmarks.length >= maxTabs) {
-      await this.showAlert(this.props.intl.formatMessage({
-        defaultMessage: 'Error',
-        id: 'tw.workspaceBookmarks.errorTitle'
-      }), this.props.intl.formatMessage({
-        defaultMessage: 'Maximum number of bookmarks reached ({max})',
-        description: 'Alert when too many bookmarks exist',
-        id: 'tw.workspaceBookmarks.maxReached'
-      }, {
-        max: maxTabs
-      }));
-      return;
-    }
-    const state = await this.getCurrentWorkspaceBookmarkState();
-    if (!state) return;
-    const name = await this.showPrompt(this.props.intl.formatMessage({
-      defaultMessage: 'Bookmark Name',
-      id: 'tw.workspaceBookmarks.nameTitle'
-    }), this.props.intl.formatMessage({
-      defaultMessage: 'Bookmark name:',
-      description: 'Prompt title for bookmark name',
-      id: 'tw.workspaceBookmarks.namePrompt'
-    }), this.props.intl.formatMessage({
-      defaultMessage: 'Bookmark {index}',
-      description: 'Prompt default value for bookmark name',
-      id: 'tw.menuBar.bookmarkDefaultName'
-    }, {
-      index: this.state.workspaceBookmarks.length + 1
-    }));
-    if (name === null) return;
-    let category = this.props.intl.formatMessage({
-      defaultMessage: 'General',
-      id: 'tw.menuBar.bookmarkDefaultCategory'
+    this.isEditingWorkspaceBookmark = true;
+    this.setState({
+      isEditingWorkspaceBookmark: true
     });
-    if (enableCategories) {
-      const categoryInput = await this.showPrompt(this.props.intl.formatMessage({
-        defaultMessage: 'Bookmark Category',
-        id: 'tw.workspaceBookmarks.categoryTitle'
+    if (this.workspaceBookmarksMenuLabelRef.current) {
+      this.workspaceBookmarksMenuLabelRef.current.setDisableClose(true);
+    }
+    try {
+      if (this.state.workspaceBookmarks.length >= maxTabs) {
+        await this.showAlert(this.props.intl.formatMessage({
+          defaultMessage: 'Error',
+          id: 'tw.workspaceBookmarks.errorTitle'
+        }), this.props.intl.formatMessage({
+          defaultMessage: 'Maximum number of bookmarks reached ({max})',
+          description: 'Alert when too many bookmarks exist',
+          id: 'tw.workspaceBookmarks.maxReached'
+        }, {
+          max: maxTabs
+        }));
+        return;
+      }
+      const state = await this.getCurrentWorkspaceBookmarkState();
+      if (!state) return;
+      const name = await this.showPrompt(this.props.intl.formatMessage({
+        defaultMessage: 'Bookmark Name',
+        id: 'tw.workspaceBookmarks.nameTitle'
       }), this.props.intl.formatMessage({
-        defaultMessage: 'Category (existing: {categories})',
-        description: 'Prompt for bookmark category',
-        id: 'tw.workspaceBookmarks.categoryPrompt'
+        defaultMessage: 'Bookmark name:',
+        description: 'Prompt title for bookmark name',
+        id: 'tw.workspaceBookmarks.namePrompt'
       }), this.props.intl.formatMessage({
-        defaultMessage: 'General',
-        id: 'tw.menuBar.bookmarkDefaultCategory'
+        defaultMessage: 'Bookmark {index}',
+        description: 'Prompt default value for bookmark name',
+        id: 'tw.menuBar.bookmarkDefaultName'
+      }, {
+        index: this.state.workspaceBookmarks.length + 1
       }));
-      if (categoryInput === null) return;
-      category = categoryInput.trim() || this.props.intl.formatMessage({
+      if (name === null) return;
+      let category = this.props.intl.formatMessage({
         defaultMessage: 'General',
         id: 'tw.menuBar.bookmarkDefaultCategory'
       });
-    }
-    const bookmark = {
-      name: name.trim() || "Bookmark ".concat(this.state.workspaceBookmarks.length + 1),
-      category,
-      state,
-      timestamp: Date.now()
-    };
-    this.setState(prev => {
-      const categories = new Set(prev.workspaceBookmarksCategories);
-      categories.add(category);
-      return {
-        workspaceBookmarks: [...prev.workspaceBookmarks, bookmark],
-        workspaceBookmarksCategories: [...categories]
+      if (enableCategories) {
+        const categoryInput = await this.showPrompt(this.props.intl.formatMessage({
+          defaultMessage: 'Bookmark Category',
+          id: 'tw.workspaceBookmarks.categoryTitle'
+        }), this.props.intl.formatMessage({
+          defaultMessage: 'Category (existing: {categories})',
+          description: 'Prompt for bookmark category',
+          id: 'tw.workspaceBookmarks.categoryPrompt'
+        }), this.props.intl.formatMessage({
+          defaultMessage: 'General',
+          id: 'tw.menuBar.bookmarkDefaultCategory'
+        }));
+        if (categoryInput === null) return;
+        category = categoryInput.trim() || this.props.intl.formatMessage({
+          defaultMessage: 'General',
+          id: 'tw.menuBar.bookmarkDefaultCategory'
+        });
+      }
+      const bookmark = {
+        name: name.trim() || "Bookmark ".concat(this.state.workspaceBookmarks.length + 1),
+        category,
+        state,
+        timestamp: Date.now()
       };
-    }, () => {
-      this.saveWorkspaceBookmarksToProject();
+      this.setState(prev => {
+        const categories = new Set(prev.workspaceBookmarksCategories);
+        categories.add(category);
+        return {
+          workspaceBookmarks: [...prev.workspaceBookmarks, bookmark],
+          workspaceBookmarksCategories: [...categories]
+        };
+      }, () => {
+        this.saveWorkspaceBookmarksToProject();
+      });
+    } finally {
+      this.isEditingWorkspaceBookmark = false;
+      this.setState({
+        isEditingWorkspaceBookmark: false
+      });
+      if (this.workspaceBookmarksMenuLabelRef.current) {
+        this.workspaceBookmarksMenuLabelRef.current.setDisableClose(false);
+      }
       this.props.onRequestCloseWorkspaceBookmarks();
-    });
+    }
   }
   async handleSwitchWorkspaceBookmark(index) {
     if (index < 0 || index >= this.state.workspaceBookmarks.length) return;
@@ -19101,59 +19130,75 @@ class MenuBar extends react__WEBPACK_IMPORTED_MODULE_7___default.a.Component {
   async handleEditWorkspaceBookmark(index) {
     const enableCategories = true;
     if (index < 0 || index >= this.state.workspaceBookmarks.length) return;
-    const bookmark = this.state.workspaceBookmarks[index];
-    const newName = await this.showPrompt(this.props.intl.formatMessage({
-      defaultMessage: 'Bookmark Name',
-      id: 'tw.workspaceBookmarks.nameTitle'
-    }), this.props.intl.formatMessage({
-      defaultMessage: 'Bookmark name:',
-      description: 'Prompt title for bookmark name',
-      id: 'tw.workspaceBookmarks.namePrompt'
-    }), bookmark.name);
-    if (newName === null || newName.trim() === '') {
-      this.props.onRequestCloseWorkspaceBookmarks();
-      return;
-    }
-    let newCategory = bookmark.category || this.props.intl.formatMessage({
-      defaultMessage: 'General',
-      id: 'tw.menuBar.bookmarkDefaultCategory'
+    this.isEditingWorkspaceBookmark = true;
+    this.setState({
+      isEditingWorkspaceBookmark: true
     });
-    if (enableCategories) {
-      const categoryList = this.state.workspaceBookmarksCategories.join(', ');
-      const categoryInput = await this.showPrompt(this.props.intl.formatMessage({
-        defaultMessage: 'Bookmark Category',
-        id: 'tw.workspaceBookmarks.categoryTitle'
+    if (this.workspaceBookmarksMenuLabelRef.current) {
+      this.workspaceBookmarksMenuLabelRef.current.setDisableClose(true);
+    }
+    try {
+      const bookmark = this.state.workspaceBookmarks[index];
+      const newName = await this.showPrompt(this.props.intl.formatMessage({
+        defaultMessage: 'Bookmark Name',
+        id: 'tw.workspaceBookmarks.nameTitle'
       }), this.props.intl.formatMessage({
-        defaultMessage: 'Category (existing: {categories})',
-        description: 'Prompt for bookmark category',
-        id: 'tw.workspaceBookmarks.categoryPrompt'
-      }, {
-        categories: categoryList
-      }), newCategory);
-      if (categoryInput !== null) {
-        newCategory = categoryInput.trim() || this.props.intl.formatMessage({
-          defaultMessage: 'General',
-          id: 'tw.menuBar.bookmarkDefaultCategory'
-        });
-        ;
+        defaultMessage: 'Bookmark name:',
+        description: 'Prompt title for bookmark name',
+        id: 'tw.workspaceBookmarks.namePrompt'
+      }), bookmark.name);
+      if (newName === null || newName.trim() === '') {
+        return;
       }
-    }
-    this.setState(prev => {
-      const next = [...prev.workspaceBookmarks];
-      next[index] = _objectSpread(_objectSpread({}, next[index]), {}, {
-        name: newName.trim(),
-        category: newCategory
+      let newCategory = bookmark.category || this.props.intl.formatMessage({
+        defaultMessage: 'General',
+        id: 'tw.menuBar.bookmarkDefaultCategory'
       });
-      const categories = new Set(prev.workspaceBookmarksCategories);
-      categories.add(newCategory);
-      return {
-        workspaceBookmarks: next,
-        workspaceBookmarksCategories: [...categories]
-      };
-    }, () => {
-      this.saveWorkspaceBookmarksToProject();
+      if (enableCategories) {
+        const categoryList = this.state.workspaceBookmarksCategories.join(', ');
+        const categoryInput = await this.showPrompt(this.props.intl.formatMessage({
+          defaultMessage: 'Bookmark Category',
+          id: 'tw.workspaceBookmarks.categoryTitle'
+        }), this.props.intl.formatMessage({
+          defaultMessage: 'Category (existing: {categories})',
+          description: 'Prompt for bookmark category',
+          id: 'tw.workspaceBookmarks.categoryPrompt'
+        }, {
+          categories: categoryList
+        }), newCategory);
+        if (categoryInput !== null) {
+          newCategory = categoryInput.trim() || this.props.intl.formatMessage({
+            defaultMessage: 'General',
+            id: 'tw.menuBar.bookmarkDefaultCategory'
+          });
+          ;
+        }
+      }
+      this.setState(prev => {
+        const next = [...prev.workspaceBookmarks];
+        next[index] = _objectSpread(_objectSpread({}, next[index]), {}, {
+          name: newName.trim(),
+          category: newCategory
+        });
+        const categories = new Set(prev.workspaceBookmarksCategories);
+        categories.add(newCategory);
+        return {
+          workspaceBookmarks: next,
+          workspaceBookmarksCategories: [...categories]
+        };
+      }, () => {
+        this.saveWorkspaceBookmarksToProject();
+      });
+    } finally {
+      this.isEditingWorkspaceBookmark = false;
+      this.setState({
+        isEditingWorkspaceBookmark: false
+      });
+      if (this.workspaceBookmarksMenuLabelRef.current) {
+        this.workspaceBookmarksMenuLabelRef.current.setDisableClose(false);
+      }
       this.props.onRequestCloseWorkspaceBookmarks();
-    });
+    }
   }
   handleToggleWorkspaceBookmarkCategoryCollapsed(category) {
     this.setState(prev => {
@@ -19911,9 +19956,11 @@ class MenuBar extends react__WEBPACK_IMPORTED_MODULE_7___default.a.Component {
       defaultMessage: "Keyboard Shortcuts",
       id: "tw.menuBar.keyboardShortcuts"
     }))))), !this.props.isPlayerOnly && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement(_tw_menu_label_jsx__WEBPACK_IMPORTED_MODULE_18__["default"], {
+      ref: this.workspaceBookmarksMenuLabelRef,
       open: this.props.workspaceBookmarksMenuOpen,
       onOpen: this.props.onClickWorkspaceBookmarks,
-      onClose: this.props.onRequestCloseWorkspaceBookmarks
+      onClose: this.props.onRequestCloseWorkspaceBookmarks,
+      disableClose: this.state.isEditingWorkspaceBookmark
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement(lucide_react__WEBPACK_IMPORTED_MODULE_56__["Bookmark"], {
       size: 20
     }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement("span", {
@@ -20752,18 +20799,45 @@ __webpack_require__.r(__webpack_exports__);
 class MenuLabel extends react__WEBPACK_IMPORTED_MODULE_0___default.a.Component {
   constructor(props) {
     super(props);
-    lodash_bindall__WEBPACK_IMPORTED_MODULE_2___default()(this, ['handleClick', 'handleMouseDown', 'handleMouseUp', 'menuRef']);
+    lodash_bindall__WEBPACK_IMPORTED_MODULE_2___default()(this, ['handleClick', 'handleMouseDown', 'handleMouseUp', 'menuRef', 'setDisableClose']);
     this.mouseDownInsideMenu = false;
+    this._disableClose = props.disableClose || false;
+    this.isAnimating = false;
+    this.animationTimer = null;
   }
   componentDidMount() {
     if (this.props.open) this.addListeners();
   }
   componentDidUpdate(prevProps) {
-    if (this.props.open && !prevProps.open) this.addListeners();
-    if (!this.props.open && prevProps.open) this.removeListeners();
+    if (this.props.open && !prevProps.open) {
+      this.addListeners();
+      this.isAnimating = true;
+      if (this.animationTimer) {
+        clearTimeout(this.animationTimer);
+      }
+      this.animationTimer = setTimeout(() => {
+        this.isAnimating = false;
+        this.animationTimer = null;
+      }, 250);
+    }
+    if (!this.props.open && prevProps.open) {
+      this.isAnimating = false;
+      if (this.animationTimer) {
+        clearTimeout(this.animationTimer);
+        this.animationTimer = null;
+      }
+      this.removeListeners();
+    }
+  }
+  setDisableClose(value) {
+    this._disableClose = value;
   }
   componentWillUnmount() {
     this.removeListeners();
+    if (this.animationTimer) {
+      clearTimeout(this.animationTimer);
+      this.animationTimer = null;
+    }
   }
   addListeners() {
     document.addEventListener('mousedown', this.handleMouseDown);
@@ -20782,9 +20856,7 @@ class MenuLabel extends react__WEBPACK_IMPORTED_MODULE_0___default.a.Component {
     document.removeEventListener('touchend', this.handleMouseUp);
   }
   handleClick(e) {
-    // this is a bit sketchy, but we want to allow clicking on the menu itself and the images
-    // and text directly inside it, but not the items inside the menu, which are under the button
-    // in the DOM.
+    if (this._disableClose) return;
     if (e.target.closest('div') === this.menuEl) {
       if (this.props.open) {
         this.props.onClose();
@@ -20794,18 +20866,19 @@ class MenuLabel extends react__WEBPACK_IMPORTED_MODULE_0___default.a.Component {
     }
   }
   handleMouseDown(e) {
-    // Track whether the mousedown happened inside the menu
     this.mouseDownInsideMenu = this.menuEl && this.menuEl.contains(e.target);
   }
   handleMouseUp(e) {
-    // Only close the menu if:
-    // 1. The menu is open
-    // 2. The mouseup is outside the menu
-    // 3. The initial mousedown was also outside the menu (indicating a click outside)
+    if (this._disableClose) {
+      this.mouseDownInsideMenu = false;
+      return;
+    }
+    if (this.isAnimating) {
+      return;
+    }
     if (this.props.open && !this.menuEl.contains(e.target) && !this.mouseDownInsideMenu) {
       this.props.onClose();
     }
-    // Reset the flag for the next interaction
     this.mouseDownInsideMenu = false;
   }
   menuRef(c) {
@@ -20825,7 +20898,8 @@ MenuLabel.propTypes = {
   children: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.node,
   open: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.bool,
   onOpen: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.func,
-  onClose: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.func
+  onClose: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.func,
+  disableClose: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.bool
 };
 /* harmony default export */ __webpack_exports__["default"] = (MenuLabel);
 
@@ -24710,7 +24784,7 @@ const WorkspaceBookmarksMenu = props => {
     }, ' ', '(', date, ')') : null)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", {
       className: _workspace_bookmarks_menu_css__WEBPACK_IMPORTED_MODULE_7___default.a.bookmarkButtons
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("button", {
-      className: _workspace_bookmarks_menu_css__WEBPACK_IMPORTED_MODULE_7___default.a.bookmarkButton,
+      className: classnames__WEBPACK_IMPORTED_MODULE_0___default()(_workspace_bookmarks_menu_css__WEBPACK_IMPORTED_MODULE_7___default.a.bookmarkButton, _workspace_bookmarks_menu_css__WEBPACK_IMPORTED_MODULE_7___default.a.editBookmarkButton),
       onClick: makeEditHandler(indexInAll),
       type: "button",
       title: props.intl.formatMessage({
@@ -29904,7 +29978,8 @@ class SimpleDialogComponent extends react__WEBPACK_IMPORTED_MODULE_2___default.a
       "aria-modal": "true",
       "aria-labelledby": "simpleDialog-title",
       width: 400,
-      height: 239,
+      minHeight: 180,
+      maxHeight: 250,
       resizable: false
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("div", {
       className: _simple_dialog_css__WEBPACK_IMPORTED_MODULE_4___default.a.body
@@ -44848,6 +44923,7 @@ class Menu extends react__WEBPACK_IMPORTED_MODULE_1___default.a.Component {
       isOpen: props.open
     };
     this.hideTimer = null;
+    this.animationFrame = null;
   }
   componentDidUpdate(prevProps) {
     if (this.props.open && !prevProps.open) {
@@ -44855,15 +44931,17 @@ class Menu extends react__WEBPACK_IMPORTED_MODULE_1___default.a.Component {
         clearTimeout(this.hideTimer);
         this.hideTimer = null;
       }
+      if (this.animationFrame) {
+        cancelAnimationFrame(this.animationFrame);
+        this.animationFrame = null;
+      }
       this.setState({
         isAnimating: true,
         isOpen: false
       }, () => {
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            this.setState({
-              isOpen: true
-            });
+        this.animationFrame = requestAnimationFrame(() => {
+          this.setState({
+            isOpen: true
           });
         });
       });
@@ -44883,6 +44961,10 @@ class Menu extends react__WEBPACK_IMPORTED_MODULE_1___default.a.Component {
     if (this.hideTimer) {
       clearTimeout(this.hideTimer);
       this.hideTimer = null;
+    }
+    if (this.animationFrame) {
+      cancelAnimationFrame(this.animationFrame);
+      this.animationFrame = null;
     }
   }
   render() {
@@ -53216,12 +53298,12 @@ class WindowedModal extends react__WEBPACK_IMPORTED_MODULE_2___default.a.Compone
   constructor(props) {
     super(props);
     _defineProperty(this, "handleWindowClose", () => {
-      this.window = null;
-      this.contentContainer = null;
-      this.createdWindow = false;
       if (this.props.onRequestClose) {
         this.props.onRequestClose();
       }
+      this.window = null;
+      this.contentContainer = null;
+      this.createdWindow = false;
     });
     _defineProperty(this, "handleWindowMinimize", () => {
       this.window = null;
@@ -53292,7 +53374,7 @@ class WindowedModal extends react__WEBPACK_IMPORTED_MODULE_2___default.a.Compone
       this.blocklyWidgetRepositionRaf_ = null;
     }
     if (this.window && this.createdWindow) {
-      this.window.close();
+      this.window.hide();
     }
   }
   scheduleBlocklyWidgetReposition() {
@@ -53324,7 +53406,7 @@ class WindowedModal extends react__WEBPACK_IMPORTED_MODULE_2___default.a.Compone
   }
   resizeToContentIfNeeded() {
     if (!this.window || !this.contentContainer) return;
-    if (this.props.id !== 'mwProjectThemeModal') return;
+    if (this.props.id !== 'mwProjectThemeModal' && this.props.id !== 'simpleDialog') return;
     window.requestAnimationFrame(() => {
       if (!this.window || !this.contentContainer) return;
       const headerHeight = this.window.headerElement ? this.window.headerElement.offsetHeight : 0;
@@ -53333,8 +53415,10 @@ class WindowedModal extends react__WEBPACK_IMPORTED_MODULE_2___default.a.Compone
       if (!desiredHeight || !Number.isFinite(desiredHeight)) return;
       this.window.height = desiredHeight;
       this.window.element.style.height = "".concat(desiredHeight, "px");
-      this.window.minHeight = desiredHeight;
-      this.window.maxHeight = desiredHeight;
+      if (this.props.id === 'mwProjectThemeModal') {
+        this.window.minHeight = desiredHeight;
+        this.window.maxHeight = desiredHeight;
+      }
     });
   }
   createWindow() {
@@ -53351,7 +53435,10 @@ class WindowedModal extends react__WEBPACK_IMPORTED_MODULE_2___default.a.Compone
       this.window = existingWindow;
       this.contentContainer = this.window.contentElement;
       this.createdWindow = false;
-      this.forceUpdate(); // Force re-render now that container is available
+      if (!this.window.isVisible) {
+        this.window.show();
+      }
+      this.forceUpdate();
       return;
     }
     const _this$props = this.props,
