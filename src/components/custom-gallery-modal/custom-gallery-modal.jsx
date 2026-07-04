@@ -19,12 +19,12 @@ const messages = defineMessages({
     name: {
         defaultMessage: 'Name',
         description: 'Extension name field label',
-        id: 'tw.customExtensionGallery.name'
+        id: 'tw.customExtensionGallery.nameLabel'
     },
     description: {
         defaultMessage: 'Description',
         description: 'Extension description field label',
-        id: 'tw.customExtensionGallery.description'
+        id: 'tw.customExtensionGallery.descriptionLabel'
     },
     extensionUrl: {
         defaultMessage: 'Extension URL',
