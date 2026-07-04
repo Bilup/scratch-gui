@@ -2287,11 +2287,12 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "/* overridden by src/lib/themes/guiHelpers.js */\n\n.menu_menu_3k7QT {\n    position: absolute;\n    border-bottom: 2px solid var(--looks-secondary);\n    border-radius: 0 0 10px 10px;\n    background-color: var(--ui-secondary);\n    color: var(--text-primary);\n    padding: 0;\n    padding-bottom: 5px;\n    margin: 0;\n    min-width: 240px;\n    overflow: visible;\n    border: 2px solid transparent;\n}\n\n.menu_menu_3k7QT:not(.menu_submenu_2Yzd1)::before {\n    content: \"\";\n    position: absolute;\n    inset: 0;\n    padding: 2px;\n    border-radius: inherit;\n    background: linear-gradient(to top, var(--looks-secondary), var(--ui-secondary));\n\n    -webkit-mask:\n        linear-gradient(#fff 0 0) content-box,\n        linear-gradient(#fff 0 0);\n    -webkit-mask-composite: xor;\n\n    -webkit-mask:\n        linear-gradient(#fff 0 0) content-box,\n        linear-gradient(#fff 0 0);\n\n            mask:\n        linear-gradient(#fff 0 0) content-box,\n        linear-gradient(#fff 0 0);\n    -webkit-mask-composite: xor;\n            mask-composite: exclude;\n\n    pointer-events: none;\n}\n\n.menu_submenu_2Yzd1 .menu_menu_3k7QT::before {\n  content: none;\n}\n\n.menu_menu_3k7QT.menu_left_dujsV {\n    right: 0;\n}\n\n.menu_menu_3k7QT.menu_right_3PQ4S {\n    left: 0;\n}\n\n.menu_menu-item_3EwYA {\n    display: block;\n    line-height: 34px;\n    white-space: nowrap;\n    padding: 0 10px;\n    font-size: .75rem;\n    margin: 0;\n    font-weight: bold;\n    position: relative;\n}\n\n.menu_menu-item_3EwYA img {\n    color: var(--text-primary);\n    margin-right: 0.5rem;\n}\n\n.menu_menu-item_3EwYA svg {\n    color: var(--text-primary);\n    vertical-align: middle;\n}\n\n.menu_menu-item_3EwYA svg.lucide {\n    margin-right: 0.5rem;\n    width: 1.2rem;\n}\n\n.menu_menu-item_3EwYA.menu_active_ebXO6,\n.menu_menu-item_3EwYA:hover,\n.menu_menu-item_3EwYA.menu_expanded_1-Ozh {\n    background-color: var(--ui-black-transparent);\n}\n\n.menu_menu-item_3EwYA.menu_hoverable_3u9dt {\n    cursor: pointer;\n}\n\n.menu_menu-item_3EwYA .menu_shortcut_1n1q6 {\n    float: right;\n    opacity: 0.6;\n    font-size: 0.9em;\n    font-weight: normal;\n    margin-left: 20px;\n    letter-spacing: -0.5px;\n}\n\n.menu_menu-item_3EwYA:hover .menu_shortcut_1n1q6 {\n    opacity: 0.8;\n}\n\n.menu_menu-section_2U-v6 {\n    border-top: 1px solid var(--ui-black-transparent);\n}\n\n.menu_submenu_2Yzd1 {\n    display: none;\n    position: absolute;\n    top: -1px;\n    min-width: 186px;\n    height: -webkit-max-content;\n    height: max-content;\n    overflow: hidden;\n    border-radius: 8px;\n}\n\n.menu_submenu_2Yzd1.menu_right_3PQ4S {\n    left: 100%;\n}\n\n.menu_submenu_2Yzd1.menu_left_dujsV {\n    right: 100%;\n}\n\n.menu_submenu_2Yzd1>.menu_menu_3k7QT {\n    position: relative;\n    overflow-y: auto;\n    overflow-x: hidden;\n    scrollbar-color: var(--menu-bar-foreground) var(--menu-bar-background);\n    border-radius: 8px;\n    border: 2px solid var(--looks-secondary);\n}\n\n.menu_menu-item_3EwYA.menu_expanded_1-Ozh>.menu_submenu_2Yzd1 {\n    display: block;\n}\n\n:not(:has(> .menu_menu-item_3EwYA.menu_expanded_1-Ozh))>.menu_menu-item_3EwYA:hover>.menu_submenu_2Yzd1 {\n    display: block;\n}\n\n/* Fallback styling for webkit browsers that don't support scrollbar-color */\n\n.menu_submenu_2Yzd1>.menu_menu_3k7QT::-webkit-scrollbar {\n    width: 12px;\n}\n\n.menu_submenu_2Yzd1>.menu_menu_3k7QT::-webkit-scrollbar-track {\n    background: var(--menu-bar-background);\n}\n\n.menu_submenu_2Yzd1>.menu_menu_3k7QT::-webkit-scrollbar-thumb {\n    background-color: var(--menu-bar-foreground);\n    border-radius: 12px;\n    border: 3px solid var(--menu-bar-background);\n}", ""]);
+exports.push([module.i, "/* overridden by src/lib/themes/guiHelpers.js */\n\n.menu_menu_3k7QT {\n    position: absolute;\n    border-bottom: 2px solid var(--looks-secondary);\n    border-radius: 0 0 10px 10px;\n    background-color: var(--ui-secondary);\n    color: var(--text-primary);\n    padding: 0;\n    padding-bottom: 5px;\n    margin: 0;\n    min-width: 240px;\n    overflow: visible;\n    border: 2px solid transparent;\n    opacity: 0;\n    transform-origin: top left;\n    transform: scale(0.9) translateY(-8px);\n    transition: opacity 0.2s ease, transform 0.2s ease;\n}\n\n.menu_menuOpen_2qnzl {\n    opacity: 1;\n    transform: scale(1) translateY(0);\n}\n\n.menu_menu_3k7QT:not(.menu_submenu_2Yzd1)::before {\n    content: \"\";\n    position: absolute;\n    inset: 0;\n    padding: 2px;\n    border-radius: inherit;\n    background: linear-gradient(to top, var(--looks-secondary), var(--ui-secondary));\n\n    -webkit-mask:\n        linear-gradient(#fff 0 0) content-box,\n        linear-gradient(#fff 0 0);\n    -webkit-mask-composite: xor;\n\n    -webkit-mask:\n        linear-gradient(#fff 0 0) content-box,\n        linear-gradient(#fff 0 0);\n\n            mask:\n        linear-gradient(#fff 0 0) content-box,\n        linear-gradient(#fff 0 0);\n    -webkit-mask-composite: xor;\n            mask-composite: exclude;\n\n    pointer-events: none;\n}\n\n.menu_submenu_2Yzd1 .menu_menu_3k7QT::before {\n  content: none;\n}\n\n.menu_menu_3k7QT.menu_left_dujsV {\n    right: 0;\n}\n\n.menu_menu_3k7QT.menu_right_3PQ4S {\n    left: 0;\n}\n\n.menu_menu-item_3EwYA {\n    display: block;\n    line-height: 34px;\n    white-space: nowrap;\n    padding: 0 10px;\n    font-size: .75rem;\n    margin: 0;\n    font-weight: bold;\n    position: relative;\n}\n\n.menu_menu-item_3EwYA img {\n    color: var(--text-primary);\n    margin-right: 0.5rem;\n}\n\n.menu_menu-item_3EwYA svg {\n    color: var(--text-primary);\n    vertical-align: middle;\n}\n\n.menu_menu-item_3EwYA svg.lucide {\n    margin-right: 0.5rem;\n    width: 1.2rem;\n}\n\n.menu_menu-item_3EwYA.menu_active_ebXO6,\n.menu_menu-item_3EwYA:hover,\n.menu_menu-item_3EwYA.menu_expanded_1-Ozh {\n    background-color: var(--ui-black-transparent);\n}\n\n.menu_menu-item_3EwYA.menu_hoverable_3u9dt {\n    cursor: pointer;\n}\n\n.menu_menu-item_3EwYA .menu_shortcut_1n1q6 {\n    float: right;\n    opacity: 0.6;\n    font-size: 0.9em;\n    font-weight: normal;\n    margin-left: 20px;\n    letter-spacing: -0.5px;\n}\n\n.menu_menu-item_3EwYA:hover .menu_shortcut_1n1q6 {\n    opacity: 0.8;\n}\n\n.menu_menu-section_2U-v6 {\n    border-top: 1px solid var(--ui-black-transparent);\n}\n\n.menu_submenu_2Yzd1 {\n    position: absolute;\n    top: -1px;\n    min-width: 186px;\n    height: -webkit-max-content;\n    height: max-content;\n    overflow: hidden;\n    border-radius: 8px;\n    opacity: 0;\n    visibility: hidden;\n    transform-origin: top left;\n    transform: scale(0.9);\n    transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;\n}\n\n.menu_submenu_2Yzd1.menu_right_3PQ4S {\n    left: 100%;\n}\n\n.menu_submenu_2Yzd1.menu_left_dujsV {\n    right: 100%;\n}\n\n.menu_submenu_2Yzd1>.menu_menu_3k7QT {\n    position: relative;\n    overflow-y: auto;\n    overflow-x: hidden;\n    scrollbar-color: var(--menu-bar-foreground) var(--menu-bar-background);\n    border-radius: 8px;\n    border: 2px solid var(--looks-secondary);\n}\n\n.menu_menu-item_3EwYA.menu_expanded_1-Ozh>.menu_submenu_2Yzd1,\n:not(:has(> .menu_menu-item_3EwYA.menu_expanded_1-Ozh))>.menu_menu-item_3EwYA:hover>.menu_submenu_2Yzd1 {\n    opacity: 1;\n    visibility: visible;\n    transform: scale(1);\n}\n\n/* Fallback styling for webkit browsers that don't support scrollbar-color */\n\n.menu_submenu_2Yzd1>.menu_menu_3k7QT::-webkit-scrollbar {\n    width: 12px;\n}\n\n.menu_submenu_2Yzd1>.menu_menu_3k7QT::-webkit-scrollbar-track {\n    background: var(--menu-bar-background);\n}\n\n.menu_submenu_2Yzd1>.menu_menu_3k7QT::-webkit-scrollbar-thumb {\n    background-color: var(--menu-bar-foreground);\n    border-radius: 12px;\n    border: 3px solid var(--menu-bar-background);\n}", ""]);
 
 // exports
 exports.locals = {
 	"menu": "menu_menu_3k7QT",
+	"menuOpen": "menu_menuOpen_2qnzl",
 	"submenu": "menu_submenu_2Yzd1",
 	"left": "menu_left_dujsV",
 	"right": "menu_right_3PQ4S",
@@ -24932,11 +24933,14 @@ const MenuComponent = _ref => {
     children = _ref.children,
     componentRef = _ref.componentRef,
     _ref$place = _ref.place,
-    place = _ref$place === void 0 ? 'right' : _ref$place;
+    place = _ref$place === void 0 ? 'right' : _ref$place,
+    _ref$isOpen = _ref.isOpen,
+    isOpen = _ref$isOpen === void 0 ? false : _ref$isOpen;
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("ul", {
     className: classnames__WEBPACK_IMPORTED_MODULE_0___default()(_menu_css__WEBPACK_IMPORTED_MODULE_3___default.a.menu, className, {
       [_menu_css__WEBPACK_IMPORTED_MODULE_3___default.a.left]: place === 'left',
-      [_menu_css__WEBPACK_IMPORTED_MODULE_3___default.a.right]: place === 'right'
+      [_menu_css__WEBPACK_IMPORTED_MODULE_3___default.a.right]: place === 'right',
+      [_menu_css__WEBPACK_IMPORTED_MODULE_3___default.a.menuOpen]: isOpen
     }),
     ref: componentRef
   }, children);
@@ -24945,7 +24949,8 @@ MenuComponent.propTypes = {
   children: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.node,
   className: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.string,
   componentRef: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.func,
-  place: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.oneOf(['left', 'right'])
+  place: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.oneOf(['left', 'right']),
+  isOpen: prop_types__WEBPACK_IMPORTED_MODULE_1___default.a.bool
 };
 const Submenu = _ref2 => {
   let children = _ref2.children,
@@ -24958,7 +24963,8 @@ const Submenu = _ref2 => {
       [_menu_css__WEBPACK_IMPORTED_MODULE_3___default.a.right]: place === 'right'
     })
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement(MenuComponent, _extends({
-    place: place
+    place: place,
+    isOpen: true
   }, props), children));
 };
 Submenu.propTypes = {
@@ -44830,20 +44836,67 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var _components_menu_menu_jsx__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../components/menu/menu.jsx */ "./src/components/menu/menu.jsx");
-const _excluded = ["open", "children"];
-function _objectWithoutProperties(e, t) { if (null == e) return {}; var o, r, i = _objectWithoutPropertiesLoose(e, t); if (Object.getOwnPropertySymbols) { var n = Object.getOwnPropertySymbols(e); for (r = 0; r < n.length; r++) o = n[r], -1 === t.indexOf(o) && {}.propertyIsEnumerable.call(e, o) && (i[o] = e[o]); } return i; }
-function _objectWithoutPropertiesLoose(r, e) { if (null == r) return {}; var t = {}; for (var n in r) if ({}.hasOwnProperty.call(r, n)) { if (-1 !== e.indexOf(n)) continue; t[n] = r[n]; } return t; }
+function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 
 
 
-const Menu = _ref => {
-  let open = _ref.open,
-    children = _ref.children,
-    props = _objectWithoutProperties(_ref, _excluded);
-  return open ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_components_menu_menu_jsx__WEBPACK_IMPORTED_MODULE_2__["default"], props, children) : null;
-};
+class Menu extends react__WEBPACK_IMPORTED_MODULE_1___default.a.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      isAnimating: false,
+      isOpen: props.open
+    };
+    this.hideTimer = null;
+  }
+  componentDidUpdate(prevProps) {
+    if (this.props.open && !prevProps.open) {
+      if (this.hideTimer) {
+        clearTimeout(this.hideTimer);
+        this.hideTimer = null;
+      }
+      this.setState({
+        isAnimating: true,
+        isOpen: false
+      }, () => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            this.setState({
+              isOpen: true
+            });
+          });
+        });
+      });
+    } else if (!this.props.open && prevProps.open) {
+      this.setState({
+        isOpen: false
+      });
+      this.hideTimer = setTimeout(() => {
+        this.setState({
+          isAnimating: false
+        });
+        this.hideTimer = null;
+      }, 200);
+    }
+  }
+  componentWillUnmount() {
+    if (this.hideTimer) {
+      clearTimeout(this.hideTimer);
+      this.hideTimer = null;
+    }
+  }
+  render() {
+    if (!this.props.open && !this.state.isAnimating) {
+      return null;
+    }
+    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_components_menu_menu_jsx__WEBPACK_IMPORTED_MODULE_2__["default"], _extends({}, this.props, {
+      isOpen: this.state.isOpen
+    }), this.props.children);
+  }
+}
 Menu.propTypes = {
   children: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.node,
+  className: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.string,
   open: prop_types__WEBPACK_IMPORTED_MODULE_0___default.a.bool.isRequired
 };
 /* harmony default export */ __webpack_exports__["default"] = (Menu);
