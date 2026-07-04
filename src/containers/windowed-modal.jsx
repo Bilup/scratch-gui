@@ -87,7 +87,7 @@ class WindowedModal extends React.Component {
             window.cancelAnimationFrame(this.blocklyWidgetRepositionRaf_);
             this.blocklyWidgetRepositionRaf_ = null;
         }
-        if (this.window && this.createdWindow) {
+        if (this.window) {
             this.window.hide();
         }
     }
@@ -153,7 +153,6 @@ class WindowedModal extends React.Component {
             return;
         }
         
-        // Check if a window with this ID already exists
         const windowId = this.props.id || 'modal-window';
         this.windowId = windowId;
         const existingWindow = WindowManager.getWindow(windowId);
@@ -161,10 +160,18 @@ class WindowedModal extends React.Component {
             this.window = existingWindow;
             this.contentContainer = this.window.contentElement;
             this.createdWindow = false;
+            
+            this.contentContainer.innerHTML = '';
+            
             if (!this.window.isVisible) {
                 this.window.show();
             }
             this.forceUpdate();
+            
+            setTimeout(() => {
+                this.resizeToContentIfNeeded();
+            }, 50);
+            
             return;
         }
         

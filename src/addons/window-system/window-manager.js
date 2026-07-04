@@ -889,6 +889,9 @@ class AddonWindow {
                 this.y = this.savedState.y;
                 this.width = this.savedState.width;
                 this.height = this.savedState.height;
+                
+                this.element.style.transition = 'left 0.3s ease-out, top 0.3s ease-out, ' +
+                    'width 0.3s ease-out, height 0.3s ease-out, border-radius 0.3s ease-out';
                 this.element.style.left = `${this.x}px`;
                 this.element.style.top = `${this.y}px`;
                 this.element.style.width = `${this.width}px`;
@@ -910,7 +913,6 @@ class AddonWindow {
     maximize () {
         if (this.isMaximized) return this;
         
-        // Save current state
         this.savedState = {
             x: this.x,
             y: this.y,
@@ -924,6 +926,8 @@ class AddonWindow {
         this.width = window.innerWidth;
         this.height = window.innerHeight;
         
+        this.element.style.transition = 'left 0.3s ease-out, top 0.3s ease-out, ' +
+            'width 0.3s ease-out, height 0.3s ease-out, border-radius 0.3s ease-out';
         this.element.style.left = '0px';
         this.element.style.top = '0px';
         this.element.style.width = '100vw';
