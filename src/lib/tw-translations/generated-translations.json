@@ -621,6 +621,8 @@
         "gui.collaboration.approveFailed": "批准加入请求失败",
         "gui.collaboration.denyFailed": "拒绝加入请求失败",
         "gui.collaboration.joinDenied": "房主拒绝了你的申请",
+        "gui.collaboration.urlCopied": "已复制到剪贴板",
+        "gui.collaboration.copyFailed": "无法复制到剪贴板，请手动复制链接",
         "gui.collaboration.changePrivacyFailed": "更改房间隐私设置失败",
         "gui.collaboration.waitingForHost": "等待房主加载项目...",
         "gui.collaboration.synchronizing": "正在与所有客户端同步...",

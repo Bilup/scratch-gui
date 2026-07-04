@@ -15,6 +15,7 @@ const BufferedInput = BufferedInputHOC(Input);
 import { Handshake as CollaborationIcon, User, Crown, UserMinus, Copy, AlertTriangle, PenLine, Settings, X } from 'lucide-react';
 
 import showAlert from '../../addons/window-system/alert';
+import NotificationSystem from '../../lib/notification-manager.js';
 
 import styles from './collaboration-modal.css';
 
@@ -454,7 +455,14 @@ class CollaborationModal extends Component {
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(roomUrl).then(() => {
                 console.log('Room URL copied to clipboard');
-                showAlert('Room URL copied to clipboard!');
+                NotificationSystem.info(
+                    this.props.intl.formatMessage({
+                        id: 'gui.collaboration.urlCopied',
+                        defaultMessage: '已复制到剪贴板',
+                        description: 'Notification when room URL is copied to clipboard'
+                    }),
+                    3000
+                );
             })
                 .catch(err => {
                     console.error('Failed to copy room URL:', err);
@@ -479,7 +487,14 @@ class CollaborationModal extends Component {
             const successful = document.execCommand('copy');
             if (successful) {
                 console.log('Room URL copied to clipboard (fallback)');
-                showAlert('Room URL copied to clipboard!');
+                NotificationSystem.info(
+                    this.props.intl.formatMessage({
+                        id: 'gui.collaboration.urlCopied',
+                        defaultMessage: '已复制到剪贴板',
+                        description: 'Notification when room URL is copied to clipboard'
+                    }),
+                    3000
+                );
             } else {
                 console.warn('Fallback copy failed');
                 this.showUrlPrompt(text);
@@ -494,8 +509,13 @@ class CollaborationModal extends Component {
 
     showUrlPrompt(text) {
         console.log('Room URL:', text);
-        showAlert(
-            'Could not copy room URL to clipboard. The URL has been logged to the console for manual copying.'
+        NotificationSystem.error(
+            this.props.intl.formatMessage({
+                id: 'gui.collaboration.copyFailed',
+                defaultMessage: '无法复制到剪贴板，请手动复制链接',
+                description: 'Notification when room URL copy fails'
+            }),
+            5000
         );
     }
 
