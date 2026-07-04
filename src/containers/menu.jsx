@@ -11,6 +11,7 @@ class Menu extends React.Component {
             isOpen: props.open
         };
         this.hideTimer = null;
+        this.animationFrame = null;
     }
 
     componentDidUpdate(prevProps) {
@@ -19,11 +20,13 @@ class Menu extends React.Component {
                 clearTimeout(this.hideTimer);
                 this.hideTimer = null;
             }
+            if (this.animationFrame) {
+                cancelAnimationFrame(this.animationFrame);
+                this.animationFrame = null;
+            }
             this.setState({isAnimating: true, isOpen: false}, () => {
-                requestAnimationFrame(() => {
-                    requestAnimationFrame(() => {
-                        this.setState({isOpen: true});
-                    });
+                this.animationFrame = requestAnimationFrame(() => {
+                    this.setState({isOpen: true});
                 });
             });
         } else if (!this.props.open && prevProps.open) {
@@ -39,6 +42,10 @@ class Menu extends React.Component {
         if (this.hideTimer) {
             clearTimeout(this.hideTimer);
             this.hideTimer = null;
+        }
+        if (this.animationFrame) {
+            cancelAnimationFrame(this.animationFrame);
+            this.animationFrame = null;
         }
     }
 

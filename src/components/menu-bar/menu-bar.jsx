@@ -274,9 +274,12 @@ class MenuBar extends React.Component {
             workspaceBookmarks: [],
             workspaceBookmarksCategories: [],
             workspaceBookmarksCollapsedCategories: [],
+            isEditingWorkspaceBookmark: false,
             canUndo: true,
             canRedo: true
         };
+        this.isEditingWorkspaceBookmark = false;
+        this.workspaceBookmarksMenuLabelRef = React.createRef();
         this.workspaceBookmarksProjectListener = null;
         this.autosaveCountdownInterval = null;
         this.undoRedoChangeListener = null;
@@ -694,87 +697,101 @@ class MenuBar extends React.Component {
         const maxTabs = 20;
         const enableCategories = true;
 
-        if (this.state.workspaceBookmarks.length >= maxTabs) {
-            await this.showAlert(
-                this.props.intl.formatMessage({
-                    defaultMessage: 'Error',
-                    id: 'tw.workspaceBookmarks.errorTitle'
-                }),
-                this.props.intl.formatMessage({
-                    defaultMessage: 'Maximum number of bookmarks reached ({max})',
-                    description: 'Alert when too many bookmarks exist',
-                    id: 'tw.workspaceBookmarks.maxReached'
-                }, { max: maxTabs })
-            );
-            return;
+        this.isEditingWorkspaceBookmark = true;
+        this.setState({isEditingWorkspaceBookmark: true});
+        if (this.workspaceBookmarksMenuLabelRef.current) {
+            this.workspaceBookmarksMenuLabelRef.current.setDisableClose(true);
         }
 
-        const state = await this.getCurrentWorkspaceBookmarkState();
-        if (!state) return;
+        try {
+            if (this.state.workspaceBookmarks.length >= maxTabs) {
+                await this.showAlert(
+                    this.props.intl.formatMessage({
+                        defaultMessage: 'Error',
+                        id: 'tw.workspaceBookmarks.errorTitle'
+                    }),
+                    this.props.intl.formatMessage({
+                        defaultMessage: 'Maximum number of bookmarks reached ({max})',
+                        description: 'Alert when too many bookmarks exist',
+                        id: 'tw.workspaceBookmarks.maxReached'
+                    }, { max: maxTabs })
+                );
+                return;
+            }
 
-        const name = await this.showPrompt(
-            this.props.intl.formatMessage({
-                defaultMessage: 'Bookmark Name',
-                id: 'tw.workspaceBookmarks.nameTitle'
-            }),
-            this.props.intl.formatMessage({
-                defaultMessage: 'Bookmark name:',
-                description: 'Prompt title for bookmark name',
-                id: 'tw.workspaceBookmarks.namePrompt'
-            }),
-            this.props.intl.formatMessage({
-                defaultMessage: 'Bookmark {index}',
-                description: 'Prompt default value for bookmark name',
-                id: 'tw.menuBar.bookmarkDefaultName'
-            }, { index: this.state.workspaceBookmarks.length + 1 })
-        );
-        if (name === null) return;
+            const state = await this.getCurrentWorkspaceBookmarkState();
+            if (!state) return;
 
-        let category = this.props.intl.formatMessage({
-            defaultMessage: 'General',
-            id: 'tw.menuBar.bookmarkDefaultCategory'
-        });
-        if (enableCategories) {
-            const categoryInput = await this.showPrompt(
+            const name = await this.showPrompt(
                 this.props.intl.formatMessage({
-                    defaultMessage: 'Bookmark Category',
-                    id: 'tw.workspaceBookmarks.categoryTitle'
+                    defaultMessage: 'Bookmark Name',
+                    id: 'tw.workspaceBookmarks.nameTitle'
                 }),
                 this.props.intl.formatMessage({
-                    defaultMessage: 'Category (existing: {categories})',
-                    description: 'Prompt for bookmark category',
-                    id: 'tw.workspaceBookmarks.categoryPrompt'
+                    defaultMessage: 'Bookmark name:',
+                    description: 'Prompt title for bookmark name',
+                    id: 'tw.workspaceBookmarks.namePrompt'
                 }),
                 this.props.intl.formatMessage({
-                    defaultMessage: 'General',
-                    id: 'tw.menuBar.bookmarkDefaultCategory'
-                })
+                    defaultMessage: 'Bookmark {index}',
+                    description: 'Prompt default value for bookmark name',
+                    id: 'tw.menuBar.bookmarkDefaultName'
+                }, { index: this.state.workspaceBookmarks.length + 1 })
             );
-            if (categoryInput === null) return;
-            category = categoryInput.trim() || this.props.intl.formatMessage({
+            if (name === null) return;
+
+            let category = this.props.intl.formatMessage({
                 defaultMessage: 'General',
                 id: 'tw.menuBar.bookmarkDefaultCategory'
             });
-        }
+            if (enableCategories) {
+                const categoryInput = await this.showPrompt(
+                    this.props.intl.formatMessage({
+                        defaultMessage: 'Bookmark Category',
+                        id: 'tw.workspaceBookmarks.categoryTitle'
+                    }),
+                    this.props.intl.formatMessage({
+                        defaultMessage: 'Category (existing: {categories})',
+                        description: 'Prompt for bookmark category',
+                        id: 'tw.workspaceBookmarks.categoryPrompt'
+                    }),
+                    this.props.intl.formatMessage({
+                        defaultMessage: 'General',
+                        id: 'tw.menuBar.bookmarkDefaultCategory'
+                    })
+                );
+                if (categoryInput === null) return;
+                category = categoryInput.trim() || this.props.intl.formatMessage({
+                    defaultMessage: 'General',
+                    id: 'tw.menuBar.bookmarkDefaultCategory'
+                });
+            }
 
-        const bookmark = {
-            name: (name.trim() || `Bookmark ${this.state.workspaceBookmarks.length + 1}`),
-            category,
-            state,
-            timestamp: Date.now()
-        };
-
-        this.setState(prev => {
-            const categories = new Set(prev.workspaceBookmarksCategories);
-            categories.add(category);
-            return {
-                workspaceBookmarks: [...prev.workspaceBookmarks, bookmark],
-                workspaceBookmarksCategories: [...categories]
+            const bookmark = {
+                name: (name.trim() || `Bookmark ${this.state.workspaceBookmarks.length + 1}`),
+                category,
+                state,
+                timestamp: Date.now()
             };
-        }, () => {
-            this.saveWorkspaceBookmarksToProject();
+
+            this.setState(prev => {
+                const categories = new Set(prev.workspaceBookmarksCategories);
+                categories.add(category);
+                return {
+                    workspaceBookmarks: [...prev.workspaceBookmarks, bookmark],
+                    workspaceBookmarksCategories: [...categories]
+                };
+            }, () => {
+                this.saveWorkspaceBookmarksToProject();
+            });
+        } finally {
+            this.isEditingWorkspaceBookmark = false;
+            this.setState({isEditingWorkspaceBookmark: false});
+            if (this.workspaceBookmarksMenuLabelRef.current) {
+                this.workspaceBookmarksMenuLabelRef.current.setDisableClose(false);
+            }
             this.props.onRequestCloseWorkspaceBookmarks();
-        });
+        }
     }
 
     async handleSwitchWorkspaceBookmark(index) {
@@ -797,68 +814,82 @@ class MenuBar extends React.Component {
     async handleEditWorkspaceBookmark(index) {
         const enableCategories = true;
         if (index < 0 || index >= this.state.workspaceBookmarks.length) return;
-        const bookmark = this.state.workspaceBookmarks[index];
 
-        const newName = await this.showPrompt(
-            this.props.intl.formatMessage({
-                defaultMessage: 'Bookmark Name',
-                id: 'tw.workspaceBookmarks.nameTitle'
-            }),
-            this.props.intl.formatMessage({
-                defaultMessage: 'Bookmark name:',
-                description: 'Prompt title for bookmark name',
-                id: 'tw.workspaceBookmarks.namePrompt'
-            }),
-            bookmark.name
-        );
-        if (newName === null || newName.trim() === '') {
-            this.props.onRequestCloseWorkspaceBookmarks();
-            return;
+        this.isEditingWorkspaceBookmark = true;
+        this.setState({isEditingWorkspaceBookmark: true});
+        if (this.workspaceBookmarksMenuLabelRef.current) {
+            this.workspaceBookmarksMenuLabelRef.current.setDisableClose(true);
         }
 
-        let newCategory = bookmark.category || this.props.intl.formatMessage({
-            defaultMessage: 'General',
-            id: 'tw.menuBar.bookmarkDefaultCategory'
-        });
-        if (enableCategories) {
-            const categoryList = this.state.workspaceBookmarksCategories.join(', ');
-            const categoryInput = await this.showPrompt(
+        try {
+            const bookmark = this.state.workspaceBookmarks[index];
+
+            const newName = await this.showPrompt(
                 this.props.intl.formatMessage({
-                    defaultMessage: 'Bookmark Category',
-                    id: 'tw.workspaceBookmarks.categoryTitle'
+                    defaultMessage: 'Bookmark Name',
+                    id: 'tw.workspaceBookmarks.nameTitle'
                 }),
                 this.props.intl.formatMessage({
-                    defaultMessage: 'Category (existing: {categories})',
-                    description: 'Prompt for bookmark category',
-                    id: 'tw.workspaceBookmarks.categoryPrompt'
-                }, { categories: categoryList }),
-                newCategory
+                    defaultMessage: 'Bookmark name:',
+                    description: 'Prompt title for bookmark name',
+                    id: 'tw.workspaceBookmarks.namePrompt'
+                }),
+                bookmark.name
             );
-            if (categoryInput !== null) {
-                newCategory = categoryInput.trim() || this.props.intl.formatMessage({
-                    defaultMessage: 'General',
-                    id: 'tw.menuBar.bookmarkDefaultCategory'
-                });;
+            if (newName === null || newName.trim() === '') {
+                return;
             }
-        }
 
-        this.setState(prev => {
-            const next = [...prev.workspaceBookmarks];
-            next[index] = {
-                ...next[index],
-                name: newName.trim(),
-                category: newCategory
-            };
-            const categories = new Set(prev.workspaceBookmarksCategories);
-            categories.add(newCategory);
-            return {
-                workspaceBookmarks: next,
-                workspaceBookmarksCategories: [...categories]
-            };
-        }, () => {
-            this.saveWorkspaceBookmarksToProject();
+            let newCategory = bookmark.category || this.props.intl.formatMessage({
+                defaultMessage: 'General',
+                id: 'tw.menuBar.bookmarkDefaultCategory'
+            });
+            if (enableCategories) {
+                const categoryList = this.state.workspaceBookmarksCategories.join(', ');
+                const categoryInput = await this.showPrompt(
+                    this.props.intl.formatMessage({
+                        defaultMessage: 'Bookmark Category',
+                        id: 'tw.workspaceBookmarks.categoryTitle'
+                    }),
+                    this.props.intl.formatMessage({
+                        defaultMessage: 'Category (existing: {categories})',
+                        description: 'Prompt for bookmark category',
+                        id: 'tw.workspaceBookmarks.categoryPrompt'
+                    }, { categories: categoryList }),
+                    newCategory
+                );
+                if (categoryInput !== null) {
+                    newCategory = categoryInput.trim() || this.props.intl.formatMessage({
+                        defaultMessage: 'General',
+                        id: 'tw.menuBar.bookmarkDefaultCategory'
+                    });;
+                }
+            }
+
+            this.setState(prev => {
+                const next = [...prev.workspaceBookmarks];
+                next[index] = {
+                    ...next[index],
+                    name: newName.trim(),
+                    category: newCategory
+                };
+                const categories = new Set(prev.workspaceBookmarksCategories);
+                categories.add(newCategory);
+                return {
+                    workspaceBookmarks: next,
+                    workspaceBookmarksCategories: [...categories]
+                };
+            }, () => {
+                this.saveWorkspaceBookmarksToProject();
+            });
+        } finally {
+            this.isEditingWorkspaceBookmark = false;
+            this.setState({isEditingWorkspaceBookmark: false});
+            if (this.workspaceBookmarksMenuLabelRef.current) {
+                this.workspaceBookmarksMenuLabelRef.current.setDisableClose(false);
+            }
             this.props.onRequestCloseWorkspaceBookmarks();
-        });
+        }
     }
 
     handleToggleWorkspaceBookmarkCategoryCollapsed(category) {
@@ -1922,10 +1953,12 @@ class MenuBar extends React.Component {
                         </MenuLabel>
                         {!this.props.isPlayerOnly && (
                             <MenuLabel
-                                open={this.props.workspaceBookmarksMenuOpen}
-                                onOpen={this.props.onClickWorkspaceBookmarks}
-                                onClose={this.props.onRequestCloseWorkspaceBookmarks}
-                            >
+                                        ref={this.workspaceBookmarksMenuLabelRef}
+                                        open={this.props.workspaceBookmarksMenuOpen}
+                                        onOpen={this.props.onClickWorkspaceBookmarks}
+                                        onClose={this.props.onRequestCloseWorkspaceBookmarks}
+                                        disableClose={this.state.isEditingWorkspaceBookmark}
+                                    >
                                 <Bookmark size={20} />
                                 <span className={styles.collapsibleLabel}>
                                     <FormattedMessage

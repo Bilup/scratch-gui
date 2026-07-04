@@ -88,7 +88,7 @@ class WindowedModal extends React.Component {
             this.blocklyWidgetRepositionRaf_ = null;
         }
         if (this.window && this.createdWindow) {
-            this.window.close();
+            this.window.hide();
         }
     }
 
@@ -126,7 +126,7 @@ class WindowedModal extends React.Component {
 
     resizeToContentIfNeeded () {
         if (!this.window || !this.contentContainer) return;
-        if (this.props.id !== 'mwProjectThemeModal') return;
+        if (this.props.id !== 'mwProjectThemeModal' && this.props.id !== 'simpleDialog') return;
 
         window.requestAnimationFrame(() => {
             if (!this.window || !this.contentContainer) return;
@@ -140,8 +140,10 @@ class WindowedModal extends React.Component {
             this.window.height = desiredHeight;
             this.window.element.style.height = `${desiredHeight}px`;
 
-            this.window.minHeight = desiredHeight;
-            this.window.maxHeight = desiredHeight;
+            if (this.props.id === 'mwProjectThemeModal') {
+                this.window.minHeight = desiredHeight;
+                this.window.maxHeight = desiredHeight;
+            }
         });
     }
     
@@ -159,7 +161,10 @@ class WindowedModal extends React.Component {
             this.window = existingWindow;
             this.contentContainer = this.window.contentElement;
             this.createdWindow = false;
-            this.forceUpdate(); // Force re-render now that container is available
+            if (!this.window.isVisible) {
+                this.window.show();
+            }
+            this.forceUpdate();
             return;
         }
         
@@ -351,13 +356,12 @@ class WindowedModal extends React.Component {
     }
     
     handleWindowClose = () => {
-        this.window = null;
-        this.contentContainer = null;
-        this.createdWindow = false;
-
         if (this.props.onRequestClose) {
             this.props.onRequestClose();
         }
+        this.window = null;
+        this.contentContainer = null;
+        this.createdWindow = false;
     };
     
     handleWindowMinimize = () => {
