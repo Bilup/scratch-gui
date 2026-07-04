@@ -73,6 +73,7 @@ class AddonWindow {
         this.isTouchResizing = false;
         this.dragOffset = {x: 0, y: 0};
         this.savedState = null; // For maximize/restore
+        this._hideTimer = null;
         
         this.createWindow();
         activeWindows.set(this.id, this);
@@ -102,7 +103,7 @@ class AddonWindow {
             flex-direction: column;
             overflow: hidden;
             backdrop-filter: blur(20px);
-            transition: none !important;
+            transition: opacity 0.25s ease, transform 0.25s ease, left 0.3s ease, top 0.3s ease, width 0.3s ease, height 0.3s ease, border-radius 0.3s ease;
         `;
         
         this.element.addEventListener('mousedown', () => this.bringToFront());
@@ -332,6 +333,8 @@ class AddonWindow {
             this.isTouchDragging = false;
             this.bringToFront();
             
+            this.element.style.transition = 'none';
+            
             // Get the current position of the window
             const currentX = parseInt(this.element.style.left, 10) || this.x;
             const currentY = parseInt(this.element.style.top, 10) || this.y;
@@ -355,6 +358,8 @@ class AddonWindow {
             this.isDragging = true;
             this.isTouchDragging = true;
             this.bringToFront();
+            
+            this.element.style.transition = 'none';
             
             const touch = e.touches[0];
             const currentX = parseInt(this.element.style.left, 10) || this.x;
@@ -399,6 +404,7 @@ class AddonWindow {
         this.isDragging = false;
         document.removeEventListener('mousemove', this.handleDrag);
         document.removeEventListener('mouseup', this.handleDragEnd);
+        this.element.style.transition = '';
     };
     
     handleTouchDrag = e => {
@@ -430,6 +436,7 @@ class AddonWindow {
         this.isDragging = false;
         this.isTouchDragging = false;
         document.removeEventListener('touchmove', this.handleTouchDrag);
+        this.element.style.transition = '';
         document.removeEventListener('touchend', this.handleTouchDragEnd);
         document.removeEventListener('touchcancel', this.handleTouchDragEnd);
     };
@@ -791,30 +798,59 @@ class AddonWindow {
     }
     
     show () {
+        if (this._hideTimer) {
+            clearTimeout(this._hideTimer);
+            this._hideTimer = null;
+        }
         this.isVisible = true;
         this.element.style.display = 'flex';
+        this.element.style.opacity = '0';
+        this.element.style.transform = 'scale(0.95)';
         this.bringToFront();
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                this.element.style.opacity = '1';
+                this.element.style.transform = 'scale(1)';
+            });
+        });
         return this;
     }
     
     hide () {
+        if (this._hideTimer) {
+            clearTimeout(this._hideTimer);
+            this._hideTimer = null;
+        }
         this.isVisible = false;
-        this.element.style.display = 'none';
+        this.element.style.opacity = '0';
+        this.element.style.transform = 'scale(0.95)';
+        this._hideTimer = setTimeout(() => {
+            this._hideTimer = null;
+            this.element.style.display = 'none';
+        }, 250);
         return this;
     }
     
     destroy (callOnClose = true) {
-        this.hide();
+        if (this._hideTimer) {
+            clearTimeout(this._hideTimer);
+            this._hideTimer = null;
+        }
+        this.isVisible = false;
         if (callOnClose) {
             this.onClose();
         }
-        activeWindows.delete(this.id);
-        if (this.scrollbarStyle && this.scrollbarStyle.parentNode) {
-            this.scrollbarStyle.parentNode.removeChild(this.scrollbarStyle);
-        }
-        if (this.element && this.element.parentNode) {
-            this.element.parentNode.removeChild(this.element);
-        }
+        this.element.style.opacity = '0';
+        this.element.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+            activeWindows.delete(this.id);
+            if (this.scrollbarStyle && this.scrollbarStyle.parentNode) {
+                this.scrollbarStyle.parentNode.removeChild(this.scrollbarStyle);
+            }
+            if (this.element && this.element.parentNode) {
+                this.element.parentNode.removeChild(this.element);
+            }
+        }, 250);
     }
 
     close () {
@@ -847,6 +883,7 @@ class AddonWindow {
                 this.element.style.top = `${this.y}px`;
                 this.element.style.width = `${this.width}px`;
                 this.element.style.height = `${this.height}px`;
+                this.element.style.borderRadius = '12px';
             }
             this.updateMaximizeButton();
         }
@@ -881,6 +918,7 @@ class AddonWindow {
         this.element.style.top = '0px';
         this.element.style.width = '100vw';
         this.element.style.height = '100vh';
+        this.element.style.borderRadius = '0px';
         
         this.updateMaximizeButton();
         this.onMaximize();
