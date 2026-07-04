@@ -496,14 +496,13 @@ class CollaborationContainer extends Component {
 
     handleJoinDenied (data) {
         console.log('Join request denied:', data);
-        this.props.onSetError(
-            data ||
-            this.props.intl.formatMessage({
-                id: 'gui.collaboration.joinDenied',
-                defaultMessage: 'Your join request was denied',
-                description: 'Error message when join request is denied'
-            })
-        );
+        const deniedMessage = this.props.intl.formatMessage({
+            id: 'gui.collaboration.joinDenied',
+            defaultMessage: 'The host denied your join request',
+            description: 'Notification when join request is denied'
+        });
+        this.props.onSetError(deniedMessage);
+        NotificationSystem.warning(deniedMessage, 5000);
         this.props.onSetConnected(false);
         this.props.onSetRoomId(null);
     }

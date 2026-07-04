@@ -620,7 +620,7 @@
         "gui.collaboration.kickedFromRoom": "你已被房主从协作房间中移除。",
         "gui.collaboration.approveFailed": "批准加入请求失败",
         "gui.collaboration.denyFailed": "拒绝加入请求失败",
-        "gui.collaboration.joinDenied": "你的加入请求被拒绝",
+        "gui.collaboration.joinDenied": "房主拒绝了你的申请",
         "gui.collaboration.changePrivacyFailed": "更改房间隐私设置失败",
         "gui.collaboration.waitingForHost": "等待房主加载项目...",
         "gui.collaboration.synchronizing": "正在与所有客户端同步...",
