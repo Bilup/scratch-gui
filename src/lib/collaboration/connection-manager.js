@@ -78,7 +78,14 @@ const handleConnection = (service, conn) => {
         service.connections.delete(conn.peer);
 
         if (conn.peer === service.hostId && !service.isHost) {
-            if (service._handleConnectionLost) {
+            if (service.joinRequestDenied) {
+                service.emit('host-left');
+                setTimeout(() => {
+                    if (!service.isDisconnecting) {
+                        service.disconnect();
+                    }
+                }, 100);
+            } else if (service._handleConnectionLost) {
                 service._handleConnectionLost('host disconnected');
             } else {
                 service.emit('host-left');
@@ -118,7 +125,14 @@ const handleConnection = (service, conn) => {
                 service.users.delete(conn.peer);
             }
 
-            if (service._handleConnectionLost) {
+            if (service.joinRequestDenied) {
+                service.emit('host-left');
+                setTimeout(() => {
+                    if (!service.isDisconnecting) {
+                        service.disconnect();
+                    }
+                }, 100);
+            } else if (service._handleConnectionLost) {
                 service._handleConnectionLost('connection error');
             } else {
                 service.emit('host-left');

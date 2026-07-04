@@ -450,8 +450,12 @@ const handleUserJoin = (service, payload, conn) => {
 };
 
 const handleJoinDenied = (service, data) => {
+    service.joinRequestDenied = true;
     service.emit('approval-resolved');
     service.emit('join-denied', data.reason || 'Join request was denied');
+    setTimeout(() => {
+        service.disconnect();
+    }, 100);
 };
 
 const handleJoinCancelled = (service, data, connection) => {

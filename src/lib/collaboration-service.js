@@ -92,6 +92,7 @@ class CollaborationService {
         this.roomPrivacy = 'public';
         this.pendingJoinRequests = new Map();
         this.isDisconnecting = false;
+        this.joinRequestDenied = false;
         this.connectionTimeout = null;
         this.seenEventIds = new Set();
         this.seenEventTimestamps = new Map();
@@ -1045,6 +1046,7 @@ class CollaborationService {
         this.roomPrivacy = 'public';
         this.hostId = null;
         this.wasKicked = false;
+        this.joinRequestDenied = false;
         this.currentConnectionFailureHandler = null;
         this.targetMapping = {};
         this.isSyncOperation = false;
