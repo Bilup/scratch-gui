@@ -211,7 +211,7 @@ Object(_app_target__WEBPACK_IMPORTED_MODULE_1__["default"])(/*#__PURE__*/react__
 /*! exports provided: version, version_little, latest-date, default */
 /***/ (function(module) {
 
-module.exports = JSON.parse("{\"version\":\"1.5.3\",\"version_little\":\"8\",\"latest-date\":\"2026-06-27\"}");
+module.exports = JSON.parse("{\"version\":\"1.5.3\",\"version_little\":\"10\",\"latest-date\":\"2026-07-04\"}");
 
 /***/ })
 
