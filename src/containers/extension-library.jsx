@@ -374,6 +374,7 @@ class ExtensionLibrary extends React.PureComponent {
     }
     handleItemSelect(item) {
         if (item.href) {
+            window.open(item.href, '_blank', 'noopener,noreferrer');
             return;
         }
 
