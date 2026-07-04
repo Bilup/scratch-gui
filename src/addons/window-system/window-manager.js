@@ -103,7 +103,8 @@ class AddonWindow {
             flex-direction: column;
             overflow: hidden;
             backdrop-filter: blur(20px);
-            transition: opacity 0.25s ease, transform 0.25s ease, left 0.3s ease, top 0.3s ease, width 0.3s ease, height 0.3s ease, border-radius 0.3s ease;
+            will-change: opacity, transform, left, top, width, height, border-radius;
+            transition: opacity 0.2s ease-out, transform 0.2s ease-out, left 0.3s ease-out, top 0.3s ease-out, width 0.3s ease-out, height 0.3s ease-out, border-radius 0.3s ease-out;
         `;
         
         this.element.addEventListener('mousedown', () => this.bringToFront());
@@ -802,16 +803,20 @@ class AddonWindow {
             clearTimeout(this._hideTimer);
             this._hideTimer = null;
         }
+        if (this.isVisible) {
+            this.bringToFront();
+            return this;
+        }
         this.isVisible = true;
         this.element.style.display = 'flex';
         this.element.style.opacity = '0';
-        this.element.style.transform = 'scale(0.95)';
+        this.element.style.transform = 'scale(0.95) translateY(-8px)';
+        this.element.style.transition = 'none';
         this.bringToFront();
         requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-                this.element.style.opacity = '1';
-                this.element.style.transform = 'scale(1)';
-            });
+            this.element.style.transition = 'opacity 0.2s ease-out, transform 0.2s ease-out, left 0.3s ease-out, top 0.3s ease-out, width 0.3s ease-out, height 0.3s ease-out, border-radius 0.3s ease-out';
+            this.element.style.opacity = '1';
+            this.element.style.transform = 'scale(1) translateY(0)';
         });
         return this;
     }
@@ -821,13 +826,18 @@ class AddonWindow {
             clearTimeout(this._hideTimer);
             this._hideTimer = null;
         }
+        if (!this.isVisible) {
+            return this;
+        }
         this.isVisible = false;
         this.element.style.opacity = '0';
-        this.element.style.transform = 'scale(0.95)';
+        this.element.style.transform = 'scale(0.95) translateY(-8px)';
         this._hideTimer = setTimeout(() => {
             this._hideTimer = null;
-            this.element.style.display = 'none';
-        }, 250);
+            if (!this.isVisible) {
+                this.element.style.display = 'none';
+            }
+        }, 200);
         return this;
     }
     
@@ -841,7 +851,7 @@ class AddonWindow {
             this.onClose();
         }
         this.element.style.opacity = '0';
-        this.element.style.transform = 'scale(0.95)';
+        this.element.style.transform = 'scale(0.95) translateY(-8px)';
         setTimeout(() => {
             activeWindows.delete(this.id);
             if (this.scrollbarStyle && this.scrollbarStyle.parentNode) {
@@ -850,7 +860,7 @@ class AddonWindow {
             if (this.element && this.element.parentNode) {
                 this.element.parentNode.removeChild(this.element);
             }
-        }, 250);
+        }, 200);
     }
 
     close () {

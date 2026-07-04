@@ -122,7 +122,7 @@ const WorkspaceBookmarksMenu = props => {
                     </div>
                     <div className={styles.bookmarkButtons}>
                         <button
-                            className={styles.bookmarkButton}
+                            className={classNames(styles.bookmarkButton, styles.editBookmarkButton)}
                             onClick={makeEditHandler(indexInAll)}
                             type="button"
                             title={props.intl.formatMessage({
