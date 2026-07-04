@@ -490,7 +490,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "/* make sure to keep these in sync with other constants,\ne.g. STAGE_DIMENSION_DEFAULTS in lib/utils/screen.js */\n\n/* layout contants from `layout-constants.js` */\n\n/* overridden by src/lib/themes/guiHelpers.js */\n\n.backpack_backpack-container_2_wGr {\n    flex-shrink: 1;\n    position: relative;\n    display: flex;\n    flex-direction: column;\n}\n\n.backpack_resize-handle_2uy0Z {\n    height: 0.5rem;\n    cursor: ns-resize;\n    background: var(--ui-white);\n    touch-action: none;\n}\n\n.backpack_backpack-header_6ltCS {\n    margin-top: 0.5rem;\n    border: 1px solid var(--ui-black-transparent);\n    background: var(--ui-white);\n    padding: 0.25rem;\n    text-align: center;\n    font-size: 0.85rem;\n    color: var(--text-primary);\n    transition: 0.2s;\n    cursor: pointer;\n    -webkit-user-select: none;\n       -moz-user-select: none;\n        -ms-user-select: none;\n            user-select: none;\n}\n\n.backpack_search-container_W18Ep {\n    padding: 0.5rem;\n    background: var(--ui-white);\n    flex-shrink: 0;\n}\n\n.backpack_search-input_2Klc9 {\n    width: 100%;\n    padding: 0.25rem 0.5rem;\n    font-size: 0.85rem;\n    border: 1px solid var(--ui-black-transparent);\n    border-radius: 0.25rem;\n    outline: none;\n}\n\n.backpack_search-input_2Klc9:focus {\n    border-color: var(--ui-primary);\n}\n\n.backpack_itemsScroller_3GokY {\n    flex: 1;\n    position: relative;\n    min-height: 0;\n    height: calc(100% - 40px);\n    overflow-y: scroll;\n}\n\n/* Absolute position the inner list to allow scrolling inside flex sized container */\n\n.backpack_backpack-list-inner_10a2A {\n    position: absolute;\n    top: 0;\n    left: 0;\n    width: 100%;\n    display: grid;\n    grid-template-columns: repeat(auto-fill, 4rem);\n    grid-auto-rows: 4.5rem;\n    gap: 0.5rem;\n    align-content: start;\n    justify-content: start;\n    padding: 0.5rem;\n    overflow-y: auto;\n    overflow-x: hidden;\n    box-sizing: border-box;\n}\n\n.backpack_drag-over_3bBKD:after {\n    content: '';\n    position: absolute;\n    top: 0;\n    left: 0;\n    width: 100%;\n    height: 100%;\n    opacity: 0.75;\n    background-color: var(--drop-highlight);\n    transition: all 0.25s ease;\n}\n\n.backpack_status-message_3kt5s {\n    width: 100%;\n    text-align: center;\n    font-size: 0.85rem;\n    color: var(--text-primary);\n}\n\n.backpack_error-message_2JoTP {\n    font-family: monospace;\n}\n\n.backpack_backpack-item_hwqzQ {\n    width: 100%;\n    height: 100%;\n    margin: 0;\n\n    /* Need to hide overflow because of background setting below */\n    overflow: hidden;\n}\n\n.backpack_backpack-item_hwqzQ > div {\n    /* Need to set the background to get blend-mode below to work */\n    background: var(--ui-primary);\n}\n\n.backpack_more_j3LFZ {\n    background: var(--looks-secondary);\n    color: var(--ui-white);\n    border: none;\n    outline: none;\n    font-weight: bold;\n    border-radius: 0.5rem;\n    font-size: 0.85rem;\n    width: 100%;\n    height: 100%;\n    padding: 0.25rem;\n    margin: 0;\n    cursor: pointer;\n}\n", ""]);
+exports.push([module.i, "/* make sure to keep these in sync with other constants,\ne.g. STAGE_DIMENSION_DEFAULTS in lib/utils/screen.js */\n\n/* layout contants from `layout-constants.js` */\n\n/* overridden by src/lib/themes/guiHelpers.js */\n\n.backpack_backpack-container_2_wGr {\n    flex-shrink: 1;\n    position: relative;\n    display: flex;\n    flex-direction: column;\n}\n\n.backpack_resize-handle_2uy0Z {\n    height: 0.5rem;\n    cursor: ns-resize;\n    background: var(--ui-white);\n    touch-action: none;\n}\n\n.backpack_backpack-header_6ltCS {\n    margin-top: 0.5rem;\n    border: 1px solid var(--ui-black-transparent);\n    background: var(--ui-white);\n    padding: 0.25rem;\n    text-align: center;\n    font-size: 0.85rem;\n    color: var(--text-primary);\n    transition: 0.2s;\n    cursor: pointer;\n    -webkit-user-select: none;\n       -moz-user-select: none;\n        -ms-user-select: none;\n            user-select: none;\n}\n\n.backpack_search-container_W18Ep {\n    padding: 0.5rem;\n    background: var(--ui-white);\n    flex-shrink: 0;\n}\n\n.backpack_search-input_2Klc9 {\n    width: 100%;\n    padding: 0.25rem 0.5rem;\n    font-size: 0.85rem;\n    border: 1px solid var(--ui-black-transparent);\n    border-radius: 0.25rem;\n    outline: none;\n}\n\n.backpack_search-input_2Klc9:focus {\n    border-color: var(--ui-primary);\n}\n\n.backpack_itemsScroller_3GokY {\n    flex: 1;\n    position: relative;\n    min-height: 0;\n    height: calc(100% - 40px);\n    overflow-y: scroll;\n}\n\n/* Absolute position the inner list to allow scrolling inside flex sized container */\n\n.backpack_backpack-list-inner_10a2A {\n    position: absolute;\n    top: 0;\n    left: 0;\n    width: 100%;\n    display: grid;\n    grid-template-columns: repeat(auto-fill, 4rem);\n    grid-auto-rows: 4.5rem;\n    gap: 0.5rem;\n    align-content: start;\n    justify-content: start;\n    padding: 0.5rem;\n    overflow-y: auto;\n    overflow-x: hidden;\n    box-sizing: border-box;\n}\n\n.backpack_backpack-list_MOp5X {\n    display: flex;\n    flex-direction: column;\n}\n\n.backpack_drag-over_3bBKD:after {\n    content: '';\n    position: absolute;\n    top: 0;\n    left: 0;\n    width: 100%;\n    height: 100%;\n    opacity: 0.75;\n    background-color: var(--drop-highlight);\n    transition: all 0.25s ease;\n}\n\n.backpack_status-message_3kt5s {\n    width: 100%;\n    text-align: center;\n    font-size: 0.85rem;\n    color: var(--text-primary);\n}\n\n.backpack_error-message_2JoTP {\n    font-family: monospace;\n}\n\n.backpack_backpack-item_hwqzQ {\n    width: 100%;\n    height: 100%;\n    margin: 0;\n\n    /* Need to hide overflow because of background setting below */\n    overflow: hidden;\n}\n\n.backpack_backpack-item_hwqzQ > div {\n    /* Need to set the background to get blend-mode below to work */\n    background: var(--ui-primary);\n}\n\n.backpack_more_j3LFZ {\n    background: var(--looks-secondary);\n    color: var(--ui-white);\n    border: none;\n    outline: none;\n    font-weight: bold;\n    border-radius: 0.5rem;\n    font-size: 0.85rem;\n    width: 100%;\n    height: 100%;\n    padding: 0.25rem;\n    margin: 0;\n    cursor: pointer;\n}\n", ""]);
 
 // exports
 exports.locals = {
@@ -507,6 +507,8 @@ exports.locals = {
 	"itemsScroller": "backpack_itemsScroller_3GokY",
 	"backpack-list-inner": "backpack_backpack-list-inner_10a2A",
 	"backpackListInner": "backpack_backpack-list-inner_10a2A",
+	"backpack-list": "backpack_backpack-list_MOp5X",
+	"backpackList": "backpack_backpack-list_MOp5X",
 	"drag-over": "backpack_drag-over_3bBKD",
 	"dragOver": "backpack_drag-over_3bBKD",
 	"status-message": "backpack_status-message_3kt5s",
@@ -5471,6 +5473,7 @@ class AddonWindow {
       this.isDragging = false;
       document.removeEventListener('mousemove', this.handleDrag);
       document.removeEventListener('mouseup', this.handleDragEnd);
+      this.element.style.transition = '';
     });
     _defineProperty(this, "handleTouchDrag", e => {
       if (!this.isDragging || !this.isTouchDragging) return;
@@ -5494,6 +5497,7 @@ class AddonWindow {
       this.isDragging = false;
       this.isTouchDragging = false;
       document.removeEventListener('touchmove', this.handleTouchDrag);
+      this.element.style.transition = '';
       document.removeEventListener('touchend', this.handleTouchDragEnd);
       document.removeEventListener('touchcancel', this.handleTouchDragEnd);
     });
@@ -5652,7 +5656,7 @@ class AddonWindow {
       y: 0
     };
     this.savedState = null; // For maximize/restore
-
+    this._hideTimer = null;
     this.createWindow();
     activeWindows.set(this.id, this);
   }
@@ -5660,7 +5664,7 @@ class AddonWindow {
     // Create main window element
     this.element = document.createElement('div');
     this.element.className = "addon-window ".concat(this.className);
-    this.element.style.cssText = "\n            position: fixed;\n            left: ".concat(this.x, "px;\n            top: ").concat(this.y, "px;\n            width: ").concat(this.width, "px;\n            height: ").concat(this.height, "px;\n            z-index: ").concat(this.zIndex, ";\n            background: linear-gradient(135deg, \n                var(--ui-modal-background, #ffffff) 0%, \n                var(--ui-primary, #f8f9fa) 100%);\n            border: 1px solid var(--ui-black-transparent, rgba(0, 0, 0, 0.08));\n            border-radius: 12px;\n            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1), \n                        0 15px 12px rgba(0, 0, 0, 0.05),\n                        0 0 0 1px rgba(255, 255, 255, 0.2) inset;\n            font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Helvetica Neue\", Helvetica, Arial, sans-serif;\n            display: none;\n            flex-direction: column;\n            overflow: hidden;\n            backdrop-filter: blur(20px);\n            transition: none !important;\n        ");
+    this.element.style.cssText = "\n            position: fixed;\n            left: ".concat(this.x, "px;\n            top: ").concat(this.y, "px;\n            width: ").concat(this.width, "px;\n            height: ").concat(this.height, "px;\n            z-index: ").concat(this.zIndex, ";\n            background: linear-gradient(135deg, \n                var(--ui-modal-background, #ffffff) 0%, \n                var(--ui-primary, #f8f9fa) 100%);\n            border: 1px solid var(--ui-black-transparent, rgba(0, 0, 0, 0.08));\n            border-radius: 12px;\n            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1), \n                        0 15px 12px rgba(0, 0, 0, 0.05),\n                        0 0 0 1px rgba(255, 255, 255, 0.2) inset;\n            font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Helvetica Neue\", Helvetica, Arial, sans-serif;\n            display: none;\n            flex-direction: column;\n            overflow: hidden;\n            backdrop-filter: blur(20px);\n            transition: opacity 0.25s ease, transform 0.25s ease, left 0.3s ease, top 0.3s ease, width 0.3s ease, height 0.3s ease, border-radius 0.3s ease;\n        ");
     this.element.addEventListener('mousedown', () => this.bringToFront());
 
     // Add focus enhancement when window becomes active
@@ -5774,6 +5778,7 @@ class AddonWindow {
       this.isDragging = true;
       this.isTouchDragging = false;
       this.bringToFront();
+      this.element.style.transition = 'none';
 
       // Get the current position of the window
       const currentX = parseInt(this.element.style.left, 10) || this.x;
@@ -5794,6 +5799,7 @@ class AddonWindow {
       this.isDragging = true;
       this.isTouchDragging = true;
       this.bringToFront();
+      this.element.style.transition = 'none';
       const touch = e.touches[0];
       const currentX = parseInt(this.element.style.left, 10) || this.x;
       const currentY = parseInt(this.element.style.top, 10) || this.y;
@@ -5971,29 +5977,58 @@ class AddonWindow {
     this.element.style.zIndex = this.zIndex;
   }
   show() {
+    if (this._hideTimer) {
+      clearTimeout(this._hideTimer);
+      this._hideTimer = null;
+    }
     this.isVisible = true;
     this.element.style.display = 'flex';
+    this.element.style.opacity = '0';
+    this.element.style.transform = 'scale(0.95)';
     this.bringToFront();
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        this.element.style.opacity = '1';
+        this.element.style.transform = 'scale(1)';
+      });
+    });
     return this;
   }
   hide() {
+    if (this._hideTimer) {
+      clearTimeout(this._hideTimer);
+      this._hideTimer = null;
+    }
     this.isVisible = false;
-    this.element.style.display = 'none';
+    this.element.style.opacity = '0';
+    this.element.style.transform = 'scale(0.95)';
+    this._hideTimer = setTimeout(() => {
+      this._hideTimer = null;
+      this.element.style.display = 'none';
+    }, 250);
     return this;
   }
   destroy() {
     let callOnClose = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
-    this.hide();
+    if (this._hideTimer) {
+      clearTimeout(this._hideTimer);
+      this._hideTimer = null;
+    }
+    this.isVisible = false;
     if (callOnClose) {
       this.onClose();
     }
-    activeWindows.delete(this.id);
-    if (this.scrollbarStyle && this.scrollbarStyle.parentNode) {
-      this.scrollbarStyle.parentNode.removeChild(this.scrollbarStyle);
-    }
-    if (this.element && this.element.parentNode) {
-      this.element.parentNode.removeChild(this.element);
-    }
+    this.element.style.opacity = '0';
+    this.element.style.transform = 'scale(0.95)';
+    setTimeout(() => {
+      activeWindows.delete(this.id);
+      if (this.scrollbarStyle && this.scrollbarStyle.parentNode) {
+        this.scrollbarStyle.parentNode.removeChild(this.scrollbarStyle);
+      }
+      if (this.element && this.element.parentNode) {
+        this.element.parentNode.removeChild(this.element);
+      }
+    }, 250);
   }
   close() {
     this.destroy(true);
@@ -6022,6 +6057,7 @@ class AddonWindow {
         this.element.style.top = "".concat(this.y, "px");
         this.element.style.width = "".concat(this.width, "px");
         this.element.style.height = "".concat(this.height, "px");
+        this.element.style.borderRadius = '12px';
       }
       this.updateMaximizeButton();
     }
@@ -6051,6 +6087,7 @@ class AddonWindow {
     this.element.style.top = '0px';
     this.element.style.width = '100vw';
     this.element.style.height = '100vh';
+    this.element.style.borderRadius = '0px';
     this.updateMaximizeButton();
     this.onMaximize();
     return this;
@@ -7421,11 +7458,8 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-
-// TODO make sprite selector item not require onClick
 const noop = () => {};
 const dragTypeMap = {
-  // Keys correspond with the backpack-server item types
   costume: _lib_constants_drag_constants__WEBPACK_IMPORTED_MODULE_4__["default"].BACKPACK_COSTUME,
   sound: _lib_constants_drag_constants__WEBPACK_IMPORTED_MODULE_4__["default"].BACKPACK_SOUND,
   script: _lib_constants_drag_constants__WEBPACK_IMPORTED_MODULE_4__["default"].BACKPACK_CODE,
@@ -7533,9 +7567,7 @@ const Backpack = _ref => {
     name: intl.formatMessage(labelMap[item.type]),
     selected: false,
     onClick: noop,
-    onDeleteButtonClick: onDelete
-    // Currently, renaming sprites is not supported.
-    ,
+    onDeleteButtonClick: onDelete,
     onRenameButtonClick: item.type === 'sprite' ? null : onRename
   })), showMore && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
     className: _backpack_css__WEBPACK_IMPORTED_MODULE_7___default.a.more,
