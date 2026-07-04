@@ -73,6 +73,11 @@
     box-sizing: border-box;
 }
 
+.backpack-list {
+    display: flex;
+    flex-direction: column;
+}
+
 .drag-over:after {
     content: '';
     position: absolute;
