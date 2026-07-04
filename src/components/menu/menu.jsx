@@ -8,7 +8,8 @@ const MenuComponent = ({
     className = '',
     children,
     componentRef,
-    place = 'right'
+    place = 'right',
+    isOpen = false
 }) => (
     <ul
         className={classNames(
@@ -16,7 +17,8 @@ const MenuComponent = ({
             className,
             {
                 [styles.left]: place === 'left',
-                [styles.right]: place === 'right'
+                [styles.right]: place === 'right',
+                [styles.menuOpen]: isOpen
             }
         )}
         ref={componentRef}
@@ -29,7 +31,8 @@ MenuComponent.propTypes = {
     children: PropTypes.node,
     className: PropTypes.string,
     componentRef: PropTypes.func,
-    place: PropTypes.oneOf(['left', 'right'])
+    place: PropTypes.oneOf(['left', 'right']),
+    isOpen: PropTypes.bool
 };
 
 
@@ -46,6 +49,7 @@ const Submenu = ({children, className, place, ...props}) => (
     >
         <MenuComponent
             place={place}
+            isOpen={true}
             {...props}
         >
             {children}

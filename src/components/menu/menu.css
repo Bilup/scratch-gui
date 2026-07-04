@@ -12,6 +12,15 @@
     min-width: 240px;
     overflow: visible;
     border: 2px solid transparent;
+    opacity: 0;
+    transform-origin: top left;
+    transform: scale(0.9) translateY(-8px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.menuOpen {
+    opacity: 1;
+    transform: scale(1) translateY(0);
 }
 
 .menu:not(.submenu)::before {
@@ -101,13 +110,17 @@
 }
 
 .submenu {
-    display: none;
     position: absolute;
     top: -1px;
     min-width: 186px;
     height: max-content;
     overflow: hidden;
     border-radius: 8px;
+    opacity: 0;
+    visibility: hidden;
+    transform-origin: top left;
+    transform: scale(0.9);
+    transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
 }
 
 .submenu.right {
@@ -127,12 +140,11 @@
     border: 2px solid $looks-secondary;
 }
 
-.menu-item.expanded>.submenu {
-    display: block;
-}
-
+.menu-item.expanded>.submenu,
 :not(:has(> .menu-item.expanded))>.menu-item:hover>.submenu {
-    display: block;
+    opacity: 1;
+    visibility: visible;
+    transform: scale(1);
 }
 
 /* Fallback styling for webkit browsers that don't support scrollbar-color */
