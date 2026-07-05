@@ -163,7 +163,18 @@ class WindowedModal extends React.Component {
             
             this.contentContainer.innerHTML = '';
             
-            if (!this.window.isVisible) {
+            const newTitle = typeof this.props.contentLabel === 'string' ? this.props.contentLabel : 'Dialog';
+            if (this.window.title !== newTitle) {
+                this.window.title = newTitle;
+                const titleElement = this.window.element.querySelector('.addon-window-title');
+                if (titleElement) {
+                    titleElement.textContent = newTitle;
+                }
+            }
+            
+            if (this.props.visible === false) {
+                this.window.hide();
+            } else {
                 this.window.show();
             }
             this.forceUpdate();

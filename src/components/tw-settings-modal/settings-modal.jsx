@@ -321,6 +321,18 @@ const settingDefinitions = {
             description: 'Enable Stage Resize setting help',
             id: 'mw.settingsModal.enableStageResizeHelp'
         }
+    },
+    windowAnimation: {
+        label: {
+            defaultMessage: 'Window Animation',
+            description: 'Enable window open/close animation',
+            id: 'mw.settingsModal.windowAnimation'
+        },
+        help: {
+            defaultMessage: 'Enables fade and scale animations when opening or closing windows.',
+            description: 'Window Animation setting help',
+            id: 'mw.settingsModal.windowAnimationHelp'
+        }
     }
 };
 
@@ -353,6 +365,7 @@ const WarpTimer = createBooleanSetting('WarpTimer', settingDefinitions.warpTimer
 const CaseSensitiveLists = createBooleanSetting('CaseSensitiveLists', settingDefinitions.caseSensitiveLists);
 const RealLayerIndexes = createBooleanSetting('RealLayerIndexes', settingDefinitions.realLayerIndexes);
 const EnableStageResize = createBooleanSetting('EnableStageResize', settingDefinitions.enableStageResize);
+const WindowAnimation = createBooleanSetting('WindowAnimation', settingDefinitions.windowAnimation);
 
 const DisableCompiler = props => (
     <BooleanSetting
@@ -715,6 +728,13 @@ const pageConfigurations = {
                             value: props.enableStageResize,
                             onChange: props.onEnableStageResizeChange
                         })
+                    },
+                    {
+                        component: WindowAnimation,
+                        props: props => ({
+                            value: props.windowAnimation,
+                            onChange: props.onWindowAnimationChange
+                        })
                     }
                 ]
             }
@@ -891,7 +911,9 @@ SettingsModalComponent.propTypes = {
     showFPSCounter: PropTypes.bool,
     onShowFPSCounterChange: PropTypes.func,
     cloudVariableServer: PropTypes.string,
-    onCloudVariableServerChange: PropTypes.func
+    onCloudVariableServerChange: PropTypes.func,
+    windowAnimation: PropTypes.bool,
+    onWindowAnimationChange: PropTypes.func
 };
 
 export default injectIntl(SettingsModalComponent);
