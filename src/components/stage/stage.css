@@ -24,6 +24,10 @@
     transition: border-width 0.3s ease, width 0.3s ease, height 0.3s ease;
 }
 
+.stage.no-animation {
+    transition: none !important;
+}
+
 .stage.full-screen {
     border: $stage-full-screen-border-width solid $ui-black-transparent;
 }

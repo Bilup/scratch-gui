@@ -132,6 +132,34 @@ const GUIComponent = props => {
         }
     }, []);
 
+    const [windowAnimation, setWindowAnimation] = useState(() => {
+        try {
+            return localStorage.getItem('mw:window-animation') !== 'false';
+        } catch (e) {
+            return true;
+        }
+    });
+
+    useEffect(() => {
+        const handleStorageChange = (e) => {
+            if (e.key === 'mw:window-animation') {
+                setWindowAnimation(e.newValue !== 'false');
+            }
+        };
+        window.addEventListener('storage', handleStorageChange);
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+        };
+    }, []);
+
+    useEffect(() => {
+        if (windowAnimation) {
+            document.documentElement.classList.remove('no-window-animation');
+        } else {
+            document.documentElement.classList.add('no-window-animation');
+        }
+    }, [windowAnimation]);
+
     const [enableStageResize, setEnableStageResize] = useState(() => {
         // 优先使用props传递的值，如果没有则从localStorage读取
         if (props.enableStageResize !== undefined) {
@@ -625,40 +653,41 @@ const GUIComponent = props => {
     return (<MediaQuery minWidth={unconstrainedWidth}>{isUnconstrained => {
         const stageSize = resolveStageSize(stageSizeMode, isUnconstrained);
 
-        return isPlayerOnly ? (
+        return (
             <React.Fragment>
-                {isWindowFullScreen ? (
-                    <div
-                        className={styles.fullscreenBackground}
-                        style={{
-                            backgroundColor: fullscreenBackgroundColor
-                        }}
-                    />
-                ) : null}
-                <StageWrapper
-                    isFullScreen={isFullScreen}
-                    isEmbedded={isEmbedded}
-                    isRendererSupported={isRendererSupported()}
-                    isRtl={isRtl}
-                    loading={loading}
-                    stageSize={STAGE_SIZE_MODES.full}
-                    vm={vm}
-                >
-                    {alertsVisible ? (
-                        <Alerts className={styles.alertsContainer} />
-                    ) : null}
-                </StageWrapper>
                 {alwaysEnabledModals}
-            </React.Fragment>
-        ) : (
-            <Box
-                className={styles.pageWrapper}
-                dir={isRtl ? 'rtl' : 'ltr'}
-                // style={minDimensions}
-                {...componentProps}
-            >
-                {alwaysEnabledModals}
-                {telemetryModalVisible ? (
+                {isPlayerOnly ? (
+                    <React.Fragment>
+                        {isWindowFullScreen ? (
+                            <div
+                                className={styles.fullscreenBackground}
+                                style={{
+                                    backgroundColor: fullscreenBackgroundColor
+                                }}
+                            />
+                        ) : null}
+                        <StageWrapper
+                            isFullScreen={isFullScreen}
+                            isEmbedded={isEmbedded}
+                            isRendererSupported={isRendererSupported()}
+                            isRtl={isRtl}
+                            loading={loading}
+                            stageSize={STAGE_SIZE_MODES.full}
+                            vm={vm}
+                        >
+                            {alertsVisible ? (
+                                <Alerts className={styles.alertsContainer} />
+                            ) : null}
+                        </StageWrapper>
+                    </React.Fragment>
+                ) : (
+                    <Box
+                        className={styles.pageWrapper}
+                        dir={isRtl ? 'rtl' : 'ltr'}
+                        // style={minDimensions}
+                        {...componentProps}
+                    >
+                        {telemetryModalVisible ? (
                     <TelemetryModal
                         isRtl={isRtl}
                         isTelemetryEnabled={isTelemetryEnabled}
@@ -898,18 +927,20 @@ const GUIComponent = props => {
                         </Box>
                     </Box>
                 </Box>
-                {extensionLibraryVisible ? (
-                    <ExtensionLibrary
-                        vm={vm}
-                        visible={extensionLibraryVisible}
-                        onRequestClose={onRequestCloseExtensionLibrary}
-                        onOpenCustomExtensionModal={onOpenCustomExtensionModal}
-                        onOpenCustomGalleryModal={onOpenCustomGalleryModal}
-                        onEnableProcedureReturns={handleEnableProcedureReturns}
-                    />
-                ) : null}
-                <DragLayer />
-            </Box>
+                        {extensionLibraryVisible ? (
+                            <ExtensionLibrary
+                                vm={vm}
+                                visible={extensionLibraryVisible}
+                                onRequestClose={onRequestCloseExtensionLibrary}
+                                onOpenCustomExtensionModal={onOpenCustomExtensionModal}
+                                onOpenCustomGalleryModal={onOpenCustomGalleryModal}
+                                onEnableProcedureReturns={handleEnableProcedureReturns}
+                            />
+                        ) : null}
+                        <DragLayer />
+                    </Box>
+                )}
+            </React.Fragment>
         );
     }}</MediaQuery>);
 };

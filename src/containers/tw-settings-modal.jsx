@@ -28,7 +28,8 @@ class UsernameModal extends React.Component {
             showFPSCounter: localStorage.getItem('mw:show-fps-counter') === 'true',
             viewCompiledMode: localStorage.getItem('mw:view-compiled-mode') === 'true',
             storeThemeInProject: localStorage.getItem('mw:store-theme-in-project') === 'true',
-            enableStageResize: localStorage.getItem('mw:enable-stage-resize') !== 'false'
+            enableStageResize: localStorage.getItem('mw:enable-stage-resize') !== 'false',
+            windowAnimation: localStorage.getItem('mw:window-animation') !== 'false'
         };
 
         bindAll(this, [
@@ -53,7 +54,8 @@ class UsernameModal extends React.Component {
             'handleViewCompiledModeChange',
             'handleStoreThemeInProjectChange',
             'handleEnableStageResizeChange',
-            'handleCloudVariableServerChange'
+            'handleCloudVariableServerChange',
+            'handleWindowAnimationChange'
         ]);
     }
 
@@ -225,6 +227,16 @@ class UsernameModal extends React.Component {
         setSearchParams(currentUrl.searchParams);
         this.props.onSetCloudHost(value);
     }
+
+    handleWindowAnimationChange (e) {
+        const enabled = e.target.checked;
+        this.setState({windowAnimation: enabled});
+        try {
+            localStorage.setItem('mw:window-animation', enabled);
+        } catch (err) {
+            // ignore
+        }
+    }
     render () {
         const {
             /* eslint-disable no-unused-vars */
@@ -263,12 +275,14 @@ class UsernameModal extends React.Component {
                 onStoreThemeInProjectChange={this.handleStoreThemeInProjectChange}
                 onEnableStageResizeChange={this.handleEnableStageResizeChange}
                 onCloudVariableServerChange={this.handleCloudVariableServerChange}
+                onWindowAnimationChange={this.handleWindowAnimationChange}
                 optimizeAnimations={this.state.optimizeAnimations}
                 debugMode={this.state.debugMode}
                 showFPSCounter={this.state.showFPSCounter}
                 viewCompiledMode={this.state.viewCompiledMode}
                 storeThemeInProject={this.state.storeThemeInProject}
                 enableStageResize={this.state.enableStageResize}
+                windowAnimation={this.state.windowAnimation}
                 theme={this.props.theme}
                 {...props}
             />

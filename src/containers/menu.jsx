@@ -2,6 +2,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 
 import MenuComponent from '../components/menu/menu.jsx';
+import WindowManager from '../addons/window-system/window-manager.js';
 
 class Menu extends React.Component {
     constructor(props) {
@@ -12,9 +13,12 @@ class Menu extends React.Component {
         };
         this.hideTimer = null;
         this.animationFrame = null;
+        this.animationFrame2 = null;
     }
 
     componentDidUpdate(prevProps) {
+        const animationsEnabled = WindowManager.getAnimationsEnabled();
+        
         if (this.props.open && !prevProps.open) {
             if (this.hideTimer) {
                 clearTimeout(this.hideTimer);
@@ -24,17 +28,41 @@ class Menu extends React.Component {
                 cancelAnimationFrame(this.animationFrame);
                 this.animationFrame = null;
             }
-            this.setState({isAnimating: true, isOpen: false}, () => {
-                this.animationFrame = requestAnimationFrame(() => {
-                    this.setState({isOpen: true});
+            if (this.animationFrame2) {
+                cancelAnimationFrame(this.animationFrame2);
+                this.animationFrame2 = null;
+            }
+            
+            if (animationsEnabled) {
+                this.setState({isAnimating: true, isOpen: false}, () => {
+                    this.animationFrame = requestAnimationFrame(() => {
+                        this.animationFrame2 = requestAnimationFrame(() => {
+                            this.setState({isOpen: true});
+                        });
+                    });
                 });
-            });
+            } else {
+                this.setState({isAnimating: true, isOpen: true});
+            }
         } else if (!this.props.open && prevProps.open) {
-            this.setState({isOpen: false});
-            this.hideTimer = setTimeout(() => {
-                this.setState({isAnimating: false});
-                this.hideTimer = null;
-            }, 200);
+            if (this.animationFrame) {
+                cancelAnimationFrame(this.animationFrame);
+                this.animationFrame = null;
+            }
+            if (this.animationFrame2) {
+                cancelAnimationFrame(this.animationFrame2);
+                this.animationFrame2 = null;
+            }
+            
+            if (animationsEnabled) {
+                this.setState({isOpen: false});
+                this.hideTimer = setTimeout(() => {
+                    this.setState({isAnimating: false});
+                    this.hideTimer = null;
+                }, 200);
+            } else {
+                this.setState({isOpen: false, isAnimating: false});
+            }
         }
     }
 
@@ -46,6 +74,10 @@ class Menu extends React.Component {
         if (this.animationFrame) {
             cancelAnimationFrame(this.animationFrame);
             this.animationFrame = null;
+        }
+        if (this.animationFrame2) {
+            cancelAnimationFrame(this.animationFrame2);
+            this.animationFrame2 = null;
         }
     }
 
