@@ -71,6 +71,11 @@ export interface ChatMessage {
   tool_call_id?: string;
   name?: string;
   attachments?: Attachment[];
+  usage?: {
+    prompt_tokens?: number;
+    completion_tokens?: number;
+    total_tokens?: number;
+  };
 }
 
 export interface SessionSnapshot {

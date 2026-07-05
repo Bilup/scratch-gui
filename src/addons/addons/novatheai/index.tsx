@@ -238,15 +238,17 @@ const Agent: React.FC<AgentProps> = ({ vm, workspace, editorThemeMode = "light",
       }`}
     >
       {/* Left Panel */}
-      {!useDrawerHistory && isLeftPanelOpen && (
-        <HistoryPanel
-          sessions={sessions}
-          currentSessionId={currentSessionId}
-          onNewChat={handleNewChat}
-          onSelectSession={handleSelectSession}
-          onDeleteSession={handleDeleteSession}
-          msg={msg}
-        />
+      {!useDrawerHistory && (
+        <div className={`${shell.leftPanel} ${isLeftPanelOpen ? "" : shell.leftPanelCollapsed}`}>
+          <HistoryPanel
+            sessions={sessions}
+            currentSessionId={currentSessionId}
+            onNewChat={handleNewChat}
+            onSelectSession={handleSelectSession}
+            onDeleteSession={handleDeleteSession}
+            msg={msg}
+          />
+        </div>
       )}
 
       {/* Right Panel */}
