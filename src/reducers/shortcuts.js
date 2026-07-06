@@ -20,6 +20,15 @@ const loadFromStorage = () => {
     return null;
 };
 
+const persistToStorage = customShortcuts => {
+    try {
+        console.log('Saving shortcuts to localStorage...');
+        localStorage.setItem('tw:shortcuts', JSON.stringify(customShortcuts));
+        console.log('Saved to localStorage successfully');
+    } catch (e) {
+        console.warn('Failed to save shortcuts:', e);
+    }
+};
 const initialState = {
     enabled: true,
     customShortcuts: loadFromStorage() || {}
@@ -29,42 +38,28 @@ const reducer = function (state, action) {
     if (typeof state === 'undefined') state = initialState;
     
     switch (action.type) {
-    case SET_SHORTCUT:
+    case SET_SHORTCUT: {
         console.log('Setting shortcut:', action.shortcutId, action.key);
-        const updatedShortcuts = {
+        const updated = {
             ...state.customShortcuts,
             [action.shortcutId]: action.key
         };
-        console.log('Updated shortcuts:', updatedShortcuts);
-        
-        try {
-            console.log('Saving shortcuts to localStorage...');
-            localStorage.setItem('tw:shortcuts', JSON.stringify(updatedShortcuts));
-            console.log('Saved to localStorage successfully');
-        } catch (e) {
-            console.warn('Failed to save shortcuts:', e);
-        }
-        
+        console.log('Updated shortcuts:', updated);
+        persistToStorage(updated);
         return Object.assign({}, state, {
-            customShortcuts: updatedShortcuts
+            customShortcuts: updated
         });
-    case RESET_SHORTCUT:
+    }
+    case RESET_SHORTCUT: {
         console.log('Resetting shortcut:', action.shortcutId);
         const newCustomShortcuts = {...state.customShortcuts};
         delete newCustomShortcuts[action.shortcutId];
         console.log('Updated shortcuts after reset:', newCustomShortcuts);
-        
-        try {
-            console.log('Saving shortcuts to localStorage...');
-            localStorage.setItem('tw:shortcuts', JSON.stringify(newCustomShortcuts));
-            console.log('Saved to localStorage successfully');
-        } catch (e) {
-            console.warn('Failed to save shortcuts:', e);
-        }
-        
+        persistToStorage(newCustomShortcuts);
         return Object.assign({}, state, {
             customShortcuts: newCustomShortcuts
         });
+    }
     case RESET_ALL_SHORTCUTS:
         console.log('Resetting all shortcuts');
         try {
@@ -75,10 +70,13 @@ const reducer = function (state, action) {
             console.warn('Failed to clear shortcuts:', e);
         }
         
+        console.log('Resetting all shortcuts');
+        persistToStorage({});
         return Object.assign({}, state, {
             customShortcuts: {}
         });
-    case LOAD_SHORTCUTS:
+    }
+    case LOAD_SHORTCUTS: {
         console.log('Loading shortcuts:', action.customShortcuts);
         const loadedShortcuts = action.customShortcuts || {};
         try {
@@ -88,10 +86,11 @@ const reducer = function (state, action) {
         } catch (e) {
             console.warn('Failed to save shortcuts:', e);
         }
-        
+
         return Object.assign({}, state, {
             customShortcuts: loadedShortcuts
         });
+    }
     case ENABLE_SHORTCUTS:
         return Object.assign({}, state, {
             enabled: action.enabled
