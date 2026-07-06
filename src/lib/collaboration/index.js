@@ -2,7 +2,7 @@ import Emitter from './emitter.js';
 import {Transport} from './transport.js';
 import HostSession from './host-session.js';
 import ClientSession from './client-session.js';
-import VMApplier from './vm-applier.js';
+import VMApplier, {remapTargetIds} from './vm-applier.js';
 import VMAdapter from './vm-adapter.js';
 import VmPatcher from './vm-patcher.js';
 import wrapVmMethods from './vm-capture.js';
@@ -105,7 +105,15 @@ class CollabService extends Emitter {
         this._snapshot = new HostSnapshotService({
             session,
             transport: this._transport,
-            getProjectData: () => this.vm.saveProjectSb3('arraybuffer')
+            getProjectData: () => this.vm.saveProjectSb3('arraybuffer'),
+            getTargetIds: () => this.vm.runtime.targets
+                .filter(target => target.isOriginal)
+                .map(target => ({
+                    id: target.id,
+                    name: target.getName(),
+                    isStage: Boolean(target.isStage)
+                })),
+            getExtensions: () => this._getLoadedExtensions()
         });
         this._assets = new AssetChannel({
             isHost: true,
@@ -154,7 +162,9 @@ class CollabService extends Emitter {
         this._snapshot = new ClientSnapshotService({
             session,
             transport: this._transport,
-            applyProjectData: buffer => this._loadProjectSuppressed(buffer)
+            applyProjectData: buffer => this._loadProjectSuppressed(buffer),
+            remapTargetIds: targetIds => remapTargetIds(this.vm, targetIds),
+            loadExtensions: extensions => this._loadMissingExtensions(extensions)
         });
         this._assets = new AssetChannel({
             isHost: false,
@@ -263,13 +273,51 @@ class CollabService extends Emitter {
 
     _submitLocalOp (type, payload) {
         if (!this._session || !this.isConnected) return;
-        if (!this.isHost && !this._approved) return;
+        // Clients may not propose until approved AND onboarded — anything
+        // captured before the snapshot landed is render noise.
+        if (!this.isHost && (!this._approved || this._session.lastAppliedSeq === null)) return;
         // Asset bytes travel ahead of the op on the same ordered channel,
         // so the host always has them before the proposal arrives.
         if (!this.isHost && Array.isArray(payload.assetRefs) && this._assets) {
             this._assets.sendAssets('host', payload.assetRefs);
         }
         this._session.submitLocal(type, payload);
+    }
+
+    /**
+     * Every loaded extension as {id, url?}. Builtins travel by id; custom
+     * extensions carry the URL they were loaded from.
+     * @returns {Array.<object>} Loaded extensions.
+     */
+    _getLoadedExtensions () {
+        const manager = this.vm.extensionManager;
+        if (!manager || !manager._loadedExtensions) return [];
+        const urls = typeof manager.getExtensionURLs === 'function' ? manager.getExtensionURLs() : {};
+        return Array.from(manager._loadedExtensions.keys()).map(id => {
+            const entry = {id};
+            if (urls[id]) entry.url = urls[id];
+            return entry;
+        });
+    }
+
+    /**
+     * Load whatever the host has that we don't. Capture is naturally
+     * suppressed: clients cannot propose until onboarding completes.
+     * @param {Array.<object>} extensions Host's [{id, url?}].
+     * @returns {Promise} Resolves when all loads settled.
+     */
+    async _loadMissingExtensions (extensions) {
+        const manager = this.vm.extensionManager;
+        if (!manager) return;
+        for (const {id, url} of extensions) {
+            if (manager.isExtensionLoaded(id)) continue;
+            try {
+                await manager.loadExtensionURL(url || id);
+            } catch (error) {
+                // eslint-disable-next-line no-console
+                console.warn(`[Collab] Could not load host extension "${id}":`, error);
+            }
+        }
     }
 
     async _loadProjectSuppressed (buffer) {
@@ -444,9 +492,16 @@ class CollabService extends Emitter {
 
 let instance = null;
 
-export default {
+const CollabServiceModule = {
     getInstance () {
         if (!instance) instance = new CollabService();
         return instance;
     }
 };
+
+// Debug handle for development only; production builds get no global.
+if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
+    window.CollaborationService = CollabServiceModule;
+}
+
+export default CollabServiceModule;

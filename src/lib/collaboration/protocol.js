@@ -379,6 +379,35 @@ const PAYLOAD_VALIDATORS = {
             return 'snapshot-begin invalid chunkCount';
         }
         if (!isNonNegativeInt(payload.atSeq)) return 'snapshot-begin requires atSeq';
+        // sb3 files do not preserve target ids, so the sender shares its
+        // name->id map and the receiver adopts those ids after loading.
+        if (typeof payload.targetIds !== 'undefined') {
+            if (!Array.isArray(payload.targetIds) || payload.targetIds.length > 1000) {
+                return 'snapshot-begin invalid targetIds';
+            }
+            for (const entry of payload.targetIds) {
+                if (!isPlainObject(entry) ||
+                    !isNonEmptyString(entry.id, LIMITS.MAX_ID) ||
+                    !isNonEmptyString(entry.name, LIMITS.MAX_STRING) ||
+                    typeof entry.isStage !== 'boolean') {
+                    return 'snapshot-begin invalid targetIds entry';
+                }
+            }
+        }
+        // sb3 files only record extensions whose blocks are used, so the
+        // sender also shares its full loaded-extension list.
+        if (typeof payload.extensions !== 'undefined') {
+            if (!Array.isArray(payload.extensions) || payload.extensions.length > 64) {
+                return 'snapshot-begin invalid extensions';
+            }
+            for (const entry of payload.extensions) {
+                if (!isPlainObject(entry) ||
+                    !isNonEmptyString(entry.id, LIMITS.MAX_STRING) ||
+                    !isOptionalString(entry.url, LIMITS.MAX_STRING)) {
+                    return 'snapshot-begin invalid extensions entry';
+                }
+            }
+        }
         return null;
     },
     [SNAPSHOT.CHUNK]: payload => {
@@ -423,6 +452,7 @@ const PAYLOAD_VALIDATORS = {
     [PRESENCE.CURSOR]: payload => {
         if (!isFiniteNumber(payload.x) || !isFiniteNumber(payload.y)) return 'cursor requires x/y';
         if (!isOptionalString(payload.targetId, LIMITS.MAX_ID)) return 'cursor invalid targetId';
+        if (!isOptionalString(payload.targetName, LIMITS.MAX_STRING)) return 'cursor invalid targetName';
         return null;
     },
     [PRESENCE.CURSOR_CHAT]: payload =>
