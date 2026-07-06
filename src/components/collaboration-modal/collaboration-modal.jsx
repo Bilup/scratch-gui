@@ -14,6 +14,7 @@ const BufferedInput = BufferedInputHOC(Input);
 import { Handshake as CollaborationIcon, User, Crown, UserMinus, Copy, AlertTriangle, PenLine, Settings, X } from 'lucide-react';
 
 import showAlert from '../../addons/window-system/alert';
+import CollaborationService from '../../lib/collaboration/index.js';
 
 import styles from './collaboration-modal.css';
 
@@ -96,9 +97,9 @@ class CollaborationModal extends Component {
             }, 100);
         }
 
-        if (typeof window !== 'undefined' && window.CollaborationService) {
+        if (CollaborationService) {
             try {
-                const service = window.CollaborationService.getInstance();
+                const service = CollaborationService.getInstance();
                 if (service) {
                     service.on('join-request-received', this.handleJoinRequestEvent);
                     service.on('awaiting-approval', this.handleAwaitingApproval);
@@ -197,9 +198,9 @@ class CollaborationModal extends Component {
             }
         }
 
-        if (this.props.visible && typeof window !== 'undefined' && window.CollaborationService) {
+        if (this.props.visible && CollaborationService) {
             try {
-                const service = window.CollaborationService.getInstance();
+                const service = CollaborationService.getInstance();
                 if (service && service.getPendingJoinRequests) {
                     const pendingRequests = service.getPendingJoinRequests();
                     const hasChanged =
@@ -215,10 +216,10 @@ class CollaborationModal extends Component {
         }
     }
 
-    componentWillUnmount() {
-        if (typeof window !== 'undefined' && window.CollaborationService) {
+    componentWillUnmount () {
+        if (CollaborationService) {
             try {
-                const service = window.CollaborationService.getInstance();
+                const service = CollaborationService.getInstance();
                 if (service) {
                     service.off('join-request-received', this.handleJoinRequestEvent);
                     service.off('awaiting-approval', this.handleAwaitingApproval);
@@ -613,9 +614,9 @@ class CollaborationModal extends Component {
             this.props.onCancelJoinRequest();
         }
 
-        if (typeof window !== 'undefined' && window.CollaborationService) {
+        if (CollaborationService) {
             try {
-                const service = window.CollaborationService.getInstance();
+                const service = CollaborationService.getInstance();
                 if (service) {
                     service.disconnect();
                 }
@@ -676,9 +677,9 @@ class CollaborationModal extends Component {
 
     handleJoinRequestEvent(data) {
         console.log('[COLLAB MODAL] Join request event received:', data);
-        if (typeof window !== 'undefined' && window.CollaborationService) {
+        if (CollaborationService) {
             try {
-                const service = window.CollaborationService.getInstance();
+                const service = CollaborationService.getInstance();
                 if (service && service.getPendingJoinRequests) {
                     const pendingRequests = service.getPendingJoinRequests();
                     console.log('[COLLAB MODAL] Updated pending requests:', pendingRequests);
@@ -805,6 +806,18 @@ class CollaborationModal extends Component {
                                 {this.state.error}
                             </div>
                         )}
+                        <div className={styles.privacyNotice}>
+                            <div className={styles.privacyNoticeIcon}>
+                                <AlertTriangle size={14} />
+                            </div>
+                            <div>
+                                <FormattedMessage
+                                    defaultMessage="The host can see your IP address. Other members cannot."
+                                    description="Privacy notice shown before joining a collaboration room"
+                                    id="gui.collaboration.joinPrivacyNotice"
+                                />
+                            </div>
+                        </div>
                     </div>
 
                     <div className={styles.sectionDivider} />
@@ -835,6 +848,18 @@ class CollaborationModal extends Component {
                                 id="gui.collaboration.createRoom"
                             />
                         </Button>
+                        <div className={styles.privacyNotice}>
+                            <div className={styles.privacyNoticeIcon}>
+                                <AlertTriangle size={14} />
+                            </div>
+                            <div>
+                                <FormattedMessage
+                                    defaultMessage="People who join can see your IP address, and you theirs."
+                                    description="Privacy notice shown before hosting a collaboration room"
+                                    id="gui.collaboration.hostPrivacyNotice"
+                                />
+                            </div>
+                        </div>
                     </div>
                 </div>
             </Box>
