@@ -380,6 +380,18 @@ const settingDefinitions = {
             defaultMessage: 'Hides the backpack bar at the bottom of the editor.',
             id: 'mw.settingsModal.hideBackpackHelp'
         }
+    },
+    hideOperatorArrows: {
+        label: {
+            defaultMessage: 'Hide Extendable Operator Arrows',
+            id: 'mw.settingsModal.hideOperatorArrows'
+        },
+        help: {
+            defaultMessage: 'Hides the arrows used to add or remove inputs on extendable ' +
+                'operator blocks like +, and, or and join. You can still add or remove inputs ' +
+                'by right-clicking the block.',
+            id: 'mw.settingsModal.hideOperatorArrowsHelp'
+        }
     }
 };
 
@@ -416,6 +428,7 @@ const SquareStageCorners = createBooleanSetting('SquareStageCorners', settingDef
 const HideDeleteButton = createBooleanSetting('HideDeleteButton', settingDefinitions.hideDeleteButton);
 const HideExtensionButton = createBooleanSetting('HideExtensionButton', settingDefinitions.hideExtensionButton);
 const HideBackpack = createBooleanSetting('HideBackpack', settingDefinitions.hideBackpack);
+const HideOperatorArrows = createBooleanSetting('HideOperatorArrows', settingDefinitions.hideOperatorArrows);
 
 const DisableCompiler = props => (
     <BooleanSetting
@@ -898,6 +911,13 @@ const pageConfigurations = {
                             value: props.hideBackpack,
                             onChange: props.onHideBackpackChange
                         })
+                    },
+                    {
+                        component: HideOperatorArrows,
+                        props: props => ({
+                            value: props.hideOperatorArrows,
+                            onChange: props.onHideOperatorArrowsChange
+                        })
                     }
                 ]
             }
@@ -1173,6 +1193,8 @@ SettingsModalComponent.propTypes = {
     onHideExtensionButtonChange: PropTypes.func,
     hideBackpack: PropTypes.bool,
     onHideBackpackChange: PropTypes.func,
+    hideOperatorArrows: PropTypes.bool,
+    onHideOperatorArrowsChange: PropTypes.func,
     tabStyle: PropTypes.string,
     onTabStyleChange: PropTypes.func,
     tabLooks: PropTypes.string,

@@ -6,9 +6,6 @@ import {connect} from 'react-redux';
 import VM from 'scratch-vm';
 import AudioEngine from 'scratch-audio';
 
-import * as BrowserGit from '../git/browser-git';
-import JSZip from 'jszip';
-
 import {setProjectUnchanged} from '../../reducers/project-changed';
 import {
     LoadingStates,
@@ -44,7 +41,6 @@ const vmManagerHOC = function (WrappedComponent) {
             if (!this.props.vm.initialized) {
                 window.vm = this.props.vm;
 
-                this.installGitProjectFileHooks();
                 try {
                     this.audioEngine = new AudioEngine();
                     this.props.vm.attachAudioEngine(this.audioEngine);
@@ -87,117 +83,7 @@ const vmManagerHOC = function (WrappedComponent) {
                 console.log('[VM Manager] exportGitToZip result:', result);
                 return zip;
             };
-
-            const originalLoadProject = vm.loadProject;
-            vm.loadProject = async data => {
-                console.log('[VM Manager] loadProject called, data type:', data instanceof ArrayBuffer ? 'ArrayBuffer' : 
-                    data instanceof Blob ? 'Blob' : 
-                    ArrayBuffer.isView(data) ? 'ArrayBufferView' : typeof data);
-                
-                let gitJson = null;
-
-                try {
-                    let buffer = null;
-                    if (data instanceof ArrayBuffer) {
-                        buffer = data;
-                        console.log('[VM Manager] Data is ArrayBuffer, length:', buffer.byteLength);
-                    } else if (ArrayBuffer.isView(data)) {
-                        buffer = data.buffer.slice(
-                            data.byteOffset,
-                            data.byteOffset + data.byteLength
-                        );
-                        console.log('[VM Manager] Data is ArrayBufferView, converted to ArrayBuffer');
-                    } else if (typeof Blob !== 'undefined' && data instanceof Blob) {
-                        console.log('[VM Manager] Data is Blob, converting to ArrayBuffer...');
-                        buffer = await data.arrayBuffer();
-                        console.log('[VM Manager] Blob converted to ArrayBuffer, length:', buffer.byteLength);
-                    }
-
-                    if (buffer) {
-                        console.log('[VM Manager] Loading zip from buffer...');
-                        const zip = await JSZip.loadAsync(buffer);
-                        
-                        // 检查项目中的扩展
-                        try {
-                            const projectJsonFile = zip.file('project.json');
-                            if (projectJsonFile) {
-                                const projectJson = JSON.parse(await projectJsonFile.async('string'));
-                                if (projectJson.extensions && projectJson.extensions.length > 0) {
-                                    console.log('[VM Manager] Project has extensions:', projectJson.extensions);
-                                }
-                                if (projectJson.extensionURLs) {
-                                    console.log('[VM Manager] Project has extensionURLs:', projectJson.extensionURLs);
-                                    for (const [extId, extUrl] of Object.entries(projectJson.extensionURLs)) {
-                                        if (extUrl && extUrl.startsWith('data:')) {
-                                            console.log('[VM Manager] WARNING: Found data:url extension:', extId);
-                                        }
-                                    }
-                                }
-                            }
-                        } catch (e) {
-                            console.warn('[VM Manager] Failed to check project extensions:', e);
-                        }
-                        
-                        // 优先尝试从 .git 文件夹导入(新格式)
-                        // 使用特定文件检测而不是 glob 模式，因为 JSZip 的 glob 可能不支持某些模式
-                        const gitConfigFile = zip.file('.git/config');
-                        console.log('[VM Manager] .git/config exists:', !!gitConfigFile);
-                        
-                        if (gitConfigFile) {
-                            console.log('[VM Manager] Found .git folder in project zip, importing directly...');
-                            const imported = await BrowserGit.importRepoFromZip(zip);
-                            console.log('[VM Manager] Import from .git folder:', imported ? 'success' : 'failed');
-                        } else {
-                            // 回退到 git.json（旧格式)
-                            const file = zip.file('git.json');
-                            if (file) {
-                                console.log('[VM Manager] Found git.json in project zip (legacy format)');
-                                gitJson = await file.async('string');
-                        
-                                // 检查 gitJson 是否是二次编码的 JSON 字符串
-                                try {
-                                    const parsed = JSON.parse(gitJson);
-                                    // 如果 parsed 是字符串，说明是二次编码的，尝试再次解析
-                                    if (typeof parsed === 'string') {
-                                        console.log('[VM Manager] git.json is double-encoded, re-parsing...');
-                                        const reParsed = JSON.parse(parsed);
-                                        gitJson = JSON.stringify(reParsed);
-                                    }
-                                } catch (e) {
-                                    console.warn('[VM Manager] Failed to parse git.json:', e);
-                                }
-                        
-                                // 直接设置 tempGitJsonString，确保在导入后立即更新
-                                BrowserGit._setTempGitJsonString(gitJson);
-                            } else {
-                                console.log('[VM Manager] No git.json or .git folder found in SB3');
-                            }
-                        }
-                    }
-                } catch (e) {
-                    console.warn('[VM Manager] Failed to read git data:', e);
-                }
-
-                // 对于旧格式的 git.json，需要在 originalLoadProject 之前导入
-                // 这样在加载过程中 repoExists() 才能返回正确的值
-                if (gitJson) {
-                    try {
-                        console.log('[VM Manager] Importing git.json BEFORE loadProject (legacy format)...');
-                        await BrowserGit.importRepoFromGitJsonString(gitJson);
-                        console.log('[VM Manager] importRepoFromGitJsonString completed before loadProject');
-                    } catch (e) {
-                        console.warn('[VM Manager] Failed to import git.json:', e);
-                    }
-                }
-
-                console.log('[VM Manager] Calling original loadProject...');
-                const result = await originalLoadProject.call(vm, data);
-                console.log('[VM Manager] Original loadProject completed');
-
-                return result;
-            };
         }
-
         loadProject () {
             console.log('[VM Manager] loadProject method called');
             // tw: stop when loading new project
@@ -276,8 +162,7 @@ const vmManagerHOC = function (WrappedComponent) {
         projectData: PropTypes.oneOfType([PropTypes.object, PropTypes.string]),
         projectId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
         username: PropTypes.string,
-        vm: PropTypes.instanceOf(VM).isRequired,
-        gitJson: PropTypes.object
+        vm: PropTypes.instanceOf(VM).isRequired
     };
 
     const mapStateToProps = state => {

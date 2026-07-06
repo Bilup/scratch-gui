@@ -11,6 +11,7 @@ import {CustomTheme} from '../lib/themes/custom-themes.js';
 import {setSearchParams} from '../lib/utils/navigation';
 import {getAppearanceSetting, setAppearanceSetting} from '../lib/mw-appearance-settings';
 import {getStyleSetting, setStyleSetting} from '../lib/mw-style-settings';
+import {getHideOperatorArrows, setHideOperatorArrows} from '../lib/mw-operator-arrows';
 
 const messages = defineMessages({
     newFramerate: {
@@ -30,7 +31,8 @@ class UsernameModal extends React.Component {
             showFPSCounter: localStorage.getItem('mw:show-fps-counter') === 'true',
             viewCompiledMode: localStorage.getItem('mw:view-compiled-mode') === 'true',
             storeThemeInProject: localStorage.getItem('mw:store-theme-in-project') === 'true',
-<            enableStageResize: localStorage.getItem('mw:enable-stage-resize') !== 'false',
+            enableStageResize: localStorage.getItem('mw:enable-stage-resize') !== 'false',
+            hideOperatorArrows: getHideOperatorArrows(),
             squareStageCorners: getAppearanceSetting('square-stage-corners'),
             hideDeleteButton: getAppearanceSetting('hide-delete-button'),
             hideExtensionButton: getAppearanceSetting('hide-extension-button'),
@@ -61,8 +63,9 @@ class UsernameModal extends React.Component {
             'handleShowFPSCounterChange',
             'handleViewCompiledModeChange',
             'handleStoreThemeInProjectChange',
-<            'handleEnableStageResizeChange',
+            'handleEnableStageResizeChange',
             'handleCloudVariableServerChange',
+            'handleHideOperatorArrowsChange',
             'handleSquareStageCornersChange',
             'handleHideDeleteButtonChange',
             'handleHideExtensionButtonChange',
@@ -222,7 +225,6 @@ class UsernameModal extends React.Component {
         }
     }
 
-<<<<<<< HEAD
     handleEnableStageResizeChange (e) {
         this.setState({enableStageResize: e.target.checked});
         try {
@@ -241,6 +243,11 @@ class UsernameModal extends React.Component {
         currentUrl.searchParams.set('cloud_host', value);
         setSearchParams(currentUrl.searchParams);
         this.props.onSetCloudHost(value);
+    }
+
+    handleHideOperatorArrowsChange (e) {
+        this.setState({hideOperatorArrows: e.target.checked});
+        setHideOperatorArrows(e.target.checked);
     }
 
     setAppearance_ (stateKey, id, checked) {
@@ -316,6 +323,8 @@ class UsernameModal extends React.Component {
                 onStoreThemeInProjectChange={this.handleStoreThemeInProjectChange}
                 onEnableStageResizeChange={this.handleEnableStageResizeChange}
                 onCloudVariableServerChange={this.handleCloudVariableServerChange}
+                onHideOperatorArrowsChange={this.handleHideOperatorArrowsChange}
+                hideOperatorArrows={this.state.hideOperatorArrows}
                 onSquareStageCornersChange={this.handleSquareStageCornersChange}
                 squareStageCorners={this.state.squareStageCorners}
                 onHideDeleteButtonChange={this.handleHideDeleteButtonChange}
