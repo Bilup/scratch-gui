@@ -93,7 +93,6 @@ const getFullscreenBackgroundColor = () => {
 const fullscreenBackgroundColor = getFullscreenBackgroundColor();
 
 const AUTO_SMALL_STAGE_INNER_WIDTH = Math.round(FIXED_WIDTH);
-const AUTO_RESTORE_STAGE_INNER_WIDTH = Math.round(FIXED_WIDTH * 0.875);
 const MIN_EDITOR_PANE_WIDTH = 598;
 const MIN_TARGET_PANE_HEIGHT = 180;
 
@@ -171,14 +170,15 @@ const GUIComponent = props => {
     const stageAndTargetWrapperRef = useRef(null);
     const stageResizeRafRef = useRef(null);
     const measureRafRef = useRef(null);
-    const autoSmallStageRequestedRef = useRef(false);
-    const autoSmallStageActiveRef = useRef(false);
-    const lastNonSmallStageSizeModeRef = useRef(STAGE_SIZE_MODES.large);
+    const syncingModeRef = useRef(false);
+    const prevStageSizeModeRef = useRef(null);
+    const lastSyncedWidthRef = useRef(null);
     const [stagePanelWidth, setStagePanelWidth] = useState(null);
     const [stageContainerWidth, setStageContainerWidth] = useState(null);
 
     const handleStagePanelResizeDoubleClick = useCallback(() => {
         setStagePanelWidth(null);
+        setStageContainerWidth(null);
     }, []);
 
     const getStageBorderExtraWidth = useCallback(containerEl => {
@@ -239,36 +239,87 @@ const GUIComponent = props => {
         });
     }, [stageContainerWidth, enableStageResize]);
 
+    const setStageWidth = useCallback(contentWidth => {
+        if (contentWidth === null) {
+            setStagePanelWidth(null);
+            setStageContainerWidth(null);
+            return;
+        }
+
+        const el = stageAndTargetWrapperRef.current;
+        let paddingLeft = 8;
+        let paddingRight = 8;
+        let borderExtra = 2;
+        if (el) {
+            const computedStyle = window.getComputedStyle(el);
+            paddingLeft = Number.parseFloat(computedStyle.paddingLeft) || 0;
+            paddingRight = Number.parseFloat(computedStyle.paddingRight) || 0;
+            borderExtra = getStageBorderExtraWidth(el);
+        }
+
+        let outerWidth = contentWidth + 2 + paddingLeft + paddingRight + borderExtra;
+
+        const editorEl = editorWrapperRef.current;
+        const containerEl = editorEl ? editorEl.parentElement : null;
+        const containerWidth = containerEl ?
+            containerEl.getBoundingClientRect().width :
+            window.innerWidth;
+        const maxOuterWidth = containerWidth - MIN_EDITOR_PANE_WIDTH - 6;
+        if (Number.isFinite(maxOuterWidth) && maxOuterWidth > 0) {
+            outerWidth = Math.min(outerWidth, maxOuterWidth);
+        }
+
+        setStagePanelWidth(outerWidth);
+        setStageContainerWidth(contentWidth + 2);
+    }, [getStageBorderExtraWidth]);
+
     useEffect(() => {
         if (!enableStageResize) return;
+        if (prevStageSizeModeRef.current === null) {
+            prevStageSizeModeRef.current = props.stageSizeRequestId;
+            return;
+        }
+        if (prevStageSizeModeRef.current === props.stageSizeRequestId) return;
+        prevStageSizeModeRef.current = props.stageSizeRequestId;
+
+        if (props.isFullScreen) return;
+        if (syncingModeRef.current) {
+            syncingModeRef.current = false;
+            return;
+        }
+
+        if (props.stageSizeMode === STAGE_SIZE_MODES.small) {
+            setStageWidth(FIXED_WIDTH * 0.5);
+        } else if (props.stageSizeMode === STAGE_SIZE_MODES.large) {
+            setStageWidth(FIXED_WIDTH);
+        } else {
+            setStageWidth(null);
+        }
+    }, [props.stageSizeMode, props.stageSizeRequestId, props.isFullScreen, setStageWidth, enableStageResize]);
+
+    useEffect(() => {
+        if (!enableStageResize) return;
+        if (stageContainerWidth === lastSyncedWidthRef.current) return;
+        lastSyncedWidthRef.current = stageContainerWidth;
+
         if (props.isFullScreen) return;
         if (typeof stageContainerWidth !== 'number') return;
+        if (typeof props.onSetStageSize !== 'function') return;
 
-        if (props.stageSizeMode !== STAGE_SIZE_MODES.small) {
-            lastNonSmallStageSizeModeRef.current = props.stageSizeMode;
+        const smallThreshold = Math.min(
+            AUTO_SMALL_STAGE_INNER_WIDTH,
+            (props.customStageSize && props.customStageSize.width) || FIXED_WIDTH
+        );
+        const isSmall = stageContainerWidth < smallThreshold;
+
+        if (isSmall && props.stageSizeMode !== STAGE_SIZE_MODES.small) {
+            syncingModeRef.current = true;
+            props.onSetStageSize(STAGE_SIZE_MODES.small);
+        } else if (!isSmall && props.stageSizeMode === STAGE_SIZE_MODES.small) {
+            syncingModeRef.current = true;
+            props.onSetStageSize(STAGE_SIZE_MODES.full);
         }
-
-        if (stageContainerWidth < AUTO_SMALL_STAGE_INNER_WIDTH) {
-            if (props.stageSizeMode !== STAGE_SIZE_MODES.small) {
-                if (autoSmallStageRequestedRef.current) return;
-                autoSmallStageRequestedRef.current = true;
-                autoSmallStageActiveRef.current = true;
-                if (typeof props.onSetStageSize === 'function') {
-                    props.onSetStageSize(STAGE_SIZE_MODES.small);
-                }
-            }
-        } else {
-            autoSmallStageRequestedRef.current = false;
-
-            if (autoSmallStageActiveRef.current &&
-                props.stageSizeMode === STAGE_SIZE_MODES.small &&
-                stageContainerWidth >= AUTO_RESTORE_STAGE_INNER_WIDTH &&
-                typeof props.onSetStageSize === 'function') {
-                autoSmallStageActiveRef.current = false;
-                props.onSetStageSize(lastNonSmallStageSizeModeRef.current);
-            }
-        }
-    }, [stageContainerWidth, props.isFullScreen, props.onSetStageSize, props.stageSizeMode, enableStageResize]);
+    }, [stageContainerWidth, props.isFullScreen, props.onSetStageSize, props.stageSizeMode, props.customStageSize, enableStageResize]);
 
     useEffect(() => {
         if (!enableStageResize) return;
@@ -383,14 +434,6 @@ const GUIComponent = props => {
                     }
                     return nextInnerWidth;
                 });
-
-                if (!props.isFullScreen &&
-                    props.stageSizeMode !== STAGE_SIZE_MODES.small &&
-                    typeof props.onSetStageSize === 'function' &&
-                    nextInnerWidth < AUTO_SMALL_STAGE_INNER_WIDTH) {
-                    autoSmallStageActiveRef.current = true;
-                    props.onSetStageSize(STAGE_SIZE_MODES.small);
-                }
             });
         };
 
@@ -412,9 +455,6 @@ const GUIComponent = props => {
     }, [
         getStageBorderExtraWidth,
         props.customStageSize,
-        props.isFullScreen,
-        props.onSetStageSize,
-        props.stageSizeMode,
         enableStageResize
     ]);
 
@@ -998,6 +1038,7 @@ GUIComponent.propTypes = {
     showSaveFilePicker: PropTypes.func,
     soundsTabVisible: PropTypes.bool,
     stageSizeMode: PropTypes.oneOf(Object.keys(STAGE_SIZE_MODES)),
+    stageSizeRequestId: PropTypes.number,
     targetIsStage: PropTypes.bool,
     telemetryModalVisible: PropTypes.bool,
     theme: PropTypes.instanceOf(Theme),
@@ -1044,6 +1085,7 @@ const mapStateToProps = state => ({
     isWindowFullScreen: state.scratchGui.tw.isWindowFullScreen,
     blocksId: state.scratchGui.timeTravel.year.toString(),
     stageSizeMode: state.scratchGui.stageSize.stageSize,
+    stageSizeRequestId: state.scratchGui.stageSize.requestId,
     theme: state.scratchGui.theme.theme,
     locale: state.locales.locale,
     onboardingVisible: state.scratchGui.onboarding.visible,
