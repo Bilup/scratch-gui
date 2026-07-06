@@ -741,6 +741,8 @@ class Blocks extends React.Component {
                         }
                     });
                 }
+
+                this.recolorFlyoutBlocks();
             }
 
             // Update workspace-specific colors directly if available
@@ -941,9 +943,22 @@ class Blocks extends React.Component {
             this.workspace.toolbox_.setFlyoutScrollPos(currentCategoryPos);
         }
 
+        this.recolorFlyoutBlocks();
+
         const queue = this.toolboxUpdateQueue;
         this.toolboxUpdateQueue = [];
         queue.forEach(fn => fn());
+    }
+
+    recolorFlyoutBlocks () {
+        if (this.flyoutWorkspace && this.flyoutWorkspace.getAllBlocks) {
+            const flyoutBlocks = this.flyoutWorkspace.getAllBlocks();
+            flyoutBlocks.forEach(block => {
+                if (block.updateColour) {
+                    block.updateColour();
+                }
+            });
+        }
     }
 
     withToolboxUpdates (fn) {
