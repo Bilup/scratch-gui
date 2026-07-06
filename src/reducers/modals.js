@@ -26,6 +26,7 @@ const MODAL_ONBOARDING = 'onboardingModal';
 const MODAL_SHORTCUT_MANAGER = 'shortcutManagerModal';
 const MODAL_WARPTHEME = 'bilmeModal';
 const MODAL_CUSTOM_GALLERY = 'customGalleryModal';
+const MODAL_DEBUGGER = 'debuggerModal';
 
 const initialState = {
     [MODAL_BACKDROP_LIBRARY]: false,
@@ -52,7 +53,8 @@ const initialState = {
     [MODAL_ONBOARDING]: false,
     [MODAL_SHORTCUT_MANAGER]: false,
     [MODAL_WARPTHEME]: false,
-    [MODAL_CUSTOM_GALLERY]: false
+    [MODAL_CUSTOM_GALLERY]: false,
+    [MODAL_DEBUGGER]: false
 };
 
 const reducer = function (state, action) {
@@ -160,6 +162,12 @@ const openBilmeModal = function () {
 const openCustomGalleryModal = function () {
     return openModal(MODAL_CUSTOM_GALLERY);
 };
+const openDebuggerModal = function () {
+    return openModal(MODAL_DEBUGGER);
+};
+const closeDebuggerModal = function () {
+    return closeModal(MODAL_DEBUGGER);
+};
 const openSimpleDialog = function (dialogConfig) {
     return {
         type: 'scratch-gui/modals/SHOW_SIMPLE_DIALOG',
@@ -265,6 +273,8 @@ export {
     openOnboardingModal,
     openShortcutManagerModal,
     openBilmeModal,
+    openDebuggerModal,
+    closeDebuggerModal,
     openSimpleDialog,
     closeBackdropLibrary,
     closeCostumeLibrary,
