@@ -107,9 +107,6 @@ import {
     openModeMenu,
     closeModeMenu,
     modeMenuOpen,
-    settingsMenuOpen,
-    openSettingsMenu,
-    closeSettingsMenu,
     errorsMenuOpen,
     openErrorsMenu,
     closeErrorsMenu,
@@ -249,32 +246,6 @@ AboutButton.propTypes = {
     onClick: PropTypes.func.isRequired
 };
 
-const SettingsButton = props => (
-    <Button
-        className={classNames(styles.menuBarItem, styles.hoverable)}
-        iconClassName={styles.aboutIcon}
-        iconElem={Settings}
-        onClick={props.onClick}
-    />
-);
-
-SettingsButton.propTypes = {
-    onClick: PropTypes.func.isRequired
-};
-
-const AddonsButton = props => (
-    <Button
-        className={classNames(styles.menuBarItem, styles.hoverable)}
-        iconClassName={styles.aboutIcon}
-        iconElem={Puzzle}
-        onClick={props.onClick}
-    />
-);
-
-AddonsButton.propTypes = {
-    onClick: PropTypes.func.isRequired
-};
-
 // Unlike <MenuItem href="">, this uses an actual <a>
 const MenuItemLink = props => (
     <a
@@ -333,7 +304,6 @@ class MenuBar extends React.Component {
             'handleClickSave',
             'handleClickSaveAsCopy',
             'handleClickPackager',
-            'handleClickDesktopSettings',
             'handleClickRestorePoints',
             'handleClickSeeCommunity',
             'handleClickShare',
@@ -539,7 +509,7 @@ class MenuBar extends React.Component {
         this.props.onClickDesktopSettings();
         this.props.onRequestCloseSettings();
     }
-    handleClickRestorePoints() {
+    handleClickRestorePoints () {
         this.props.onClickRestorePoints();
         this.props.onRequestCloseFile();
     }
@@ -1831,20 +1801,31 @@ class MenuBar extends React.Component {
                                     </MenuItem>
                                 </MenuSection>
                                 <MenuSection>
-                                    <MenuItem
-                                        onClick={() => {
-                                            this.props.onClickSettingsModal();
-                                            this.props.onRequestCloseEdit();
-                                        }}
-                                        shortcut={formatShortcutDisplay(this.getShortcut('settings'))}
-                                    >
-                                        <Settings />
-                                        <FormattedMessage
-                                            defaultMessage="Project Settings"
-                                            description="Menu bar item for settings"
-                                            id="tw.menuBar.moreSettings"
-                                        />
-                                    </MenuItem>
+                                    {this.props.onClickSettingsModal && (
+                                        <MenuItem onClick={this.props.onClickSettingsModal}>
+                                            <Settings />
+                                            <FormattedMessage
+                                                defaultMessage="Settings"
+                                                description="Menu bar item to open the settings modal"
+                                                id="tw.menuBar.settings"
+                                            />
+                                        </MenuItem>
+                                    )}
+                                    {this.props.onClickAddonSettings && (
+                                        <MenuItem
+                                            onClick={() => {
+                                                this.props.onRequestCloseEdit();
+                                                this.props.onClickAddonSettings();
+                                            }}
+                                        >
+                                            <Puzzle />
+                                            <FormattedMessage
+                                                defaultMessage="Addons"
+                                                description="Menu bar item to open addon settings"
+                                                id="tw.menuBar.addons"
+                                            />
+                                        </MenuItem>
+                                    )}
                                     {this.props.onClickDesktopSettings &&
                                         <TWDesktopSettings onClick={this.props.onClickDesktopSettings} />}
                                     <ChangeUsername>{changeUsername => (
@@ -2190,36 +2171,7 @@ class MenuBar extends React.Component {
                                 </MenuBarMenu>
                             </MenuLabel>
                         )}
-                        {(this.props.canChangeTheme || this.props.canChangeLanguage) && (<SettingsMenu
-                            canChangeLanguage={this.props.canChangeLanguage}
-                            canChangeTheme={this.props.canChangeTheme}
-                            isRtl={this.props.isRtl}
-                            onClickDesktopSettings={
-                                this.props.onClickDesktopSettings &&
-                                this.handleClickDesktopSettings
-                            }
-                            // eslint-disable-next-line react/jsx-no-bind
-                            onOpenCustomSettings={this.props.onClickAddonSettings.bind(null, 'editor-theme3')}
-                            onRequestClose={this.props.onRequestCloseSettings}
-                            onRequestOpen={this.props.onClickSettings}
-                            settingsMenuOpen={this.props.settingsMenuOpen}
-                        />)}
-                        {this.props.onClickSettingsModal && (
-                            <div
-                                data-mw-item="settings"
-                                className={styles.menuBarLayoutItem}
-                            >
-                                <SettingsButton onClick={this.props.onClickSettingsModal} />
-                            </div>
-                        )}
-                        {this.props.onClickAddonSettings && (
-                            <div
-                                data-mw-item="addons"
-                                className={styles.menuBarLayoutItem}
-                            >
-                                <AddonsButton onClick={this.props.onClickAddonSettings} />
-                            </div>
-                        )}
+                        {(this.props.canChangeTheme || this.props.canChangeLanguage) && <SettingsMenu />}
                     </div>
 
                     <div
@@ -2486,7 +2438,6 @@ MenuBar.propTypes = {
     onClickRemix: PropTypes.func,
     onClickSave: PropTypes.func,
     onClickSaveAsCopy: PropTypes.func,
-    onClickSettings: PropTypes.func,
     onClickPreferencesModal: PropTypes.func,
     onClickSettingsModal: PropTypes.func,
     onClickGitModal: PropTypes.func,
@@ -2507,7 +2458,6 @@ MenuBar.propTypes = {
     onRequestCloseWorkspaceBookmarks: PropTypes.func,
     onRequestCloseLogin: PropTypes.func,
     onRequestCloseMode: PropTypes.func,
-    onRequestCloseSettings: PropTypes.func,
     onClickTools: PropTypes.func,
     onRequestCloseTools: PropTypes.func,
     onRequestOpenAbout: PropTypes.func,
@@ -2528,7 +2478,6 @@ MenuBar.propTypes = {
     onGitStatusDone: PropTypes.func,
     renderLogin: PropTypes.func,
     sessionExists: PropTypes.bool,
-    settingsMenuOpen: PropTypes.bool,
     shouldSaveBeforeTransition: PropTypes.func,
     showSaveFilePicker: PropTypes.func,
     showComingSoon: PropTypes.bool,
@@ -2578,7 +2527,6 @@ const mapStateToProps = (state, ownProps) => {
         projectTitle: state.scratchGui.projectTitle,
         projectChanged: state.scratchGui.projectChanged,
         sessionExists: state.session && typeof state.session.session !== 'undefined',
-        settingsMenuOpen: settingsMenuOpen(state),
         theme: state.scratchGui.theme.theme,
         username: user ? user.username : null,
         userOwnsProject: ownProps.authorUsername && user &&
@@ -2621,7 +2569,6 @@ const mapDispatchToProps = dispatch => ({
     onRequestCloseAbout: () => dispatch(closeAboutMenu()),
     onClickRestorePoints: () => dispatch(openRestorePointModal()),
     onClickExtensionManager: () => dispatch(openExtensionManagerModal()),
-    onClickSettings: () => dispatch(openSettingsMenu()),
     onClickSettingsModal: () => {
         dispatch(closeEditMenu());
         dispatch(openSettingsModal());
@@ -2638,7 +2585,6 @@ const mapDispatchToProps = dispatch => ({
         dispatch(openShortcutManagerModal());
     },
     onOpenSettingsModal: () => dispatch(openSettingsModal()),
-    onRequestCloseSettings: () => dispatch(closeSettingsMenu()),
     onClickNew: needSave => {
         dispatch(setPlayer(false));
         dispatch(requestNewProject(needSave));

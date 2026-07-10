@@ -9,6 +9,7 @@ import FancyCheckbox from '../tw-fancy-checkbox/checkbox.jsx';
 import styles from './settings-modal.css';
 import {
     ZONES,
+    ALWAYS_SHOW,
     getZoneDisplayOrder,
     getZoneExtras,
     setZoneOrder,
@@ -141,7 +142,7 @@ class UnwrappedMenuBarLayoutSetting extends React.Component {
         const visible = !this.state.hidden.includes(id);
         const labelId = LABELS[id];
         const label = labelId ? intl.formatMessage({id: labelId, defaultMessage: labelId}) : id;
-        const canHide = id !== 'rotur-account' && id !== 'save-status';
+        const canHide = !ALWAYS_SHOW.includes(id);
         return (
             <div
                 key={id}

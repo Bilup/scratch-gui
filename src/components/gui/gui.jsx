@@ -905,7 +905,7 @@ const GUIComponent = props => {
                                 <TabPanel className={tabClassNames.tabPanel}>
                                     <Box className={styles.blocksWrapper}>
                                         <Blocks
-                                            key={`${blocksId}/${theme.id}`}
+                                            key={`${blocksId}/${theme.getBlocksThemeId()}`}
                                             canUseCloud={canUseCloud}
                                             grow={1}
                                             isVisible={blocksTabVisible}
