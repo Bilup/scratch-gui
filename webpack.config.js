@@ -105,6 +105,7 @@ const base = {
                 /node_modules[\\/]pify/,
                 /node_modules[\\/]@vernier[\\/]godirect/,
                 /node_modules[\\/]@chenglou[\\/]pretext/,
+                /node_modules[\\/]fractch[\\/]src/,
                 /node_modules[\\/]isomorphic-git/
             ],
             options: {

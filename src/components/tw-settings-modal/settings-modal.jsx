@@ -12,14 +12,26 @@ import DocumentationLink from '../tw-documentation-link/documentation-link.jsx';
 import styles from './settings-modal.css';
 import helpIcon from './help-icon.svg';
 import {APP_NAME} from '../../lib/constants/brand.js';
+import {STYLE_GROUPS} from '../../lib/mw-style-settings';
+import StylePreview from './style-preview.jsx';
+import MenuBarLayoutSetting from './menu-bar-layout.jsx';
 
-import {Settings, Zap} from 'lucide-react';
+import {Settings, Zap, Blocks, Palette, PanelTop, Bug, ChevronDown, GitBranch, Variable} from 'lucide-react';
+
+import {DEFINITIONS as DEBUGGER_SETTINGS, getSetting as getDebuggerSetting,
+    setSetting as setDebuggerSetting} from '../../lib/debugger/settings.js';
+import {DEFINITIONS as VARIABLE_MANAGER_SETTINGS, getSetting as getVariableManagerSetting,
+    setSetting as setVariableManagerSetting} from '../../lib/variable-manager/settings.js';
+import {
+    getAuthorName, getAuthorEmail, setAuthorName, setAuthorEmail,
+    getDefaultBranch, setDefaultBranch, getAutoCommit, setAutoCommit
+} from '../../lib/git/config.js';
 
 const BufferedInput = BufferedInputHOC(Input);
 
 const messages = defineMessages({
     title: {
-        defaultMessage: 'Project Settings',
+        defaultMessage: 'Settings',
         description: 'Title of settings modal',
         id: 'tw.settingsModal.title'
     },
@@ -51,6 +63,42 @@ const messages = defineMessages({
     headerExperimental: {
         defaultMessage: 'Experimental',
         id: 'mw.settings.experimental'
+    },
+    headerEditor: {
+        defaultMessage: 'Editor',
+        id: 'mw.settings.editor'
+    },
+    headerInterface: {
+        defaultMessage: 'Interface',
+        id: 'mw.settings.interface'
+    },
+    headerStage: {
+        defaultMessage: 'Stage',
+        id: 'mw.settings.stageHeader'
+    },
+    headerBlockPalette: {
+        defaultMessage: 'Block Palette',
+        id: 'mw.settings.blockPaletteHeader'
+    },
+    headerStyles: {
+        defaultMessage: 'Styles',
+        id: 'mw.settings.stylesHeader'
+    },
+    headerMenuBar: {
+        defaultMessage: 'Menu Bar',
+        id: 'mw.settings.menuBarHeader'
+    },
+    headerDebugger: {
+        defaultMessage: 'Debugger',
+        id: 'mw.settings.debuggerHeader'
+    },
+    headerVersionControl: {
+        defaultMessage: 'Version Control',
+        id: 'mw.settings.versionControlHeader'
+    },
+    headerVariableManager: {
+        defaultMessage: 'Variable Manager',
+        id: 'mw.settings.variableManagerHeader'
     }
 });
 
@@ -93,6 +141,27 @@ SidebarItem.propTypes = {
     icon: PropTypes.elementType,
     onClick: PropTypes.func.isRequired,
     isSelected: PropTypes.bool
+};
+
+const SidebarGroupHeader = ({id, label, collapsed, onClick}) => (
+    <button
+        type="button"
+        className={styles.sidebarGroupHeader}
+        onClick={() => onClick(id)}
+        aria-expanded={!collapsed}
+    >
+        <ChevronDown
+            className={classNames(styles.sidebarGroupChevron, {[styles.collapsed]: collapsed})}
+        />
+        <span>{label}</span>
+    </button>
+);
+
+SidebarGroupHeader.propTypes = {
+    id: PropTypes.string.isRequired,
+    label: PropTypes.string.isRequired,
+    collapsed: PropTypes.bool,
+    onClick: PropTypes.func.isRequired
 };
 
 class UnwrappedSetting extends React.Component {
@@ -333,6 +402,80 @@ const settingDefinitions = {
             description: 'Window Animation setting help',
             id: 'mw.settingsModal.windowAnimationHelp'
         }
+    },
+    squareStageCorners: {
+        label: {
+            defaultMessage: 'Square Stage Corners',
+            id: 'mw.settingsModal.squareStageCorners'
+        },
+        help: {
+            defaultMessage: 'Removes the rounded corners from the stage.',
+            id: 'mw.settingsModal.squareStageCornersHelp'
+        }
+    },
+    hideDeleteButton: {
+        label: {
+            defaultMessage: 'Hide Delete Button',
+            id: 'mw.settingsModal.hideDeleteButton'
+        },
+        help: {
+            defaultMessage: 'Hides the delete button on sprites, costumes, and sounds.',
+            id: 'mw.settingsModal.hideDeleteButtonHelp'
+        }
+    },
+    hideExtensionButton: {
+        label: {
+            defaultMessage: 'Hide Extension Button',
+            id: 'mw.settingsModal.hideExtensionButton'
+        },
+        help: {
+            defaultMessage: 'Hides the add extension button in the bottom-left of the block palette.',
+            id: 'mw.settingsModal.hideExtensionButtonHelp'
+        }
+    },
+    hideBackpack: {
+        label: {
+            defaultMessage: 'Hide Backpack',
+            id: 'mw.settingsModal.hideBackpack'
+        },
+        help: {
+            defaultMessage: 'Hides the backpack bar at the bottom of the editor.',
+            id: 'mw.settingsModal.hideBackpackHelp'
+        }
+    },
+    hideOperatorArrows: {
+        label: {
+            defaultMessage: 'Hide Extendable Operator Arrows',
+            id: 'mw.settingsModal.hideOperatorArrows'
+        },
+        help: {
+            defaultMessage: 'Hides the arrows used to add or remove inputs on extendable ' +
+                'operator blocks like +, and, or and join. You can still add or remove inputs ' +
+                'by right-clicking the block.',
+            id: 'mw.settingsModal.hideOperatorArrowsHelp'
+        }
+    },
+    showPauseButton: {
+        label: {
+            defaultMessage: 'Show Pause Button',
+            id: 'mw.settingsModal.showPauseButton'
+        },
+        help: {
+            defaultMessage: 'Adds a pause/play button between the green flag and stop button that ' +
+                'freezes the project in place. The project can also be paused with Alt+X (Option+X on macOS).',
+            id: 'mw.settingsModal.showPauseButtonHelp'
+        }
+    },
+    showStepButton: {
+        label: {
+            defaultMessage: 'Show Frame Step Button',
+            id: 'mw.settingsModal.showStepButton'
+        },
+        help: {
+            defaultMessage: 'While the project is paused, adds a button that advances it by exactly one ' +
+                'frame so you can watch behavior change step by step.',
+            id: 'mw.settingsModal.showStepButtonHelp'
+        }
     }
 };
 
@@ -356,6 +499,39 @@ const createBooleanSetting = (key, definition) => {
     return SettingComponent;
 };
 
+class DebuggerBooleanSetting extends React.Component {
+    constructor (props) {
+        super(props);
+        this.handleChange = this.handleChange.bind(this);
+        this.state = {value: getDebuggerSetting(props.settingId)};
+    }
+    handleChange (e) {
+        const value = e.target.checked;
+        setDebuggerSetting(this.props.settingId, value);
+        this.setState({value});
+    }
+    render () {
+        const {intl, label, help} = this.props;
+        const translatedLabel = intl.formatMessage({id: label, defaultMessage: label});
+        const translatedHelp = help ? intl.formatMessage({id: help, defaultMessage: help}) : undefined;
+        return (
+            <BooleanSetting
+                value={this.state.value}
+                onChange={this.handleChange}
+                label={translatedLabel}
+                help={translatedHelp}
+            />
+        );
+    }
+}
+
+DebuggerBooleanSetting.propTypes = {
+    settingId: PropTypes.string.isRequired,
+    label: PropTypes.string.isRequired,
+    help: PropTypes.string,
+    intl: intlShape.isRequired
+};
+
 const HighQualityPen = createBooleanSetting('HighQualityPen', settingDefinitions.highQualityPen);
 const Interpolation = createBooleanSetting('Interpolation', settingDefinitions.interpolation);
 const InfiniteClones = createBooleanSetting('InfiniteClones', settingDefinitions.infiniteClones);
@@ -366,6 +542,11 @@ const CaseSensitiveLists = createBooleanSetting('CaseSensitiveLists', settingDef
 const RealLayerIndexes = createBooleanSetting('RealLayerIndexes', settingDefinitions.realLayerIndexes);
 const EnableStageResize = createBooleanSetting('EnableStageResize', settingDefinitions.enableStageResize);
 const WindowAnimation = createBooleanSetting('WindowAnimation', settingDefinitions.windowAnimation);
+const SquareStageCorners = createBooleanSetting('SquareStageCorners', settingDefinitions.squareStageCorners);
+const HideDeleteButton = createBooleanSetting('HideDeleteButton', settingDefinitions.hideDeleteButton);
+const HideExtensionButton = createBooleanSetting('HideExtensionButton', settingDefinitions.hideExtensionButton);
+const HideBackpack = createBooleanSetting('HideBackpack', settingDefinitions.hideBackpack);
+const HideOperatorArrows = createBooleanSetting('HideOperatorArrows', settingDefinitions.hideOperatorArrows);
 
 const DisableCompiler = props => (
     <BooleanSetting
@@ -396,6 +577,128 @@ DisableCompiler.propTypes = {
     value: PropTypes.bool,
     onChange: PropTypes.func.isRequired
 };
+
+const STYLE_OPTIONS = {
+    'tab-style': [
+        {value: 'mistwarp', labelId: 'mw.settingsModal.tabStyle.mistwarp', label: 'MistWarp'},
+        {value: 'turbowarp', labelId: 'mw.settingsModal.tabStyle.turbowarp', label: 'TurboWarp'},
+        {value: 'scratchbox', labelId: 'mw.settingsModal.tabStyle.scratchbox', label: 'ScratchBox'}
+    ],
+    'tab-looks': [
+        {value: 'default', labelId: 'mw.settingsModal.tabLooks.default', label: 'Default'},
+        {value: 'icon-only', labelId: 'mw.settingsModal.tabLooks.iconOnly', label: 'Icon Only'},
+        {value: 'text-only', labelId: 'mw.settingsModal.tabLooks.textOnly', label: 'Text Only'}
+    ],
+    'window-style': [
+        {value: 'mistwarp', labelId: 'mw.settingsModal.windowStyle.mistwarp', label: 'MistWarp'},
+        {value: 'macos', labelId: 'mw.settingsModal.windowStyle.macos', label: 'macOS'},
+        {value: 'windows10', labelId: 'mw.settingsModal.windowStyle.windows10', label: 'Windows 10'}
+    ]
+};
+
+const getOptionCss = (groupId, value) => {
+    const group = STYLE_GROUPS.find(g => g.id === groupId);
+    if (!group) return null;
+    const option = group.options.find(o => o.value === value);
+    return option ? option.css : null;
+};
+
+const StyleOption = ({groupId, option, selected, onSelect, intl}) => (
+    <button
+        type="button"
+        className={classNames(styles.styleOption, {[styles.styleOptionSelected]: selected})}
+        onClick={() => onSelect(option.value)}
+    >
+        <div className={styles.stylePreview}>
+            <StylePreview
+                type={groupId === 'window-style' ? 'window' : 'tabs'}
+                variant={option.value}
+                css={getOptionCss(groupId, option.value)}
+            />
+        </div>
+        <span className={styles.styleOptionLabel}>
+            {option.labelId && intl ? intl.formatMessage({id: option.labelId, defaultMessage: option.label}) : option.label}
+        </span>
+    </button>
+);
+StyleOption.propTypes = {
+    groupId: PropTypes.string.isRequired,
+    option: PropTypes.shape({
+        value: PropTypes.string,
+        label: PropTypes.string,
+        labelId: PropTypes.string
+    }).isRequired,
+    selected: PropTypes.bool,
+    onSelect: PropTypes.func.isRequired,
+    intl: intlShape
+};
+
+const StyleSelect = ({groupId, label, value, onChange, intl}) => (
+    <div className={styles.setting}>
+        <div className={styles.label}>{label}</div>
+        <div className={styles.stylePicker}>
+            {STYLE_OPTIONS[groupId].map(option => (
+                <StyleOption
+                    key={option.value}
+                    groupId={groupId}
+                    option={option}
+                    selected={value === option.value}
+                    onSelect={onChange}
+                    intl={intl}
+                />
+            ))}
+        </div>
+    </div>
+);
+StyleSelect.propTypes = {
+    groupId: PropTypes.string.isRequired,
+    label: PropTypes.node,
+    value: PropTypes.string,
+    onChange: PropTypes.func.isRequired,
+    intl: intlShape
+};
+
+const TabStyleSelect = props => (
+    <StyleSelect
+        groupId="tab-style"
+        label={<FormattedMessage
+            defaultMessage="Tab Style"
+            id="mw.settingsModal.tabStyle"
+        />}
+        value={props.value}
+        onChange={props.onChange}
+        intl={props.intl}
+    />
+);
+TabStyleSelect.propTypes = {value: PropTypes.string, onChange: PropTypes.func, intl: intlShape};
+
+const TabLooksSelect = props => (
+    <StyleSelect
+        groupId="tab-looks"
+        label={<FormattedMessage
+            defaultMessage="Tab Looks"
+            id="mw.settingsModal.tabLooks"
+        />}
+        value={props.value}
+        onChange={props.onChange}
+        intl={props.intl}
+    />
+);
+TabLooksSelect.propTypes = {value: PropTypes.string, onChange: PropTypes.func, intl: intlShape};
+
+const WindowStyleSelect = props => (
+    <StyleSelect
+        groupId="window-style"
+        label={<FormattedMessage
+            defaultMessage="Window Style"
+            id="mw.settingsModal.windowStyle"
+        />}
+        value={props.value}
+        onChange={props.onChange}
+        intl={props.intl}
+    />
+);
+WindowStyleSelect.propTypes = {value: PropTypes.string, onChange: PropTypes.func, intl: intlShape};
 
 const CustomFPS = ({framerate, onChange, onCustomizeFramerate}) => (
     <BooleanSetting
@@ -703,6 +1006,119 @@ const pageConfigurations = {
             }
         ]
     },
+    editor: {
+        sections: [
+            {
+                headerMessage: 'headerStage',
+                settings: [
+                    {
+                        component: DebuggerBooleanSetting,
+                        props: () => ({
+                            settingId: 'stage_pause_button',
+                            label: settingDefinitions.showPauseButton.label.id,
+                            help: settingDefinitions.showPauseButton.help.id
+                        })
+                    },
+                    {
+                        component: DebuggerBooleanSetting,
+                        props: () => ({
+                            settingId: 'stage_step_button',
+                            label: settingDefinitions.showStepButton.label.id,
+                            help: settingDefinitions.showStepButton.help.id
+                        })
+                    },
+                    {
+                        component: SquareStageCorners,
+                        props: props => ({
+                            value: props.squareStageCorners,
+                            onChange: props.onSquareStageCornersChange
+                        })
+                    }
+                ]
+            },
+            {
+                headerMessage: 'headerBlockPalette',
+                settings: [
+                    {
+                        component: HideExtensionButton,
+                        props: props => ({
+                            value: props.hideExtensionButton,
+                            onChange: props.onHideExtensionButtonChange
+                        })
+                    },
+                    {
+                        component: HideOperatorArrows,
+                        props: props => ({
+                            value: props.hideOperatorArrows,
+                            onChange: props.onHideOperatorArrowsChange
+                        })
+                    }
+                ]
+            },
+            {
+                headerMessage: 'headerInterface',
+                settings: [
+                    {
+                        component: HideDeleteButton,
+                        props: props => ({
+                            value: props.hideDeleteButton,
+                            onChange: props.onHideDeleteButtonChange
+                        })
+                    },
+                    {
+                        component: HideBackpack,
+                        props: props => ({
+                            value: props.hideBackpack,
+                            onChange: props.onHideBackpackChange
+                        })
+                    }
+                ]
+            }
+        ]
+    },
+    styles: {
+        sections: [
+            {
+                headerMessage: 'headerStyles',
+                settings: [
+                    {
+                        component: TabStyleSelect,
+                        props: props => ({
+                            value: props.tabStyle,
+                            onChange: props.onTabStyleChange
+                        })
+                    },
+                    {
+                        component: TabLooksSelect,
+                        props: props => ({
+                            value: props.tabLooks,
+                            onChange: props.onTabLooksChange
+                        })
+                    },
+                    {
+                        component: WindowStyleSelect,
+                        props: props => ({
+                            value: props.windowStyle,
+                            onChange: props.onWindowStyleChange
+                        })
+                    }
+                ]
+            }
+        ]
+    },
+    menuBar: {
+        sections: [
+            {
+                headerMessage: 'headerMenuBar',
+                settings: [
+                    {
+                        component: MenuBarLayoutSetting,
+                        props: () => ({})
+                    }
+                ]
+            }
+        ]
+    },
     experimental: {
         sections: [
             {
@@ -760,6 +1176,7 @@ const UnwrappedPageRenderer = ({config, intl, ...props}) => (
                     return (<SettingComponent
                         key={settingIdx}
                         {...settingProps}
+                        intl={intl}
                     />);
                 })}
             </React.Fragment>
@@ -782,11 +1199,291 @@ const ExperimentalPage = props => (<PageRenderer
     config={pageConfigurations.experimental}
     {...props}
 />);
+const EditorPage = props => (<PageRenderer
+    config={pageConfigurations.editor}
+    {...props}
+/>);
+const StylesPage = props => (<PageRenderer
+    config={pageConfigurations.styles}
+    {...props}
+/>);
+const MenuBarPage = props => (<PageRenderer
+    config={pageConfigurations.menuBar}
+    {...props}
+/>);
+
+const STAGE_CONTROL_SETTINGS = ['stage_pause_button', 'stage_step_button'];
+
+const UnwrappedDebuggerPage = ({intl}) => (
+    <Box className={styles.body}>
+        <Header>{intl.formatMessage(messages.headerDebugger)}</Header>
+        {DEBUGGER_SETTINGS.filter(setting => !STAGE_CONTROL_SETTINGS.includes(setting.id)).map(setting => (
+            <DebuggerBooleanSetting
+                key={setting.id}
+                settingId={setting.id}
+                label={setting.label}
+                help={setting.help}
+                intl={intl}
+            />
+        ))}
+    </Box>
+);
+
+UnwrappedDebuggerPage.propTypes = {
+    intl: intlShape.isRequired
+};
+
+const DebuggerPage = injectIntl(UnwrappedDebuggerPage);
+
+const TextSetting = ({label, help, value, onSubmit, placeholder}) => (
+    <div className={styles.setting}>
+        <div className={styles.textSettingLabel}>{label}</div>
+        <BufferedInput
+            className={styles.textInput}
+            type="text"
+            value={value}
+            placeholder={placeholder}
+            onSubmit={onSubmit}
+        />
+        {help && <p className={styles.detail}>{help}</p>}
+    </div>
+);
+TextSetting.propTypes = {
+    label: PropTypes.node,
+    help: PropTypes.node,
+    value: PropTypes.string,
+    onSubmit: PropTypes.func.isRequired,
+    placeholder: PropTypes.string
+};
+
+class UnwrappedVersionControlPage extends React.Component {
+    constructor (props) {
+        super(props);
+        bindAll(this, [
+            'handleNameChange',
+            'handleEmailChange',
+            'handleBranchChange',
+            'handleAutoCommitChange'
+        ]);
+        this.state = {
+            authorName: getAuthorName(),
+            authorEmail: getAuthorEmail(),
+            defaultBranch: getDefaultBranch(),
+            autoCommit: getAutoCommit()
+        };
+    }
+    handleNameChange (value) {
+        setAuthorName(value);
+        this.setState({authorName: getAuthorName()});
+    }
+    handleEmailChange (value) {
+        setAuthorEmail(value);
+        this.setState({authorEmail: getAuthorEmail()});
+    }
+    handleBranchChange (value) {
+        setDefaultBranch(value);
+        this.setState({defaultBranch: getDefaultBranch()});
+    }
+    handleAutoCommitChange (e) {
+        const value = e.target.checked;
+        setAutoCommit(value);
+        this.setState({autoCommit: value});
+    }
+    render () {
+        const {intl} = this.props;
+        return (
+            <Box className={styles.body}>
+                <Header>{intl.formatMessage(messages.headerVersionControl)}</Header>
+                <TextSetting
+                    label={<FormattedMessage
+                        defaultMessage="Author name"
+                        id="mw.settings.vc.authorName"
+                    />}
+                    help={<FormattedMessage
+                        // eslint-disable-next-line max-len
+                        defaultMessage="Used as the commit author and as your username when pushing to private repositories."
+                        id="mw.settings.vc.authorNameHelp"
+                    />}
+                    value={this.state.authorName}
+                    onSubmit={this.handleNameChange}
+                    placeholder="User"
+                />
+                <TextSetting
+                    label={<FormattedMessage
+                        defaultMessage="Author email"
+                        id="mw.settings.vc.authorEmail"
+                    />}
+                    help={<FormattedMessage
+                        defaultMessage="Recorded as the email address on each commit you make."
+                        id="mw.settings.vc.authorEmailHelp"
+                    />}
+                    value={this.state.authorEmail}
+                    onSubmit={this.handleEmailChange}
+                    placeholder="user@example.com"
+                />
+                <TextSetting
+                    label={<FormattedMessage
+                        defaultMessage="Default branch name"
+                        id="mw.settings.vc.defaultBranch"
+                    />}
+                    help={<FormattedMessage
+                        defaultMessage="Branch created when a new repository is initialized."
+                        id="mw.settings.vc.defaultBranchHelp"
+                    />}
+                    value={this.state.defaultBranch}
+                    onSubmit={this.handleBranchChange}
+                    placeholder="main"
+                />
+                <BooleanSetting
+                    value={this.state.autoCommit}
+                    onChange={this.handleAutoCommitChange}
+                    label={<FormattedMessage
+                        defaultMessage="Commit automatically when the project is saved"
+                        id="mw.settings.vc.autoCommit"
+                    />}
+                    help={<FormattedMessage
+                        // eslint-disable-next-line max-len
+                        defaultMessage="Creates a commit each time you save the project so your history stays up to date without manual commits."
+                        id="mw.settings.vc.autoCommitHelp"
+                    />}
+                />
+            </Box>
+        );
+    }
+}
+UnwrappedVersionControlPage.propTypes = {
+    intl: intlShape.isRequired
+};
+const VersionControlPage = injectIntl(UnwrappedVersionControlPage);
+
+class VmSetting extends React.Component {
+    constructor (props) {
+        super(props);
+        bindAll(this, ['handleBooleanChange', 'handleSelectChange', 'handleNumberChange']);
+        this.state = {value: getVariableManagerSetting(props.definition.id)};
+    }
+    commit (value) {
+        setVariableManagerSetting(this.props.definition.id, value);
+        this.setState({value: getVariableManagerSetting(this.props.definition.id)});
+    }
+    handleBooleanChange (e) {
+        this.commit(e.target.checked);
+    }
+    handleSelectChange (e) {
+        this.commit(e.target.value);
+    }
+    handleNumberChange (value) {
+        this.commit(value);
+    }
+    render () {
+        const {definition, intl} = this.props;
+        const {value} = this.state;
+        const translatedLabel = intl.formatMessage({id: definition.label, defaultMessage: definition.label});
+        const translatedHelp = definition.help ? intl.formatMessage({id: definition.help, defaultMessage: definition.help}) : undefined;
+        if (definition.type === 'boolean') {
+            return (
+                <BooleanSetting
+                    value={value}
+                    onChange={this.handleBooleanChange}
+                    label={translatedLabel}
+                    help={translatedHelp}
+                />
+            );
+        }
+        if (definition.type === 'select') {
+            return (
+                <Setting
+                    help={translatedHelp}
+                    primary={
+                        <div className={styles.label}>
+                            <span className={styles.settingText}>{translatedLabel}</span>
+                            <select
+                                className={styles.select}
+                                value={value}
+                                onChange={this.handleSelectChange}
+                            >
+                                {definition.options.map(option => (
+                                    <option
+                                        key={option.value}
+                                        value={option.value}
+                                    >
+                                        {intl.formatMessage({id: option.label, defaultMessage: option.label})}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    }
+                />
+            );
+        }
+        return (
+            <Setting
+                help={translatedHelp}
+                primary={
+                    <div className={styles.label}>
+                        <span className={styles.settingText}>{translatedLabel}</span>
+                        <BufferedInput
+                            className={styles.numberInput}
+                            type="number"
+                            value={value}
+                            min={definition.min}
+                            max={definition.max}
+                            step={definition.step}
+                            onSubmit={this.handleNumberChange}
+                        />
+                    </div>
+                }
+            />
+        );
+    }
+}
+VmSetting.propTypes = {
+    definition: PropTypes.shape({
+        id: PropTypes.string.isRequired,
+        type: PropTypes.string.isRequired,
+        label: PropTypes.string,
+        help: PropTypes.string,
+        min: PropTypes.number,
+        max: PropTypes.number,
+        step: PropTypes.number,
+        options: PropTypes.array
+    }).isRequired,
+    intl: intlShape.isRequired
+};
+
+const UnwrappedVariableManagerPage = ({intl}) => (
+    <Box className={styles.body}>
+        <Header>{intl.formatMessage(messages.headerVariableManager)}</Header>
+        {VARIABLE_MANAGER_SETTINGS.map(definition => (
+            <VmSetting
+                key={definition.id}
+                definition={definition}
+                intl={intl}
+            />
+        ))}
+    </Box>
+);
+UnwrappedVariableManagerPage.propTypes = {
+    intl: intlShape.isRequired
+};
+const VariableManagerPage = injectIntl(UnwrappedVariableManagerPage);
 
 const SettingsRouter = ({view, ...handlers}) => {
     switch (view) {
     case 'general':
         return <GeneralPage {...handlers} />;
+    case 'debugger':
+        return <DebuggerPage {...handlers} />;
+    case 'versionControl':
+        return <VersionControlPage {...handlers} />;
+    case 'variableManager':
+        return <VariableManagerPage {...handlers} />;
+    case 'editor':
+        return <EditorPage {...handlers} />;
+    case 'styles':
+        return <StylesPage {...handlers} />;
+    case 'menuBar':
+        return <MenuBarPage {...handlers} />;
     case 'experimental':
         return <ExperimentalPage {...handlers} />;
     default:
@@ -802,15 +1499,25 @@ SettingsRouter.propTypes = {
 class SettingsModalComponent extends React.Component {
     constructor (props) {
         super(props);
-        bindAll(this, ['handleNavigate', 'handleStoreProjectOptions']);
+        bindAll(this, ['handleNavigate', 'handleStoreProjectOptions', 'handleToggleGroup']);
 
         this.state = {
-            currentView: 'general'
+            currentView: 'general',
+            collapsedGroups: {}
         };
     }
 
     handleNavigate (category) {
         this.setState({currentView: category});
+    }
+
+    handleToggleGroup (groupId) {
+        this.setState(prevState => ({
+            collapsedGroups: {
+                ...prevState.collapsedGroups,
+                [groupId]: !prevState.collapsedGroups[groupId]
+            }
+        }));
     }
 
     handleStoreProjectOptions () {
@@ -821,16 +1528,76 @@ class SettingsModalComponent extends React.Component {
         const {intl} = this.props;
         const {currentView} = this.state;
 
-        const categories = [
+        const sidebarGroups = [
             {
                 id: 'general',
-                label: intl.formatMessage({id: 'mw.settings.general', defaultMessage: 'General'}),
-                icon: Settings
+                label: intl.formatMessage({id: 'mw.settings.groupGeneral', defaultMessage: 'General'}),
+                items: [
+                    {
+                        id: 'general',
+                        label: intl.formatMessage({id: 'mw.settings.general', defaultMessage: 'General'}),
+                        icon: Settings
+                    }
+                ]
             },
             {
-                id: 'experimental',
-                label: intl.formatMessage({id: 'mw.settings.experimental', defaultMessage: 'Experimental'}),
-                icon: Zap
+                id: 'appearance',
+                label: intl.formatMessage({id: 'mw.settings.groupAppearance', defaultMessage: 'Appearance'}),
+                items: [
+                    {
+                        id: 'editor',
+                        label: intl.formatMessage({id: 'mw.settings.editor', defaultMessage: 'Editor'}),
+                        icon: Blocks
+                    },
+                    {
+                        id: 'styles',
+                        label: intl.formatMessage({id: 'mw.settings.styles', defaultMessage: 'Styles'}),
+                        icon: Palette
+                    },
+                    {
+                        id: 'menuBar',
+                        label: intl.formatMessage({id: 'mw.settings.menuBar', defaultMessage: 'Menu Bar'}),
+                        icon: PanelTop
+                    }
+                ]
+            },
+            {
+                id: 'tools',
+                label: intl.formatMessage({id: 'mw.settings.groupTools', defaultMessage: 'Tools'}),
+                items: [
+                    {
+                        id: 'versionControl',
+                        label: intl.formatMessage({
+                            id: 'mw.settings.versionControl',
+                            defaultMessage: 'Version Control'
+                        }),
+                        icon: GitBranch
+                    },
+                    {
+                        id: 'variableManager',
+                        label: intl.formatMessage({
+                            id: 'mw.settings.variableManager',
+                            defaultMessage: 'Variable Manager'
+                        }),
+                        icon: Variable
+                    },
+                    {
+                        id: 'debugger',
+                        label: intl.formatMessage({id: 'mw.settings.debugger', defaultMessage: 'Debugger'}),
+                        icon: Bug
+                    }
+                ]
+            },
+            {
+                id: 'advanced',
+                label: intl.formatMessage({id: 'mw.settings.groupAdvanced', defaultMessage: 'Advanced'}),
+                items: [
+                    {
+                        id: 'experimental',
+                        label: intl.formatMessage({id: 'mw.settings.experimental', defaultMessage: 'Experimental'}),
+                        icon: Zap
+                    }
+                ]
             }
         ];
 
@@ -846,16 +1613,32 @@ class SettingsModalComponent extends React.Component {
                 <Box className={styles.sidebarLayout}>
                     <div className={styles.sidebar}>
                         <div className={styles.sidebarItems}>
-                            {categories.map(cat => (
-                                <SidebarItem
-                                    key={cat.id}
-                                    id={cat.id}
-                                    label={cat.label}
-                                    icon={cat.icon}
-                                    onClick={this.handleNavigate}
-                                    isSelected={currentView === cat.id}
-                                />
-                            ))}
+                            {sidebarGroups.map(group => {
+                                const collapsed = !!this.state.collapsedGroups[group.id];
+                                return (
+                                    <div
+                                        key={group.id}
+                                        className={styles.sidebarGroup}
+                                    >
+                                        <SidebarGroupHeader
+                                            id={group.id}
+                                            label={group.label}
+                                            collapsed={collapsed}
+                                            onClick={this.handleToggleGroup}
+                                        />
+                                        {!collapsed && group.items.map(cat => (
+                                            <SidebarItem
+                                                key={cat.id}
+                                                id={cat.id}
+                                                label={cat.label}
+                                                icon={cat.icon}
+                                                onClick={this.handleNavigate}
+                                                isSelected={currentView === cat.id}
+                                            />
+                                        ))}
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
                     <div className={styles.contentArea}>
@@ -896,6 +1679,22 @@ SettingsModalComponent.propTypes = {
     onCaseSensitiveListsChange: PropTypes.func,
     realLayerIndexes: PropTypes.bool,
     onRealLayerIndexesChange: PropTypes.func,
+    squareStageCorners: PropTypes.bool,
+    onSquareStageCornersChange: PropTypes.func,
+    hideDeleteButton: PropTypes.bool,
+    onHideDeleteButtonChange: PropTypes.func,
+    hideExtensionButton: PropTypes.bool,
+    onHideExtensionButtonChange: PropTypes.func,
+    hideBackpack: PropTypes.bool,
+    onHideBackpackChange: PropTypes.func,
+    hideOperatorArrows: PropTypes.bool,
+    onHideOperatorArrowsChange: PropTypes.func,
+    tabStyle: PropTypes.string,
+    onTabStyleChange: PropTypes.func,
+    tabLooks: PropTypes.string,
+    onTabLooksChange: PropTypes.func,
+    windowStyle: PropTypes.string,
+    onWindowStyleChange: PropTypes.func,
     customStageSizeEnabled: PropTypes.bool,
     stageWidth: PropTypes.number,
     onStageWidthChange: PropTypes.func,

@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import React, {useState, useEffect, useMemo} from 'react';
 import {defineMessages, injectIntl, intlShape, FormattedMessage} from 'react-intl';
-import {Search, Heart, Download, ExternalLink} from 'lucide-react';
+import {Search, Heart, Download, ExternalLink, Plus} from 'lucide-react';
 
 import Modal from '../../containers/windowed-modal.jsx';
 import Box from '../box/box.jsx';
@@ -330,7 +330,7 @@ const BilmeModal = props => {
     };
 
     const handleOpenInBilme = theme => {
-        const slug = theme.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        const slug = theme.name.toLowerCase().replace(/[^a-z0-9.]+/g, '-').replace(/(^-|-$)/g, '');
         window.open(`https://theme.bilup.org/themes/${theme.author}/${slug}`, '_blank');
     };
 
@@ -434,6 +434,14 @@ const BilmeModal = props => {
                                 </option>
                             ))}
                         </select>
+
+                        <button
+                            className={styles.createBtn}
+                            onClick={handleCreateTheme}
+                        >
+                            <Plus size={14} />
+                            <FormattedMessage {...messages.createTheme} />
+                        </button>
                     </div>
                 </div>
 
@@ -462,21 +470,21 @@ const BilmeModal = props => {
                         filteredThemes.map(theme => (
                             <div
                                 key={theme.uuid}
-                                className={styles.themeCard}
+                                className={styles['theme-card']}
                                 data-name={theme.name}
                                 data-platform={theme.platform}
                             >
                                 <div
-                                    className={styles.themeHeader}
+                                    className={styles['theme-header']}
                                     style={getGradientStyle(theme)}
                                 />
-                                <div className={styles.themeContent}>
-                                    <h3 className={styles.themeName}>{theme.name}</h3>
-                                    <p className={styles.themeAuthor}>by {theme.authorName}</p>
+                                <div className={styles['theme-content']}>
+                                    <h3 className={styles['theme-name']}>{theme.name}</h3>
+                                    <p className={styles['theme-author']}>by {theme.authorName}</p>
                                     {theme.description && (
-                                        <p className={styles.themeDescription}>{theme.description}</p>
+                                        <p className={styles['theme-description']}>{theme.description}</p>
                                     )}
-                                    <div className={styles.themeStats}>
+                                    <div className={styles['theme-stats']}>
                                         <div className={styles.stat}>
                                             <Heart size={14} />
                                             <span>{theme.likes}</span>
@@ -486,15 +494,15 @@ const BilmeModal = props => {
                                             <span>{theme.downloads}</span>
                                         </div>
                                     </div>
-                                    <div className={styles.themeActions}>
+                                    <div className={styles['theme-actions']}>
                                         <button
-                                            className={styles.applyBtn}
+                                            className={styles['apply-btn']}
                                             onClick={() => handleApplyTheme(theme)}
                                         >
                                             <FormattedMessage {...messages.applyTheme} />
                                         </button>
                                         <button
-                                            className={styles.openBtn}
+                                            className={styles['open-btn']}
                                             onClick={() => handleOpenInBilme(theme)}
                                         >
                                             <ExternalLink size={14} />
@@ -505,16 +513,6 @@ const BilmeModal = props => {
                         ))
                     )}
                 </div>
-                <button
-                    className={styles.floatingCreateBtn}
-                    onClick={handleCreateTheme}
-                    title={props.intl.formatMessage(messages.createTheme)}
-                >
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="12" y1="5" x2="12" y2="19"></line>
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
-                </button>
             </Box>
         </Modal>
     );

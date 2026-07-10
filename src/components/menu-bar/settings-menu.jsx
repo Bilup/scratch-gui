@@ -30,26 +30,32 @@ const SettingsMenu = ({
     onRequestClose,
     onRequestOpen,
     settingsMenuOpen
-}) => {
-    return (
-        <MenuLabel
+}) => (
+    <MenuLabel
+        dataItem="view"
+        open={settingsMenuOpen}
+        onOpen={onRequestOpen}
+        onClose={onRequestClose}
+    >
+        <Eye
+            width={20}
+            height={20}
+            size={20}
+        />
+        <span className={styles.dropdownLabel}>
+            <FormattedMessage
+                defaultMessage="View"
+                description="View menu"
+                id="gui.menuBar.theme"
+            />
+        </span>
+        <ChevronDown />
+        <MenuBarMenu
+            className={menuBarStyles.menuBarMenu}
             open={settingsMenuOpen}
             onOpen={onRequestOpen}
             onClose={onRequestClose}
         >
-            <Eye
-                width={20}
-                height={20}
-                size={20}
-            />
-            <span className={styles.dropdownLabel}>
-                <FormattedMessage
-                    defaultMessage="View"
-                    description="View menu"
-                    id="gui.menuBar.theme"
-                />
-            </span>
-            <ChevronDown />
             <MenuBarMenu
                 className={menuBarStyles.menuBarMenu}
                 open={settingsMenuOpen}
@@ -76,9 +82,9 @@ const SettingsMenu = ({
                     </MenuSection>
                 )}
             </MenuBarMenu>
-        </MenuLabel>
-    );
-};
+        </MenuBarMenu>
+    </MenuLabel>
+);
 
 SettingsMenu.propTypes = {
     canChangeLanguage: PropTypes.bool,

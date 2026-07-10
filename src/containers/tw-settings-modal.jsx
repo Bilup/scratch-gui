@@ -9,6 +9,9 @@ import SettingsModalComponent from '../components/tw-settings-modal/settings-mod
 import {defaultStageSize} from '../reducers/custom-stage-size';
 import {CustomTheme} from '../lib/themes/custom-themes.js';
 import {setSearchParams} from '../lib/utils/navigation';
+import {getAppearanceSetting, setAppearanceSetting} from '../lib/mw-appearance-settings';
+import {getStyleSetting, setStyleSetting} from '../lib/mw-style-settings';
+import {getHideOperatorArrows, setHideOperatorArrows} from '../lib/mw-operator-arrows';
 
 const messages = defineMessages({
     newFramerate: {
@@ -29,7 +32,15 @@ class UsernameModal extends React.Component {
             viewCompiledMode: localStorage.getItem('mw:view-compiled-mode') === 'true',
             storeThemeInProject: localStorage.getItem('mw:store-theme-in-project') === 'true',
             enableStageResize: localStorage.getItem('mw:enable-stage-resize') !== 'false',
-            windowAnimation: localStorage.getItem('mw:window-animation') !== 'false'
+            windowAnimation: localStorage.getItem('mw:window-animation') !== 'false',
+            hideOperatorArrows: getHideOperatorArrows(),
+            squareStageCorners: getAppearanceSetting('square-stage-corners'),
+            hideDeleteButton: getAppearanceSetting('hide-delete-button'),
+            hideExtensionButton: getAppearanceSetting('hide-extension-button'),
+            hideBackpack: getAppearanceSetting('hide-backpack'),
+            tabStyle: getStyleSetting('tab-style'),
+            tabLooks: getStyleSetting('tab-looks'),
+            windowStyle: getStyleSetting('window-style')
         };
 
         bindAll(this, [
@@ -55,7 +66,15 @@ class UsernameModal extends React.Component {
             'handleStoreThemeInProjectChange',
             'handleEnableStageResizeChange',
             'handleCloudVariableServerChange',
-            'handleWindowAnimationChange'
+            'handleWindowAnimationChange',
+            'handleHideOperatorArrowsChange',
+            'handleSquareStageCornersChange',
+            'handleHideDeleteButtonChange',
+            'handleHideExtensionButtonChange',
+            'handleHideBackpackChange',
+            'handleTabStyleChange',
+            'handleTabLooksChange',
+            'handleWindowStyleChange'
         ]);
     }
 
@@ -228,7 +247,7 @@ class UsernameModal extends React.Component {
         this.props.onSetCloudHost(value);
     }
 
-    handleWindowAnimationChange (e) {
+handleWindowAnimationChange (e) {
         const enabled = e.target.checked;
         this.setState({windowAnimation: enabled});
         try {
@@ -236,6 +255,47 @@ class UsernameModal extends React.Component {
         } catch (err) {
             // ignore
         }
+    }
+
+    handleHideOperatorArrowsChange (e) {
+        this.setState({hideOperatorArrows: e.target.checked});
+        setHideOperatorArrows(e.target.checked);
+    }
+
+    setAppearance_ (stateKey, id, checked) {
+        this.setState({[stateKey]: checked});
+        setAppearanceSetting(id, checked);
+    }
+
+    handleSquareStageCornersChange (e) {
+        this.setAppearance_('squareStageCorners', 'square-stage-corners', e.target.checked);
+    }
+
+    handleHideDeleteButtonChange (e) {
+        this.setAppearance_('hideDeleteButton', 'hide-delete-button', e.target.checked);
+    }
+
+    handleHideExtensionButtonChange (e) {
+        this.setAppearance_('hideExtensionButton', 'hide-extension-button', e.target.checked);
+    }
+
+    handleHideBackpackChange (e) {
+        this.setAppearance_('hideBackpack', 'hide-backpack', e.target.checked);
+    }
+
+    handleTabStyleChange (value) {
+        this.setState({tabStyle: value});
+        setStyleSetting('tab-style', value);
+    }
+
+    handleTabLooksChange (value) {
+        this.setState({tabLooks: value});
+        setStyleSetting('tab-looks', value);
+    }
+
+    handleWindowStyleChange (value) {
+        this.setState({windowStyle: value});
+        setStyleSetting('window-style', value);
     }
     render () {
         const {
@@ -276,6 +336,22 @@ class UsernameModal extends React.Component {
                 onEnableStageResizeChange={this.handleEnableStageResizeChange}
                 onCloudVariableServerChange={this.handleCloudVariableServerChange}
                 onWindowAnimationChange={this.handleWindowAnimationChange}
+                onHideOperatorArrowsChange={this.handleHideOperatorArrowsChange}
+                hideOperatorArrows={this.state.hideOperatorArrows}
+                onSquareStageCornersChange={this.handleSquareStageCornersChange}
+                squareStageCorners={this.state.squareStageCorners}
+                onHideDeleteButtonChange={this.handleHideDeleteButtonChange}
+                hideDeleteButton={this.state.hideDeleteButton}
+                onHideExtensionButtonChange={this.handleHideExtensionButtonChange}
+                hideExtensionButton={this.state.hideExtensionButton}
+                onHideBackpackChange={this.handleHideBackpackChange}
+                hideBackpack={this.state.hideBackpack}
+                onTabStyleChange={this.handleTabStyleChange}
+                tabStyle={this.state.tabStyle}
+                onTabLooksChange={this.handleTabLooksChange}
+                tabLooks={this.state.tabLooks}
+                onWindowStyleChange={this.handleWindowStyleChange}
+                windowStyle={this.state.windowStyle}
                 optimizeAnimations={this.state.optimizeAnimations}
                 debugMode={this.state.debugMode}
                 showFPSCounter={this.state.showFPSCounter}
@@ -302,6 +378,7 @@ UsernameModal.propTypes = {
         setInterpolation: PropTypes.func,
         setRuntimeOptions: PropTypes.func,
         setStageSize: PropTypes.func,
+        setExtendableOperators: PropTypes.func,
         storeProjectOptions: PropTypes.func
     }),
     isEmbedded: PropTypes.bool,
