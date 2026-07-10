@@ -7,54 +7,69 @@ import {injectIntl} from 'react-intl';
 import BilmeModalComponent from '../components/bl-bilme/bilme-modal.jsx';
 import {closeBilmeModal} from '../reducers/modals';
 import {setTheme} from '../reducers/theme';
-import {CustomTheme} from '../lib/themes/custom-themes.js';
+import {CustomTheme, customThemeManager} from '../lib/themes/custom-themes.js';
 import {applyTheme} from '../lib/themes/themePersistance.js';
+import {getRoturSessionApi} from '../lib/rotur/session-api.js';
 
 class BilmeModal extends React.Component {
     constructor (props) {
         super(props);
         this.handleThemeApply = this.handleThemeApply.bind(this);
+        this.handleThemeSave = this.handleThemeSave.bind(this);
+        this.handleRoturLogin = this.handleRoturLogin.bind(this);
     }
 
-  handleThemeApply (themeData) {
-    // themeData comes from Bilme export API in Bilup format
-    // The format is: { themes: [{ accent, gui, blocks, menuBarAlign, wallpaper, fonts }] }
-    if (!themeData.themes || themeData.themes.length === 0) {
-      console.error('Invalid theme data format');
-      return;
+    handleRoturLogin () {
+        const session = getRoturSessionApi();
+        if (session) return session.login();
+        return Promise.reject(new Error('Rotur is still starting. Try again in a moment.'));
     }
 
-    const themeConfig = themeData.themes[0];
+    parseExport (themeData) {
+        if (!themeData || !themeData.themes || themeData.themes.length === 0) {
+            throw new Error('Invalid theme data format');
+        }
+        return themeData;
+    }
 
-    // Use CustomTheme.import to properly handle the theme data
-    const bilupTheme = CustomTheme.import(themeConfig);
+    handleThemeApply (themeData) {
+        const data = this.parseExport(themeData);
+        const mistwarpTheme = CustomTheme.import(data.themes[0]);
+        this.props.onSetTheme(mistwarpTheme);
+        applyTheme(mistwarpTheme);
+    }
 
-    // Apply the theme
-    this.props.onSetTheme(bilupTheme);
-    applyTheme(bilupTheme);
+    handleThemeSave (themeData, meta = {}) {
+        const data = this.parseExport(themeData);
+        return customThemeManager.addFromExportData(data, meta);
+    }
 
-    // Close the modal
-    this.props.onClose();
-  }
-
-  render () {
-    if (!this.props.visible) return null;
-    return (
-      <BilmeModalComponent
-        onClose={this.props.onClose}
-        onThemeApply={this.handleThemeApply}
-      />
-    );
-  }
+    render () {
+        if (!this.props.visible) return null;
+        return (
+            <BilmeModalComponent
+                currentTheme={this.props.currentTheme}
+                onClose={this.props.onClose}
+                onRoturLogin={this.handleRoturLogin}
+                onThemeApply={this.handleThemeApply}
+                onThemeSave={this.handleThemeSave}
+                roturUsername={this.props.roturUsername}
+            />
+        );
+    }
 }
 
 BilmeModal.propTypes = {
-  onClose: PropTypes.func.isRequired,
-  onSetTheme: PropTypes.func.isRequired,
-  visible: PropTypes.bool
+    currentTheme: PropTypes.object,
+    onClose: PropTypes.func.isRequired,
+    onSetTheme: PropTypes.func.isRequired,
+    roturUsername: PropTypes.string,
+    visible: PropTypes.bool
 };
 
 const mapStateToProps = state => ({
+    currentTheme: state.scratchGui.theme.theme,
+    roturUsername: state.scratchGui.rotur.username,
     visible: state.scratchGui.modals.bilmeModal
 });
 
