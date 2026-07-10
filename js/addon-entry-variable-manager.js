@@ -12,7 +12,7 @@ exports = module.exports = __webpack_require__(/*! ../../../../node_modules/css-
 
 
 // module
-exports.push([module.i, "/* Variable Manager - MistWarp Design System - Redesigned */\n\n/* Main container */\n.sa-var-manager {\n  display: flex;\n  flex-direction: column;\n  height: 100%;\n  overflow: hidden;\n  background: var(--ui-primary);\n  border-radius: 0 0 12px 12px;\n  margin: 0;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Helvetica Neue\", Helvetica, Arial, sans-serif;\n  color: var(--text-primary);\n  box-sizing: border-box;\n  -webkit-font-smoothing: antialiased;\n  -moz-osx-font-smoothing: grayscale;\n}\n\n/* Window system compatibility */\n.addon-window .sa-var-manager {\n  height: 100%;\n  border-radius: 0;\n}\n\n/* Top bar */\n.sa-var-manager-topbar {\n  display: flex;\n  flex-direction: column;\n  gap: 0.75rem;\n  padding: 0.75rem;\n  background: linear-gradient(135deg, \n    var(--ui-secondary) 0%, \n    var(--ui-primary) 100%);\n  border-bottom: 1px solid var(--ui-black-transparent);\n  flex-shrink: 0;\n}\n\n/* Search and filter row */\n.sa-var-manager-filters {\n  display: flex;\n  gap: 0.5rem;\n  align-items: center;\n}\n\n.sa-var-manager-search-wrapper {\n  position: relative;\n  flex: 1;\n}\n\n.sa-var-manager-search-icon {\n  position: absolute;\n  left: 0.625rem;\n  top: 50%;\n  transform: translateY(-50%);\n  width: 1rem;\n  height: 1rem;\n  color: var(--text-primary);\n  pointer-events: none;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n\n.sa-var-manager-searchbox {\n  width: 100%;\n  padding: 0.5rem 2rem 0.5rem 2rem;\n  border: 1px solid var(--ui-black-transparent);\n  border-radius: var(--form-radius, 4px);\n  background: var(--ui-white);\n  font-size: 0.8125rem;\n  color: var(--text-primary);\n  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);\n  font-family: inherit;\n  outline: none;\n  box-sizing: border-box;\n}\n\n.sa-var-manager-searchbox:focus {\n  border-color: var(--looks-secondary);\n  background: var(--ui-white);\n  box-shadow: 0 0 0 2px var(--looks-transparent);\n}\n\n.sa-var-manager-searchbox::placeholder {\n  color: var(--text-primary);\n}\n\n.sa-var-manager-clear-search {\n  position: absolute;\n  right: 0.5rem;\n  top: 50%;\n  transform: translateY(-50%);\n  background: none;\n  border: none;\n  cursor: pointer;\n  color: var(--text-primary);\n  width: 1.25rem;\n  height: 1.25rem;\n  border-radius: 50%;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  transition: all 0.15s ease;\n  padding: 0;\n}\n\n.sa-var-manager-clear-search:hover {\n  background: var(--ui-tertiary);\n}\n\n.sa-var-manager-clear-search svg {\n  width: 0.75rem;\n  height: 0.75rem;\n}\n\n/* Filter tabs */\n.sa-var-manager-filters-tabs {\n  display: flex;\n  gap: 0.25rem;\n  background: var(--ui-tertiary);\n  padding: 0.1875rem;\n  border-radius: var(--form-radius, 4px);\n}\n\n.sa-var-manager-filter-tab {\n  display: flex;\n  align-items: center;\n  gap: 0.375rem;\n  padding: 0.375rem 0.625rem;\n  background: transparent;\n  border: none;\n  border-radius: calc(var(--form-radius, 4px) - 2px);\n  color: var(--text-primary);\n  font-size: 0.75rem;\n  font-weight: 500;\n  cursor: pointer;\n  transition: all 0.15s ease;\n  outline: none;\n}\n\n.sa-var-manager-filter-tab:hover {\n  background: var(--ui-secondary);\n}\n\n.sa-var-manager-filter-tab.sa-var-manager-filter-active {\n  background: var(--ui-white);\n  color: var(--text-primary);\n  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);\n}\n\n.sa-var-manager-filter-tab svg {\n  width: 0.875rem;\n  height: 0.875rem;\n}\n\n.sa-var-manager-filter-count {\n  background: var(--looks-secondary);\n  color: white;\n  padding: 0 0.375rem;\n  border-radius: 8px;\n  font-size: 0.6875rem;\n  font-weight: 600;\n  min-width: 1.125rem;\n  text-align: center;\n}\n\n/* Stats bar */\n.sa-var-manager-stats {\n  display: flex;\n  gap: 0.5rem;\n  font-size: 0.6875rem;\n  color: var(--text-primary);\n  align-items: center;\n}\n\n.sa-var-manager-stat {\n  display: flex;\n  align-items: center;\n  gap: 0.25rem;\n  background: var(--ui-tertiary);\n  padding: 0.1875rem 0.5rem;\n  border-radius: 12px;\n}\n\n.sa-var-manager-stat svg {\n  width: 0.75rem;\n  height: 0.75rem;\n}\n\n.sa-var-manager-stat-value {\n  font-weight: 600;\n  color: var(--text-primary);\n}\n\n/* Content area */\n.sa-var-manager-content {\n  flex: 1;\n  overflow-y: auto;\n  overflow-x: hidden;\n  padding: 0rem;\n  min-height: 0;\n}\n\n/* Section */\n.sa-var-manager-section {\n  padding: 0.5rem 0.75rem;\n}\n\n.sa-var-manager-section-header {\n  display: flex;\n  align-items: center;\n  gap: 0.5rem;\n  font-weight: 600;\n  font-size: 0.75rem;\n  color: var(--text-primary);\n  text-transform: uppercase;\n  letter-spacing: 0.5px;\n  margin-bottom: 0.5rem;\n  padding: 0.25rem 0;\n}\n\n.sa-var-manager-section-header svg {\n  width: 0.875rem;\n  height: 0.875rem;\n}\n\n.sa-var-manager-section-count {\n  background: var(--ui-tertiary);\n  color: var(--text-primary);\n  padding: 0 0.375rem;\n  border-radius: 8px;\n  font-size: 0.6875rem;\n  font-weight: 600;\n}\n\n/* Variable cards */\n.sa-var-manager-list {\n  display: flex;\n  flex-direction: column;\n  gap: 0.375rem;\n}\n\n.sa-var-manager-card {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.5rem;\n  padding: 0.625rem 0.75rem;\n  background: var(--ui-white);\n  border: 1px solid var(--ui-black-transparent);\n  border-radius: var(--form-radius, 4px);\n  transition: all 0.15s ease;\n}\n\n.sa-var-manager-card:hover {\n  border-color: var(--looks-light-transparent);\n  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);\n}\n\n.sa-var-manager-card:focus-within {\n  border-color: var(--looks-secondary);\n  box-shadow: 0 0 0 2px var(--looks-transparent);\n  outline: none;\n}\n\n.sa-var-manager-card-icon {\n  flex-shrink: 0;\n  width: 1.25rem;\n  height: 1.25rem;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  border-radius: 4px;\n  flex-direction: column;\n  align-self: center;\n  padding-top: 0.125rem;\n}\n\n.sa-var-manager-card-icon svg {\n  width: 0.75rem;\n  height: 0.75rem;\n}\n\n.sa-var-manager-card-icon[data-type=\"variable\"] {\n  background: var(--looks-light-transparent);\n  color: var(--looks-secondary);\n}\n\n.sa-var-manager-card-icon[data-type=\"list\"] {\n  background: rgba(255, 102, 128, 0.1);\n  color: var(--data-primary);\n}\n\n.sa-var-manager-card-icon[data-type=\"cloud\"] {\n  background: var(--extensions-light);\n  color: var(--extensions-primary);\n}\n\n.sa-var-manager-card-body {\n  flex: 1;\n  display: flex;\n  flex-direction: column;\n  gap: 0.375rem;\n  min-width: 0;\n}\n\n.sa-var-manager-card-header {\n  display: flex;\n  align-items: center;\n  gap: 0.375rem;\n}\n\n.sa-var-manager-name-input {\n  flex: 1;\n  padding: 0.25rem 0.375rem;\n  background: transparent;\n  border: 1px solid transparent;\n  border-radius: var(--form-radius, 4px);\n  font-size: 0.8125rem;\n  font-weight: 600;\n  color: var(--text-primary);\n  transition: all 0.15s ease;\n  font-family: inherit;\n  outline: none;\n}\n\n.sa-var-manager-name-input:focus {\n  background: var(--ui-white);\n  border-color: var(--looks-secondary);\n  box-shadow: 0 0 0 1px var(--looks-transparent);\n}\n\n.sa-var-manager-name-input::placeholder {\n  color: var(--text-primary);\n}\n\n.sa-var-manager-card-badges {\n  display: flex;\n  gap: 0.25rem;\n  flex-shrink: 0;\n}\n\n.sa-var-manager-badge {\n  display: flex;\n  align-items: center;\n  gap: 0.1875rem;\n  padding: 0.125rem 0.375rem;\n  border-radius: 8px;\n  font-size: 0.625rem;\n  font-weight: 500;\n}\n\n.sa-var-manager-badge svg {\n  width: 0.625rem;\n  height: 0.625rem;\n}\n\n.sa-var-manager-badge[data-badge=\"list\"] {\n  background: rgba(255, 102, 128, 0.1);\n  color: var(--data-primary);\n}\n\n.sa-var-manager-badge[data-badge=\"cloud\"] {\n  background: var(--extensions-light);\n  color: var(--extensions-primary);\n}\n\n.sa-var-manager-value-wrapper {\n  position: relative;\n}\n\n.sa-var-manager-value-input {\n  width: 100%;\n  padding: 0.375rem 0.5rem;\n  background: var(--ui-secondary);\n  border: 1px solid transparent;\n  border-radius: var(--form-radius, 4px);\n  font-size: 0.75rem;\n  color: var(--text-primary);\n  transition: all 0.15s ease;\n  font-family: inherit;\n  outline: none;\n  resize: vertical;\n  min-height: 1.75rem;\n  box-sizing: border-box;\n}\n\n.sa-var-manager-value-input:focus {\n  background: var(--ui-white);\n  border-color: var(--looks-secondary);\n  box-shadow: 0 0 0 1px var(--looks-transparent);\n}\n\n.sa-var-manager-value-input::placeholder {\n  color: var(--text-primary);\n  font-style: italic;\n}\n\n.sa-var-manager-value-actions {\n  display: flex;\n  gap: 0.1875rem;\n  position: absolute;\n  right: 0.375rem;\n  bottom: 0.375rem;\n}\n\n.sa-var-manager-value-action {\n  width: 1.25rem;\n  height: 1.25rem;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  background: var(--ui-white);\n  border: 1px solid var(--ui-black-transparent);\n  border-radius: 4px;\n  color: var(--text-primary);\n  cursor: pointer;\n  transition: all 0.15s ease;\n  padding: 0;\n}\n\n.sa-var-manager-value-action:hover {\n  background: var(--looks-light-transparent);\n  border-color: var(--looks-secondary);\n}\n\n.sa-var-manager-value-action svg {\n  width: 0.625rem;\n  height: 0.625rem;\n}\n\n/* Too big state */\n.sa-var-manager-too-big {\n  display: none;\n  padding: 0.375rem 0.5rem;\n  background: var(--extensions-light);\n  border: 1px solid var(--extensions-secondary);\n  border-radius: var(--form-radius, 4px);\n  color: var(--extensions-primary);\n  font-size: 0.75rem;\n  font-style: italic;\n  cursor: pointer;\n  transition: all 0.15s ease;\n}\n\n.sa-var-manager-too-big:hover {\n  background: var(--extensions-secondary);\n}\n\n[data-too-big=\"true\"] .sa-var-manager-too-big {\n  display: block;\n}\n\n[data-too-big=\"true\"] .sa-var-manager-value-input,\n[data-too-big=\"true\"] .sa-var-manager-value-actions {\n  display: none;\n}\n\n/* Error state */\n.sa-var-manager-error {\n  border-color: var(--error-primary) !important;\n  background: var(--error-transparent) !important;\n  animation: shake 0.3s ease-in-out;\n}\n\n/* Freeze mode */\n.sa-var-manager.freeze .sa-var-manager-value-input:not(:focus),\n.sa-var-manager.freeze .sa-var-manager-name-input:not(:focus) {\n  opacity: 0.5;\n  pointer-events: none;\n}\n\n.sa-var-manager.freeze input:focus,\n.sa-var-manager.freeze textarea:focus {\n  opacity: 1 !important;\n  pointer-events: all;\n}\n\n/* Animations */\n@keyframes shake {\n  0%, 100% { transform: translateX(0); }\n  20% { transform: translateX(-3px); }\n  40% { transform: translateX(3px); }\n  60% { transform: translateX(-3px); }\n  80% { transform: translateX(3px); }\n}\n\n/* Empty state */\n.sa-var-manager-empty {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  padding: 3rem 1.25rem;\n  color: var(--text-primary);\n  text-align: center;\n}\n\n.sa-var-manager-empty-icon {\n  width: 3rem;\n  height: 3rem;\n  margin-bottom: 1rem;\n  color: var(--text-primary);\n}\n\n.sa-var-manager-empty-text {\n  font-size: 0.875rem;\n  font-weight: 500;\n  margin-bottom: 0.375rem;\n}\n\n.sa-var-manager-empty-subtext {\n  font-size: 0.6875rem;\n  opacity: 0.7;\n}\n\n/* Scrollbar */\n.sa-var-manager-content::-webkit-scrollbar {\n  width: 6px;\n}\n\n.sa-var-manager-content::-webkit-scrollbar-track {\n  background: var(--ui-tertiary);\n}\n\n.sa-var-manager-content::-webkit-scrollbar-thumb {\n  background-color: var(--ui-black-transparent);\n  border-radius: 3px;\n}\n\n.sa-var-manager-content::-webkit-scrollbar-thumb:hover {\n  background-color: rgba(0, 0, 0, 0.4);\n}\n\n/* Button container */\n.sa-variable-manager-container {\n  user-select: none;\n  -webkit-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n}\n\n.sa-variable-manager-container * {\n  user-select: none;\n  -webkit-user-select: none;\n  -moz-user-select: none;\n  -ms-user-select: none;\n}\n\n[dir=\"ltr\"] .sa-variable-manager-container {\n  margin-right: 0.5rem;\n}\n\n[dir=\"rtl\"] .sa-variable-manager-container {\n  margin-left: 0.5rem;\n}\n\n.sa-small-stage [class*=\"gui_body-wrapper_\"]:not(.sa-stage-hidden) .sa-variable-manager-container {\n  display: none !important;\n}\n\n/* Responsive */\n@media (max-width: 768px) {\n  .sa-var-manager-topbar {\n    padding: 0.5rem;\n  }\n  \n  .sa-var-manager-filters {\n    flex-direction: column;\n    align-items: stretch;\n  }\n  \n  .sa-var-manager-filters-tabs {\n    justify-content: space-between;\n  }\n  \n  .sa-var-manager-filter-tab {\n    flex: 1;\n    justify-content: center;\n    padding: 0.375rem 0.5rem;\n    font-size: 0.6875rem;\n  }\n  \n  .sa-var-manager-section {\n    padding: 0.375rem 0.5rem;\n  }\n  \n  .sa-var-manager-card {\n    padding: 0.5rem;\n  }\n}\n\n/* High contrast */\n@media (prefers-contrast: high) {\n  .sa-var-manager-searchbox,\n  .sa-var-manager-name-input,\n  .sa-var-manager-value-input,\n  .sa-var-manager-card,\n  .sa-var-manager-filter-tab,\n  .sa-var-manager-value-action {\n    border-width: 2px;\n  }\n}\n\n/* Reduced motion */\n@media (prefers-reduced-motion: reduce) {\n  .sa-var-manager-card,\n  .sa-var-manager-searchbox,\n  .sa-var-manager-name-input,\n  .sa-var-manager-value-input,\n  .sa-var-manager-filter-tab,\n  .sa-var-manager-value-action {\n    transition: none !important;\n    animation: none !important;\n  }\n  \n  .sa-var-manager-error {\n    animation: none !important;\n    border-color: var(--error-primary);\n  }\n}\n\n/* Dark theme */\n@media (prefers-color-scheme: dark) {\n  .sa-var-manager-searchbox {\n    background-color: var(--input-background);\n    border-color: var(--ui-black-transparent);\n  }\n  \n  .sa-var-manager-filter-tab.sa-var-manager-filter-active {\n    background: var(--ui-secondary);\n  }\n  \n  .sa-var-manager-card {\n    background: var(--ui-secondary);\n  }\n  \n  .sa-var-manager-value-input {\n    background: var(--ui-tertiary);\n  }\n  \n  .sa-var-manager-value-input:focus {\n    background: var(--input-background);\n  }\n  \n  .sa-var-manager-value-action {\n    background: var(--ui-tertiary);\n  }\n}\n\n/* Fix text selection */\n[class*=\"stage-header_stage-button\"] {\n  user-select: none !important;\n  -webkit-user-select: none !important;\n  -moz-user-select: none !important;\n  -ms-user-select: none !important;\n}\n\n[class*=\"stage-header_stage-button\"] * {\n  user-select: none !important;\n  -webkit-user-select: none !important;\n  -moz-user-select: none !important;\n  -ms-user-select: none !important;\n}\n\n.sa-screenshot-container,\n.sa-debugger-container,\n.sa-gamepad-container,\n.sa-calculator-container,\n.sa-hide-stage-container {\n  user-select: none !important;\n  -webkit-user-select: none !important;\n  -moz-user-select: none !important;\n  -ms-user-select: none !important;\n}\n\n.sa-screenshot-container *,\n.sa-debugger-container *,\n.sa-gamepad-container *,\n.sa-calculator-container *,\n.sa-hide-stage-container * {\n  user-select: none !important;\n  -webkit-user-select: none !important;\n  -moz-user-select: none !important;\n  -ms-user-select: none !important;\n}\n", ""]);
+exports.push([module.i, ".mw-vm {\n  display: flex;\n  flex-direction: column;\n  height: 100%;\n  overflow: hidden;\n  background: transparent;\n  color: var(--text-primary);\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Helvetica Neue\", Helvetica, Arial, sans-serif;\n  -webkit-font-smoothing: antialiased;\n  box-sizing: border-box;\n}\n\n.mw-vm *,\n.mw-vm *::before,\n.mw-vm *::after {\n  box-sizing: border-box;\n}\n\n.mw-vm [hidden] {\n  display: none !important;\n}\n\n/* Header ---------------------------------------------------------------- */\n.mw-vm-header {\n  display: flex;\n  flex-direction: column;\n  gap: 0.5rem;\n  padding: 0.75rem;\n  border-bottom: 1px solid var(--ui-black-transparent);\n  flex-shrink: 0;\n}\n\n.mw-vm-search-wrap {\n  position: relative;\n  display: flex;\n  align-items: center;\n}\n\n.mw-vm-search-icon {\n  position: absolute;\n  left: 0.6rem;\n  width: 0.9rem;\n  height: 0.9rem;\n  opacity: 0.5;\n  pointer-events: none;\n  display: flex;\n}\n\n.mw-vm-search-icon svg,\n.mw-vm-search-clear svg,\n.mw-vm-seg-icon svg,\n.mw-vm-tool svg,\n.mw-vm-section-icon svg,\n.mw-vm-icon svg,\n.mw-vm-empty-icon svg {\n  width: 100%;\n  height: 100%;\n}\n\n.mw-vm-search {\n  width: 100%;\n  height: 2rem;\n  padding: 0 2rem;\n  border: 1px solid var(--ui-black-transparent);\n  border-radius: 8px;\n  background: var(--input-background);\n  color: var(--text-primary);\n  font-family: inherit;\n  font-size: 0.8125rem;\n  outline: none;\n  transition: border-color 0.15s ease, box-shadow 0.15s ease;\n}\n\n.mw-vm-search:focus {\n  border-color: var(--looks-secondary);\n  box-shadow: 0 0 0 2px var(--looks-transparent);\n}\n\n.mw-vm-search::placeholder {\n  color: var(--text-primary);\n  opacity: 0.5;\n}\n\n.mw-vm-search-clear {\n  position: absolute;\n  right: 0.4rem;\n  width: 1.2rem;\n  height: 1.2rem;\n  padding: 0.25rem;\n  border: 0;\n  border-radius: 50%;\n  background: transparent;\n  color: var(--text-primary);\n  opacity: 0.6;\n  cursor: pointer;\n  display: flex;\n  transition: opacity 0.15s ease, background-color 0.15s ease;\n}\n\n.mw-vm-search-clear:hover {\n  opacity: 1;\n  background: var(--ui-black-transparent);\n}\n\n.mw-vm-toolbar {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 0.5rem;\n}\n\n.mw-vm-segment {\n  display: inline-flex;\n  gap: 2px;\n  padding: 2px;\n  background: var(--ui-black-transparent);\n  border-radius: 8px;\n}\n\n.mw-vm-seg {\n  display: flex;\n  align-items: center;\n  gap: 0.35rem;\n  padding: 0.3rem 0.55rem;\n  border: 0;\n  border-radius: 6px;\n  background: transparent;\n  color: var(--text-primary);\n  font-family: inherit;\n  font-size: 0.75rem;\n  font-weight: 600;\n  font-variant-numeric: tabular-nums;\n  cursor: pointer;\n  opacity: 0.7;\n  transition: background-color 0.15s ease, color 0.15s ease, opacity 0.15s ease;\n}\n\n.mw-vm-seg:hover {\n  opacity: 1;\n}\n\n.mw-vm-seg-active {\n  background: var(--looks-secondary);\n  color: #fff;\n  opacity: 1;\n}\n\n.mw-vm-seg-icon {\n  width: 0.85rem;\n  height: 0.85rem;\n  display: flex;\n}\n\n.mw-vm-seg-count {\n  opacity: 0.75;\n}\n\n.mw-vm-tool {\n  width: 2rem;\n  height: 2rem;\n  padding: 0.45rem;\n  border: 1px solid var(--ui-black-transparent);\n  border-radius: 8px;\n  background: transparent;\n  color: var(--text-primary);\n  cursor: pointer;\n  opacity: 0.75;\n  flex-shrink: 0;\n  display: flex;\n  transition: opacity 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;\n}\n\n.mw-vm-tool:hover {\n  opacity: 1;\n  border-color: var(--looks-secondary);\n  color: var(--looks-secondary);\n}\n\n.mw-vm-tool:active {\n  background: var(--ui-black-transparent);\n}\n\n/* Content --------------------------------------------------------------- */\n.mw-vm-content {\n  flex: 1;\n  min-height: 0;\n  overflow-y: auto;\n  overflow-x: hidden;\n  padding: 0.25rem 0.5rem 0.75rem;\n}\n\n.mw-vm-section-head {\n  position: sticky;\n  top: 0;\n  z-index: 1;\n  display: flex;\n  align-items: center;\n  gap: 0.4rem;\n  padding: 0.75rem 0.5rem 0.4rem;\n  font-size: 0.65rem;\n  font-weight: 700;\n  letter-spacing: 0.06em;\n  text-transform: uppercase;\n  opacity: 0.6;\n  background: var(--ui-modal-background, var(--ui-primary));\n}\n\n.mw-vm-section-icon {\n  width: 0.8rem;\n  height: 0.8rem;\n  display: flex;\n}\n\n.mw-vm-section-title {\n  flex: 1;\n  min-width: 0;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\n\n.mw-vm-section-count {\n  font-variant-numeric: tabular-nums;\n}\n\n.mw-vm-list {\n  display: flex;\n  flex-direction: column;\n  gap: 1px;\n}\n\n/* Row ------------------------------------------------------------------- */\n.mw-vm-row {\n  display: flex;\n  align-items: flex-start;\n  gap: 0.5rem;\n  padding: 0.4rem 0.5rem;\n  border-radius: 8px;\n  transition: background-color 0.12s ease;\n}\n\n.mw-vm-row:hover {\n  background: var(--ui-black-transparent);\n}\n\n.mw-vm-icon {\n  flex-shrink: 0;\n  width: 0.9rem;\n  height: 0.9rem;\n  margin-top: 0.3rem;\n  display: flex;\n}\n\n.mw-vm-row[data-kind=\"variable\"] .mw-vm-icon {\n  color: var(--data-primary, #ff8c1a);\n}\n\n.mw-vm-row[data-kind=\"list\"] .mw-vm-icon {\n  color: var(--red-primary, #fc662c);\n}\n\n.mw-vm-row[data-kind=\"cloud\"] .mw-vm-icon {\n  color: var(--looks-secondary);\n}\n\n.mw-vm-name-cell {\n  display: flex;\n  align-items: center;\n  gap: 0.3rem;\n  flex: 0 0 36%;\n  min-width: 5.5rem;\n  padding-top: 0.15rem;\n}\n\n.mw-vm-name {\n  flex: 1;\n  min-width: 0;\n  padding: 0.25rem 0.4rem;\n  border: 1px solid transparent;\n  border-radius: 6px;\n  background: transparent;\n  color: var(--text-primary);\n  font-family: inherit;\n  font-size: 0.8125rem;\n  font-weight: 600;\n  outline: none;\n  transition: background-color 0.15s ease, border-color 0.15s ease;\n}\n\n.mw-vm-name:hover {\n  background: var(--ui-black-transparent);\n}\n\n.mw-vm-name:focus {\n  background: var(--input-background);\n  border-color: var(--looks-secondary);\n}\n\n.mw-vm-badge {\n  flex-shrink: 0;\n  padding: 0.05rem 0.35rem;\n  border: 1px solid var(--ui-black-transparent);\n  border-radius: 999px;\n  font-size: 0.5625rem;\n  font-weight: 700;\n  letter-spacing: 0.04em;\n  text-transform: uppercase;\n  opacity: 0.7;\n}\n\n.mw-vm-badge[data-badge=\"cloud\"] {\n  color: var(--looks-secondary);\n  border-color: var(--looks-secondary);\n  opacity: 1;\n}\n\n.mw-vm-value-cell {\n  flex: 1;\n  min-width: 0;\n}\n\n.mw-vm-value {\n  width: 100%;\n  min-height: 1.75rem;\n  padding: 0.3rem 0.45rem;\n  border: 1px solid var(--ui-black-transparent);\n  border-radius: 6px;\n  background: var(--input-background);\n  color: var(--text-primary);\n  font-family: \"SF Mono\", \"Monaco\", \"Inconsolata\", \"Fira Code\", monospace;\n  font-size: 0.75rem;\n  line-height: 1.5;\n  outline: none;\n  resize: vertical;\n  transition: border-color 0.15s ease, box-shadow 0.15s ease;\n}\n\n.mw-vm-value:focus {\n  border-color: var(--looks-secondary);\n  box-shadow: 0 0 0 2px var(--looks-transparent);\n}\n\ntextarea.mw-vm-value {\n  display: block;\n  overflow: hidden;\n}\n\n.mw-vm-big {\n  display: none;\n  width: 100%;\n  padding: 0.3rem 0.45rem;\n  border: 1px dashed var(--ui-black-transparent);\n  border-radius: 6px;\n  background: transparent;\n  color: var(--text-primary);\n  font-family: inherit;\n  font-size: 0.75rem;\n  font-style: italic;\n  opacity: 0.7;\n  cursor: pointer;\n  transition: border-color 0.15s ease, color 0.15s ease, opacity 0.15s ease;\n}\n\n.mw-vm-big:hover {\n  border-color: var(--looks-secondary);\n  color: var(--looks-secondary);\n  opacity: 1;\n}\n\n.mw-vm-row[data-big=\"true\"] .mw-vm-value {\n  display: none;\n}\n\n.mw-vm-row[data-big=\"true\"] .mw-vm-big {\n  display: block;\n}\n\n.mw-vm-error {\n  border-color: var(--error-primary) !important;\n  background: var(--error-transparent) !important;\n  animation: mw-vm-shake 0.3s ease;\n}\n\n@keyframes mw-vm-shake {\n  0%, 100% { transform: translateX(0); }\n  25% { transform: translateX(-3px); }\n  75% { transform: translateX(3px); }\n}\n\n/* Freeze while editing so live updates don't fight the user */\n.mw-vm-frozen .mw-vm-value:not(:focus),\n.mw-vm-frozen .mw-vm-name:not(:focus) {\n  opacity: 0.5;\n}\n\n/* Empty state ----------------------------------------------------------- */\n.mw-vm-empty {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  justify-content: center;\n  gap: 0.35rem;\n  padding: 3rem 1.25rem;\n  text-align: center;\n}\n\n.mw-vm-empty-icon {\n  width: 2.25rem;\n  height: 2.25rem;\n  opacity: 0.35;\n  display: flex;\n}\n\n.mw-vm-empty-title {\n  font-size: 0.85rem;\n  font-weight: 600;\n}\n\n.mw-vm-empty-sub {\n  font-size: 0.72rem;\n  opacity: 0.6;\n}\n\n/* Scrollbar ------------------------------------------------------------- */\n.mw-vm-content::-webkit-scrollbar {\n  width: 8px;\n}\n\n.mw-vm-content::-webkit-scrollbar-track {\n  background: transparent;\n}\n\n.mw-vm-content::-webkit-scrollbar-thumb {\n  background-color: var(--ui-black-transparent);\n  border-radius: 8px;\n  border: 2px solid transparent;\n  background-clip: content-box;\n}\n\n/* Narrow window: stack name over value */\n@media (max-width: 520px) {\n  .mw-vm-row {\n    flex-wrap: wrap;\n  }\n\n  .mw-vm-name-cell {\n    flex-basis: calc(100% - 1.4rem);\n  }\n\n  .mw-vm-value-cell {\n    flex-basis: 100%;\n    margin-left: 1.4rem;\n  }\n}\n\n/* Stage header button integration -------------------------------------- */\n.sa-variable-manager-container,\n.sa-variable-manager-container * {\n  user-select: none;\n  -webkit-user-select: none;\n}\n\n[dir=\"ltr\"] .sa-variable-manager-container {\n  margin-right: 0.5rem;\n}\n\n[dir=\"rtl\"] .sa-variable-manager-container {\n  margin-left: 0.5rem;\n}\n\n.sa-small-stage [class*=\"gui_body-wrapper_\"]:not(.sa-stage-hidden) .sa-variable-manager-container {\n  display: none !important;\n}\n", ""]);
 
 // exports
 
@@ -73,17 +73,6 @@ const resources = {
 
 /***/ }),
 
-/***/ "./src/addons/addons/variable-manager/icon.svg":
-/*!*****************************************************!*\
-  !*** ./src/addons/addons/variable-manager/icon.svg ***!
-  \*****************************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-module.exports = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXZhcmlhYmxlLWljb24gbHVjaWRlLXZhcmlhYmxlIj48cGF0aCBkPSJNOCAyMXMtNC0zLTQtOSA0LTkgNC05Ii8+PHBhdGggZD0iTTE2IDNzNCAzIDQgOS00IDktNCA5Ii8+PGxpbmUgeDE9IjE1IiB4Mj0iOSIgeTE9IjkiIHkyPSIxNSIvPjxsaW5lIHgxPSI5IiB4Mj0iMTUiIHkxPSI5IiB5Mj0iMTUiLz48L3N2Zz4="
-
-/***/ }),
-
 /***/ "./src/addons/addons/variable-manager/userscript.js":
 /*!**********************************************************!*\
   !*** ./src/addons/addons/variable-manager/userscript.js ***!
@@ -93,701 +82,585 @@ module.exports = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5v
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _icon_svg__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./icon.svg */ "./src/addons/addons/variable-manager/icon.svg");
-/* harmony import */ var _icon_svg__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_icon_svg__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _window_system_window_manager_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../window-system/window-manager.js */ "./src/addons/window-system/window-manager.js");
+/* harmony import */ var _window_system_window_manager_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../window-system/window-manager.js */ "./src/addons/window-system/window-manager.js");
+/* harmony import */ var _lib_variable_manager_settings_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../lib/variable-manager/settings.js */ "./src/lib/variable-manager/settings.js");
 
 
-
-// Lucide icons as SVG strings
-const SEARCH_ICON = "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"11\" cy=\"11\" r=\"8\"/><path d=\"m21 21-4.3-4.3\"/></svg>";
-const X_ICON = "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M18 6 6 18\"/><path d=\"m6 6 12 12\"/></svg>";
-const VARIABLE_ICON = "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M8 21s-4-3-4-9 4-9 4-9\"/><path d=\"M16 3s4 3 4 9-4 9-4 9\"/><line x1=\"15\" x2=\"9\" y1=\"9\" y2=\"15\"/><line x1=\"9\" x2=\"15\" y1=\"9\" y2=\"15\"/></svg>";
-const LIST_ICON = "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"8\" x2=\"21\" y1=\"6\" y2=\"6\"/><line x1=\"8\" x2=\"21\" y1=\"12\" y2=\"12\"/><line x1=\"8\" x2=\"21\" y1=\"18\" y2=\"18\"/><line x1=\"3\" x2=\"3.01\" y1=\"6\" y2=\"6\"/><line x1=\"3\" x2=\"3.01\" y1=\"12\" y2=\"12\"/><line x1=\"3\" x2=\"3.01\" y1=\"18\" y2=\"18\"/></svg>";
-const CLOUD_ICON = "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242\"/><path d=\"M12 12v9\"/><path d=\"m16 16-4-4-4 4\"/></svg>";
-const EYE_ICON = "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/></svg>";
-const EYE_OFF_ICON = "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M9.88 9.88a3 3 0 1 0 4.24 4.24\"/><path d=\"M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68\"/><path d=\"M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7c.41 0 .83-.02 1.24-.05\"/><path d=\"m2 2 20 20\"/></svg>";
-const SPRITE_ICON = "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z\"/><polyline points=\"3.27 6.96 12 12.01 20.73 6.96\"/><line x1=\"12\" x2=\"12\" y1=\"22.08\" y2=\"12\"/></svg>";
-const STAGE_ICON = "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"2\" y=\"3\" width=\"20\" height=\"14\" rx=\"2\" ry=\"2\"/><line x1=\"8\" x2=\"16\" y1=\"21\" y2=\"21\"/><line x1=\"12\" x2=\"12\" y1=\"17\" y2=\"21\"/></svg>";
-const FILTER_ALL_ICON = "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M11 7h8\"/><path d=\"M3 7h2\"/><path d=\"M7 11h2\"/><path d=\"M3 11h2\"/><path d=\"M5 15h2\"/><path d=\"M3 15h2\"/><path d=\"M17 11h4\"/><path d=\"M11 15h4\"/><path d=\"M15 19h2\"/></svg>";
-const FILTER_VAR_ICON = "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M8 21s-4-3-4-9 4-9 4-9\"/><path d=\"M16 3s4 3 4 9-4 9-4 9\"/><line x1=\"15\" x2=\"9\" y1=\"9\" y2=\"15\"/><line x1=\"9\" x2=\"15\" y1=\"9\" y2=\"15\"/></svg>";
-const FILTER_LIST_ICON = "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"8\" x2=\"21\" y1=\"6\" y2=\"6\"/><line x1=\"8\" x2=\"21\" y1=\"12\" y2=\"12\"/><line x1=\"8\" x2=\"21\" y1=\"18\" y2=\"18\"/><line x1=\"3\" x2=\"3.01\" y1=\"6\" y2=\"6\"/><line x1=\"3\" x2=\"3.01\" y1=\"12\" y2=\"12\"/><line x1=\"3\" x2=\"3.01\" y1=\"18\" y2=\"18\"/></svg>";
-const FILTER_CLOUD_ICON = "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M17.5 19c0-1.7-1.3-3-3-3h-11a4 4 0 0 1-.5-7.97 5 5 0 0 1 9.9-1V7a3 3 0 0 1 5.93-.72\"/></svg>";
-const EMPTY_ICON = "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"/><polyline points=\"7 10 12 15 17 10\"/><line x1=\"12\" x2=\"12\" y1=\"15\" y2=\"3\"/></svg>";
-
-/**
- * Variable Manager addon - completely redesigned
- */
+const svg = paths => "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" " + "stroke-linecap=\"round\" stroke-linejoin=\"round\">".concat(paths, "</svg>");
+const ICONS = {
+  search: svg('<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>'),
+  clear: svg('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>'),
+  variable: svg('<path d="M8 21s-4-3-4-9 4-9 4-9"/><path d="M16 3s4 3 4 9-4 9-4 9"/>' + '<line x1="15" x2="9" y1="9" y2="15"/><line x1="9" x2="15" y1="9" y2="15"/>'),
+  list: svg('<line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/>' + '<line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/>' + '<line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/>'),
+  cloud: svg('<path d="M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2"/>' + '<path d="M12 12v9"/><path d="m16 16-4-4-4 4"/>'),
+  all: svg('<path d="M11 7h8"/><path d="M3 7h2"/><path d="M7 11h2"/><path d="M3 11h2"/>' + '<path d="M5 15h2"/><path d="M3 15h2"/><path d="M17 11h4"/><path d="M11 15h4"/><path d="M15 19h2"/>'),
+  sprite: svg('<path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.3 7 12 12 20.7 7"/><line x1="12" x2="12" y1="22" y2="12"/>'),
+  stage: svg('<rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/>'),
+  refresh: svg('<path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/>' + '<path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/>'),
+  empty: svg('<path d="M22 12h-6l-2 3h-4l-2-3H2"/>' + '<path d="M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1z"/>')
+};
+const FILTERS = [{
+  id: 'all',
+  icon: ICONS.all,
+  label: 'All'
+}, {
+  id: 'variables',
+  icon: ICONS.variable,
+  label: 'Vars'
+}, {
+  id: 'lists',
+  icon: ICONS.list,
+  label: 'Lists'
+}, {
+  id: 'cloud',
+  icon: ICONS.cloud,
+  label: 'Cloud'
+}];
+const el = function el(tag) {
+  let props = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  const node = document.createElement(tag);
+  for (const key of Object.keys(props)) {
+    const value = props[key];
+    if (key === 'class') {
+      node.className = value;
+    } else if (key === 'html') {
+      node.innerHTML = value;
+    } else if (key === 'dataset') {
+      Object.assign(node.dataset, value);
+    } else if (key.startsWith('on') && typeof value === 'function') {
+      node.addEventListener(key.slice(2).toLowerCase(), value);
+    } else if (key in node) {
+      node[key] = value;
+    } else {
+      node.setAttribute(key, value);
+    }
+  }
+  for (var _len = arguments.length, children = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
+    children[_key - 2] = arguments[_key];
+  }
+  for (const child of children) {
+    if (child === null || child === false) continue;
+    node.append(child);
+  }
+  return node;
+};
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
   let addon = _ref.addon,
     console = _ref.console,
     msg = _ref.msg;
   const vm = addon.tab.traps.vm;
-
-  // State
-  let localVariables = [];
-  let globalVariables = [];
-  let allVariables = [];
-  let preventUpdate = false;
-  let updateScheduled = false;
-  let lastUpdateTime = 0;
-  const UPDATE_THROTTLE = 50;
-  let variableManagerWindow = null;
-  let currentFilter = 'all'; // 'all', 'variables', 'lists', 'cloud'
-  let currentSearch = '';
-  let selectedVariable = null;
-
-  // Create the main manager container
-  const manager = document.createElement('div');
-  manager.className = 'sa-var-manager';
-  manager.setAttribute('role', 'main');
-  manager.setAttribute('aria-label', 'Variable Manager');
-
-  // Top bar with search and filters
-  const topbar = document.createElement('div');
-  topbar.className = 'sa-var-manager-topbar';
-
-  // Search and filter row
-  const filtersRow = document.createElement('div');
-  filtersRow.className = 'sa-var-manager-filters';
-
-  // Search wrapper
-  const searchWrapper = document.createElement('div');
-  searchWrapper.className = 'sa-var-manager-search-wrapper';
-  const searchIcon = document.createElement('div');
-  searchIcon.className = 'sa-var-manager-search-icon';
-  searchIcon.innerHTML = SEARCH_ICON;
-  const searchBox = document.createElement('input');
-  searchBox.placeholder = msg('search');
-  searchBox.className = 'sa-var-manager-searchbox';
-  searchBox.type = 'text';
-  searchBox.setAttribute('aria-label', msg('search-aria'));
-  const clearSearchBtn = document.createElement('button');
-  clearSearchBtn.className = 'sa-var-manager-clear-search';
-  clearSearchBtn.innerHTML = X_ICON;
-  clearSearchBtn.title = msg('clear-search');
-  clearSearchBtn.style.display = 'none';
-  clearSearchBtn.setAttribute('aria-label', msg('clear-search'));
-  searchWrapper.appendChild(searchIcon);
-  searchWrapper.appendChild(searchBox);
-  searchWrapper.appendChild(clearSearchBtn);
-
-  // Filter tabs
-  const filterTabs = document.createElement('div');
-  filterTabs.className = 'sa-var-manager-filters-tabs';
-  const createFilterTab = (filter, icon, label) => {
-    const tab = document.createElement('button');
-    tab.className = 'sa-var-manager-filter-tab';
-    tab.dataset.filter = filter;
-    tab.innerHTML = "".concat(icon, "<span>").concat(label, "</span><span class=\"sa-var-manager-filter-count\">0</span>");
-    tab.setAttribute('aria-label', msg('filter-by', {
-      label
-    }));
-    tab.setAttribute('role', 'button');
-    tab.setAttribute('tabindex', '0');
-    tab.addEventListener('click', () => setFilter(filter));
-    tab.addEventListener('keydown', e => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        setFilter(filter);
-      }
-    });
-    return tab;
+  const settings = {
+    defaultFilter: () => Object(_lib_variable_manager_settings_js__WEBPACK_IMPORTED_MODULE_1__["getSetting"])('default_filter'),
+    liveUpdate: () => Object(_lib_variable_manager_settings_js__WEBPACK_IMPORTED_MODULE_1__["getSetting"])('live_update'),
+    throttle: () => Object(_lib_variable_manager_settings_js__WEBPACK_IMPORTED_MODULE_1__["getSetting"])('update_throttle'),
+    maxLength: type => Object(_lib_variable_manager_settings_js__WEBPACK_IMPORTED_MODULE_1__["getSetting"])(type === 'list' ? 'list_max_length' : 'variable_max_length')
   };
-  const allFilterTab = createFilterTab('all', FILTER_ALL_ICON, msg('filter-all'));
-  const varFilterTab = createFilterTab('variables', FILTER_VAR_ICON, msg('filter-variables'));
-  const listFilterTab = createFilterTab('lists', FILTER_LIST_ICON, msg('filter-lists'));
-  const cloudFilterTab = createFilterTab('cloud', FILTER_CLOUD_ICON, msg('filter-cloud'));
-  filterTabs.append(allFilterTab, varFilterTab, listFilterTab, cloudFilterTab);
-  filtersRow.append(searchWrapper, filterTabs);
-  topbar.appendChild(filtersRow);
+  let rows = [];
+  let localRows = [];
+  let globalRows = [];
+  let filter = settings.defaultFilter();
+  let search = '';
+  let frozen = false;
+  let win = null;
+  let updateQueued = false;
+  let lastUpdate = 0;
 
-  // Stats bar
-  const statsBar = document.createElement('div');
-  statsBar.className = 'sa-var-manager-stats';
-  const createStat = (icon, value) => {
-    const stat = document.createElement('div');
-    stat.className = 'sa-var-manager-stat';
-    stat.innerHTML = "".concat(icon, "<span class=\"sa-var-manager-stat-value\">").concat(value, "</span>");
-    return stat;
-  };
-  const statsVariables = createStat(VARIABLE_ICON, '0');
-  const statsLists = createStat(LIST_ICON, '0');
-  const statsCloud = createStat(CLOUD_ICON, '0');
-  statsBar.append(statsVariables, statsLists, statsCloud);
-  topbar.appendChild(statsBar);
-  manager.appendChild(topbar);
-
-  // Content area
-  const content = document.createElement('div');
-  content.className = 'sa-var-manager-content';
-  manager.appendChild(content);
-
-  // Empty state
-  const emptyState = document.createElement('div');
-  emptyState.className = 'sa-var-manager-empty';
-  emptyState.innerHTML = "\n        <div class=\"sa-var-manager-empty-icon\">".concat(EMPTY_ICON, "</div>\n        <div class=\"sa-var-manager-empty-text\">").concat(msg('no-variables'), "</div>\n        <div class=\"sa-var-manager-empty-subtext\">").concat(msg('clear-filters'), "</div>\n    ");
-  emptyState.style.display = 'none';
-  content.appendChild(emptyState);
-
-  // Local section
-  const localSection = document.createElement('div');
-  localSection.className = 'sa-var-manager-section';
-  localSection.innerHTML = "\n        <div class=\"sa-var-manager-section-header\">\n            ".concat(SPRITE_ICON, "\n            <span>").concat(msg('local-section'), "</span>\n            <span class=\"sa-var-manager-section-count\">0</span>\n        </div>\n        <div class=\"sa-var-manager-list\"></div>\n    ");
-  content.appendChild(localSection);
-  const localList = localSection.querySelector('.sa-var-manager-list');
-  const localCount = localSection.querySelector('.sa-var-manager-section-count');
-
-  // Global section
-  const globalSection = document.createElement('div');
-  globalSection.className = 'sa-var-manager-section';
-  globalSection.innerHTML = "\n        <div class=\"sa-var-manager-section-header\">\n            ".concat(STAGE_ICON, "\n            <span>").concat(msg('global-section'), "</span>\n            <span class=\"sa-var-manager-section-count\">0</span>\n        </div>\n        <div class=\"sa-var-manager-list\"></div>\n    ");
-  content.appendChild(globalSection);
-  const globalList = globalSection.querySelector('.sa-var-manager-list');
-  const globalCount = globalSection.querySelector('.sa-var-manager-section-count');
-
-  // Helper functions
-  const updateStats = () => {
-    const variables = allVariables.filter(v => v.type === 'variable').length;
-    const lists = allVariables.filter(v => v.type === 'list').length;
-    const clouds = allVariables.filter(v => v.isCloud).length;
-    statsVariables.querySelector('.sa-var-manager-stat-value').textContent = variables;
-    statsLists.querySelector('.sa-var-manager-stat-value').textContent = lists;
-    statsCloud.querySelector('.sa-var-manager-stat-value').textContent = clouds;
-
-    // Update filter counts
-    allFilterTab.querySelector('.sa-var-manager-filter-count').textContent = allVariables.length;
-    varFilterTab.querySelector('.sa-var-manager-filter-count').textContent = variables;
-    listFilterTab.querySelector('.sa-var-manager-filter-count').textContent = lists;
-    cloudFilterTab.querySelector('.sa-var-manager-filter-count').textContent = clouds;
-  };
-  const setFilter = filter => {
-    currentFilter = filter;
-    filterTabs.querySelectorAll('.sa-var-manager-filter-tab').forEach(tab => {
-      tab.classList.toggle('sa-var-manager-filter-active', tab.dataset.filter === filter);
-    });
-    applyFilters();
-  };
-  const applyFilters = () => {
-    const searchLower = currentSearch.toLowerCase();
-    allVariables.forEach(v => {
-      var _v$value;
-      const matchesSearch = !searchLower || v.name.toLowerCase().includes(searchLower) || ((_v$value = v.value) === null || _v$value === void 0 ? void 0 : _v$value.toString().toLowerCase().includes(searchLower));
-      let matchesFilter = true;
-      if (currentFilter === 'variables') {
-        matchesFilter = v.type === 'variable';
-      } else if (currentFilter === 'lists') {
-        matchesFilter = v.type === 'list';
-      } else if (currentFilter === 'cloud') {
-        matchesFilter = v.isCloud;
-      }
-      const visible = matchesSearch && matchesFilter;
-      v.setVisible(visible);
-    });
-    updateSectionVisibility();
-  };
-  const updateSectionVisibility = () => {
-    const visibleLocals = localVariables.filter(v => v.visible);
-    const visibleGlobals = globalVariables.filter(v => v.visible);
-    localSection.style.display = visibleLocals.length > 0 ? 'block' : 'none';
-    globalSection.style.display = visibleGlobals.length > 0 ? 'block' : 'none';
-    localCount.textContent = visibleLocals.length;
-    globalCount.textContent = visibleGlobals.length;
-    const hasVisible = visibleLocals.length > 0 || visibleGlobals.length > 0;
-    emptyState.style.display = hasVisible ? 'none' : 'flex';
-  };
-
-  // Search functionality
-  let searchTimeout;
-  const performSearch = searchTerm => {
-    currentSearch = searchTerm;
-    clearSearchBtn.style.display = searchTerm ? 'flex' : 'none';
-    applyFilters();
-  };
-  searchBox.addEventListener('input', e => {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => performSearch(e.target.value), 100);
-  });
-  clearSearchBtn.addEventListener('click', () => {
-    searchBox.value = '';
-    performSearch('');
-    searchBox.focus();
-  });
-  searchBox.addEventListener('keydown', e => {
-    if (e.key === 'Escape') {
-      if (searchBox.value) {
-        clearSearchBtn.click();
-      } else {
-        hideVariableManager();
-      }
-      e.preventDefault();
-    }
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      focusFirstVisibleVariable();
-    }
-  });
-  const focusFirstVisibleVariable = () => {
-    const firstVisible = allVariables.find(v => v.visible && v.input);
-    if (firstVisible && firstVisible.input) {
-      firstVisible.input.focus();
-      selectedVariable = firstVisible;
-    }
-  };
-
-  // WrappedVariable class - completely redesigned
-  class WrappedVariable {
+  // --- A single variable/list row -------------------------------------
+  class VariableRow {
     constructor(scratchVariable, target) {
       this.scratchVariable = scratchVariable;
       this.target = target;
       this.type = scratchVariable.type === 'list' ? 'list' : 'variable';
-      this.isCloud = scratchVariable.isCloud || false;
+      this.isCloud = !!scratchVariable.isCloud;
       this.name = scratchVariable.name;
       this.id = scratchVariable.id;
       this.visible = true;
-      this.ignoreTooBig = false;
+      this.showBig = false;
       this.lastValue = null;
-      this.buildDOM();
+      this.build();
     }
-    buildDOM() {
-      this.card = document.createElement('div');
-      this.card.className = 'sa-var-manager-card';
-      this.card.dataset.variableId = this.id;
-      const icon = document.createElement('div');
-      icon.className = 'sa-var-manager-card-icon';
-      icon.dataset.type = this.isCloud ? 'cloud' : this.type;
-      if (this.isCloud) {
-        icon.innerHTML = CLOUD_ICON;
-      } else if (this.type === 'list') {
-        icon.innerHTML = LIST_ICON;
-      } else {
-        icon.innerHTML = VARIABLE_ICON;
-      }
-      const body = document.createElement('div');
-      body.className = 'sa-var-manager-card-body';
-      const header = document.createElement('div');
-      header.className = 'sa-var-manager-card-header';
-      const nameInput = document.createElement('input');
-      nameInput.className = 'sa-var-manager-name-input';
-      nameInput.value = this.name;
-      nameInput.setAttribute('aria-label', this.type === 'list' ? msg('list-name') : msg('variable-name'));
-      this.nameInput = nameInput;
-      const badges = document.createElement('div');
-      badges.className = 'sa-var-manager-card-badges';
-      if (this.type === 'list') {
-        const listBadge = document.createElement('div');
-        listBadge.className = 'sa-var-manager-badge';
-        listBadge.dataset.badge = 'list';
-        listBadge.innerHTML = "".concat(LIST_ICON, "<span>").concat(msg('list-badge'), "</span>");
-        badges.appendChild(listBadge);
-      }
-      if (this.isCloud) {
-        const cloudBadge = document.createElement('div');
-        cloudBadge.className = 'sa-var-manager-badge';
-        cloudBadge.dataset.badge = 'cloud';
-        cloudBadge.innerHTML = "".concat(CLOUD_ICON, "<span>").concat(msg('cloud-badge'), "</span>");
-        badges.appendChild(cloudBadge);
-      }
-      header.append(nameInput, badges);
-      const valueWrapper = document.createElement('div');
-      valueWrapper.className = 'sa-var-manager-value-wrapper';
-      const valueInput = document.createElement('textarea');
-      valueInput.className = 'sa-var-manager-value-input';
-      valueInput.setAttribute('aria-label', "".concat(this.name, " value"));
-      this.input = valueInput;
-      const tooBig = document.createElement('button');
-      tooBig.className = 'sa-var-manager-too-big';
-      tooBig.textContent = msg('variable-too-large');
-      tooBig.addEventListener('click', () => {
-        this.ignoreTooBig = true;
-        this.updateValue(true);
+    get kind() {
+      return this.isCloud ? 'cloud' : this.type;
+    }
+    build() {
+      this.nameInput = el('input', {
+        class: 'mw-vm-name',
+        value: this.name,
+        spellcheck: false,
+        'aria-label': "".concat(this.type, " name")
       });
-      this.tooBig = tooBig;
-      valueWrapper.append(valueInput, tooBig);
-      body.append(header, valueWrapper);
-      this.card.append(icon, body);
-      this.setupEventListeners();
+      this.valueInput = el(this.type === 'list' ? 'textarea' : 'input', {
+        class: 'mw-vm-value',
+        spellcheck: false,
+        'aria-label': "".concat(this.name, " value")
+      });
+      this.bigButton = el('button', {
+        class: 'mw-vm-big',
+        type: 'button',
+        onclick: () => {
+          this.showBig = true;
+          this.refreshValue(true);
+        }
+      }, msg('too-big'));
+      const badge = this.isCloud || this.type === 'list' ? el('span', {
+        class: 'mw-vm-badge',
+        dataset: {
+          badge: this.kind
+        }
+      }, this.isCloud ? 'Cloud' : 'List') : null;
+      this.row = el('div', {
+        class: 'mw-vm-row',
+        dataset: {
+          kind: this.kind
+        }
+      }, el('span', {
+        class: 'mw-vm-icon',
+        html: ICONS[this.kind]
+      }), el('div', {
+        class: 'mw-vm-name-cell'
+      }, this.nameInput, badge), el('div', {
+        class: 'mw-vm-value-cell'
+      }, this.valueInput, this.bigButton));
+      this.bindEvents();
     }
-    setupEventListeners() {
-      const workspace = () => Blockly.getMainWorkspace();
-
-      // Name input handling
-      const onNameBlur = () => {
-        const newName = this.nameInput.value.trim();
-        if (newName === this.name) return;
-        const CLOUD_PREFIX = '☁ ';
-        let processedName = newName;
-        if (this.isCloud) {
-          if (!processedName.startsWith('☁')) {
-            processedName = CLOUD_PREFIX + processedName;
-          } else if (!processedName.startsWith(CLOUD_PREFIX)) {
-            processedName = CLOUD_PREFIX + processedName.substring(1);
-          }
-        }
-        if (!processedName.trim()) {
-          this.showError(this.nameInput);
-          return;
-        }
-        let nameAlreadyUsed = false;
-        try {
-          const w = workspace();
-          if (this.target.isStage) {
-            const existingNames = vm.runtime.getAllVarNamesOfType(this.scratchVariable.type);
-            nameAlreadyUsed = existingNames.includes(processedName);
-          } else if (w) {
-            nameAlreadyUsed = !!w.getVariable(processedName, this.scratchVariable.type);
-          }
-        } catch (e) {
-          console.error('Error checking variable name:', e);
-        }
-        if (nameAlreadyUsed) {
-          this.showError(this.nameInput);
-          return;
-        }
-        try {
-          const w = workspace();
-          if (w) {
-            w.renameVariableById(this.id, processedName);
-          }
-          this.name = processedName;
-          if (this.nameInput.value !== processedName) {
-            this.nameInput.value = processedName;
-          }
-        } catch (e) {
-          console.error('Error renaming variable:', e);
-          this.showError(this.nameInput);
-        }
-      };
+    bindEvents() {
+      this.nameInput.addEventListener('focus', () => {
+        freeze(true);
+        this.nameInput.select();
+      });
+      this.nameInput.addEventListener('blur', () => this.commitName());
       this.nameInput.addEventListener('keydown', e => {
         if (e.key === 'Enter') {
           e.preventDefault();
           this.nameInput.blur();
-        }
-        if (e.key === 'Escape') {
+        } else if (e.key === 'Escape') {
           this.nameInput.value = this.name;
-          e.preventDefault();
           this.nameInput.blur();
         }
       });
-      this.nameInput.addEventListener('focus', () => {
-        preventUpdate = true;
-        manager.classList.add('freeze');
-        this.nameInput.select();
-      });
-      this.nameInput.addEventListener('blur', () => {
-        onNameBlur();
-        preventUpdate = false;
-        manager.classList.remove('freeze');
-      });
-
-      // Value input handling
-      const onValueBlur = () => {
-        try {
-          const newValue = this.scratchVariable.type === 'list' ? this.input.value.split('\n').filter(line => line !== '') : this.input.value;
-          vm.setVariableValue(this.target.id, this.id, newValue);
-          this.input.classList.remove('sa-var-manager-error');
-        } catch (e) {
-          console.error('Error setting variable value:', e);
-          this.showError(this.input);
-        }
-      };
-      this.input.addEventListener('keydown', e => {
-        if (e.key === 'a' && (e.ctrlKey || e.metaKey)) return; // Allow Ctrl+A
-
-        if (e.key === 'Escape') {
-          this.updateValue(true);
-          e.preventDefault();
-          this.input.blur();
-        }
-
-        // Tab navigation
-        if (e.key === 'Tab') {
-          const currentIndex = allVariables.indexOf(selectedVariable);
-          if (e.shiftKey && currentIndex > 0) {
-            e.preventDefault();
-            const prev = allVariables.slice(0, currentIndex).reverse().find(v => v.visible);
-            if (prev && prev.input) {
-              prev.input.focus();
-              selectedVariable = prev;
-            }
-          } else if (!e.shiftKey && currentIndex < allVariables.length - 1) {
-            e.preventDefault();
-            const next = allVariables.slice(currentIndex + 1).find(v => v.visible);
-            if (next && next.input) {
-              next.input.focus();
-              selectedVariable = next;
-            }
-          }
-        }
-      });
-      this.input.addEventListener('focus', () => {
-        preventUpdate = true;
-        manager.classList.add('freeze');
-        selectedVariable = this;
-        if (this.scratchVariable.type !== 'list') {
-          this.input.select();
+      this.valueInput.addEventListener('focus', () => {
+        freeze(true);
+        if (this.type === 'list') {
+          this.valueInput.setSelectionRange(0, 0);
         } else {
-          this.input.setSelectionRange(0, 0);
+          this.valueInput.select();
         }
       });
-      this.input.addEventListener('blur', () => {
-        onValueBlur();
-        preventUpdate = false;
-        manager.classList.remove('freeze');
-      });
-      this.input.addEventListener('touchstart', e => {
-        e.stopPropagation();
-      }, {
-        passive: true
+      this.valueInput.addEventListener('blur', () => this.commitValue());
+      this.valueInput.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          this.refreshValue(true);
+          this.valueInput.blur();
+        }
       });
     }
-    showError(element) {
-      element.classList.add('sa-var-manager-error');
-      setTimeout(() => element.classList.remove('sa-var-manager-error'), 1000);
-    }
-    updateValue(force) {
-      if (!this.visible && !force) return;
-      let value;
-      let maxSafeLength;
-      if (this.type === 'list') {
-        value = this.scratchVariable.value.join('\n');
-        maxSafeLength = 5000000;
-      } else {
-        value = String(this.scratchVariable.value);
-        maxSafeLength = 1000000;
+    commitName() {
+      freeze(false);
+      let next = this.nameInput.value.trim();
+      if (next === this.name) return;
+      if (this.isCloud && !next.startsWith('☁')) {
+        next = "\u2601 ".concat(next);
       }
-      if (!force && this.lastValue === value) return;
-      this.lastValue = value;
-      if (!this.ignoreTooBig && value.length > maxSafeLength) {
-        this.card.dataset.tooBig = 'true';
+      if (!next) {
+        this.flashError(this.nameInput);
+        this.nameInput.value = this.name;
         return;
       }
-      this.card.dataset.tooBig = 'false';
-      if (this.input.value !== value) {
-        this.input.value = value;
-        if (this.type === 'list') {
-          this.input.style.height = 'auto';
-          const height = Math.min(200, this.input.scrollHeight);
-          if (height > 0) {
-            this.input.style.height = "".concat(height, "px");
-          }
+      const workspace = Blockly.getMainWorkspace();
+      let taken = false;
+      try {
+        if (this.target.isStage) {
+          taken = vm.runtime.getAllVarNamesOfType(this.scratchVariable.type).includes(next);
+        } else if (workspace) {
+          taken = !!workspace.getVariable(next, this.scratchVariable.type);
         }
+      } catch (e) {
+        console.error('variable-manager: name check failed', e);
+      }
+      if (taken) {
+        this.flashError(this.nameInput);
+        this.nameInput.value = this.name;
+        return;
+      }
+      try {
+        if (workspace) workspace.renameVariableById(this.id, next);
+        this.name = next;
+        this.nameInput.value = next;
+      } catch (e) {
+        console.error('variable-manager: rename failed', e);
+        this.flashError(this.nameInput);
+        this.nameInput.value = this.name;
+      }
+    }
+    commitValue() {
+      freeze(false);
+      try {
+        const next = this.type === 'list' ? this.valueInput.value.split('\n').filter(line => line !== '') : this.valueInput.value;
+        vm.setVariableValue(this.target.id, this.id, next);
+        this.valueInput.classList.remove('mw-vm-error');
+      } catch (e) {
+        console.error('variable-manager: set value failed', e);
+        this.flashError(this.valueInput);
+      }
+    }
+    flashError(element) {
+      element.classList.add('mw-vm-error');
+      setTimeout(() => element.classList.remove('mw-vm-error'), 800);
+    }
+    matches(query, activeFilter) {
+      if (activeFilter === 'variables' && this.type !== 'variable') return false;
+      if (activeFilter === 'lists' && this.type !== 'list') return false;
+      if (activeFilter === 'cloud' && !this.isCloud) return false;
+      if (!query) return true;
+      const value = String(this.scratchVariable.value);
+      return this.name.toLowerCase().includes(query) || value.toLowerCase().includes(query);
+    }
+    refreshValue(force) {
+      if (!this.visible && !force) return;
+      const value = this.type === 'list' ? this.scratchVariable.value.join('\n') : String(this.scratchVariable.value);
+      if (!force && value === this.lastValue) return;
+      this.lastValue = value;
+      const tooBig = !this.showBig && value.length > settings.maxLength(this.type);
+      this.row.dataset.big = tooBig ? 'true' : 'false';
+      if (tooBig) return;
+      if (this.valueInput.value !== value) {
+        this.valueInput.value = value;
+      }
+      if (this.type === 'list') {
+        this.valueInput.style.height = 'auto';
+        this.valueInput.style.height = "".concat(Math.min(220, this.valueInput.scrollHeight), "px");
       }
     }
     setVisible(visible) {
       if (this.visible === visible) return;
       this.visible = visible;
-      this.card.style.display = visible ? 'flex' : 'none';
-      if (visible) {
-        this.updateValue(true);
-      }
+      this.row.hidden = !visible;
+      if (visible) this.refreshValue(true);
+    }
+    destroy() {
+      this.row.remove();
     }
   }
 
-  // Update scheduling
-  const scheduleUpdate = () => {
-    if (updateScheduled) return;
-    if (!variableManagerWindow || preventUpdate || !variableManagerWindow.isVisible) return;
-    updateScheduled = true;
-    requestAnimationFrame(() => {
-      const now = Date.now();
-      if (now - lastUpdateTime < UPDATE_THROTTLE) {
-        setTimeout(() => {
-          updateScheduled = false;
-          scheduleUpdate();
-        }, UPDATE_THROTTLE - (now - lastUpdateTime));
-        return;
-      }
-      quickReload();
-      lastUpdateTime = now;
-      updateScheduled = false;
+  // --- DOM scaffold ---------------------------------------------------
+  const searchInput = el('input', {
+    class: 'mw-vm-search',
+    type: 'text',
+    placeholder: "".concat(msg('search'), "\u2026"),
+    'aria-label': msg('search')
+  });
+  const clearButton = el('button', {
+    class: 'mw-vm-search-clear',
+    type: 'button',
+    title: 'Clear',
+    hidden: true,
+    html: ICONS.clear,
+    onclick: () => {
+      searchInput.value = '';
+      applySearch('');
+      searchInput.focus();
+    }
+  });
+  const filterButtons = {};
+  const segment = el('div', {
+    class: 'mw-vm-segment',
+    role: 'tablist'
+  });
+  for (const def of FILTERS) {
+    const count = el('span', {
+      class: 'mw-vm-seg-count'
+    }, '0');
+    const button = el('button', {
+      class: 'mw-vm-seg',
+      type: 'button',
+      role: 'tab',
+      title: def.label,
+      dataset: {
+        filter: def.id
+      },
+      onclick: () => setFilter(def.id)
+    }, el('span', {
+      class: 'mw-vm-seg-icon',
+      html: def.icon
+    }), count);
+    filterButtons[def.id] = {
+      button,
+      count
+    };
+    segment.append(button);
+  }
+  const refreshButton = el('button', {
+    class: 'mw-vm-tool',
+    type: 'button',
+    title: 'Refresh',
+    html: ICONS.refresh,
+    onclick: () => reload()
+  });
+  const header = el('div', {
+    class: 'mw-vm-header'
+  }, el('div', {
+    class: 'mw-vm-search-wrap'
+  }, el('span', {
+    class: 'mw-vm-search-icon',
+    html: ICONS.search
+  }), searchInput, clearButton), el('div', {
+    class: 'mw-vm-toolbar'
+  }, segment, refreshButton));
+  const makeSection = (icon, label) => {
+    const countEl = el('span', {
+      class: 'mw-vm-section-count'
+    }, '0');
+    const list = el('div', {
+      class: 'mw-vm-list'
     });
+    const section = el('div', {
+      class: 'mw-vm-section',
+      hidden: true
+    }, el('div', {
+      class: 'mw-vm-section-head'
+    }, el('span', {
+      class: 'mw-vm-section-icon',
+      html: icon
+    }), el('span', {
+      class: 'mw-vm-section-title'
+    }, label), countEl), list);
+    return {
+      section,
+      list,
+      countEl
+    };
   };
-  const quickReload = () => {
-    if (!variableManagerWindow || preventUpdate || !variableManagerWindow.isVisible) return;
-    allVariables.forEach(v => v.updateValue());
+  const localSection = makeSection(ICONS.sprite, msg('for-this-sprite'));
+  const globalSection = makeSection(ICONS.stage, msg('for-all-sprites'));
+  const emptyState = el('div', {
+    class: 'mw-vm-empty',
+    hidden: true
+  }, el('span', {
+    class: 'mw-vm-empty-icon',
+    html: ICONS.empty
+  }), el('div', {
+    class: 'mw-vm-empty-title'
+  }, 'Nothing to show'), el('div', {
+    class: 'mw-vm-empty-sub'
+  }, 'Try a different search or filter'));
+  const content = el('div', {
+    class: 'mw-vm-content'
+  }, emptyState, localSection.section, globalSection.section);
+  const root = el('div', {
+    class: 'mw-vm',
+    role: 'main',
+    'aria-label': 'Variable Manager'
+  }, header, content);
+
+  // --- Filtering / search ---------------------------------------------
+  const freeze = value => {
+    frozen = value;
+    root.classList.toggle('mw-vm-frozen', value);
   };
-  const fullReload = () => {
-    if (!variableManagerWindow || preventUpdate || !variableManagerWindow.isVisible) return;
+  const updateCounts = () => {
+    const totals = {
+      all: rows.length,
+      variables: 0,
+      lists: 0,
+      cloud: 0
+    };
+    for (const row of rows) {
+      if (row.type === 'variable') totals.variables++;
+      if (row.type === 'list') totals.lists++;
+      if (row.isCloud) totals.cloud++;
+    }
+    for (const def of FILTERS) {
+      filterButtons[def.id].count.textContent = totals[def.id];
+    }
+  };
+  const applyFilters = () => {
+    const query = search.toLowerCase();
+    for (const row of rows) {
+      row.setVisible(row.matches(query, filter));
+    }
+    const visibleLocal = localRows.filter(row => row.visible).length;
+    const visibleGlobal = globalRows.filter(row => row.visible).length;
+    localSection.section.hidden = visibleLocal === 0;
+    globalSection.section.hidden = visibleGlobal === 0;
+    localSection.countEl.textContent = visibleLocal;
+    globalSection.countEl.textContent = visibleGlobal;
+    emptyState.hidden = visibleLocal + visibleGlobal > 0;
+  };
+  const setFilter = next => {
+    filter = next;
+    for (const def of FILTERS) {
+      filterButtons[def.id].button.classList.toggle('mw-vm-seg-active', def.id === next);
+    }
+    applyFilters();
+  };
+  const applySearch = query => {
+    search = query;
+    clearButton.hidden = !query;
+    applyFilters();
+  };
+  let searchTimer;
+  searchInput.addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => applySearch(searchInput.value), 90);
+  });
+  searchInput.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      if (searchInput.value) clearButton.click();else hide();
+    }
+  });
+
+  // --- Data loading ---------------------------------------------------
+  const collectRows = target => Object.values(target.variables).filter(variable => variable.type === '' || variable.type === 'list').map(variable => new VariableRow(variable, target));
+  const reload = () => {
+    if (!win || !win.isVisible) return;
+    rows.forEach(row => row.destroy());
     const editingTarget = vm.runtime.getEditingTarget();
     const stage = vm.runtime.getTargetForStage();
-
-    // Clean up old variables
-    localVariables.forEach(v => v.card.remove());
-    globalVariables.forEach(v => v.card.remove());
-    localVariables = editingTarget.isStage ? [] : Object.values(editingTarget.variables).filter(i => i.type === '' || i.type === 'list').map(i => new WrappedVariable(i, editingTarget));
-    globalVariables = Object.values(stage.variables).filter(i => i.type === '' || i.type === 'list').map(i => new WrappedVariable(i, stage));
-    allVariables = [...localVariables, ...globalVariables];
-
-    // Append to lists
-    localList.append(...localVariables.map(v => v.card));
-    globalList.append(...globalVariables.map(v => v.card));
-    applyFilters();
-    updateStats();
+    localRows = editingTarget && !editingTarget.isStage ? collectRows(editingTarget) : [];
+    globalRows = stage ? collectRows(stage) : [];
+    rows = [...localRows, ...globalRows];
+    localSection.list.replaceChildren(...localRows.map(row => row.row));
+    globalSection.list.replaceChildren(...globalRows.map(row => row.row));
+    rows.forEach(row => row.refreshValue(true));
+    updateCounts();
+    setFilter(filter);
+  };
+  const refreshValues = () => {
+    if (!win || !win.isVisible || frozen) return;
+    rows.forEach(row => row.refreshValue(false));
+  };
+  const scheduleUpdate = () => {
+    if (updateQueued || !win || !win.isVisible || frozen) return;
+    if (!settings.liveUpdate()) return;
+    updateQueued = true;
+    requestAnimationFrame(() => {
+      const throttle = settings.throttle();
+      const elapsed = Date.now() - lastUpdate;
+      if (elapsed < throttle) {
+        setTimeout(() => {
+          updateQueued = false;
+          scheduleUpdate();
+        }, throttle - elapsed);
+        return;
+      }
+      refreshValues();
+      lastUpdate = Date.now();
+      updateQueued = false;
+    });
   };
 
-  // Window management
-  const toggleVariableManager = () => {
-    if (variableManagerWindow && variableManagerWindow.isVisible) {
-      hideVariableManager();
-    } else {
-      showVariableManager();
-    }
-  };
-  const showVariableManager = () => {
-    if (variableManagerWindow) {
-      variableManagerWindow.show().bringToFront();
+  // --- Window ---------------------------------------------------------
+  const show = () => {
+    if (win) {
+      win.show().bringToFront();
+      reload();
       return;
     }
-    const initialX = Math.max(24, Math.min(window.innerWidth - 474, 50));
-    const initialY = Math.max(24, Math.min(window.innerHeight - 574, 50));
-    variableManagerWindow = _window_system_window_manager_js__WEBPACK_IMPORTED_MODULE_1__["default"].createWindow({
+    win = _window_system_window_manager_js__WEBPACK_IMPORTED_MODULE_0__["default"].createWindow({
       id: 'variable-manager',
-      title: msg('variables-manager'),
-      width: 650,
+      title: msg('variables'),
+      width: 640,
       height: 600,
-      minWidth: 500,
-      minHeight: 400,
+      minWidth: 460,
+      minHeight: 360,
       maxWidth: Math.min(window.innerWidth * 0.9, 1400),
       maxHeight: Math.min(window.innerHeight * 0.9, 1000),
       className: 'sa-variable-manager-window',
-      x: initialX,
-      y: initialY,
+      x: Math.max(24, Math.min(window.innerWidth - 664, 60)),
+      y: Math.max(24, Math.min(window.innerHeight - 624, 60)),
       onClose: () => {
-        variableManagerWindow = null;
-        cleanup();
+        win = null;
+        rows.forEach(row => row.destroy());
+        rows = localRows = globalRows = [];
       }
     });
-
-    // Try to position near debugger
-    const debuggerEl = document.querySelector('.sa-debugger-window');
-    if (debuggerEl) {
-      try {
-        const debuggerRect = debuggerEl.getBoundingClientRect();
-        const margin = 10;
-        if (debuggerRect.left > 460) {
-          variableManagerWindow.x = Math.max(margin, debuggerRect.left - 460 - margin);
-        } else {
-          variableManagerWindow.x = Math.min(window.innerWidth - 460 - margin, debuggerRect.right + margin);
-        }
-        variableManagerWindow.y = Math.max(margin, debuggerRect.top);
-      } catch (e) {
-        // Use default position
-      }
-    }
-    variableManagerWindow.setContent(manager);
-    variableManagerWindow.show();
+    win.setContent(root);
+    win.show();
     setTimeout(() => {
-      searchBox.focus();
-      fullReload();
-    }, 50);
+      filter = settings.defaultFilter();
+      reload();
+      searchInput.focus();
+    }, 40);
   };
-  const hideVariableManager = () => {
-    if (variableManagerWindow) {
-      variableManagerWindow.close();
-    }
+  const hide = () => {
+    if (win) win.close();
   };
+  const toggle = () => {
+    if (win && win.isVisible) hide();else show();
+  };
+  window.__mistwarpVariableManagerToggle = toggle;
 
-  // Cleanup
-  const cleanup = () => {
-    localVariables.forEach(v => v.card.remove());
-    globalVariables.forEach(v => v.card.remove());
-    localVariables = [];
-    globalVariables = [];
-    allVariables = [];
-    selectedVariable = null;
-  };
-
-  // Keyboard shortcuts
-  const handleKeyboardShortcuts = e => {
-    if (!variableManagerWindow || !variableManagerWindow.isVisible) return;
-    if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
-      e.preventDefault();
-      searchBox.focus();
-      searchBox.select();
+  // --- Settings reactions ---------------------------------------------
+  const removeSettingsListener = Object(_lib_variable_manager_settings_js__WEBPACK_IMPORTED_MODULE_1__["onSettingChanged"])(event => {
+    if (event.settingId === 'default_filter' && (!win || !win.isVisible)) {
+      filter = event.value;
+    } else if (event.settingId === 'live_update' && event.value) {
+      scheduleUpdate();
+    } else if ((event.settingId === 'variable_max_length' || event.settingId === 'list_max_length') && win && win.isVisible) {
+      rows.forEach(row => row.refreshValue(true));
     }
-    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'V') {
-      e.preventDefault();
-      hideVariableManager();
-    }
-    if (e.key === 'Escape') {
-      if (document.activeElement === searchBox && searchBox.value) {
-        clearSearchBtn.click();
-      } else {
-        hideVariableManager();
-      }
-    }
-  };
-  document.addEventListener('keydown', handleKeyboardShortcuts);
-
-  // Event hooks
-  vm.runtime.on('PROJECT_LOADED', () => {
-    var _variableManagerWindo;
-    if ((_variableManagerWindo = variableManagerWindow) !== null && _variableManagerWindo !== void 0 && _variableManagerWindo.isVisible) fullReload();
   });
-  vm.runtime.on('TOOLBOX_EXTENSIONS_NEED_UPDATE', () => {
-    var _variableManagerWindo2;
-    if ((_variableManagerWindo2 = variableManagerWindow) !== null && _variableManagerWindo2 !== void 0 && _variableManagerWindo2.isVisible) fullReload();
-  });
-  let stepHookInstalled = false;
-  const installStepHook = () => {
-    if (stepHookInstalled) return;
-    stepHookInstalled = true;
-    const oldStep = vm.runtime._step;
-    vm.runtime._step = function () {
-      for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-        args[_key] = arguments[_key];
-      }
-      const ret = oldStep.call(this, ...args);
-      try {
-        scheduleUpdate();
-      } catch (e) {
-        console.error(e);
-      }
-      return ret;
-    };
+
+  // --- Runtime hooks --------------------------------------------------
+  const onProjectChange = () => {
+    if (win && win.isVisible) reload();
   };
-  installStepHook();
+  vm.runtime.on('PROJECT_LOADED', onProjectChange);
+  vm.runtime.on('TOOLBOX_EXTENSIONS_NEED_UPDATE', onProjectChange);
+  const originalStep = vm.runtime._step;
+  vm.runtime._step = function () {
+    for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+      args[_key2] = arguments[_key2];
+    }
+    const result = originalStep.apply(this, args);
+    try {
+      scheduleUpdate();
+    } catch (e) {
+      console.error('variable-manager: update failed', e);
+    }
+    return result;
+  };
+  const onGlobalKey = e => {
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'V' || e.key === 'v') && !e.repeat) {
+      e.preventDefault();
+      toggle();
+    } else if (win && win.isVisible && (e.ctrlKey || e.metaKey) && e.key === 'f') {
+      e.preventDefault();
+      searchInput.focus();
+      searchInput.select();
+    }
+  };
+  document.addEventListener('keydown', onGlobalKey);
   addon.self.addEventListener('disabled', () => {
-    document.removeEventListener('keydown', handleKeyboardShortcuts);
-    hideVariableManager();
-    cleanup();
+    document.removeEventListener('keydown', onGlobalKey);
+    removeSettingsListener();
+    hide();
   });
   addon.self.addEventListener('reenabled', () => {
-    if (variableManagerWindow) fullReload();
+    if (win && win.isVisible) reload();
   });
 
-  // Expose toggle function
-  window.__bilupVariableManagerToggle = toggleVariableManager;
-
-  // Create button
-  const buttonOuter = document.createElement('div');
-  buttonOuter.className = 'sa-variable-manager-container';
-  const button = document.createElement('div');
-  button.className = addon.tab.scratchClass('button_outlined-button', 'stage-header_stage-button');
-  const buttonContent = document.createElement('div');
-  buttonContent.className = addon.tab.scratchClass('button_content');
-  const buttonImage = document.createElement('svg');
-  buttonImage.className = addon.tab.scratchClass('stage-header_stage-button-icon');
-  buttonImage.draggable = false;
-  buttonImage.innerHTML = addon.self.getResource('/icon.svg');
-  buttonContent.appendChild(buttonImage);
-  button.appendChild(buttonContent);
-  buttonOuter.appendChild(button);
-  const preventSelection = e => e.preventDefault();
-  button.addEventListener('mousedown', preventSelection);
-  button.addEventListener('selectstart', preventSelection);
-  button.addEventListener('click', toggleVariableManager);
-
-  // Global keyboard shortcut
-  document.addEventListener('keydown', e => {
-    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'V' && !e.repeat) {
-      e.preventDefault();
-      toggleVariableManager();
-    }
+  // --- Stage header button --------------------------------------------
+  const buttonWrap = el('div', {
+    class: 'sa-variable-manager-container'
   });
-
-  // Add to stage header
+  const button = el('div', {
+    class: addon.tab.scratchClass('button_outlined-button', 'stage-header_stage-button'),
+    onclick: toggle,
+    onmousedown: e => e.preventDefault()
+  });
+  const buttonContent = el('div', {
+    class: addon.tab.scratchClass('button_content')
+  });
+  const buttonIcon = document.createElement('svg');
+  buttonIcon.className = addon.tab.scratchClass('stage-header_stage-button-icon');
+  buttonIcon.draggable = false;
+  buttonIcon.innerHTML = addon.self.getResource('/icon.svg');
+  buttonContent.append(buttonIcon);
+  button.append(buttonContent);
+  buttonWrap.append(button);
   while (true) {
     await addon.tab.waitForElement('[class^="stage-header_stage-size-row"], [class^="stage-header_fullscreen-buttons-row_"]', {
       markAsSeen: true,
@@ -797,12 +670,12 @@ const EMPTY_ICON = "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentCol
     if (addon.tab.editorMode === 'editor') {
       addon.tab.appendToSharedSpace({
         space: 'stageHeader',
-        element: buttonOuter,
+        element: buttonWrap,
         order: 2
       });
     } else {
-      buttonOuter.remove();
-      hideVariableManager();
+      buttonWrap.remove();
+      hide();
     }
   }
 });

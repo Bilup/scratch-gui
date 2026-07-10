@@ -1154,6 +1154,7 @@ const postThrottledSettingsChange = store => {
     });
   }, 100);
 };
+const NATIVISED_ADDONS = new Set(['remove-curved-stage-border', 'hide-delete-button', 'remove-extension-button', 'tw-remove-backpack', 'tab-styles', 'window-theme']);
 const filterAddonsBySupport = () => {
   const supported = {};
   const unsupported = {};
@@ -1161,6 +1162,9 @@ const filterAddonsBySupport = () => {
     var _ref2 = _slicedToArray(_ref, 2);
     const id = _ref2[0];
     const manifest = _ref2[1];
+    if (NATIVISED_ADDONS.has(id)) {
+      continue;
+    }
     if (manifest.unsupported) {
       unsupported[id] = manifest;
     } else {
