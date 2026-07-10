@@ -240,14 +240,15 @@ __webpack_require__.r(__webpack_exports__);
       let handler = null;
       let isLoading = false;
       while (true) {
-        const topBar = await addon.tab.waitForElement("[class^='menu-bar_main-menu']", {
+        const topBar = await addon.tab.waitForElement("[class^='menu-bar_file-group']", {
           markAsSeen: true,
           reduxEvents: ["scratch-gui/mode/SET_PLAYER", "fontsLoaded/SET_FONTS_LOADED", "scratch-gui/locales/SELECT_LOCALE"],
           reduxCondition: state => !state.scratchGui.mode.isPlayerOnly
         });
-        let display = topBar.appendChild(document.createElement("span"));
+        const mainMenu = topBar.parentElement || topBar;
+        let display = mainMenu.appendChild(document.createElement("span"));
+        display.setAttribute("data-mw-item", "block-count");
         addon.tab.displayNoneWhileDisabled(display);
-        display.style.order = 1;
         display.style.cursor = 'pointer';
         display.style.padding = '4px 8px';
         display.style.borderRadius = '4px';

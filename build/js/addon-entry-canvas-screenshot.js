@@ -12,7 +12,7 @@ exports = module.exports = __webpack_require__(/*! ../../../../node_modules/css-
 
 
 // module
-exports.push([module.i, "[dir=\"ltr\"] .sa-screenshot-container {\n  margin-right: 0.2rem;\n}\n\n[dir=\"rtl\"] .sa-screenshot-container {\n  margin-left: 0.2rem;\n}\n\n.sa-small-stage [class*=\"gui_body-wrapper_\"]:not(.sa-stage-hidden) .sa-screenshot-container {\n  display: none !important;\n}\n\n.sa-screenshot-container [class*=\"button_content_\"] {\n  position: relative;\n}\n\n.sa-screenshot-container [class*=\"button_outlined-button\"] {\n  background-color: var(--ui-secondary);\n  border-color: var(--ui-secondary-dark, var(--ui-black-transparent));\n  color: var(--text-primary);\n}\n\n.sa-screenshot-container [class*=\"button_outlined-button\"]:hover {\n  background-color: var(--ui-secondary-dark, var(--ui-tertiary));\n  border-color: var(--ui-secondary-darker, var(--ui-black-transparent));\n}\n\n.sa-screenshot-container img {\n  filter: var(--editorDarkMode-accent-filter, none);\n  width: 1.25rem;\n  height: 1.25rem;\n}\n\n.sa-screenshot-preview {\n  pointer-events: none;\n  user-select: none;\n  position: fixed;\n  bottom: 20px;\n  right: 20px;\n  width: 200px;\n  height: 150px;\n  background: #4c97ff;\n  border-radius: 8px;\n  padding: 8px;\n  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);\n  z-index: 10000;\n  opacity: 0;\n  transform: translateY(10px) scale(0.9);\n  transition: all 0.3s ease;\n}\n\n.sa-screenshot-preview img {\n  width: 100%;\n  height: 100%;\n  object-fit: contain;\n  border-radius: 4px;\n}\n\n.sa-screenshot-preview-visible {\n  opacity: 1;\n  transform: translateY(0) scale(1);\n}\n\n@keyframes sa-screenshot-flash {\n  0% { opacity: 1; }\n  50% { opacity: 0.7; }\n  100% { opacity: 1; }\n}\n", ""]);
+exports.push([module.i, "[dir=\"ltr\"] .sa-screenshot-container {\n  margin-right: 0.2rem;\n}\n\n[dir=\"rtl\"] .sa-screenshot-container {\n  margin-left: 0.2rem;\n}\n\n.sa-small-stage [class*=\"gui_body-wrapper_\"]:not(.sa-stage-hidden) .sa-screenshot-container {\n  display: none !important;\n}\n\n.sa-screenshot-container [class*=\"button_content_\"] {\n  position: relative;\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  width: 100%;\n  height: 100%;\n}\n\n.sa-screenshot-container [class*=\"stage-header_stage-button-icon\"] {\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  width: 100%;\n  height: 100%;\n}\n\n.sa-screenshot-container [class*=\"stage-header_stage-button-icon\"] svg {\n  width: 100%;\n  height: 100%;\n}\n\n.sa-screenshot-preview {\n  pointer-events: none;\n  user-select: none;\n  position: fixed;\n  bottom: 20px;\n  right: 20px;\n  width: 220px;\n  background: var(--ui-modal-background, var(--ui-primary, #fff));\n  border: 1px solid var(--ui-black-transparent, rgba(0, 0, 0, 0.15));\n  border-radius: 12px;\n  padding: 6px;\n  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.16), 0 2px 8px rgba(0, 0, 0, 0.08);\n  z-index: 10000;\n  opacity: 0;\n  transform: translateY(10px) scale(0.96);\n  transition: opacity 0.25s ease, transform 0.25s ease;\n  font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", \"Helvetica Neue\", Helvetica, Arial, sans-serif;\n}\n\n.sa-screenshot-preview-image {\n  height: 140px;\n  border-radius: 8px;\n  overflow: hidden;\n  background: var(--ui-black-transparent, rgba(0, 0, 0, 0.06));\n  display: flex;\n  align-items: center;\n  justify-content: center;\n}\n\n.sa-screenshot-preview img {\n  max-width: 100%;\n  max-height: 100%;\n  object-fit: contain;\n  display: block;\n}\n\n.sa-screenshot-preview-caption {\n  display: flex;\n  align-items: center;\n  justify-content: center;\n  gap: 0.375rem;\n  padding: 0.5rem 0.25rem 0.25rem;\n  font-size: 0.6875rem;\n  font-weight: 600;\n  color: var(--text-primary, #575e75);\n}\n\n.sa-screenshot-preview-visible {\n  opacity: 1;\n  transform: translateY(0) scale(1);\n}\n\n@keyframes sa-screenshot-flash {\n  0% { opacity: 1; }\n  50% { opacity: 0.7; }\n  100% { opacity: 1; }\n}\n", ""]);
 
 // exports
 
@@ -118,11 +118,18 @@ __webpack_require__.r(__webpack_exports__);
   };
   const showPreview = dataUrl => {
     if (!addon.settings.get('show_notifications')) return;
+    if (!dataUrl) return;
     const preview = document.createElement('div');
     preview.className = 'sa-screenshot-preview';
+    const imageWrapper = document.createElement('div');
+    imageWrapper.className = 'sa-screenshot-preview-image';
     const image = document.createElement('img');
     image.src = dataUrl;
-    preview.appendChild(image);
+    imageWrapper.appendChild(image);
+    const caption = document.createElement('div');
+    caption.className = 'sa-screenshot-preview-caption';
+    caption.textContent = msg('screenshot-taken');
+    preview.append(imageWrapper, caption);
     document.body.appendChild(preview);
     setTimeout(() => preview.classList.add('sa-screenshot-preview-visible'), 100);
     setTimeout(() => {

@@ -33,25 +33,22 @@ __webpack_require__.r(__webpack_exports__);
   const vm = addon.tab.traps.vm;
   const oldAddSprite = vm.constructor.prototype.addSprite;
   vm.constructor.prototype.addSprite = function (input) {
-    var _spriteObj$costumes, _spriteObj$costumes$;
-    let spriteObj,
-      stringify = true;
-    if (typeof input === "object") {
+    var _spriteObj, _spriteObj$costumes, _spriteObj$costumes$, _spriteObj2;
+    let spriteObj = null;
+    if (typeof input === "string") {
+      spriteObj = JSON.parse(input);
+    } else if (input && typeof input === "object" && !(input instanceof ArrayBuffer) && !ArrayBuffer.isView(input)) {
       spriteObj = input;
-      stringify = false;
-    } else spriteObj = JSON.parse(input);
-    const isEmpty = ((_spriteObj$costumes = spriteObj.costumes) === null || _spriteObj$costumes === void 0 ? void 0 : (_spriteObj$costumes$ = _spriteObj$costumes[0]) === null || _spriteObj$costumes$ === void 0 ? void 0 : _spriteObj$costumes$.baseLayerMD5) === "cd21514d0531fdffb22204e0ec5ed84a.svg";
-    if (!addon.self.disabled && (isEmpty || !spriteObj.tags || !addon.settings.get("library"))) {
-      if (spriteObj.scratchX) {
-        spriteObj.scratchX = addon.settings.get("x");
-        spriteObj.scratchY = addon.settings.get("y");
-      }
-      if (spriteObj.x) {
-        spriteObj.x = addon.settings.get("x");
-        spriteObj.y = addon.settings.get("y");
-      }
     }
-    return oldAddSprite.call(this, stringify ? JSON.stringify(spriteObj) : spriteObj);
+    const isEmpty = ((_spriteObj = spriteObj) === null || _spriteObj === void 0 ? void 0 : (_spriteObj$costumes = _spriteObj.costumes) === null || _spriteObj$costumes === void 0 ? void 0 : (_spriteObj$costumes$ = _spriteObj$costumes[0]) === null || _spriteObj$costumes$ === void 0 ? void 0 : _spriteObj$costumes$.baseLayerMD5) === "cd21514d0531fdffb22204e0ec5ed84a.svg";
+    const shouldPositionSprite = isEmpty || !((_spriteObj2 = spriteObj) !== null && _spriteObj2 !== void 0 && _spriteObj2.tags) || !addon.settings.get("library");
+    return oldAddSprite.call(this, input).then(result => {
+      if (!addon.self.disabled && shouldPositionSprite) {
+        var _this$editingTarget;
+        (_this$editingTarget = this.editingTarget) === null || _this$editingTarget === void 0 ? void 0 : _this$editingTarget.setXY(addon.settings.get("x"), addon.settings.get("y"));
+      }
+      return result;
+    });
   };
   const registerDupPrototype = () => {
     const targetPrototype = vm.runtime.getTargetForStage().constructor.prototype;
