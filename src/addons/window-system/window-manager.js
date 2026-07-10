@@ -139,6 +139,9 @@ class AddonWindow {
         this.isTouchDragging = false;
         this.isTouchResizing = false;
         this.dragOffset = {x: 0, y: 0};
+        this.dragPointerId = null;
+        this.resizePointerId = null;
+        this.resizeHandle = null;
         this.savedState = null; // For maximize/restore
         this._hideTimer = null;
         
@@ -171,7 +174,7 @@ class AddonWindow {
             transition: opacity 0.2s ease-out, transform 0.2s ease-out, left 0.3s ease-out, top 0.3s ease-out, width 0.3s ease-out, height 0.3s ease-out, border-radius 0.3s ease-out;
         `;
 
-        this.element.addEventListener('mousedown', () => this.bringToFront());
+        this.element.addEventListener('pointerdown', () => this.bringToFront());
         
         // Create header
         this.headerElement = document.createElement('div');
@@ -182,6 +185,7 @@ class AddonWindow {
             padding: 8px 16px;
             cursor: move;
             user-select: none;
+            touch-action: none;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -328,7 +332,7 @@ class AddonWindow {
             padding: 0;
         `;
         
-        button.addEventListener('mousedown', e => {
+        button.addEventListener('pointerdown', e => {
             e.stopPropagation();
         });
         
@@ -358,28 +362,34 @@ class AddonWindow {
     }
 
     addDragFunctionality () {
-        this.headerElement.addEventListener('mousedown', e => {
-            if (e.target.tagName === 'BUTTON') return;
-            
+        this.headerElement.addEventListener('pointerdown', e => {
+            // Only primary button / primary touch; ignore control buttons
+            if (e.button !== 0) return;
+            if (e.target.closest('button')) return;
+
             this.isDragging = true;
-            this.isTouchDragging = false;
+            this.dragPointerId = e.pointerId;
             this.bringToFront();
-            
-            this.element.style.transition = 'none';
-            
             // Get the current position of the window
             const currentX = parseInt(this.element.style.left, 10) || this.x;
             const currentY = parseInt(this.element.style.top, 10) || this.y;
-            
+
             // Calculate offset relative to current window position
             this.dragOffset = {
                 x: e.clientX - currentX,
                 y: e.clientY - currentY
             };
-            
-            document.addEventListener('mousemove', this.handleDrag);
-            document.addEventListener('mouseup', this.handleDragEnd);
-            
+
+            try {
+                this.headerElement.setPointerCapture(e.pointerId);
+            } catch (err) {
+                // setPointerCapture can throw if the pointer is already released
+            }
+
+            this.headerElement.addEventListener('pointermove', this.handleDrag);
+            this.headerElement.addEventListener('pointerup', this.handleDragEnd);
+            this.headerElement.addEventListener('pointercancel', this.handleDragEnd);
+
             e.preventDefault();
         });
         
@@ -412,6 +422,7 @@ class AddonWindow {
     
     handleDrag = e => {
         if (!this.isDragging) return;
+        if (this.dragPointerId !== null && e.pointerId !== this.dragPointerId) return;
         
         const newX = e.clientX - this.dragOffset.x;
         const newY = e.clientY - this.dragOffset.y;
@@ -432,45 +443,21 @@ class AddonWindow {
         this.onMove(this.x, this.y);
     };
     
-    handleDragEnd = () => {
+    handleDragEnd = e => {
+        if (e && this.dragPointerId !== null && e.pointerId !== this.dragPointerId) return;
+
         this.isDragging = false;
-        document.removeEventListener('mousemove', this.handleDrag);
-        document.removeEventListener('mouseup', this.handleDragEnd);
-        this.element.style.transition = '';
-    };
-    
-    handleTouchDrag = e => {
-        if (!this.isDragging || !this.isTouchDragging) return;
-        if (e.touches.length !== 1) return;
-        
-        const touch = e.touches[0];
-        const newX = touch.clientX - this.dragOffset.x;
-        const newY = touch.clientY - this.dragOffset.y;
-        
-        const minVisiblePixels = 50;
-        const minX = -(this.width - minVisiblePixels);
-        const maxX = window.innerWidth - minVisiblePixels;
-        const minY = 0;
-        const maxY = window.innerHeight - minVisiblePixels;
-        
-        this.x = Math.max(minX, Math.min(newX, maxX));
-        this.y = Math.max(minY, Math.min(newY, maxY));
-        
-        this.element.style.left = `${this.x}px`;
-        this.element.style.top = `${this.y}px`;
-        
-        this.onMove(this.x, this.y);
-        
-        e.preventDefault();
-    };
-    
-    handleTouchDragEnd = () => {
-        this.isDragging = false;
-        this.isTouchDragging = false;
-        document.removeEventListener('touchmove', this.handleTouchDrag);
-        this.element.style.transition = '';
-        document.removeEventListener('touchend', this.handleTouchDragEnd);
-        document.removeEventListener('touchcancel', this.handleTouchDragEnd);
+        if (this.dragPointerId !== null) {
+            try {
+                this.headerElement.releasePointerCapture(this.dragPointerId);
+            } catch (err) {
+                // already released
+            }
+            this.dragPointerId = null;
+        }
+        this.headerElement.removeEventListener('pointermove', this.handleDrag);
+        this.headerElement.removeEventListener('pointerup', this.handleDragEnd);
+        this.headerElement.removeEventListener('pointercancel', this.handleDragEnd);
     };
     
     addResizeHandles () {
@@ -563,10 +550,12 @@ class AddonWindow {
             }
             
             Object.assign(handle.style, styles);
+            handle.style.touchAction = 'none';
             
-            handle.addEventListener('mousedown', e => {
+            handle.addEventListener('pointerdown', e => {
+                if (e.button !== 0) return;
                 e.stopPropagation();
-                this.startResize(e, direction);
+                this.startResize(e, direction, handle);
             });
             
             handle.addEventListener('touchstart', e => {
@@ -584,9 +573,11 @@ class AddonWindow {
         });
     }
     
-    startResize (e, direction) {
+    startResize (e, direction, handle) {
         this.isResizing = true;
         this.resizeDirection = direction;
+        this.resizePointerId = e.pointerId;
+        this.resizeHandle = handle;
         this.bringToFront();
         
         const rect = this.element.getBoundingClientRect();
@@ -601,15 +592,23 @@ class AddonWindow {
             left: rect.left,
             top: rect.top
         };
+
+        try {
+            handle.setPointerCapture(e.pointerId);
+        } catch (err) {
+            // setPointerCapture can throw if the pointer is already released
+        }
         
-        document.addEventListener('mousemove', this.handleResize);
-        document.addEventListener('mouseup', this.handleResizeEnd);
+        handle.addEventListener('pointermove', this.handleResize);
+        handle.addEventListener('pointerup', this.handleResizeEnd);
+        handle.addEventListener('pointercancel', this.handleResizeEnd);
         
         e.preventDefault();
     }
     
     handleResize = e => {
         if (!this.isResizing) return;
+        if (this.resizePointerId !== null && e.pointerId !== this.resizePointerId) return;
         
         const deltaX = e.clientX - this.resizeStart.x;
         const deltaY = e.clientY - this.resizeStart.y;
@@ -664,10 +663,23 @@ class AddonWindow {
         this.onResize(newWidth, newHeight);
     };
     
-    handleResizeEnd = () => {
+    handleResizeEnd = e => {
+        if (e && this.resizePointerId !== null && e.pointerId !== this.resizePointerId) return;
+
         this.isResizing = false;
-        document.removeEventListener('mousemove', this.handleResize);
-        document.removeEventListener('mouseup', this.handleResizeEnd);
+        const handle = this.resizeHandle;
+        if (handle && this.resizePointerId !== null) {
+            try {
+                handle.releasePointerCapture(this.resizePointerId);
+            } catch (err) {
+                // already released
+            }
+            handle.removeEventListener('pointermove', this.handleResize);
+            handle.removeEventListener('pointerup', this.handleResizeEnd);
+            handle.removeEventListener('pointercancel', this.handleResizeEnd);
+        }
+        this.resizePointerId = null;
+        this.resizeHandle = null;
     };
     
     handleTouchResize = e => {
