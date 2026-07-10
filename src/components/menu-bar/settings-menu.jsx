@@ -11,7 +11,6 @@ import TWGuiThemeMenu from './tw-theme-gui.jsx';
 import TWBlocksThemeMenu from './tw-theme-blocks.jsx';
 import TWWallpaperMenu from './tw-theme-wallpaper.jsx';
 import TWFontsThemeMenu from './tw-theme-fonts.jsx';
-import TWMenuBarAlignMenu from './tw-menubar-align.jsx';
 import TWCustomThemeMenu from './tw-theme-custom.jsx';
 import TWBilmeMenu from './bl-bilme-menu.jsx';
 
@@ -70,8 +69,7 @@ const SettingsMenu = ({
             <div className={styles.menuSeparator} />
             {canChangeTheme && (
                 <MenuSection>
-                    <TWBlocksThemeMenu onOpenCustomSettings={onOpenCustomSettings} />
-                    <TWMenuBarAlignMenu />
+                    <TWBlocksThemeMenu />
                     <TWAccentThemeMenu />
                     <TWBilmeMenu />
                 </MenuSection>
