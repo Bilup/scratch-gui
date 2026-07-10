@@ -156,7 +156,10 @@ const openOnboardingModal = function () {
     return openModal(MODAL_ONBOARDING);
 };
 const openShortcutManagerModal = function () {
-    return openModal(MODAL_SHORTCUT_MANAGER);
+    // eslint-disable-next-line global-require
+    const {setSettingsModalInitialView} = require('../lib/settings/modal-view.js');
+    setSettingsModalInitialView('shortcuts');
+    return openModal(MODAL_SETTINGS);
 };
 const openBilmeModal = function () {
     return openModal(MODAL_WARPTHEME);

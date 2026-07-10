@@ -62,7 +62,6 @@ import {
     openRestorePointModal,
     openGitModal,
     openExtensionManagerModal,
-    openShortcutManagerModal,
     openSimpleDialog
 } from '../../reducers/modals';
 import { showOnboarding } from '../../reducers/onboarding';
@@ -155,7 +154,7 @@ import {
     FilePen, PencilRuler, TriangleAlert, Info, Shuffle, Zap, Gauge,
     FilePlusCorner, Upload, RefreshCcw, ClockPlus, Package, FileInput,
     Save, ArchiveRestore, UserPen, Cloud, Settings, PackagePlus, Puzzle,
-    Bookmark, GitBranch, FileCog, Bug, Database, Undo, Redo, Handshake, Sparkles, Wrench, Keyboard, Send,
+    Bookmark, GitBranch, FileCog, Bug, Database, Undo, Redo, Handshake, Sparkles, Wrench, Send,
     Download, AppWindow, Computer, Shield, Code
 } from 'lucide-react';
 
@@ -2112,21 +2111,6 @@ class MenuBar extends React.Component {
                                         />
                                     </MenuItem>
                                 </MenuSection>
-                                <MenuSection>
-                                    <MenuItem
-                                        onClick={() => {
-                                            this.props.onClickShortcutManagerModal();
-                                            this.props.onRequestCloseTools();
-                                        }}
-                                    >
-                                        <Keyboard />
-                                        <FormattedMessage
-                                            defaultMessage="Keyboard Shortcuts"
-                                            description="Menu bar item for keyboard shortcuts"
-                                            id="tw.menuBar.keyboardShortcuts"
-                                        />
-                                    </MenuItem>
-                                </MenuSection>
                             </MenuBarMenu>
                         </MenuLabel>
                         {!this.props.isPlayerOnly && (
@@ -2442,7 +2426,7 @@ MenuBar.propTypes = {
     onClickSettingsModal: PropTypes.func,
     onClickGitModal: PropTypes.func,
     onClickShowTutorial: PropTypes.func,
-    onClickShortcutManagerModal: PropTypes.func,
+
     onOpenSettingsModal: PropTypes.func,
     onLogOut: PropTypes.func,
     onOpenExtensionLibrary: PropTypes.func,
@@ -2580,9 +2564,6 @@ const mapDispatchToProps = dispatch => ({
     onClickShowTutorial: () => {
         localStorage.removeItem('mw:has-seen-onboarding');
         dispatch(showOnboarding());
-    },
-    onClickShortcutManagerModal: () => {
-        dispatch(openShortcutManagerModal());
     },
     onOpenSettingsModal: () => dispatch(openSettingsModal()),
     onClickNew: needSave => {
