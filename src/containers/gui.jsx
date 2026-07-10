@@ -23,7 +23,6 @@ import {
 import {STAGE_SIZE_MODES} from '../lib/constants/layout-constants';
 import {setStageSize} from '../reducers/stage-size';
 import {setFullScreen} from '../reducers/mode';
-import collaborationService from '../lib/collaboration-service.js';
 
 import {
     closeCostumeLibrary,

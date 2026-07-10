@@ -104,6 +104,7 @@ class MenuLabel extends React.Component {
     render () {
         return (
             <div
+                data-mw-item={this.props.dataItem}
                 className={classNames(styles.menuBarItem, styles.hoverable, {
                     [styles.active]: this.props.open
                 })}
@@ -118,6 +119,7 @@ class MenuLabel extends React.Component {
 
 MenuLabel.propTypes = {
     children: PropTypes.node,
+    dataItem: PropTypes.string,
     open: PropTypes.bool,
     onOpen: PropTypes.func,
     onClose: PropTypes.func,

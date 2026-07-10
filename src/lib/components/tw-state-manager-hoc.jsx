@@ -5,6 +5,9 @@ import bindAll from 'lodash.bindall';
 import VM from 'scratch-vm';
 import log from '../utils/log';
 import {defineMessages, intlShape, injectIntl} from 'react-intl';
+import {initAppearanceSettings} from '../mw-appearance-settings';
+import {initStyleSettings} from '../mw-style-settings';
+import {initMenuBarLayout} from '../mw-menu-bar-layout';
 
 import {
     setUsername
@@ -22,6 +25,7 @@ import {
     setFullScreen
 } from '../../reducers/mode';
 import {generateRandomUsername} from '../utils/tw-username';
+import CollaborationService from '../collaboration/index.js';
 import {setSearchParams} from '../utils/navigation';
 import {defaultStageSize} from '../../reducers/custom-stage-size';
 
@@ -290,6 +294,10 @@ const TWStateManager = function (WrappedComponent) {
         componentDidMount () {
             const urlParams = new URLSearchParams(location.search);
 
+            initAppearanceSettings();
+            initStyleSettings();
+            initMenuBarLayout();
+
             if (urlParams.has('fps')) {
                 const fps = +urlParams.get('fps');
                 if (Number.isNaN(fps) || fps < 0) {
@@ -451,11 +459,9 @@ const TWStateManager = function (WrappedComponent) {
                 setLocalStorage(USERNAME_KEY, this.props.username);
                 
                 // Sync username with collaboration service if connected
-                if (typeof window !== 'undefined' &&
-                    window.CollaborationService &&
-                    prevProps.username && this.props.username) {
+                if (prevProps.username && this.props.username) {
                     try {
-                        const service = window.CollaborationService.getInstance();
+                        const service = CollaborationService.getInstance();
                         if (service && service.isConnectedToHostPeer()) {
                             service.changeUsername(this.props.username);
                         }

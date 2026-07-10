@@ -2,7 +2,6 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import bindAll from 'lodash.bindall';
 import {connect} from 'react-redux';
-import {injectIntl} from 'react-intl';
 import VM from 'scratch-vm';
 
 import GitModalComponent from '../components/mw-git-modal/git-modal.jsx';
@@ -14,6 +13,8 @@ import {
     getDefaultAuthor,
     getRepoStatus,
     getRepoChanges,
+    getFs,
+    REPO_DIR,
     initRepo,
     createBranch,
     checkoutBranchAndRestore,
@@ -26,11 +27,48 @@ import {
     mergeBranchesApply,
     restoreProjectFromCurrentRef,
     computeCommitGraph,
+    getRemotes,
     addRemote,
     removeRemote,
-    getRemotes,
-    push
+    push,
+    cloneRepo,
+    repoHasFractch,
+    readReadme,
+    writeReadme
 } from '../lib/git/browser-git.js';
+import {buildSb3FromFractchTree} from '../lib/git/fractch-tree.js';
+import {
+    getFileContentAtCommit,
+    getChangedFilesBetweenCommits,
+    getCommitParents,
+    computeLineDiff
+} from '../lib/git/git-diff.js';
+
+const TOKEN_KEY = 'mw:git-token';
+const DEFAULT_BRANCH_KEY = 'mw:git-default-branch';
+const AUTO_COMMIT_KEY = 'mw:git-autocommit';
+
+const readLocal = (key, fallback) => {
+    try {
+        const value = localStorage.getItem(key);
+        return value === null ? fallback : value;
+    } catch (e) {
+        return fallback;
+    }
+};
+
+const writeLocal = (key, value) => {
+    try {
+        localStorage.setItem(key, value);
+    } catch (e) {
+        // ignore
+    }
+};
+
+const isDiffable = filepath => /\.(fractch|svg|json|txt|md)$/i.test(filepath || '');
+
+// Cheap content signature so a live-refreshing diff only re-renders when it changed.
+const diffSignature = diff => (diff && Array.isArray(diff.hunks) ? JSON.stringify(diff.hunks) : '');
 
 class TWGitModal extends React.Component {
     constructor (props) {
@@ -57,24 +95,47 @@ class TWGitModal extends React.Component {
             mergeConflicts: [],
             mergeResolutions: {},
             changes: [],
-            // Remote repository state
+            // Remotes
             remotes: [],
-            remoteName: '',
-            remoteUrl: '',
-            pushRemote: '',
+            newRemoteName: 'origin',
+            newRemoteUrl: '',
+            pushRemote: 'origin',
             pushBranch: '',
-            // Authentication state
-            authUsername: '',
-            authToken: '',
-            disableCorsProxy: false
+            remoteToken: readLocal(TOKEN_KEY, ''),
+            // Clone
+            cloneUrl: '',
+            cloneConfirm: false,
+            // Readme
+            readmeContent: '',
+            readmeDirty: false,
+            // Diff
+            diffLoading: false,
+            diffFilepath: null,
+            diffData: null,
+            diffContext: null,
+            selectedCommitOid: null,
+            commitFiles: [],
+            // Settings
+            defaultBranch: readLocal(DEFAULT_BRANCH_KEY, 'main'),
+            autoCommit: readLocal(AUTO_COMMIT_KEY, 'false') === 'true'
         };
 
         this._lastProgressUpdate = 0;
 
+        this._pollTimer = null;
+        this._polling = false;
+        this._openDiffSig = null;
+
         bindAll(this, [
             'refresh',
+            'pollChanges',
+            'computeWorkingDiff',
+            'handleProjectChanged',
             'handleRefresh',
             'handleInit',
+            'handleClone',
+            'handleCancelClone',
+            'handleChangeCloneUrl',
             'handleCommit',
             'handleUndoCommit',
             'handleCheckoutBranch',
@@ -93,22 +154,83 @@ class TWGitModal extends React.Component {
             'handlePreviewMerge',
             'handleSetMergeResolution',
             'handleApplyMerge',
-            // Remote repository handlers
+            'handleDiffChangedFile',
+            'handleSelectCommit',
+            'handleDiffCommitFile',
+            'handleClearDiff',
+            'handleChangeNewRemoteName',
+            'handleChangeNewRemoteUrl',
+            'handleChangePushRemote',
+            'handleChangePushBranch',
+            'handleChangeRemoteToken',
             'handleAddRemote',
             'handleRemoveRemote',
             'handlePush',
-            'handleChangeRemoteName',
-            'handleChangeRemoteUrl',
-            'handleChangePushRemote',
-            'handleChangePushBranch',
-            'handleChangeAuthUsername',
-            'handleChangeAuthToken',
-            'handleChangeDisableCorsProxy'
+            'handleChangeDefaultBranch',
+            'handleToggleAutoCommit',
+            'handleChangeReadme',
+            'handleSaveReadme'
         ]);
     }
 
     componentDidMount () {
         this.refresh();
+        // Re-check working changes only when the VM reports an actual project
+        // edit, debounced so a burst of edits triggers a single re-serialization.
+        if (this.props.vm && typeof this.props.vm.on === 'function') {
+            this.props.vm.on('PROJECT_CHANGED', this.handleProjectChanged);
+        }
+    }
+
+    componentWillUnmount () {
+        if (this.props.vm && typeof this.props.vm.off === 'function') {
+            this.props.vm.off('PROJECT_CHANGED', this.handleProjectChanged);
+        }
+        if (this._pollTimer) {
+            clearTimeout(this._pollTimer);
+            this._pollTimer = null;
+        }
+    }
+
+    handleProjectChanged () {
+        if (this._pollTimer) clearTimeout(this._pollTimer);
+        this._pollTimer = setTimeout(this.pollChanges, 700);
+    }
+
+    async pollChanges () {
+        // Skip while another operation is running, before init, or if a poll is
+        // still in flight (computing status re-serializes the project).
+        if (this._polling || this.state.busy || !this.state.initialized) return;
+        this._polling = true;
+        try {
+            const changes = await getRepoChanges(this.props.vm);
+            const prev = this.state.changes || [];
+            const changed = prev.length !== changes.length ||
+                changes.some((c, i) => !prev[i] ||
+                    prev[i].filepath !== c.filepath ||
+                    prev[i].description !== c.description);
+            if (changed) {
+                this.setState({changes});
+            }
+            // Keep an open working-tree diff in sync with live edits, swapping the
+            // content in place (no loading flash) and only when it actually changed.
+            if (this.state.diffContext === 'working' && this.state.diffFilepath && !this.state.diffLoading) {
+                try {
+                    const diff = await this.computeWorkingDiff(this.state.diffFilepath);
+                    const sig = diffSignature(diff);
+                    if (sig !== this._openDiffSig) {
+                        this._openDiffSig = sig;
+                        this.setState({diffData: diff});
+                    }
+                } catch (e) {
+                    // ignore: the manual diff path still works
+                }
+            }
+        } catch (e) {
+            // silent: polling should never surface transient errors
+        } finally {
+            this._polling = false;
+        }
     }
 
     handleGitProgress (progress) {
@@ -122,38 +244,28 @@ class TWGitModal extends React.Component {
         const total = typeof progress.total === 'number' ? progress.total : null;
         const ratio = completed !== null && total && total > 0 ? Math.max(0, Math.min(1, completed / total)) : null;
 
+        let message = progress.message || 'Working…';
+        if (ratio !== null) {
+            message = `${message} ${Math.round(ratio * 100)}%`;
+        } else if (completed !== null && completed > 0) {
+            message = `${message} (${completed})`;
+        }
+
         this.setState({
-            busyMessage: progress.message || this.props.intl.formatMessage({
-                defaultMessage: 'Working…',
-                description: 'Message shown when Git operation is in progress',
-                id: 'mw.gitModal.busy'
-            }),
+            busyMessage: message,
             busyProgress: ratio
         });
     }
 
     async refresh () {
-        this.setState({busy: true, busyMessage: this.props.intl.formatMessage({
-            defaultMessage: 'Refreshing…',
-            description: 'Message shown when refreshing Git repository status',
-            id: 'mw.gitModal.refreshing'
-        }), busyProgress: null, error: null});
+        this.setState({busy: true, busyMessage: 'Refreshing…', busyProgress: null, error: null});
         try {
             const status = await getRepoStatus(this.props.vm);
-            // If a repo exists but has no commits, treat it like uninitialized
-            // so the UI prompts to initialize (this covers partially-created
-            // .git metadata without history).
             const hasCommits = Array.isArray(status.commits) && status.commits.length > 0;
             const graph = status.initialized ?
                 (await computeCommitGraph({depth: 50})) :
                 {branches: [], nodes: [], branchLogs: []};
-            
-            // Get remotes if repo is initialized
-            let remotes = [];
-            if (status.initialized && hasCommits) {
-                remotes = await getRemotes(this.props.vm);
-            }
-            
+
             const palette = [
                 '#4db6ac', '#9575cd', '#64b5f6',
                 '#f06292', '#ba68c8', '#4fc3f7',
@@ -163,6 +275,25 @@ class TWGitModal extends React.Component {
             graph.branches.forEach((b, i) => {
                 branchColors[b] = palette[i % palette.length];
             });
+
+            let remotes = [];
+            let readme = this.state.readmeContent;
+            if (status.initialized) {
+                try {
+                    remotes = await getRemotes(this.props.vm);
+                } catch (e) {
+                    remotes = [];
+                }
+                // Don't clobber unsaved README edits with the on-disk copy.
+                if (!this.state.readmeDirty) {
+                    try {
+                        readme = await readReadme();
+                    } catch (e) {
+                        readme = '';
+                    }
+                }
+            }
+
             this.setState({
                 initialized: Boolean(status.initialized) && hasCommits,
                 currentBranch: status.currentBranch,
@@ -173,7 +304,14 @@ class TWGitModal extends React.Component {
                 graphBranchLogs: graph.branchLogs,
                 branchColors,
                 changes: status.changes,
-                remotes
+                remotes,
+                readmeContent: readme,
+                pushRemote: (remotes[0] && remotes[0].name) || this.state.pushRemote,
+                pushBranch: this.state.pushBranch ||
+                    status.currentBranch ||
+                    (Array.isArray(status.branches) && status.branches.includes('main') ?
+                        'main' : (status.branches && status.branches[0])) ||
+                    ''
             });
         } catch (err) {
             this.setState({error: err && err.message ? err.message : String(err)});
@@ -187,16 +325,69 @@ class TWGitModal extends React.Component {
     }
 
     async handleInit () {
-        this.setState({busy: true, busyMessage: this.props.intl.formatMessage({
-            defaultMessage: 'Initializing repository…',
-            description: 'Message shown when initializing Git repository',
-            id: 'mw.gitModal.init-ing'
-        }), busyProgress: 0, error: null});
+        this.setState({busy: true, busyMessage: 'Initializing repository…', busyProgress: 0, error: null});
         try {
             await initRepo({
                 vm: this.props.vm,
+                defaultBranch: this.state.defaultBranch || 'main',
                 onProgress: this.handleGitProgress
             });
+            await this.refresh();
+        } catch (err) {
+            this.setState({error: err && err.message ? err.message : String(err)});
+        } finally {
+            this.setState({busy: false, busyMessage: null, busyProgress: null});
+        }
+    }
+
+    handleChangeCloneUrl (e) {
+        this.setState({cloneUrl: e.target.value, cloneConfirm: false});
+    }
+
+    handleCancelClone () {
+        this.setState({cloneConfirm: false});
+    }
+
+    async handleClone () {
+        const url = (this.state.cloneUrl || '').trim();
+        if (!url) {
+            this.setState({error: 'Enter a git URL to clone'});
+            return;
+        }
+        // Cloning replaces the current project (and any repo). Confirm first when
+        // there are unsaved changes to avoid silently discarding work.
+        if (this.props.projectChanged && !this.state.cloneConfirm) {
+            this.setState({cloneConfirm: true, error: null});
+            return;
+        }
+        this.setState({cloneConfirm: false});
+        const token = this.state.remoteToken;
+        const username = (this.state.authorName || '').trim();
+        this.setState({busy: true, busyMessage: 'Cloning…', busyProgress: null, error: null});
+        try {
+            const cloneOpts = {url, onProgress: this.handleGitProgress};
+            if (token) {
+                cloneOpts.onAuth = () => (username ?
+                    {username, password: token} :
+                    {username: token, password: token});
+            }
+            await cloneRepo(cloneOpts);
+
+            if (!(await repoHasFractch())) {
+                await deleteRepo();
+                throw new Error('That repository is not a fractch project (no .fractch files found).');
+            }
+
+            const fs = getFs();
+            const pfs = fs.promises;
+            const bytes = await buildSb3FromFractchTree({fs: pfs, dir: REPO_DIR});
+            const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+
+            this.props.vm.quit();
+            await this.props.vm.loadProject(buffer, {skipGitImport: true});
+            this.props.vm.renderer.draw();
+
+            this.setState({cloneUrl: ''});
             await this.refresh();
         } catch (err) {
             this.setState({error: err && err.message ? err.message : String(err)});
@@ -208,19 +399,11 @@ class TWGitModal extends React.Component {
     async handleCommit () {
         const message = this.state.commitMessage.trim();
         if (!message) {
-            this.setState({error: this.props.intl.formatMessage({
-                defaultMessage: 'Commit message is required',
-                description: 'Error message when commit message is empty',
-                id: 'mw.gitModal.error.commitMessageRequired'
-            })});
+            this.setState({error: 'Commit message is required'});
             return;
         }
 
-        this.setState({busy: true, busyMessage: this.props.intl.formatMessage({
-            defaultMessage: 'Committing…',
-            description: 'Message shown when committing changes to Git repository',
-            id: 'mw.gitModal.committing'
-        }), busyProgress: 0, error: null});
+        this.setState({busy: true, busyMessage: 'Committing…', busyProgress: 0, error: null});
         try {
             await commitProject({
                 vm: this.props.vm,
@@ -231,7 +414,7 @@ class TWGitModal extends React.Component {
                 },
                 onProgress: this.handleGitProgress
             });
-            this.setState({commitMessage: ''});
+            this.setState({commitMessage: '', diffData: null, diffFilepath: null});
             await this.refresh();
         } catch (err) {
             this.setState({error: err && err.message ? err.message : String(err)});
@@ -243,31 +426,19 @@ class TWGitModal extends React.Component {
     async handleUndoCommit () {
         if (!this.state.initialized) return;
         if (!this.state.currentBranch) {
-            this.setState({error: this.props.intl.formatMessage({
-                defaultMessage: 'Cannot undo commit while detached. Check out a branch first.',
-                description: 'Error message when trying to undo commit while detached',
-                id: 'mw.gitModal.error.cannotUndoWhileDetached'
-            })});
+            this.setState({error: 'Cannot undo commit while detached. Check out a branch first.'});
             return;
         }
 
         if (!Array.isArray(this.state.commits) || this.state.commits.length < 2) {
-            this.setState({error: this.props.intl.formatMessage({
-                defaultMessage: 'No previous commit to undo to.',
-                description: 'Error message when there is no previous commit',
-                id: 'mw.gitModal.error.noPreviousCommit'
-            })});
+            this.setState({error: 'No previous commit to undo to.'});
             return;
         }
 
         const head = this.state.commits[0];
         const previous = this.state.commits[1];
 
-        this.setState({busy: true, busyMessage: this.props.intl.formatMessage({
-            defaultMessage: 'Undoing commit…',
-            description: 'Message shown when undoing a Git commit',
-            id: 'mw.gitModal.undoingCommit'
-        }), busyProgress: null, error: null});
+        this.setState({busy: true, busyMessage: 'Undoing commit…', busyProgress: null, error: null});
         try {
             const snapshot = await readSnapshotAtCommit(previous.oid);
             this.props.vm.quit();
@@ -297,19 +468,11 @@ class TWGitModal extends React.Component {
     async handleCreateBranch () {
         const ref = this.state.newBranchName.trim();
         if (!ref) {
-            this.setState({error: this.props.intl.formatMessage({
-                defaultMessage: 'Branch name is required',
-                description: 'Error message when branch name is empty',
-                id: 'mw.gitModal.error.branchNameRequired'
-            })});
+            this.setState({error: 'Branch name is required'});
             return;
         }
 
-        this.setState({busy: true, busyMessage: this.props.intl.formatMessage({
-            defaultMessage: 'Creating branch…',
-            description: 'Message shown when creating a new Git branch',
-            id: 'mw.gitModal.creatingBranch'
-        }), busyProgress: null, error: null});
+        this.setState({busy: true, busyMessage: 'Creating branch…', busyProgress: null, error: null});
         try {
             await createBranch({ref, vm: this.props.vm});
             await checkoutBranchAndRestore({vm: this.props.vm, ref});
@@ -326,11 +489,7 @@ class TWGitModal extends React.Component {
         const ref = e && e.target ? e.target.value : null;
         if (!ref) return;
 
-        this.setState({busy: true, busyMessage: this.props.intl.formatMessage({
-            defaultMessage: 'Checking out branch…',
-            description: 'Message shown when checking out a Git branch',
-            id: 'mw.gitModal.checkingOutBranch'
-        }), busyProgress: null, error: null});
+        this.setState({busy: true, busyMessage: 'Checking out branch…', busyProgress: null, error: null});
         try {
             await checkoutBranchAndRestore({vm: this.props.vm, ref});
             await this.refresh();
@@ -345,11 +504,7 @@ class TWGitModal extends React.Component {
         const oid = e && e.currentTarget ? e.currentTarget.dataset.oid : null;
         if (!oid) return;
 
-        this.setState({busy: true, busyMessage: this.props.intl.formatMessage({
-            defaultMessage: 'Restoring commit…',
-            description: 'Message shown when restoring a Git commit',
-            id: 'mw.gitModal.restoringCommit'
-        }), busyProgress: null, error: null});
+        this.setState({busy: true, busyMessage: 'Restoring commit…', busyProgress: null, error: null});
         try {
             await checkoutCommitAndRestore({vm: this.props.vm, oid});
             await this.refresh();
@@ -364,11 +519,7 @@ class TWGitModal extends React.Component {
         const oid = e && e.currentTarget ? e.currentTarget.dataset.oid : null;
         if (!oid) return;
 
-        this.setState({busy: true, busyMessage: this.props.intl.formatMessage({
-            defaultMessage: 'Preparing download…',
-            description: 'Message shown when preparing a Git commit for download',
-            id: 'mw.gitModal.preparingDownload'
-        }), busyProgress: null, error: null});
+        this.setState({busy: true, busyMessage: 'Preparing download…', busyProgress: null, error: null});
         try {
             const sb3ArrayBuffer = await readSnapshotAtCommit(oid);
             if (!sb3ArrayBuffer || sb3ArrayBuffer.byteLength === 0) {
@@ -385,13 +536,10 @@ class TWGitModal extends React.Component {
     }
 
     async handleDeleteRepo () {
-        this.setState({busy: true, busyMessage: this.props.intl.formatMessage({
-            defaultMessage: 'Deleting repository…',
-            description: 'Message shown when deleting a Git repository',
-            id: 'mw.gitModal.deletingRepo'
-        }), busyProgress: null, error: null});
+        this.setState({busy: true, busyMessage: 'Deleting repository…', busyProgress: null, error: null});
         try {
             await deleteRepo();
+            this.setState({diffData: null, diffFilepath: null, selectedCommitOid: null, commitFiles: []});
             await this.refresh();
         } catch (err) {
             this.setState({error: err && err.message ? err.message : String(err)});
@@ -409,11 +557,7 @@ class TWGitModal extends React.Component {
         }
         if (!ref) return;
 
-        this.setState({busy: true, busyMessage: this.props.intl.formatMessage({
-            defaultMessage: 'Deleting branch…',
-            description: 'Message shown when deleting a Git branch',
-            id: 'mw.gitModal.deletingBranch'
-        }), busyProgress: null, error: null});
+        this.setState({busy: true, busyMessage: 'Deleting branch…', busyProgress: null, error: null});
         try {
             await deleteBranch(ref);
             await this.refresh();
@@ -422,6 +566,221 @@ class TWGitModal extends React.Component {
         } finally {
             this.setState({busy: false, busyMessage: null, busyProgress: null});
         }
+    }
+
+    async computeWorkingDiff (filepath) {
+        const fs = getFs();
+        const pfs = fs.promises;
+        let workingText = '';
+        try {
+            const data = await pfs.readFile(`${REPO_DIR}/${filepath}`, 'utf8');
+            workingText = typeof data === 'string' ? data : new TextDecoder().decode(data);
+        } catch (e) {
+            workingText = '';
+        }
+        let headText = '';
+        // isomorphic-git's readBlob does not resolve the symbolic ref "HEAD",
+        // so use the resolved oid of the latest commit instead.
+        const headOid = Array.isArray(this.state.commits) && this.state.commits[0] ?
+            this.state.commits[0].oid : null;
+        if (headOid) {
+            try {
+                const res = await getFileContentAtCommit({fs, dir: REPO_DIR, oid: headOid, filepath});
+                headText = res.text || '';
+            } catch (e) {
+                headText = '';
+            }
+        }
+        return computeLineDiff(headText, workingText);
+    }
+
+    async handleDiffChangedFile (filepath) {
+        if (!filepath || !isDiffable(filepath)) return;
+        // Clicking the already-open file toggles its diff closed instead of
+        // recomputing (which caused a brief flicker).
+        if (this.state.diffContext === 'working' && this.state.diffFilepath === filepath && !this.state.diffLoading) {
+            this.setState({diffData: null, diffFilepath: null});
+            this._openDiffSig = null;
+            return;
+        }
+        this.setState({diffLoading: true, diffFilepath: filepath, diffData: null, diffContext: 'working'});
+        try {
+            const diff = await this.computeWorkingDiff(filepath);
+            this._openDiffSig = diffSignature(diff);
+            this.setState({diffData: diff, diffLoading: false});
+        } catch (err) {
+            this.setState({diffLoading: false, error: err && err.message ? err.message : String(err)});
+        }
+    }
+
+    async handleSelectCommit (oid) {
+        if (!oid) return;
+        this.setState({selectedCommitOid: oid, diffData: null, diffFilepath: null, diffContext: 'commit'});
+        try {
+            const fs = getFs();
+            const parents = await getCommitParents({fs, dir: REPO_DIR, oid});
+            const parent = parents[0] || null;
+            let files = [];
+            if (parent) {
+                files = await getChangedFilesBetweenCommits({fs, dir: REPO_DIR, oidA: parent, oidB: oid});
+            }
+            this.setState({commitFiles: files});
+        } catch (err) {
+            this.setState({error: err && err.message ? err.message : String(err)});
+        }
+    }
+
+    async handleDiffCommitFile (filepath) {
+        const oid = this.state.selectedCommitOid;
+        if (!oid || !filepath || !isDiffable(filepath)) return;
+        if (this.state.diffContext === 'commit' && this.state.diffFilepath === filepath && !this.state.diffLoading) {
+            this.setState({diffData: null, diffFilepath: null});
+            return;
+        }
+        this.setState({diffLoading: true, diffFilepath: filepath, diffData: null, diffContext: 'commit'});
+        try {
+            const fs = getFs();
+            const parents = await getCommitParents({fs, dir: REPO_DIR, oid});
+            const parent = parents[0] || null;
+            const newRes = await getFileContentAtCommit({fs, dir: REPO_DIR, oid, filepath});
+            const oldRes = parent ?
+                await getFileContentAtCommit({fs, dir: REPO_DIR, oid: parent, filepath}) :
+                {text: ''};
+            const diff = await computeLineDiff(oldRes.text || '', newRes.text || '');
+            this.setState({diffData: diff, diffLoading: false});
+        } catch (err) {
+            this.setState({diffLoading: false, error: err && err.message ? err.message : String(err)});
+        }
+    }
+
+    handleClearDiff () {
+        this.setState({diffData: null, diffFilepath: null});
+    }
+
+    handleChangeNewRemoteName (e) {
+        this.setState({newRemoteName: e.target.value});
+    }
+
+    handleChangeNewRemoteUrl (e) {
+        this.setState({newRemoteUrl: e.target.value});
+    }
+
+    handleChangePushRemote (e) {
+        this.setState({pushRemote: e.target.value});
+    }
+
+    handleChangePushBranch (e) {
+        this.setState({pushBranch: e.target.value});
+    }
+
+    handleChangeRemoteToken (e) {
+        const token = e.target.value;
+        this.setState({remoteToken: token});
+        writeLocal(TOKEN_KEY, token);
+    }
+
+    async handleAddRemote () {
+        const name = this.state.newRemoteName.trim();
+        const url = this.state.newRemoteUrl.trim();
+        if (!name || !url) {
+            this.setState({error: 'Remote name and URL are required'});
+            return;
+        }
+        this.setState({busy: true, busyMessage: 'Adding remote…', busyProgress: null, error: null});
+        try {
+            await addRemote({vm: this.props.vm, name, url});
+            this.setState({newRemoteUrl: ''});
+            await this.refresh();
+        } catch (err) {
+            this.setState({error: err && err.message ? err.message : String(err)});
+        } finally {
+            this.setState({busy: false, busyMessage: null, busyProgress: null});
+        }
+    }
+
+    async handleRemoveRemote (eOrName) {
+        let name = null;
+        if (typeof eOrName === 'string') {
+            name = eOrName;
+        } else if (eOrName && eOrName.currentTarget) {
+            name = eOrName.currentTarget.dataset.name || null;
+        }
+        if (!name) return;
+        this.setState({busy: true, busyMessage: 'Removing remote…', busyProgress: null, error: null});
+        try {
+            await removeRemote({vm: this.props.vm, name});
+            await this.refresh();
+        } catch (err) {
+            this.setState({error: err && err.message ? err.message : String(err)});
+        } finally {
+            this.setState({busy: false, busyMessage: null, busyProgress: null});
+        }
+    }
+
+    async handlePush () {
+        const remote = this.state.pushRemote;
+        const branch = this.state.pushBranch || this.state.currentBranch;
+        const token = this.state.remoteToken;
+        // The commit author name doubles as the remote username (Settings tab).
+        const username = (this.state.authorName || '').trim();
+        if (!remote) {
+            this.setState({error: 'Select a remote to push to'});
+            return;
+        }
+        if (!branch) {
+            this.setState({error: 'Select a branch to push'});
+            return;
+        }
+        this.setState({busy: true, busyMessage: `Pushing ${branch} to ${remote}…`, busyProgress: null, error: null});
+        try {
+            await push({
+                vm: this.props.vm,
+                remote,
+                ref: branch,
+                setUpstream: true,
+                onProgress: this.handleGitProgress,
+                // Standard Basic auth: commit author name as username, token as
+                // password (Gitea/GitLab/self-hosted). Falls back to token-as-username
+                // (GitHub PAT style) if no author name is set.
+                onAuth: () => (username ?
+                    {username, password: token} :
+                    {username: token || 'x-access-token', password: token})
+            });
+            this.setState({error: null, busyMessage: 'Pushed'});
+        } catch (err) {
+            this.setState({error: err && err.message ? err.message : String(err)});
+        } finally {
+            this.setState({busy: false, busyMessage: null, busyProgress: null});
+        }
+    }
+
+    handleChangeReadme (e) {
+        this.setState({readmeContent: e.target.value, readmeDirty: true});
+    }
+
+    async handleSaveReadme () {
+        this.setState({busy: true, busyMessage: 'Saving README…', busyProgress: null, error: null});
+        try {
+            await writeReadme(this.state.readmeContent);
+            this.setState({readmeDirty: false});
+            await this.refresh();
+        } catch (err) {
+            this.setState({error: err && err.message ? err.message : String(err)});
+        } finally {
+            this.setState({busy: false, busyMessage: null, busyProgress: null});
+        }
+    }
+
+    handleChangeDefaultBranch (e) {
+        const value = e.target.value;
+        this.setState({defaultBranch: value});
+        writeLocal(DEFAULT_BRANCH_KEY, value);
+    }
+
+    handleToggleAutoCommit () {
+        const next = !this.state.autoCommit;
+        this.setState({autoCommit: next});
+        writeLocal(AUTO_COMMIT_KEY, next ? 'true' : 'false');
     }
 
     handleClose () {
@@ -453,20 +812,12 @@ class TWGitModal extends React.Component {
         const theirs = this.state.mergeSourceBranch;
         if (!ours || !theirs) return;
         if (ours === theirs) {
-            this.setState({error: this.props.intl.formatMessage({
-                defaultMessage: 'Select a different branch to merge.',
-                description: 'Error message when selecting same branch for merge',
-                id: 'mw.gitModal.error.selectDifferentBranch'
-            })});
+            this.setState({error: 'Select a different branch to merge.'});
             return;
         }
         this.setState({
             busy: true,
-            busyMessage: this.props.intl.formatMessage({
-            defaultMessage: 'Analyzing merge…',
-            description: 'Message shown when analyzing a Git merge',
-            id: 'mw.gitModal.analyzingMerge'
-        }),
+            busyMessage: 'Analyzing merge…',
             busyProgress: null,
             error: null,
             mergeConflicts: [],
@@ -493,11 +844,7 @@ class TWGitModal extends React.Component {
         const ours = this.state.currentBranch;
         const theirs = this.state.mergeSourceBranch;
         if (!ours || !theirs) return;
-        this.setState({busy: true, busyMessage: this.props.intl.formatMessage({
-            defaultMessage: 'Merging…',
-            description: 'Message shown when Git merging',
-            id: 'mw.gitModal.merging'
-        }), busyProgress: null, error: null});
+        this.setState({busy: true, busyMessage: 'Merging…', busyProgress: null, error: null});
         try {
             await mergeBranchesApply({
                 ours,
@@ -516,133 +863,6 @@ class TWGitModal extends React.Component {
         } finally {
             this.setState({busy: false, busyMessage: null, busyProgress: null});
         }
-    }
-
-    // Remote repository handlers
-    async handleAddRemote () {
-        const {remoteName, remoteUrl} = this.state;
-        if (!remoteName.trim()) {
-            this.setState({error: this.props.intl.formatMessage({
-                defaultMessage: 'Remote name is required',
-                description: 'Error message when remote name is empty',
-                id: 'mw.gitModal.error.remoteNameRequired'
-            })});
-            return;
-        }
-        if (!remoteUrl.trim()) {
-            this.setState({error: this.props.intl.formatMessage({
-                defaultMessage: 'Remote URL is required',
-                description: 'Error message when remote URL is empty',
-                id: 'mw.gitModal.error.remoteUrlRequired'
-            })});
-            return;
-        }
-
-        this.setState({busy: true, busyMessage: this.props.intl.formatMessage({
-            defaultMessage: 'Adding remote…',
-            description: 'Message shown when adding a Git remote',
-            id: 'mw.gitModal.addingRemote'
-        }), busyProgress: null, error: null});
-        try {
-            await addRemote({vm: this.props.vm, name: remoteName, url: remoteUrl});
-            this.setState({remoteName: '', remoteUrl: ''});
-            await this.refresh();
-        } catch (err) {
-            this.setState({error: err && err.message ? err.message : String(err)});
-        } finally {
-            this.setState({busy: false, busyMessage: null, busyProgress: null});
-        }
-    }
-
-    async handleRemoveRemote (remoteName) {
-        if (!remoteName) return;
-
-        this.setState({busy: true, busyMessage: this.props.intl.formatMessage({
-            defaultMessage: 'Removing remote…',
-            description: 'Message shown when removing a Git remote',
-            id: 'mw.gitModal.removingRemote'
-        }), busyProgress: null, error: null});
-        try {
-            await removeRemote({vm: this.props.vm, name: remoteName});
-            await this.refresh();
-        } catch (err) {
-            this.setState({error: err && err.message ? err.message : String(err)});
-        } finally {
-            this.setState({busy: false, busyMessage: null, busyProgress: null});
-        }
-    }
-
-    async handlePush () {
-        const {pushRemote, pushBranch, authUsername, authToken, disableCorsProxy} = this.state;
-        if (!pushRemote) {
-            this.setState({error: this.props.intl.formatMessage({
-                defaultMessage: 'Select a remote to push to',
-                description: 'Error message when no remote is selected for push',
-                id: 'mw.gitModal.error.selectPushRemote'
-            })});
-            return;
-        }
-        if (!pushBranch) {
-            this.setState({error: this.props.intl.formatMessage({
-                defaultMessage: 'Select a branch to push',
-                description: 'Error message when no branch is selected for push',
-                id: 'mw.gitModal.error.selectPushBranch'
-            })});
-            return;
-        }
-
-        this.setState({busy: true, busyMessage: this.props.intl.formatMessage({
-            defaultMessage: 'Pushing to remote…',
-            description: 'Message shown when pushing to a Git remote',
-            id: 'mw.gitModal.pushingToRemote'
-        }), busyProgress: null, error: null});
-        try {
-            const options = {};
-            if (authUsername && authToken) {
-                options.onAuth = () => ({
-                    username: authUsername,
-                    password: authToken
-                });
-                options.onAuthFailure = () => {
-                    throw new Error('Authentication failed. Please check your username and token.');
-                };
-            }
-            options.disableCorsProxy = disableCorsProxy;
-            await push({vm: this.props.vm, remote: pushRemote, branch: pushBranch, ...options});
-            await this.refresh();
-        } catch (err) {
-            this.setState({error: err && err.message ? err.message : String(err)});
-        } finally {
-            this.setState({busy: false, busyMessage: null, busyProgress: null});
-        }
-    }
-
-    handleChangeRemoteName (e) {
-        this.setState({remoteName: e.target.value});
-    }
-
-    handleChangeRemoteUrl (e) {
-        this.setState({remoteUrl: e.target.value});
-    }
-
-    handleChangePushRemote (e) {
-        this.setState({pushRemote: e.target.value});
-    }
-
-    handleChangePushBranch (e) {
-        this.setState({pushBranch: e.target.value});
-    }
-
-    handleChangeAuthUsername (e) {
-        this.setState({authUsername: e.target.value});
-    }
-
-    handleChangeAuthToken (e) {
-        this.setState({authToken: e.target.value});
-    }
-
-    handleChangeDisableCorsProxy (e) {
-        this.setState({disableCorsProxy: e.target.checked});
     }
 
     render () {
@@ -672,6 +892,25 @@ class TWGitModal extends React.Component {
                 mergeConflicts={this.state.mergeConflicts}
                 mergeResolutions={this.state.mergeResolutions}
                 canUndoCommit={canUndoCommit}
+                changes={this.state.changes}
+                remotes={this.state.remotes}
+                newRemoteName={this.state.newRemoteName}
+                newRemoteUrl={this.state.newRemoteUrl}
+                pushRemote={this.state.pushRemote}
+                pushBranch={this.state.pushBranch}
+                remoteToken={this.state.remoteToken}
+                diffLoading={this.state.diffLoading}
+                diffFilepath={this.state.diffFilepath}
+                diffData={this.state.diffData}
+                diffContext={this.state.diffContext}
+                selectedCommitOid={this.state.selectedCommitOid}
+                commitFiles={this.state.commitFiles}
+                defaultBranch={this.state.defaultBranch}
+                autoCommit={this.state.autoCommit}
+                readmeContent={this.state.readmeContent}
+                readmeDirty={this.state.readmeDirty}
+                onChangeReadme={this.handleChangeReadme}
+                onSaveReadme={this.handleSaveReadme}
                 onChangeCommitMessage={this.handleChangeCommitMessage}
                 onChangeAuthorName={this.handleChangeAuthorName}
                 onChangeAuthorEmail={this.handleChangeAuthorEmail}
@@ -681,6 +920,11 @@ class TWGitModal extends React.Component {
                 onCommit={this.handleCommit}
                 onUndoCommit={this.handleUndoCommit}
                 onInit={this.handleInit}
+                cloneUrl={this.state.cloneUrl}
+                cloneConfirm={this.state.cloneConfirm}
+                onChangeCloneUrl={this.handleChangeCloneUrl}
+                onClone={this.handleClone}
+                onCancelClone={this.handleCancelClone}
                 onRefresh={this.handleRefresh}
                 onRestoreCommit={this.handleRestoreCommit}
                 onDownloadCommit={this.handleDownloadCommit}
@@ -690,47 +934,42 @@ class TWGitModal extends React.Component {
                 onPreviewMerge={this.handlePreviewMerge}
                 onSetMergeResolution={this.handleSetMergeResolution}
                 onApplyMerge={this.handleApplyMerge}
-                onClose={this.handleClose}
-                changes={this.state.changes}
-                // Remote repository props
-                remotes={this.state.remotes}
-                remoteName={this.state.remoteName}
-                remoteUrl={this.state.remoteUrl}
-                pushRemote={this.state.pushRemote}
-                pushBranch={this.state.pushBranch}
-                authUsername={this.state.authUsername}
-                authToken={this.state.authToken}
-                disableCorsProxy={this.state.disableCorsProxy}
+                onDiffChangedFile={this.handleDiffChangedFile}
+                onSelectCommit={this.handleSelectCommit}
+                onDiffCommitFile={this.handleDiffCommitFile}
+                onClearDiff={this.handleClearDiff}
+                onChangeNewRemoteName={this.handleChangeNewRemoteName}
+                onChangeNewRemoteUrl={this.handleChangeNewRemoteUrl}
+                onChangePushRemote={this.handleChangePushRemote}
+                onChangePushBranch={this.handleChangePushBranch}
+                onChangeRemoteToken={this.handleChangeRemoteToken}
                 onAddRemote={this.handleAddRemote}
                 onRemoveRemote={this.handleRemoveRemote}
                 onPush={this.handlePush}
-                onChangeRemoteName={this.handleChangeRemoteName}
-                onChangeRemoteUrl={this.handleChangeRemoteUrl}
-                onChangePushRemote={this.handleChangePushRemote}
-                onChangePushBranch={this.handleChangePushBranch}
-                onChangeAuthUsername={this.handleChangeAuthUsername}
-                onChangeAuthToken={this.handleChangeAuthToken}
-                onChangeDisableCorsProxy={this.handleChangeDisableCorsProxy}
+                onChangeDefaultBranch={this.handleChangeDefaultBranch}
+                onToggleAutoCommit={this.handleToggleAutoCommit}
+                onClose={this.handleClose}
             />
         );
     }
 }
 
 TWGitModal.propTypes = {
-    intl: PropTypes.object.isRequired,
     onClose: PropTypes.func.isRequired,
-    vm: PropTypes.instanceOf(VM).isRequired
+    vm: PropTypes.instanceOf(VM).isRequired,
+    projectChanged: PropTypes.bool
 };
 
 const mapStateToProps = state => ({
-    vm: state.scratchGui.vm
+    vm: state.scratchGui.vm,
+    projectChanged: state.scratchGui.projectChanged
 });
 
 const mapDispatchToProps = dispatch => ({
     onClose: () => dispatch(closeGitModal())
 });
 
-export default injectIntl(connect(
+export default connect(
     mapStateToProps,
     mapDispatchToProps
-)(TWGitModal));
+)(TWGitModal);

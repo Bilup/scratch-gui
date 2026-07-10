@@ -39,6 +39,17 @@ import CloudVariablesToggler from '../../containers/tw-cloud-toggler.jsx';
 import TWSaveStatus from './tw-save-status.jsx';
 import TWNews from './tw-news.jsx';
 import CollaborationContainer from '../../containers/collaboration-container.jsx';
+import {
+    commitProject,
+    getDefaultAuthor,
+    repoExists,
+    getRemotes,
+    push as gitPush,
+    pull as gitPull,
+    REPO_DIR as GIT_REPO_DIR,
+    getFs as getGitFs
+} from '../../lib/git/browser-git';
+import {buildSb3FromFractchTree} from '../../lib/git/fractch-tree';
 
 import TWDesktopSettings from './tw-desktop-settings.jsx';
 
@@ -105,7 +116,9 @@ import {
     closeToolsMenu,
     toolsMenuOpen
 } from '../../reducers/menus';
-import { setFileHandle } from '../../reducers/tw.js';
+import {setFileHandle} from '../../reducers/tw.js';
+import {setProjectUnchanged} from '../../reducers/project-changed';
+import {showStandardAlert, showAlertWithTimeout, closeAlertWithId} from '../../reducers/alerts';
 import {
     setAutosaveEnabled,
     setAutosaveInterval,
@@ -145,7 +158,8 @@ import {
     FilePlusCorner, Upload, RefreshCcw, ClockPlus, Package, FileInput,
     Save, ArchiveRestore, UserPen, Cloud, Settings, PackagePlus, Puzzle,
     Bookmark, GitBranch, FileCog, Bug, Database, Undo, Redo, Handshake,
-    Sparkles, Wrench, Keyboard, ChartColumn, ListTodo, AppWindow
+    Sparkles, Wrench, Keyboard, ChartColumn, ListTodo, AppWindow, Send,
+    Download
 } from 'lucide-react';
 
 import sharedMessages from '../../lib/constants/shared-messages';
@@ -235,6 +249,32 @@ AboutButton.propTypes = {
     onClick: PropTypes.func.isRequired
 };
 
+const SettingsButton = props => (
+    <Button
+        className={classNames(styles.menuBarItem, styles.hoverable)}
+        iconClassName={styles.aboutIcon}
+        iconElem={Settings}
+        onClick={props.onClick}
+    />
+);
+
+SettingsButton.propTypes = {
+    onClick: PropTypes.func.isRequired
+};
+
+const AddonsButton = props => (
+    <Button
+        className={classNames(styles.menuBarItem, styles.hoverable)}
+        iconClassName={styles.aboutIcon}
+        iconElem={Puzzle}
+        onClick={props.onClick}
+    />
+);
+
+AddonsButton.propTypes = {
+    onClick: PropTypes.func.isRequired
+};
+
 // Unlike <MenuItem href="">, this uses an actual <a>
 const MenuItemLink = props => (
     <a
@@ -276,7 +316,9 @@ class MenuBar extends React.Component {
             workspaceBookmarksCollapsedCategories: [],
             isEditingWorkspaceBookmark: false,
             canUndo: true,
-            canRedo: true
+            canRedo: true,
+            gitRepoExists: false,
+            gitRemotes: []
         };
         this.isEditingWorkspaceBookmark = false;
         this.workspaceBookmarksMenuLabelRef = React.createRef();
@@ -298,6 +340,11 @@ class MenuBar extends React.Component {
             'handleClickUndo',
             'handleClickRedo',
             'handleClickCollaboration',
+            'handleClickFile',
+            'refreshGitMenuState',
+            'handleClickGitCommit',
+            'handleClickGitPush',
+            'handleClickGitPull',
             'handleSetMode',
             'handleKeyPress',
             'handleRestoreOption',
@@ -525,7 +572,125 @@ class MenuBar extends React.Component {
     handleClickCollaboration() {
         this.props.onClickCollaboration();
     }
-    handleSetMode(mode) {
+
+    handleClickFile () {
+        this.props.onClickFile();
+        this.refreshGitMenuState();
+    }
+
+    async refreshGitMenuState () {
+        // Keep this cheap (no project re-serialization): existence + remotes only.
+        // "Has changes" is derived from the redux projectChanged flag in render.
+        try {
+            if (!(await repoExists())) {
+                this.setState({gitRepoExists: false, gitRemotes: []});
+                return;
+            }
+            const remotes = await getRemotes(this.props.vm).catch(() => []);
+            this.setState({
+                gitRepoExists: true,
+                gitRemotes: Array.isArray(remotes) ? remotes : []
+            });
+        } catch (e) {
+            this.setState({gitRepoExists: false, gitRemotes: []});
+        }
+    }
+
+    gitAuth () {
+        let token = '';
+        try {
+            token = localStorage.getItem('mw:git-token') || '';
+        } catch (e) {
+            token = '';
+        }
+        const username = (getDefaultAuthor().name || '').trim();
+        if (!token) return null;
+        return () => (username ? {username, password: token} : {username: token, password: token});
+    }
+
+    async handleClickGitPush (remote) {
+        this.props.onRequestCloseFile();
+        this.props.onShowGitStatus('gitPushing');
+        try {
+            await gitPush({
+                vm: this.props.vm,
+                remote,
+                setUpstream: true,
+                onAuth: this.gitAuth()
+            });
+            this.props.onGitStatusDone('gitPushSuccess');
+        } catch (e) {
+            console.error(e);
+            this.props.onCloseGitStatus('gitPushing');
+            // eslint-disable-next-line no-alert
+            window.alert(`Push failed: ${e && e.message ? e.message : e}`);
+        }
+    }
+
+    async handleClickGitPull (remote) {
+        this.props.onRequestCloseFile();
+        this.props.onShowGitStatus('gitPulling');
+        try {
+            await gitPull({
+                vm: this.props.vm,
+                remote,
+                onAuth: this.gitAuth()
+            });
+            // The working tree changed; rebuild the project and reload it.
+            const fs = getGitFs();
+            const bytes = await buildSb3FromFractchTree({fs: fs.promises, dir: GIT_REPO_DIR});
+            const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+            this.props.vm.quit();
+            await this.props.vm.loadProject(buffer, {skipGitImport: true});
+            this.props.vm.renderer.draw();
+            this.props.onGitStatusDone('gitPullSuccess');
+        } catch (e) {
+            console.error(e);
+            this.props.onCloseGitStatus('gitPulling');
+            // eslint-disable-next-line no-alert
+            window.alert(`Pull failed: ${e && e.message ? e.message : e}`);
+        }
+    }
+
+    handleClickGitCommit () {
+        this.props.onRequestCloseFile();
+        // Defer so the menu closes before the (blocking) prompt appears.
+        setTimeout(async () => {
+            // eslint-disable-next-line no-alert
+            const message = window.prompt(
+                this.props.intl.formatMessage({
+                    defaultMessage: 'Commit message',
+                    description: 'Prompt title when committing to git from the File menu',
+                    id: 'mw.menuBar.gitCommit.prompt'
+                }),
+                ''
+            );
+            if (message === null || !message.trim()) {
+                return;
+            }
+            this.props.onShowGitStatus('gitCommitting');
+            try {
+                await commitProject({
+                    vm: this.props.vm,
+                    message: message.trim(),
+                    author: getDefaultAuthor()
+                });
+                // Mark unchanged so the Commit item hides until the next edit.
+                this.props.onProjectUnchanged();
+                this.props.onGitStatusDone('gitCommitSuccess');
+            } catch (e) {
+                console.error(e);
+                this.props.onCloseGitStatus('gitCommitting');
+                // eslint-disable-next-line no-alert
+                window.alert(this.props.intl.formatMessage({
+                    defaultMessage: 'Commit failed: ',
+                    description: 'Alert prefix when a git commit from the File menu fails',
+                    id: 'mw.menuBar.gitCommit.failed'
+                }) + (e && e.message ? e.message : e));
+            }
+        }, 0);
+    }
+    handleSetMode (mode) {
         return () => {
             // Turn on/off filters for modes.
             if (mode === '1920') {
@@ -1292,7 +1457,7 @@ class MenuBar extends React.Component {
                     )}
                 >
                     <div className={styles.fileGroup}>
-                        {this.props.errors.length > 0 && <div>
+                        {this.props.errors.length > 0 && <div data-mw-item="__errors">
                             <MenuLabel
                                 open={this.props.errorsMenuOpen}
                                 onOpen={this.props.onClickErrors}
@@ -1336,8 +1501,9 @@ class MenuBar extends React.Component {
                         </div>}
                         {(this.props.canManageFiles) && (
                             <MenuLabel
+                                dataItem="file"
                                 open={this.props.fileMenuOpen}
-                                onOpen={this.props.onClickFile}
+                                onOpen={this.handleClickFile}
                                 onClose={this.props.onRequestCloseFile}
                             >
                                 <FilePen
@@ -1484,16 +1650,51 @@ class MenuBar extends React.Component {
                                             </MenuItem>
                                         </MenuSection>
                                     )}
-                                    <MenuSection className={styles.menuSection}>
-                                        <MenuItem onClick={this.props.onClickCollaboration}>
-                                            <Handshake size={20} />
-                                            <FormattedMessage
-                                                defaultMessage="Live Collaboration"
-                                                description="Menu bar item for live collaboration"
-                                                id="tw.menuBar.collaboration"
-                                            />
-                                        </MenuItem>
-                                    </MenuSection>
+                                    {(
+                                        (this.state.gitRepoExists && this.props.projectChanged) ||
+                                        (this.state.gitRepoExists && this.state.gitRemotes.length > 0)
+                                    ) && (
+                                        <MenuSection>
+                                            {this.state.gitRepoExists && this.props.projectChanged && (
+                                                <MenuItem onClick={this.handleClickGitCommit}>
+                                                    <GitBranch />
+                                                    <FormattedMessage
+                                                        defaultMessage="Commit to Git…"
+                                                        description="Menu bar item to make a git commit with a message"
+                                                        id="mw.menuBar.gitCommit"
+                                                    />
+                                                </MenuItem>
+                                            )}
+                                            {this.state.gitRepoExists && this.state.gitRemotes.map(remote => (
+                                                <MenuItem
+                                                    key={`push-${remote.name}`}
+                                                    onClick={() => this.handleClickGitPush(remote.name)}
+                                                >
+                                                    <Send />
+                                                    <FormattedMessage
+                                                        defaultMessage="Push to {remote}"
+                                                        description="Menu bar item to push to a git remote"
+                                                        id="mw.menuBar.gitPush"
+                                                        values={{remote: remote.name}}
+                                                    />
+                                                </MenuItem>
+                                            ))}
+                                            {this.state.gitRepoExists && this.state.gitRemotes.map(remote => (
+                                                <MenuItem
+                                                    key={`pull-${remote.name}`}
+                                                    onClick={() => this.handleClickGitPull(remote.name)}
+                                                >
+                                                    <Download />
+                                                    <FormattedMessage
+                                                        defaultMessage="Pull from {remote}"
+                                                        description="Menu bar item to pull from a git remote"
+                                                        id="mw.menuBar.gitPull"
+                                                        values={{remote: remote.name}}
+                                                    />
+                                                </MenuItem>
+                                            ))}
+                                        </MenuSection>
+                                    )}
                                     <MenuSection>
                                         <MenuItem
                                             onClick={this.handleClickRestorePoints}
@@ -1560,6 +1761,7 @@ class MenuBar extends React.Component {
                             </MenuLabel>
                         )}
                         <MenuLabel
+                            dataItem="edit"
                             open={this.props.editMenuOpen}
                             onOpen={this.props.onClickEdit}
                             onClose={this.props.onRequestCloseEdit}
@@ -1636,21 +1838,6 @@ class MenuBar extends React.Component {
                                     </MenuItem>
                                     {this.props.onClickDesktopSettings &&
                                         <TWDesktopSettings onClick={this.props.onClickDesktopSettings} />}
-                                    {this.props.onClickAddonSettings && (
-                                        <MenuItem
-                                            onClick={() => {
-                                                this.props.onClickAddonSettings();
-                                                this.props.onRequestCloseEdit();
-                                            }}
-                                        >
-                                            <Puzzle />
-                                            <FormattedMessage
-                                                defaultMessage="Addons"
-                                                description="Menu bar item for addon settings"
-                                                id="tw.menuBar.addons"
-                                            />
-                                        </MenuItem>
-                                    )}
                                     <ChangeUsername>{changeUsername => (
                                         <MenuItem onClick={changeUsername}>
                                             <UserPen />
@@ -1747,6 +1934,7 @@ class MenuBar extends React.Component {
                         </MenuLabel>
                         {this.props.isTotallyNormal && (
                             <MenuLabel
+                                dataItem="mode"
                                 open={this.props.modeMenuOpen}
                                 onOpen={this.props.onClickMode}
                                 onClose={this.props.onRequestCloseMode}
@@ -1803,6 +1991,7 @@ class MenuBar extends React.Component {
                             settingsMenuOpen={this.props.settingsMenuOpen}
                         />)}
                         <MenuLabel
+                            dataItem="tools"
                             open={this.props.toolsMenuOpen}
                             onOpen={this.props.onClickTools}
                             onClose={this.props.onRequestCloseTools}
@@ -1833,6 +2022,19 @@ class MenuBar extends React.Component {
                                             defaultMessage="Git"
                                             description="Menu bar item to open git window"
                                             id="mw.menuBar.git"
+                                        />
+                                    </MenuItem>
+                                    <MenuItem
+                                        onClick={() => {
+                                            this.props.onClickCollaboration();
+                                            this.props.onRequestCloseTools();
+                                        }}
+                                    >
+                                        <Handshake size={20} />
+                                        <FormattedMessage
+                                            defaultMessage="Live Collaboration"
+                                            description="Menu bar item for live collaboration"
+                                            id="tw.menuBar.collaboration"
                                         />
                                     </MenuItem>
                                 </MenuSection>
@@ -1953,12 +2155,13 @@ class MenuBar extends React.Component {
                         </MenuLabel>
                         {!this.props.isPlayerOnly && (
                             <MenuLabel
-                                        ref={this.workspaceBookmarksMenuLabelRef}
-                                        open={this.props.workspaceBookmarksMenuOpen}
-                                        onOpen={this.props.onClickWorkspaceBookmarks}
-                                        onClose={this.props.onRequestCloseWorkspaceBookmarks}
-                                        disableClose={this.state.isEditingWorkspaceBookmark}
-                                    >
+                                ref={this.workspaceBookmarksMenuLabelRef}
+                                dataItem="bookmarks"
+                                open={this.props.workspaceBookmarksMenuOpen}
+                                onOpen={this.props.onClickWorkspaceBookmarks}
+                                onClose={this.props.onRequestCloseWorkspaceBookmarks}
+                                disableClose={this.state.isEditingWorkspaceBookmark}
+                            >
                                 <Bookmark size={20} />
                                 <span className={styles.collapsibleLabel}>
                                     <FormattedMessage
@@ -1994,10 +2197,18 @@ class MenuBar extends React.Component {
                         )}
                     </div>
 
-                    <Divider className={styles.divider} />
+                    <div
+                        data-mw-item="__divider"
+                        className={styles.menuBarLayoutItem}
+                    >
+                        <Divider className={styles.divider} />
+                    </div>
 
                     {this.props.canEditTitle ? (
-                        <div className={classNames(styles.menuBarItem, styles.growable)}>
+                        <div
+                            data-mw-item="project-title"
+                            className={classNames(styles.menuBarItem, styles.growable)}
+                        >
                             <MenuBarItemTooltip
                                 enable
                                 id="title-field"
@@ -2020,13 +2231,19 @@ class MenuBar extends React.Component {
 
                     {(this.props.isShowingProject || this.props.isUpdating) &&
                         this.props.projectId && this.props.projectId !== '0' ? (
-                        <div className={classNames(styles.menuBarItem, styles.viewCounter)}>
-                            <TWViewCounter projectId={this.props.projectId} />
-                        </div>
-                    ) : null}
+                            <div
+                                data-mw-item="__view-counter"
+                                className={classNames(styles.menuBarItem, styles.viewCounter)}
+                            >
+                                <TWViewCounter projectId={this.props.projectId} />
+                            </div>
+                        ) : null}
                     {this.props.canShare ? (
                         (this.props.isShowingProject || this.props.isUpdating) && (
-                            <div className={classNames(styles.menuBarItem)}>
+                            <div
+                                data-mw-item="share"
+                                className={classNames(styles.menuBarItem)}
+                            >
                                 <ProjectWatcher onDoneUpdating={this.props.onSeeCommunity}>
                                     {
                                         waitForUpdate => (
@@ -2045,18 +2262,27 @@ class MenuBar extends React.Component {
                             </div>
                         )
                     ) : this.props.showComingSoon ? (
-                        <div className={classNames(styles.menuBarItem)}>
+                        <div
+                            data-mw-item="share"
+                            className={classNames(styles.menuBarItem)}
+                        >
                             <MenuBarItemTooltip id="share-button">
                                 <ShareButton className={styles.menuBarButton} />
                             </MenuBarItemTooltip>
                         </div>
                     ) : null}
                     {this.props.canRemix && (
-                        <div className={classNames(styles.menuBarItem)}>
+                        <div
+                            data-mw-item="remix"
+                            className={classNames(styles.menuBarItem)}
+                        >
                             {remixButton}
                         </div>
                     )}
-                    <div className={classNames(styles.menuBarItem, styles.communityButtonWrapper)}>
+                    <div
+                        data-mw-item="community"
+                        className={classNames(styles.menuBarItem, styles.communityButtonWrapper)}
+                    >
                         {this.props.enableCommunity ? (
                             (this.props.isShowingProject || this.props.isUpdating) && (
                                 <ProjectWatcher onDoneUpdating={this.props.onSeeCommunity}>
@@ -2086,7 +2312,10 @@ class MenuBar extends React.Component {
                         ) : []))}
                     </div>
                     {/* tw: add a feedback button */}
-                    <div className={styles.menuBarItem}>
+                    <div
+                        data-mw-item="feedback"
+                        className={styles.menuBarItem}
+                    >
                         <a
                             className={styles.feedbackLink}
                             href={FEEDBACK_URL}
@@ -2108,11 +2337,42 @@ class MenuBar extends React.Component {
                     </div>
                 </div>
 
-                <div className={styles.accountInfoGroup}>
-                    <TWSaveStatus
-                        showSaveFilePicker={this.props.showSaveFilePicker}
-                    />
-                    {aboutButton}
+                <div
+                    data-mw-item="__account-group"
+                    className={styles.accountInfoGroup}
+                >
+                    <div
+                        data-mw-item="save-status"
+                        className={styles.menuBarLayoutItem}
+                    >
+                        <TWSaveStatus
+                            showSaveFilePicker={this.props.showSaveFilePicker}
+                        />
+                    </div>
+                    {this.props.onClickAddonSettings && (
+                        <div
+                            data-mw-item="addons"
+                            className={styles.menuBarLayoutItem}
+                        >
+                            <AddonsButton onClick={this.props.onClickAddonSettings} />
+                        </div>
+                    )}
+                    {this.props.onClickSettingsModal && (
+                        <div
+                            data-mw-item="settings"
+                            className={styles.menuBarLayoutItem}
+                        >
+                            <SettingsButton onClick={this.props.onClickSettingsModal} />
+                        </div>
+                    )}
+                    {aboutButton && (
+                        <div
+                            data-mw-item="about"
+                            className={styles.menuBarLayoutItem}
+                        >
+                            {aboutButton}
+                        </div>
+                    )}
                 </div>
             </Box>
         );
@@ -2246,6 +2506,11 @@ MenuBar.propTypes = {
     onToggleLoginOpen: PropTypes.func,
     projectId: PropTypes.string,
     projectTitle: PropTypes.string,
+    projectChanged: PropTypes.bool,
+    onProjectUnchanged: PropTypes.func,
+    onShowGitStatus: PropTypes.func,
+    onCloseGitStatus: PropTypes.func,
+    onGitStatusDone: PropTypes.func,
     renderLogin: PropTypes.func,
     sessionExists: PropTypes.bool,
     settingsMenuOpen: PropTypes.bool,
@@ -2296,6 +2561,7 @@ const mapStateToProps = (state, ownProps) => {
         loginMenuOpen: loginMenuOpen(state),
         modeMenuOpen: modeMenuOpen(state),
         projectTitle: state.scratchGui.projectTitle,
+        projectChanged: state.scratchGui.projectChanged,
         sessionExists: state.session && typeof state.session.session !== 'undefined',
         settingsMenuOpen: settingsMenuOpen(state),
         theme: state.scratchGui.theme.theme,
@@ -2320,6 +2586,10 @@ const mapDispatchToProps = dispatch => ({
     onClickCollaboration: () => dispatch(openCollaborationModal()),
     onClickFile: () => dispatch(openFileMenu()),
     onRequestCloseFile: () => dispatch(closeFileMenu()),
+    onProjectUnchanged: () => dispatch(setProjectUnchanged()),
+    onShowGitStatus: alertId => dispatch(showStandardAlert(alertId)),
+    onCloseGitStatus: alertId => dispatch(closeAlertWithId(alertId)),
+    onGitStatusDone: alertId => showAlertWithTimeout(dispatch, alertId),
     onClickWorkspaceBookmarks: () => dispatch(openWorkspaceBookmarksMenu()),
     onRequestCloseWorkspaceBookmarks: () => dispatch(closeWorkspaceBookmarksMenu()),
     onClickEdit: () => dispatch(openEditMenu()),
