@@ -16,7 +16,7 @@ const COLOR_CLASSES = [
     'addon-custom-block'
 ];
 
-const createBlockHelpers = vm => {
+const createBlockHelpers = (vm, msg) => {
     const getScratchBlocks = () => window.ScratchBlocks;
 
     const getBlock = (target, id) =>
@@ -42,7 +42,7 @@ const createBlockHelpers = vm => {
         return {
             exists: false,
             original: null,
-            name: 'Unknown sprite'
+            name: msg('debugger/unknown-sprite', 'Unknown sprite')
         };
     };
 

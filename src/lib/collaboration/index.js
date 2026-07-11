@@ -198,6 +198,10 @@ class CollabService extends Emitter {
         session.on('join-denied', reason => {
             this.emit('approval-resolved');
             this.emit('join-denied', reason);
+            // Fully tear down: a denied client must not keep its transport
+            // (which would auto-reconnect and re-request admission in a
+            // loop). Tear down quietly — the denial error is already shown.
+            this._teardown();
         });
         session.on('kicked', () => {
             this.emit('kicked-from-room', {});

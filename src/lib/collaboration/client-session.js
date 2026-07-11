@@ -63,6 +63,9 @@ class ClientSession extends Emitter {
         this.users = new Map();
         this.pendingOps = [];
         this.isApproved = false;
+        // Set once the host denies our join; suppresses the auto-reconnect
+        // loop that would otherwise re-send HELLO and re-trigger a request.
+        this._denied = false;
 
         this._opBuffer = new Map();
         this._clientOpCounter = 0;
@@ -97,6 +100,7 @@ class ClientSession extends Emitter {
     }
 
     destroy () {
+        if (this.transport) this.transport.abortReconnect();
         this.transport.off('message', this._onMessage);
         this.transport.off('peer-disconnected', this._onPeerDisconnected);
         this.transport.off('reconnecting', this._onReconnecting);
@@ -344,6 +348,10 @@ class ClientSession extends Emitter {
             this.emit('join-approved', {hostUsername: payload.hostUsername});
             break;
         case CTRL.JOIN_DENIED:
+            this._denied = true;
+            // Stop the transport from redialing the host (which would
+            // re-send HELLO and re-trigger a join request in a loop).
+            if (this.transport) this.transport.abortReconnect();
             this.emit('join-denied', payload.reason || 'Join request was denied');
             break;
         case CTRL.USERS_LIST:
@@ -446,6 +454,8 @@ class ClientSession extends Emitter {
     }
 
     _onReconnected () {
+        // A denied join must never re-hello the host.
+        if (this._denied) return;
         // Re-join. With lastAppliedSeq in the hello the host can replay
         // the missed window from its log instead of re-streaming the
         // whole project.

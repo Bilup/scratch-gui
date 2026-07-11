@@ -80,13 +80,18 @@ const AddonsPage = () => {
         }
     }, [handleIframeLoad]);
 
+    let locale = 'en';
+    try {
+        locale = document.documentElement.lang || 'en';
+    } catch (e) { /* ignore */ }
+
     return (
         <div className={styles.addonsContainer}>
             <iframe
                 ref={iframeRef}
                 className={styles.addonsIframe}
                 title="Addons settings"
-                src="/addons.html"
+                src={`/addons.html?locale=${encodeURIComponent(locale)}`}
                 frameBorder="0"
                 sandbox="allow-same-origin allow-scripts allow-modals allow-forms allow-popups"
             />

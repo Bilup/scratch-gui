@@ -91,7 +91,7 @@ const registerDebuggerBlocks = (vm, handlers) => {
     if (vm.__mwDebuggerBlocksInstalled) return;
     vm.__mwDebuggerBlocksInstalled = true;
 
-    const {onLog, onBreakpoint, onClearLogs} = handlers;
+    const {onLog, onBreakpoint, onClearLogs, msg} = handlers;
 
     addBlock(vm, BREAKPOINT, {
         args: [],
@@ -122,7 +122,7 @@ const registerDebuggerBlocks = (vm, handlers) => {
             onClearLogs();
         }
         if (getSetting('log_greenflag')) {
-            onLog('Green flag clicked', null, 'internal');
+            onLog(msg('debugger/log-msg-flag-clicked', 'Green flag clicked'), null, 'internal');
         }
         return ogGreenFlag.call(this, ...args);
     };
@@ -131,7 +131,7 @@ const registerDebuggerBlocks = (vm, handlers) => {
     vm.runtime.startHats = function (hat, optMatchFields, ...args) {
         if (getSetting('log_broadcasts') && hat === 'event_whenbroadcastreceived') {
             onLog(
-                `Broadcasted "${optMatchFields.BROADCAST_OPTION}"`,
+                msg('debugger/log-msg-broadcasted', 'Broadcasted {broadcast}').replace('{broadcast}', `"${optMatchFields.BROADCAST_OPTION}"`),
                 vm.runtime.sequencer.activeThread,
                 'internal'
             );
@@ -150,7 +150,7 @@ const registerDebuggerBlocks = (vm, handlers) => {
         proto.makeClone = function (...args) {
             if (getSetting('log_failed_clone_creation') && !vm.runtime.clonesAvailable()) {
                 onLog(
-                    `Failed to create clone of "${this.getName()}" because there are too many clones`,
+                    msg('debugger/log-msg-clone-cap', 'Failed to create clone of {sprite}, cannot create over 300 clones.').replace('{sprite}', `"${this.getName()}"`),
                     vm.runtime.sequencer.activeThread,
                     'internal-warn'
                 );
@@ -158,7 +158,7 @@ const registerDebuggerBlocks = (vm, handlers) => {
             const clone = ogMakeClone.call(this, ...args);
             if (getSetting('log_clone_create') && clone) {
                 onLog(
-                    `Created clone of "${this.getName()}"`,
+                    msg('debugger/log-msg-clone-created', 'Created clone of {sprite}.').replace('{sprite}', `"${this.getName()}"`),
                     vm.runtime.sequencer.activeThread,
                     'internal'
                 );

@@ -24,7 +24,6 @@ import {Eye} from 'lucide-react';
 const SettingsMenu = ({
     canChangeLanguage,
     canChangeTheme,
-    intl,
     isRtl,
     onOpenCustomSettings,
     onRequestClose,
@@ -53,35 +52,30 @@ const SettingsMenu = ({
         <MenuBarMenu
             className={menuBarStyles.menuBarMenu}
             open={settingsMenuOpen}
+            place={isRtl ? 'left' : 'right'}
             onOpen={onRequestOpen}
             onClose={onRequestClose}
         >
-            <MenuBarMenu
-                className={menuBarStyles.menuBarMenu}
-                open={settingsMenuOpen}
-                place={isRtl ? 'left' : 'right'}
-            >
-                <MenuSection>
-                    {canChangeLanguage && <LanguageMenu onRequestCloseSettings={onRequestClose} />}
-                    {canChangeTheme && (
-                        <React.Fragment>
-                            <TWCustomThemeMenu />
-                            <TWGuiThemeMenu />
-                            <TWWallpaperMenu />
-                            <TWFontsThemeMenu />
-                        </React.Fragment>
-                    )}
-                </MenuSection>
-                <div className={styles.menuSeparator} />
+            <MenuSection>
+                {canChangeLanguage && <LanguageMenu onRequestCloseSettings={onRequestClose} />}
                 {canChangeTheme && (
-                    <MenuSection>
-                        <TWBlocksThemeMenu onOpenCustomSettings={onOpenCustomSettings} />
-                        <TWMenuBarAlignMenu />
-                        <TWAccentThemeMenu />
-                        <TWBilmeMenu />
-                    </MenuSection>
+                    <React.Fragment>
+                        <TWCustomThemeMenu />
+                        <TWGuiThemeMenu />
+                        <TWWallpaperMenu />
+                        <TWFontsThemeMenu />
+                    </React.Fragment>
                 )}
-            </MenuBarMenu>
+            </MenuSection>
+            <div className={styles.menuSeparator} />
+            {canChangeTheme && (
+                <MenuSection>
+                    <TWBlocksThemeMenu onOpenCustomSettings={onOpenCustomSettings} />
+                    <TWMenuBarAlignMenu />
+                    <TWAccentThemeMenu />
+                    <TWBilmeMenu />
+                </MenuSection>
+            )}
         </MenuBarMenu>
     </MenuLabel>
 );
@@ -89,7 +83,6 @@ const SettingsMenu = ({
 SettingsMenu.propTypes = {
     canChangeLanguage: PropTypes.bool,
     canChangeTheme: PropTypes.bool,
-    intl: PropTypes.object,
     isRtl: PropTypes.bool,
     onOpenCustomSettings: PropTypes.func,
     onRequestClose: PropTypes.func,

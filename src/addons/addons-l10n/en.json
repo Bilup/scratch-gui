@@ -198,6 +198,8 @@
   "variable-manager/too-big": "Click to display very large value.",
   "variable-manager/variables-manager": "Variables Manager",
   "variable-manager/variables": "Variables",
+  "variable-manager/refresh": "Refresh",
+  "variable-manager/value-of": "{name} value",
   "search-sprites/placeholder": "Search sprites...",
   "sprite-properties/close-properties-panel-tooltip": "Collapse properties panel",
   "sprite-properties/open-properties-panel-tooltip": "Open properties panel",

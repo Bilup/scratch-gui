@@ -82,6 +82,7 @@ class Transport extends Emitter {
         this._heartbeatTimer = null;
         this._reconnectTimer = null;
         this._reconnectAttempts = 0;
+        this._reconnectAborted = false;
         this._joinMetadata = null;
     }
 
@@ -359,8 +360,22 @@ class Transport extends Emitter {
         }
     }
 
+    /**
+     * Permanently stop any pending or future reconnection attempts. Used
+     * when the host has explicitly denied the join: a denied client must
+     * not redial (which would re-send HELLO and re-trigger another join
+     * request, looping forever).
+     */
+    abortReconnect () {
+        this._reconnectAborted = true;
+        if (this._reconnectTimer) {
+            clearTimeout(this._reconnectTimer);
+            this._reconnectTimer = null;
+        }
+    }
+
     _scheduleReconnect () {
-        if (this.destroyed || this._reconnectTimer) return;
+        if (this.destroyed || this._reconnectAborted || this._reconnectTimer) return;
         this._reconnectAttempts++;
         if (this._reconnectAttempts > MAX_RECONNECT_ATTEMPTS) {
             this.emit('fatal', {

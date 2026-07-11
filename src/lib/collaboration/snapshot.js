@@ -4,6 +4,9 @@ import {SNAPSHOT, makeSnapshot} from './protocol.js';
 const CHUNK_SIZE = 64 * 1024;
 const SEND_WINDOW = 4;
 const RECEIVE_TIMEOUT_MS = 60 * 1000;
+// Cap resync/restream attempts so a project that can never be applied
+// stops re-downloading in a loop and surfaces a real error instead.
+const MAX_RESYNC_ATTEMPTS = 5;
 
 const toArrayBuffer = data => {
     if (data instanceof ArrayBuffer) return data;
@@ -192,6 +195,7 @@ class ClientSnapshotService extends Emitter {
         this.loadExtensions = loadExtensions || null;
         this._incoming = null;
         this._timeout = null;
+        this._resyncAttempts = 0;
 
         this._onSnapshotMessage = envelope => {
             if (envelope.type === SNAPSHOT.BEGIN) {
@@ -218,9 +222,18 @@ class ClientSnapshotService extends Emitter {
     /**
      * Ask the host for a fresh snapshot and drop local ordering state.
      * Used both when the session detects it cannot catch up and when the
-     * host explicitly demands a resync.
+     * host explicitly demands a resync. Bounded so a project that can
+     * never be applied stops looping and surfaces a real error.
      */
     requestResync () {
+        this._resyncAttempts++;
+        if (this._resyncAttempts > MAX_RESYNC_ATTEMPTS) {
+            const error = new Error(
+                'Failed to synchronize with the host after multiple attempts');
+            this._resyncAttempts = 0;
+            this.emit('download-error', {error});
+            return;
+        }
         this.session.beginResync();
         this.transport.sendToHost(makeSnapshot(SNAPSHOT.REQUEST, {}));
     }
@@ -280,6 +293,13 @@ class ClientSnapshotService extends Emitter {
             return;
         }
 
+        // All bytes are in. Signal "download complete" BEFORE applying the
+        // project: applyProjectData emits 'project-sync-apply-complete',
+        // which is what clears the loading overlay. Emitting
+        // 'download-complete' afterwards would re-arm the overlay with no
+        // further event to clear it, leaving the editor stuck on "Loading…".
+        this.emit('download-complete');
+
         try {
             await this.applyProjectData(combined.buffer);
         } catch (error) {
@@ -287,6 +307,9 @@ class ClientSnapshotService extends Emitter {
             this.requestResync();
             return;
         }
+
+        // A full onboarding succeeded; earlier resyncs no longer count.
+        this._resyncAttempts = 0;
 
         // Adopt the host's target ids BEFORE any queued ops replay, so op
         // targetIds resolve identically on every peer.
@@ -312,7 +335,6 @@ class ClientSnapshotService extends Emitter {
         this.transport.sendToHost(makeSnapshot(SNAPSHOT.COMPLETE, {
             transferId: incoming.transferId
         }));
-        this.emit('download-complete');
     }
 
     _armTimeout () {

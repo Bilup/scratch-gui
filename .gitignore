@@ -29,3 +29,4 @@ bun.lock
 
 # for act
 .secrets
+/.workbuddy

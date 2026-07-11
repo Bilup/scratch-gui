@@ -33,6 +33,11 @@ const AppStateHOC = function (WrappedComponent, localesOnly) {
 
             let initializedLocales = localesInitialState;
             const locale = detectLocale(Object.keys(locales));
+            // Reflect the active editor locale on the document element so that
+            // same-origin iframes (e.g. the addons settings page) can inherit it.
+            try {
+                document.documentElement.lang = locale;
+            } catch (e) { /* ignore */ }
             if (locale !== 'en') {
                 initializedLocales = initLocale(initializedLocales, locale);
             }

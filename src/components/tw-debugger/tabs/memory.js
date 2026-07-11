@@ -8,6 +8,7 @@ const MAX_VARIABLE_ROWS = 300;
 const createMemoryTab = controller => {
     const vm = controller.vm;
     const engine = controller.engine;
+    const msg = controller.msg;
 
     const fancyGraphs = getSetting('fancy_graphs');
     const lineWidth = 2;
@@ -94,11 +95,11 @@ const createMemoryTab = controller => {
     const infoSection = document.createElement('div');
     infoSection.className = 'sa-memory-info-section';
 
-    const clonesCard = createInfoCard({title: 'Clones', className: 'sa-memory-clones'});
-    const variablesCard = createInfoCard({title: 'Variables', className: 'sa-memory-variables'});
-    const variableDataCard = createInfoCard({title: 'Variable chars', className: 'sa-memory-variable-data'});
-    const listsCard = createInfoCard({title: 'Lists', className: 'sa-memory-lists'});
-    const listItemsCard = createInfoCard({title: 'List items', className: 'sa-memory-list-items'});
+    const clonesCard = createInfoCard({title: msg('debugger/memory-clones-current', 'Clones'), className: 'sa-memory-clones'});
+    const variablesCard = createInfoCard({title: msg('debugger/memory-variables-total', 'Variables'), className: 'sa-memory-variables'});
+    const variableDataCard = createInfoCard({title: msg('debugger/memory-variable-data-total', 'Variable chars'), className: 'sa-memory-variable-data'});
+    const listsCard = createInfoCard({title: msg('debugger/memory-lists-total', 'Lists'), className: 'sa-memory-lists'});
+    const listItemsCard = createInfoCard({title: msg('debugger/memory-list-items-total', 'List items'), className: 'sa-memory-list-items'});
 
     infoSection.append(
         clonesCard.element,
@@ -108,7 +109,7 @@ const createMemoryTab = controller => {
         listItemsCard.element
     );
 
-    const variableDataElements = createChart({title: 'Variable data size'});
+    const variableDataElements = createChart({title: msg('debugger/memory-variable-data-chart-title', 'Variable data size')});
     const variableDataScales = commonScales();
     variableDataScales.y.suggestedMax = 1000;
     const variableDataChart = new Chart(variableDataElements.canvas.getContext('2d'), {
@@ -120,12 +121,12 @@ const createMemoryTab = controller => {
             scales: variableDataScales,
             plugins: {
                 legend: {display: false},
-                tooltip: {callbacks: {label: context => `${context.parsed.y} chars`}}
+                tooltip: {callbacks: {label: context => msg('debugger/memory-variable-data-chart-tooltip', '{chars} chars').replace('{chars}', context.parsed.y)}}
             }
         }
     });
 
-    const listItemsElements = createChart({title: 'List items'});
+    const listItemsElements = createChart({title: msg('debugger/memory-list-items-chart-title', 'List items')});
     const listItemsScales = commonScales();
     listItemsScales.y.suggestedMax = 1000;
     const listItemsChart = new Chart(listItemsElements.canvas.getContext('2d'), {
@@ -137,14 +138,14 @@ const createMemoryTab = controller => {
             scales: listItemsScales,
             plugins: {
                 legend: {display: false},
-                tooltip: {callbacks: {label: context => `${context.parsed.y} items`}}
+                tooltip: {callbacks: {label: context => msg('debugger/memory-list-items-chart-tooltip', '{items} items').replace('{items}', context.parsed.y)}}
             }
         }
     });
 
     const variablesHeader = document.createElement('h2');
     variablesHeader.className = 'sa-memory-section-title';
-    variablesHeader.textContent = 'Variables';
+    variablesHeader.textContent = msg('debugger/memory-variables-total', 'Variables');
     const variablesList = document.createElement('div');
     variablesList.className = 'sa-memory-variables-list';
 
@@ -199,7 +200,7 @@ const createMemoryTab = controller => {
 
                 const scope = document.createElement('span');
                 scope.className = 'sa-memory-variable-scope';
-                scope.textContent = target.isStage ? 'Stage' : target.getName();
+                scope.textContent = target.isStage ? msg('debugger/memory-stage', 'Stage') : target.getName();
                 row.appendChild(scope);
 
                 const name = document.createElement('span');
@@ -227,7 +228,7 @@ const createMemoryTab = controller => {
         if (count === 0) {
             const empty = document.createElement('div');
             empty.className = 'sa-memory-variables-empty';
-            empty.textContent = 'No variables';
+            empty.textContent = msg('debugger/memory-no-variables', 'No variables');
             variablesList.appendChild(empty);
         } else {
             variablesList.appendChild(fragment);
@@ -294,7 +295,7 @@ const createMemoryTab = controller => {
     });
 
     const clearButton = {
-        label: 'Clear charts',
+        label: msg('debugger/memory-clear-charts', 'Clear charts'),
         icon: clearIcon,
         onClick: () => {
             variableDataChart.data.datasets[0].data.fill(-1);
@@ -308,7 +309,7 @@ const createMemoryTab = controller => {
 
     return {
         id: 'memory',
-        label: 'Memory',
+        label: msg('debugger/tab-memory', 'Memory'),
         icon: memoryIcon,
         content,
         buttons: [clearButton],

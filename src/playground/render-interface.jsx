@@ -50,6 +50,19 @@ import styles from './interface.css';
 // Import window manager dynamically
 let settingsWindow = null;
 
+// Build the addons settings URL, forwarding the current editor locale so the
+// addons page (a separate same-origin app) renders in the same language.
+const buildAddonsUrl = addonId => {
+    const path = process.env.ROUTING_STYLE === 'wildcard' ? 'addons' : 'addons.html';
+    let locale = 'en';
+    try {
+        locale = document.documentElement.lang || 'en';
+    } catch (e) { /* ignore */ }
+    const query = `?locale=${encodeURIComponent(locale)}`;
+    const hash = typeof addonId === 'string' ? `#${addonId}` : '';
+    return `${process.env.ROOT}${path}${query}${hash}`;
+};
+
 const syncCssVarsToIframe = (iframe, vars) => {
     const doc = iframe.contentDocument;
     const root = doc.documentElement;
@@ -70,8 +83,7 @@ const createSettingsContent = addonId => {
     iframe.style.border = 'none';
     iframe.style.borderRadius = '0 0 8px 8px';
 
-    const path = process.env.ROUTING_STYLE === 'wildcard' ? 'addons' : 'addons.html';
-    const url = `${process.env.ROOT}${path}${typeof addonId === 'string' ? `#${addonId}` : ''}`;
+    const url = buildAddonsUrl(addonId);
 
     iframe.src = url;
 
@@ -108,8 +120,7 @@ if (typeof window !== 'undefined') {
     window.handleClickAddonSettings = addonId => {
         if (!windowManager) {
             // Fall back to original behavior if window manager isn't available
-            const path = process.env.ROUTING_STYLE === 'wildcard' ? 'addons' : 'addons.html';
-            const url = `${process.env.ROOT}${path}${typeof addonId === 'string' ? `#${addonId}` : ''}`;
+            const url = buildAddonsUrl(addonId);
             window.open(url);
             return;
         }
@@ -308,8 +319,7 @@ class Interface extends React.Component {
     handleClickAddonSettings = addonId => {
         if (!windowManager) {
             // Fall back to original behavior if window manager isn't available
-            const path = process.env.ROUTING_STYLE === 'wildcard' ? 'addons' : 'addons.html';
-            const url = `${process.env.ROOT}${path}${typeof addonId === 'string' ? `#${addonId}` : ''}`;
+            const url = buildAddonsUrl(addonId);
             window.open(url);
             return;
         }

@@ -119,11 +119,12 @@ class Debugger extends React.Component {
     render () {
         const {paused} = this.state;
         const activeTab = this.getActiveTab();
+        const msg = this.props.controller.msg;
 
         return (
             <AddonWindow
                 id="debugger"
-                title="Debugger"
+                title={msg('debugger/window-title', 'Debugger')}
                 className="sa-debugger-window"
                 width={INITIAL_WIDTH}
                 height={INITIAL_HEIGHT}
@@ -135,6 +136,7 @@ class Debugger extends React.Component {
                 <div
                     className="mw-debugger-tabs"
                     role="tablist"
+                    aria-label={msg('debugger/tabs-aria-label', 'Debugger tabs')}
                 >
                     {this.tabs.map(tab => (
                         <button
@@ -162,7 +164,7 @@ class Debugger extends React.Component {
                     {paused && (
                         <div className="mw-debugger-paused">
                             <span className="mw-debugger-paused-dot" />
-                            {'Paused'}
+                            {msg('debugger/paused', 'Paused')}
                         </div>
                     )}
                     {paused && (
@@ -174,7 +176,7 @@ class Debugger extends React.Component {
                                 className="mw-debugger-toolbar-icon"
                                 style={{maskImage: `url(${playIcon})`, WebkitMaskImage: `url(${playIcon})`}}
                             />
-                            {'Resume'}
+                            {msg('debugger/unpause', 'Resume')}
                         </button>
                     )}
                     {paused && (
@@ -186,7 +188,7 @@ class Debugger extends React.Component {
                                 className="mw-debugger-toolbar-icon"
                                 style={{maskImage: `url(${stepIcon})`, WebkitMaskImage: `url(${stepIcon})`}}
                             />
-                            {'Step'}
+                            {msg('debugger/step', 'Step')}
                         </button>
                     )}
                     <div className="mw-debugger-toolbar-spacer" />
