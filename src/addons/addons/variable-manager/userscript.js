@@ -102,13 +102,13 @@ export default async function ({addon, console, msg}) {
                 class: 'mw-vm-name',
                 value: this.name,
                 spellcheck: false,
-                'aria-label': `${this.type} name`
+                'aria-label': msg(this.type === 'list' ? 'list-name' : 'variable-name')
             });
 
             this.valueInput = el(this.type === 'list' ? 'textarea' : 'input', {
                 class: 'mw-vm-value',
                 spellcheck: false,
-                'aria-label': `${this.name} value`
+                'aria-label': msg('value-of', {name: this.name})
             });
 
             this.bigButton = el('button', {
@@ -122,7 +122,7 @@ export default async function ({addon, console, msg}) {
 
             const badge = this.isCloud || this.type === 'list' ?
                 el('span', {class: 'mw-vm-badge', dataset: {badge: this.kind}},
-                    this.isCloud ? 'Cloud' : 'List') :
+                    msg(this.isCloud ? 'cloud-badge' : 'list-badge')) :
                 null;
 
             this.row = el('div', {class: 'mw-vm-row', dataset: {kind: this.kind}},
@@ -283,7 +283,7 @@ export default async function ({addon, console, msg}) {
     const clearButton = el('button', {
         class: 'mw-vm-search-clear',
         type: 'button',
-        title: 'Clear',
+        title: msg('clear-search'),
         hidden: true,
         html: ICONS.clear,
         onclick: () => {
@@ -301,7 +301,7 @@ export default async function ({addon, console, msg}) {
             class: 'mw-vm-seg',
             type: 'button',
             role: 'tab',
-            title: def.label,
+            title: msg(`filter-${def.id}`),
             dataset: {filter: def.id},
             onclick: () => setFilter(def.id)
         }, el('span', {class: 'mw-vm-seg-icon', html: def.icon}), count);
@@ -312,7 +312,7 @@ export default async function ({addon, console, msg}) {
     const refreshButton = el('button', {
         class: 'mw-vm-tool',
         type: 'button',
-        title: 'Refresh',
+        title: msg('refresh'),
         html: ICONS.refresh,
         onclick: () => reload()
     });
@@ -345,13 +345,13 @@ export default async function ({addon, console, msg}) {
 
     const emptyState = el('div', {class: 'mw-vm-empty', hidden: true},
         el('span', {class: 'mw-vm-empty-icon', html: ICONS.empty}),
-        el('div', {class: 'mw-vm-empty-title'}, 'Nothing to show'),
-        el('div', {class: 'mw-vm-empty-sub'}, 'Try a different search or filter')
+        el('div', {class: 'mw-vm-empty-title'}, msg('no-variables')),
+        el('div', {class: 'mw-vm-empty-sub'}, msg('clear-filters'))
     );
 
     const content = el('div', {class: 'mw-vm-content'},
         emptyState, localSection.section, globalSection.section);
-    const root = el('div', {class: 'mw-vm', role: 'main', 'aria-label': 'Variable Manager'},
+    const root = el('div', {class: 'mw-vm', role: 'main', 'aria-label': msg('variables-manager')},
         header, content);
 
     // --- Filtering / search ---------------------------------------------

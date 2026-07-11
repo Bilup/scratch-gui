@@ -5,6 +5,25 @@ import registerDebuggerBlocks from './blocks.js';
 
 const MAX_LOGS = 200000;
 
+/**
+ * Get a translated message from the Redux store's locale messages.
+ * Falls back to the English fallback string if the key is not found.
+ * @param {string} key - Translation key (e.g. "debugger/clear")
+ * @param {string} [fallback] - English fallback string
+ * @returns {string} Translated string
+ */
+const msg = (key, fallback) => {
+    if (typeof window !== 'undefined' && window.ReduxStore) {
+        const state = window.ReduxStore.getState();
+        const messages = state.locales && state.locales.messages;
+        if (messages) {
+            const translated = messages[key];
+            if (translated) return translated;
+        }
+    }
+    return fallback || key;
+};
+
 const initDebugger = vm => {
     if (vm.__mwDebuggerController) {
         return vm.__mwDebuggerController;
@@ -12,7 +31,7 @@ const initDebugger = vm => {
 
     const events = new EventTarget();
     const engine = createEngine(vm);
-    const helpers = createBlockHelpers(vm);
+    const helpers = createBlockHelpers(vm, msg);
 
     engine.onPauseChanged(paused => {
         const event = new CustomEvent('pause');
@@ -82,7 +101,7 @@ const initDebugger = vm => {
         const isPlayerOnly = store && store.getState().scratchGui.mode.isPlayerOnly;
         if (isPlayerOnly) {
             if (!hasLoggedPauseError) {
-                addLog('Cannot pause when the editor is not open', thread, 'error');
+                addLog(msg('debugger/cannot-pause-player', 'Cannot pause when the editor is not open'), thread, 'error');
                 hasLoggedPauseError = true;
             }
             return;
@@ -94,7 +113,8 @@ const initDebugger = vm => {
     registerDebuggerBlocks(vm, {
         onLog: addLog,
         onBreakpoint,
-        onClearLogs: clearLogs
+        onClearLogs: clearLogs,
+        msg
     });
 
     const afterStepCallbacks = [];
@@ -127,6 +147,7 @@ const initDebugger = vm => {
         clearLogs,
         addAfterStepCallback,
         setHasUnreadMessage,
+        msg,
         isVisible: () => visible,
         setVisible: value => {
             visible = value;

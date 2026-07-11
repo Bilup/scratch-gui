@@ -25,9 +25,10 @@ const downloadText = (filename, text) => {
 
 const createLogsTab = controller => {
     const vm = controller.vm;
+    const msg = controller.msg;
 
     const logView = new LogView();
-    logView.placeholderElement.textContent = 'No logs yet';
+    logView.placeholderElement.textContent = msg('debugger/no-logs', 'No logs yet');
 
     const filters = {
         search: '',
@@ -96,7 +97,7 @@ const createLogsTab = controller => {
         text.className = 'sa-debugger-log-text';
         if (String(row.text).length === 0) {
             text.classList.add('sa-debugger-log-text-empty');
-            text.textContent = 'empty string';
+            text.textContent = msg('debugger/empty-string', '(empty string)');
         } else {
             text.textContent = row.text;
             text.title = row.text;
@@ -116,7 +117,7 @@ const createLogsTab = controller => {
     const searchInput = document.createElement('input');
     searchInput.type = 'text';
     searchInput.className = 'sa-debugger-search';
-    searchInput.placeholder = 'Search logs';
+    searchInput.placeholder = msg('debugger/search-logs', 'Search logs');
     searchInput.addEventListener('input', () => {
         filters.search = searchInput.value.trim().toLowerCase();
         rebuild();
@@ -151,7 +152,7 @@ const createLogsTab = controller => {
         spriteSelect.textContent = '';
         const allOption = document.createElement('option');
         allOption.value = 'all';
-        allOption.textContent = 'All sprites';
+        allOption.textContent = msg('debugger/all-sprites', 'All sprites');
         spriteSelect.appendChild(allOption);
         for (const name of names) {
             const option = document.createElement('option');
@@ -185,19 +186,19 @@ const createLogsTab = controller => {
     controller.events.addEventListener('clear', onClear);
 
     const exportButton = {
-        label: 'Export',
+        label: msg('debugger/export', 'Export'),
         icon: downloadIcon,
         onClick: () => {
             const file = controller.rows
                 .map(({text, targetInfo, type}) =>
-                    `${targetInfo ? targetInfo.name : 'Unknown sprite'}: ${text} (${type})\n`)
+                    `${targetInfo ? targetInfo.name : msg('debugger/unknown-sprite', 'Unknown sprite')}: ${text} (${type})\n`)
                 .join('');
             downloadText('logs.txt', file);
         }
     };
 
     const clearButton = {
-        label: 'Clear',
+        label: msg('debugger/clear', 'Clear'),
         icon: deleteIcon,
         onClick: () => {
             controller.clearLogs();
@@ -206,7 +207,7 @@ const createLogsTab = controller => {
 
     return {
         id: 'logs',
-        label: 'Logs',
+        label: msg('debugger/tab-logs', 'Logs'),
         icon: logsIcon,
         content,
         buttons: [exportButton, clearButton],

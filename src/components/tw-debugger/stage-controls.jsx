@@ -88,6 +88,7 @@ class DebuggerStageControls extends React.Component {
 
     render () {
         const {paused, showPauseButton, showStepButton} = this.state;
+        const msg = this.controller.msg;
         return (
             <React.Fragment>
                 {showPauseButton && (
@@ -95,7 +96,7 @@ class DebuggerStageControls extends React.Component {
                         className={styles.debuggerBtn}
                         draggable={false}
                         src={paused ? playIcon : pauseIcon}
-                        title={paused ? 'Play' : 'Pause'}
+                        title={paused ? msg('debugger/play', 'Play') : msg('debugger/pause', 'Pause')}
                         onClick={this.handleTogglePause}
                     />
                 )}
@@ -104,7 +105,7 @@ class DebuggerStageControls extends React.Component {
                         className={classNames(styles.debuggerBtn, styles.stepBtn)}
                         draggable={false}
                         src={stepIcon}
-                        title={'Step one frame'}
+                        title={msg('debugger/step-one-frame', 'Step one frame')}
                         onClick={this.handleStep}
                     />
                 )}

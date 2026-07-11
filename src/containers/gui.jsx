@@ -55,6 +55,7 @@ import storage from '../lib/persistence/storage';
 import vmListenerHOC from '../lib/components/vm-listener-hoc.jsx';
 import vmManagerHOC from '../lib/components/vm-manager-hoc.jsx';
 import cloudManagerHOC from '../lib/components/cloud-manager-hoc.jsx';
+import CollaborationService from '../lib/collaboration/index.js';
 
 import GUIComponent from '../components/gui/gui.jsx';
 import {setIsScratchDesktop} from '../lib/utils/isScratchDesktop.js';
@@ -176,11 +177,9 @@ class GUI extends React.Component {
         // Sync costume when tab changes from costumes tab
         if (prevProps.activeTabIndex === COSTUMES_TAB_INDEX &&
             this.props.activeTabIndex !== COSTUMES_TAB_INDEX) {
-            if (collaborationService) {
-                const serviceInstance = collaborationService.getInstance();
-                if (serviceInstance) {
-                    serviceInstance.syncCurrentCostume();
-                }
+            const collaborationService = CollaborationService.getInstance();
+            if (collaborationService && collaborationService.syncCurrentCostume) {
+                collaborationService.syncCurrentCostume();
             }
         }
 

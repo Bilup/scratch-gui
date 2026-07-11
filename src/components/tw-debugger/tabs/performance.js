@@ -5,6 +5,7 @@ import performanceIcon from '../icons/performance.svg';
 const createPerformanceTab = controller => {
     const vm = controller.vm;
     const engine = controller.engine;
+    const msg = controller.msg;
 
     const fancyGraphs = getSetting('fancy_graphs');
     const lineWidth = 2;
@@ -72,7 +73,7 @@ const createPerformanceTab = controller => {
         tension: 0.3
     }]);
 
-    const fpsElements = createChart({title: 'Frames per second'});
+    const fpsElements = createChart({title: msg('debugger/performance-framerate-title', 'Frames per second')});
     const fpsScales = commonScales();
     fpsScales.y.suggestedMax = getMaxFps();
     const fpsChart = new Chart(fpsElements.canvas.getContext('2d'), {
@@ -84,12 +85,12 @@ const createPerformanceTab = controller => {
             scales: fpsScales,
             plugins: {
                 legend: {display: false},
-                tooltip: {callbacks: {label: context => `${context.parsed.y} FPS`}}
+                tooltip: {callbacks: {label: context => msg('debugger/performance-framerate-graph-tooltip', 'FPS: {fps}').replace('{fps}', context.parsed.y)}}
             }
         }
     });
 
-    const clonesElements = createChart({title: 'Clones'});
+    const clonesElements = createChart({title: msg('debugger/performance-clonecount-title', 'Clones')});
     const clonesScales = commonScales();
     clonesScales.y.suggestedMax = 300;
     const clonesChart = new Chart(clonesElements.canvas.getContext('2d'), {
@@ -101,7 +102,7 @@ const createPerformanceTab = controller => {
             scales: clonesScales,
             plugins: {
                 legend: {display: false},
-                tooltip: {callbacks: {label: context => `${context.parsed.y} clones`}}
+                tooltip: {callbacks: {label: context => msg('debugger/performance-clonecount-graph-tooltip', 'Clones: {clones}').replace('{clones}', context.parsed.y)}}
             }
         }
     });
@@ -158,7 +159,7 @@ const createPerformanceTab = controller => {
 
     return {
         id: 'performance',
-        label: 'Performance',
+        label: msg('debugger/tab-performance', 'Performance'),
         icon: performanceIcon,
         content,
         buttons: [],

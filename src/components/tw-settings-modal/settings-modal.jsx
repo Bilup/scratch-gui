@@ -1306,7 +1306,10 @@ class UnwrappedVersionControlPage extends React.Component {
                     />}
                     value={this.state.authorName}
                     onSubmit={this.handleNameChange}
-                    placeholder="User"
+                    placeholder={intl.formatMessage({
+                        id: 'mw.settings.vc.authorNamePlaceholder',
+                        defaultMessage: 'User'
+                    })}
                 />
                 <TextSetting
                     label={<FormattedMessage

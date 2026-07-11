@@ -11,6 +11,7 @@ const concatInPlace = (copyInto, copyFrom) => {
 const createThreadsTab = controller => {
     const vm = controller.vm;
     const engine = controller.engine;
+    const msg = controller.msg;
 
     if (!window.Blockly && window.ScratchBlocks) {
         window.Blockly = window.ScratchBlocks;
@@ -19,7 +20,7 @@ const createThreadsTab = controller => {
     const logView = new LogView();
     logView.canAutoScrollToEnd = false;
     logView.outerElement.classList.add('sa-debugger-threads');
-    logView.placeholderElement.textContent = 'No threads are running';
+    logView.placeholderElement.textContent = msg('debugger/no-threads-running', 'No threads are running');
 
     const errorColor = getComputedStyle(document.documentElement)
         .getPropertyValue('--error-primary') || '#ff0000';
@@ -58,7 +59,7 @@ const createThreadsTab = controller => {
 
             const id = document.createElement('div');
             id.className = 'sa-debugger-thread-id';
-            id.textContent = `Thread ${row.id}`;
+            id.textContent = msg('debugger/thread', 'Thread {id}').replace('{id}', row.id);
             root.appendChild(id);
         }
 
@@ -72,7 +73,7 @@ const createThreadsTab = controller => {
         if (row.type === 'compiled') {
             const el = document.createElement('div');
             el.className = 'sa-debugger-thread-compiled';
-            el.textContent = 'Compiled threads can\'t be stepped and have no stack information.';
+            el.textContent = msg('debugger/compiled-no-step', "Compiled threads can't be stepped and have no stack information.");
             root.appendChild(el);
         }
 
@@ -241,7 +242,7 @@ const createThreadsTab = controller => {
 
     return {
         id: 'threads',
-        label: 'Threads',
+        label: msg('debugger/tab-threads', 'Threads'),
         icon: threadsIcon,
         content: logView.outerElement,
         buttons: [],
