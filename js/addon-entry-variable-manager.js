@@ -187,12 +187,14 @@ const el = function el(tag) {
         class: 'mw-vm-name',
         value: this.name,
         spellcheck: false,
-        'aria-label': "".concat(this.type, " name")
+        'aria-label': msg(this.type === 'list' ? 'list-name' : 'variable-name')
       });
       this.valueInput = el(this.type === 'list' ? 'textarea' : 'input', {
         class: 'mw-vm-value',
         spellcheck: false,
-        'aria-label': "".concat(this.name, " value")
+        'aria-label': msg('value-of', {
+          name: this.name
+        })
       });
       this.bigButton = el('button', {
         class: 'mw-vm-big',
@@ -207,7 +209,7 @@ const el = function el(tag) {
         dataset: {
           badge: this.kind
         }
-      }, this.isCloud ? 'Cloud' : 'List') : null;
+      }, msg(this.isCloud ? 'cloud-badge' : 'list-badge')) : null;
       this.row = el('div', {
         class: 'mw-vm-row',
         dataset: {
@@ -353,7 +355,7 @@ const el = function el(tag) {
   const clearButton = el('button', {
     class: 'mw-vm-search-clear',
     type: 'button',
-    title: 'Clear',
+    title: msg('clear-search'),
     hidden: true,
     html: ICONS.clear,
     onclick: () => {
@@ -375,7 +377,7 @@ const el = function el(tag) {
       class: 'mw-vm-seg',
       type: 'button',
       role: 'tab',
-      title: def.label,
+      title: msg("filter-".concat(def.id)),
       dataset: {
         filter: def.id
       },
@@ -393,7 +395,7 @@ const el = function el(tag) {
   const refreshButton = el('button', {
     class: 'mw-vm-tool',
     type: 'button',
-    title: 'Refresh',
+    title: msg('refresh'),
     html: ICONS.refresh,
     onclick: () => reload()
   });
@@ -441,16 +443,16 @@ const el = function el(tag) {
     html: ICONS.empty
   }), el('div', {
     class: 'mw-vm-empty-title'
-  }, 'Nothing to show'), el('div', {
+  }, msg('no-variables')), el('div', {
     class: 'mw-vm-empty-sub'
-  }, 'Try a different search or filter'));
+  }, msg('clear-filters')));
   const content = el('div', {
     class: 'mw-vm-content'
   }, emptyState, localSection.section, globalSection.section);
   const root = el('div', {
     class: 'mw-vm',
     role: 'main',
-    'aria-label': 'Variable Manager'
+    'aria-label': msg('variables-manager')
   }, header, content);
 
   // --- Filtering / search ---------------------------------------------
