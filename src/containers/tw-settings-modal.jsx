@@ -12,6 +12,7 @@ import {setSearchParams} from '../lib/utils/navigation';
 import {getAppearanceSetting, setAppearanceSetting} from '../lib/mw-appearance-settings';
 import {getStyleSetting, setStyleSetting} from '../lib/mw-style-settings';
 import {getHideOperatorArrows, setHideOperatorArrows} from '../lib/mw-operator-arrows';
+import {getVanillaPalette, setVanillaPalette} from '../lib/mw-vanilla-palette';
 
 const messages = defineMessages({
     newFramerate: {
@@ -34,6 +35,7 @@ class UsernameModal extends React.Component {
             enableStageResize: localStorage.getItem('mw:enable-stage-resize') !== 'false',
             windowAnimation: localStorage.getItem('mw:window-animation') !== 'false',
             hideOperatorArrows: getHideOperatorArrows(),
+            vanillaPalette: getVanillaPalette(),
             squareStageCorners: getAppearanceSetting('square-stage-corners'),
             hideDeleteButton: getAppearanceSetting('hide-delete-button'),
             hideExtensionButton: getAppearanceSetting('hide-extension-button'),
@@ -69,6 +71,7 @@ class UsernameModal extends React.Component {
             'handleCloudVariableServerChange',
             'handleWindowAnimationChange',
             'handleHideOperatorArrowsChange',
+            'handleVanillaPaletteChange',
             'handleSquareStageCornersChange',
             'handleHideDeleteButtonChange',
             'handleHideExtensionButtonChange',
@@ -264,6 +267,11 @@ handleWindowAnimationChange (e) {
         setHideOperatorArrows(e.target.checked);
     }
 
+    handleVanillaPaletteChange (e) {
+        this.setState({vanillaPalette: e.target.checked});
+        setVanillaPalette(e.target.checked);
+    }
+
     setAppearance_ (stateKey, id, checked) {
         this.setState({[stateKey]: checked});
         setAppearanceSetting(id, checked);
@@ -344,6 +352,8 @@ handleWindowAnimationChange (e) {
                 onWindowAnimationChange={this.handleWindowAnimationChange}
                 onHideOperatorArrowsChange={this.handleHideOperatorArrowsChange}
                 hideOperatorArrows={this.state.hideOperatorArrows}
+                onVanillaPaletteChange={this.handleVanillaPaletteChange}
+                vanillaPalette={this.state.vanillaPalette}
                 onSquareStageCornersChange={this.handleSquareStageCornersChange}
                 squareStageCorners={this.state.squareStageCorners}
                 onHideDeleteButtonChange={this.handleHideDeleteButtonChange}
