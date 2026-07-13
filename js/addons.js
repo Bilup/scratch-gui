@@ -2103,7 +2103,8 @@ __webpack_require__.r(__webpack_exports__);
   "background": () => __webpack_require__.e(/*! import() | addon-entry-background */ "addon-entry-background").then(__webpack_require__.bind(null, /*! ../addons/background/_runtime_entry.js */ "./src/addons/addons/background/_runtime_entry.js")),
   "todo": () => __webpack_require__.e(/*! import() | addon-entry-todo */ "addon-entry-todo").then(__webpack_require__.bind(null, /*! ../addons/todo/_runtime_entry.js */ "./src/addons/addons/todo/_runtime_entry.js")),
   "novatheai": () => __webpack_require__.e(/*! import() | addon-entry-novatheai */ "addon-entry-novatheai").then(__webpack_require__.bind(null, /*! ../addons/novatheai/_runtime_entry.js */ "./src/addons/addons/novatheai/_runtime_entry.js")),
-  "calculator": () => __webpack_require__.e(/*! import() | addon-entry-calculator */ "addon-entry-calculator").then(__webpack_require__.bind(null, /*! ../addons/calculator/_runtime_entry.js */ "./src/addons/addons/calculator/_runtime_entry.js"))
+  "calculator": () => __webpack_require__.e(/*! import() | addon-entry-calculator */ "addon-entry-calculator").then(__webpack_require__.bind(null, /*! ../addons/calculator/_runtime_entry.js */ "./src/addons/addons/calculator/_runtime_entry.js")),
+  "project-size-display": () => __webpack_require__.e(/*! import() | addon-entry-project-size-display */ "addon-entry-project-size-display").then(__webpack_require__.bind(null, /*! ../addons/project-size-display/_runtime_entry.js */ "./src/addons/addons/project-size-display/_runtime_entry.js"))
 });
 
 /***/ }),
