@@ -81,7 +81,8 @@ const addons = [
     'autosave',
     'no-category-text',
     'green-flag-order',
-    'remove-extension-button'
+    'remove-extension-button',
+    'project-size-display'
 ];
 
 const newAddons = [

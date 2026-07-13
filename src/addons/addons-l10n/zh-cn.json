@@ -765,5 +765,11 @@
   "tw-comment-markdown-editor/edit": "编辑",
   "tw-comment-markdown-editor/preview": "预览",
   "tw-comment-markdown-editor/toggle-to-preview": "切换到预览模式 (Ctrl+M)",
-  "tw-comment-markdown-editor/toggle-to-edit": "切换到编辑模式 (Ctrl+M)"
+  "tw-comment-markdown-editor/toggle-to-edit": "切换到编辑模式 (Ctrl+M)",
+  "project-size-display/blocks-count": "代码数量",
+  "project-size-display/project-size": "工程大小",
+  "project-size-display/stage": "舞台",
+  "project-size-display/stage-size": "舞台大小",
+  "project-size-display/sprite-size": "角色大小",
+  "project-size-display/unknown": "未知"
 }

@@ -35,9 +35,9 @@ class TWFontsModal extends React.Component {
             this.setState({
                 screen: ''
             });
-        } else {
-            this.props.onClose();
+            return false;
         }
+        this.props.onClose();
     }
 
     handleCustomFontsChanged () {

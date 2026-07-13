@@ -884,7 +884,7 @@ const StoreProjectOptions = ({
                 <FormattedMessage
                     defaultMessage="Store theme in project"
                     description="Checkbox under the store settings in project button"
-                    id="mw.settingsModal.storeThemeInProject"
+                    id="tw.settingsModal.storeThemeInProject"
                 />
             </label>
             <p>
