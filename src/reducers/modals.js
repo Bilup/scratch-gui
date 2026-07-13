@@ -16,6 +16,7 @@ const MODAL_SETTINGS = 'settingsModal';
 const MODAL_CUSTOM_EXTENSION = 'customExtensionModal';
 const MODAL_RESTORE_POINTS = 'restorePointModal';
 const MODAL_FONTS = 'fontsModal';
+const MODAL_ASSETS = 'assetsModal';
 const MODAL_UNKNOWN_PLATFORM = 'unknownPlatformModal';
 const MODAL_INVALID_PROJECT = 'invalidProjectModal';
 const MODAL_EXTENSION_MANAGER = 'extensionManagerModal';
@@ -45,6 +46,7 @@ const initialState = {
     [MODAL_CUSTOM_EXTENSION]: false,
     [MODAL_RESTORE_POINTS]: false,
     [MODAL_FONTS]: false,
+    [MODAL_ASSETS]: false,
     [MODAL_UNKNOWN_PLATFORM]: false,
     [MODAL_INVALID_PROJECT]: false,
     [MODAL_EXTENSION_MANAGER]: false,
@@ -136,6 +138,9 @@ const openRestorePointModal = function () {
 };
 const openFontsModal = function () {
     return openModal(MODAL_FONTS);
+};
+const openAssetsModal = function () {
+    return openModal(MODAL_ASSETS);
 };
 const openUnknownPlatformModal = function () {
     return openModal(MODAL_UNKNOWN_PLATFORM);
@@ -230,6 +235,9 @@ const closeRestorePointModal = function () {
 const closeFontsModal = function () {
     return closeModal(MODAL_FONTS);
 };
+const closeAssetsModal = function () {
+    return closeModal(MODAL_ASSETS);
+};
 const closeUnknownPlatformModal = function () {
     return closeModal(MODAL_UNKNOWN_PLATFORM);
 };
@@ -276,6 +284,7 @@ export {
     openCustomExtensionModal,
     openRestorePointModal,
     openFontsModal,
+    openAssetsModal,
     openUnknownPlatformModal,
     openInvalidProjectModal,
     openExtensionManagerModal,
@@ -304,6 +313,7 @@ export {
     closeCustomExtensionModal,
     closeRestorePointModal,
     closeFontsModal,
+    closeAssetsModal,
     closeUnknownPlatformModal,
     closeInvalidProjectModal,
     closeExtensionManagerModal,

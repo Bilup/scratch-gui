@@ -444,6 +444,17 @@ const settingDefinitions = {
             id: 'mw.settingsModal.hideOperatorArrowsHelp'
         }
     },
+    unclipPalette: {
+        label: {
+            defaultMessage: 'Unclip Block Palette',
+            id: 'mw.settingsModal.unclipPalette'
+        },
+        help: {
+            defaultMessage: 'While the block palette is hovered, blocks that are wider than the ' +
+                'palette overflow past its edge instead of being cut off.',
+            id: 'mw.settingsModal.unclipPaletteHelp'
+        }
+    },
     showPauseButton: {
         label: {
             defaultMessage: 'Show Pause Button',
@@ -536,6 +547,7 @@ const HideDeleteButton = createBooleanSetting('HideDeleteButton', settingDefinit
 const HideExtensionButton = createBooleanSetting('HideExtensionButton', settingDefinitions.hideExtensionButton);
 const HideBackpack = createBooleanSetting('HideBackpack', settingDefinitions.hideBackpack);
 const HideOperatorArrows = createBooleanSetting('HideOperatorArrows', settingDefinitions.hideOperatorArrows);
+const UnclipPalette = createBooleanSetting('UnclipPalette', settingDefinitions.unclipPalette);
 
 const DisableCompiler = props => (
     <BooleanSetting
@@ -1052,6 +1064,13 @@ const pageConfigurations = {
                         props: props => ({
                             value: props.hideOperatorArrows,
                             onChange: props.onHideOperatorArrowsChange
+                        })
+                    },
+                    {
+                        component: UnclipPalette,
+                        props: props => ({
+                            value: props.unclipPalette,
+                            onChange: props.onUnclipPaletteChange
                         })
                     }
                 ]
@@ -2132,6 +2151,8 @@ SettingsModalComponent.propTypes = {
     onHideDeleteButtonChange: PropTypes.func,
     hideExtensionButton: PropTypes.bool,
     onHideExtensionButtonChange: PropTypes.func,
+    unclipPalette: PropTypes.bool,
+    onUnclipPaletteChange: PropTypes.func,
     hideBackpack: PropTypes.bool,
     onHideBackpackChange: PropTypes.func,
     hideOperatorArrows: PropTypes.bool,
