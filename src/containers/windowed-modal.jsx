@@ -375,7 +375,10 @@ class WindowedModal extends React.Component {
     
     handleWindowClose = () => {
         if (this.props.onRequestClose) {
-            this.props.onRequestClose();
+            const shouldClose = this.props.onRequestClose();
+            if (shouldClose === false) {
+                return false;
+            }
         }
         this.window = null;
         this.contentContainer = null;
@@ -383,13 +386,15 @@ class WindowedModal extends React.Component {
     };
     
     handleWindowMinimize = () => {
+        if (this.props.onRequestClose) {
+            const shouldClose = this.props.onRequestClose();
+            if (shouldClose === false) {
+                return false;
+            }
+        }
         this.window = null;
         this.contentContainer = null;
         this.createdWindow = false;
-
-        if (this.props.onRequestClose) {
-            this.props.onRequestClose();
-        }
     };
     
     addEventListeners () {

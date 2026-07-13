@@ -3,7 +3,6 @@ const manifest = {
   "description": "Make your editor look brand new.",
   "editorOnly": false,
   "tags": [
-    "new",
     "astraeditor"
   ],
   "info": [

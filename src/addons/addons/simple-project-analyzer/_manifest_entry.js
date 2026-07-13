@@ -18,7 +18,6 @@ const manifest = {
   ],
   "tags": [
     "recommended",
-    "new",
     "astraeditor"
   ],
   "dynamicDisable": true,

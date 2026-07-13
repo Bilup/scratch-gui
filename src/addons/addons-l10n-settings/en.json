@@ -467,5 +467,7 @@
   "zebra-striping/@settings-name-intensity": "Intensity (0-100%)",
   "zebra-striping/@settings-name-shade": "Shade",
   "zebra-striping/@settings-select-shade-darker": "Darker",
-  "zebra-striping/@settings-select-shade-lighter": "Lighter"
+  "zebra-striping/@settings-select-shade-lighter": "Lighter",
+  "project-size-display/@name": "Project Size Display",
+  "project-size-display/@description": "Displays project size, block count, and selected sprite/stage size at the bottom of the sprite selector."
 }

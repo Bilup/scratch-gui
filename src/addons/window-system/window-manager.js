@@ -63,6 +63,7 @@ class AddonWindow {
         this.isVisible = false;
         this.isMinimized = false;
         this.isMaximized = false;
+        this.isDestroying = false;
         this.zIndex = this.alwaysOnTop ? ++nextOnTopZIndex : ++nextZIndex;
         
         this.onClose = options.onClose || (() => {});
@@ -829,10 +830,14 @@ class AddonWindow {
             clearTimeout(this._hideTimer);
             this._hideTimer = null;
         }
-        this.isVisible = false;
         if (callOnClose) {
-            this.onClose();
+            const shouldClose = this.onClose();
+            if (shouldClose === false) {
+                return;
+            }
         }
+        this.isVisible = false;
+        this.isDestroying = true;
         this.element.style.opacity = '0';
         this.element.style.transform = 'scale(0.95) translateY(-8px)';
         this._hideTimer = setTimeout(() => {
@@ -981,7 +986,11 @@ const WindowManager = {
     },
     
     getWindow (id) {
-        return activeWindows.get(id);
+        const window = activeWindows.get(id);
+        if (window && window.isDestroying) {
+            return null;
+        }
+        return window;
     },
     
     getAllWindows () {
@@ -1003,7 +1012,7 @@ const WindowManager = {
     
     bringToFront (id) {
         const window = activeWindows.get(id);
-        if (window) {
+        if (window && !window.isDestroying) {
             window.bringToFront();
         }
     },

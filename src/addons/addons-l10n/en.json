@@ -770,5 +770,11 @@
   "tw-comment-markdown-editor/edit": "Edit",
   "tw-comment-markdown-editor/preview": "Preview",
   "tw-comment-markdown-editor/toggle-to-preview": "Switch to Preview Mode (Ctrl+M)",
-  "tw-comment-markdown-editor/toggle-to-edit": "Switch to Edit Mode (Ctrl+M)"
+  "tw-comment-markdown-editor/toggle-to-edit": "Switch to Edit Mode (Ctrl+M)",
+  "project-size-display/blocks-count": "Blocks",
+  "project-size-display/project-size": "Project Size",
+  "project-size-display/stage": "Stage",
+  "project-size-display/stage-size": "Stage Size",
+  "project-size-display/sprite-size": "Sprite Size",
+  "project-size-display/unknown": "Unknown"
 }

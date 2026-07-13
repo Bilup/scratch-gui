@@ -92,6 +92,7 @@ import _background from "../addons/background/_manifest_entry.js";
 import _todo from "../addons/todo/_manifest_entry.js";
 import _novatheai from "../addons/novatheai/_manifest_entry.js";
 import _calculator from "../addons/calculator/_manifest_entry.js";
+import _project_size_display from "../addons/project-size-display/_manifest_entry.js";
 export default {
   "cat-blocks": _cat_blocks,
   "dev-inspector": _dev_inspector,
@@ -186,4 +187,5 @@ export default {
   "todo": _todo,
   "novatheai": _novatheai,
   "calculator": _calculator,
+  "project-size-display": _project_size_display,
 };

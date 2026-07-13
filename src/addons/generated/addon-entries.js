@@ -93,4 +93,5 @@ export default {
   "todo": () => import(/* webpackChunkName: "addon-entry-todo" */ "../addons/todo/_runtime_entry.js"),
   "novatheai": () => import(/* webpackChunkName: "addon-entry-novatheai" */ "../addons/novatheai/_runtime_entry.js"),
   "calculator": () => import(/* webpackChunkName: "addon-entry-calculator" */ "../addons/calculator/_runtime_entry.js"),
+  "project-size-display": () => import(/* webpackChunkName: "addon-entry-project-size-display" */ "../addons/project-size-display/_runtime_entry.js"),
 };
