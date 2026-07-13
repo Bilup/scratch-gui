@@ -127,6 +127,8 @@ import collectMetadata from '../../lib/collect-metadata';
 import LazyScratchBlocks from '../../lib/tw-lazy-scratch-blocks';
 import SettingsStore from '../../addons/settings-store-singleton.js';
 
+import openFractchTerminalWindow from '../../lib/mw/open-fractch-terminal-window.js';
+
 import WorkspaceBookmarksMenu from './workspace-bookmarks-menu.jsx';
 
 import {
@@ -156,7 +158,8 @@ import {
     FilePlusCorner, Upload, RefreshCcw, ClockPlus, Package, FileInput,
     Save, ArchiveRestore, UserPen, Cloud, PackagePlus, Puzzle,
     Bookmark, GitBranch, FileCog, Bug, Database, Undo, Redo, Handshake, Sparkles, Wrench, Send,
-    Download, AppWindow, Computer, Shield, Code, Menu as MenuIcon
+    Download, AppWindow, Computer, Shield, Code, Code2, MessageCircle, TerminalSquare,
+    Blocks as BlocksIcon, Menu as MenuIcon
 } from 'lucide-react';
 
 import sharedMessages from '../../lib/constants/shared-messages';
@@ -1846,6 +1849,31 @@ class MenuBar extends React.Component {
                                         />
                                     </MenuItem>
                                 </MenuSection>
+                                {this.props.onToggleFractchMode && !this.props.isPlayerOnly && (
+                                    <MenuSection>
+                                        <MenuItem
+                                            onClick={() => {
+                                                this.props.onRequestCloseEdit();
+                                                this.props.onToggleFractchMode();
+                                            }}
+                                        >
+                                            {this.props.fractchMode ? <BlocksIcon /> : <Code2 />}
+                                            {this.props.fractchMode ? (
+                                                <FormattedMessage
+                                                    defaultMessage="Switch to blocks"
+                                                    description="Menu bar item that leaves the Fractch code editor"
+                                                    id="mw.menuBar.switchToBlocks"
+                                                />
+                                            ) : (
+                                                <FormattedMessage
+                                                    defaultMessage="Switch to Fractch"
+                                                    description="Menu bar item that opens the Fractch code editor"
+                                                    id="mw.menuBar.switchToFractch"
+                                                />
+                                            )}
+                                        </MenuItem>
+                                    </MenuSection>
+                                )}
                                 <MenuSection>
                                     {this.props.onClickAddonSettings && (
                                         <MenuItem
@@ -1956,6 +1984,16 @@ class MenuBar extends React.Component {
                                         />
                                     </MenuItem>
                                 </MenuSection>
+                                <MenuSection>
+                                    <MenuItemLink href="https://originchats.mistium.com?server=chats.mistium.com">
+                                        <MessageCircle />
+                                        <FormattedMessage
+                                            defaultMessage="originChats"
+                                            description="Menu bar item to join originChats"
+                                            id="tw.menuBar.joinDiscord"
+                                        />
+                                    </MenuItemLink>
+                                </MenuSection>
                             </MenuBarMenu>
                         </MenuLabel>
                         {this.props.isTotallyNormal && (
@@ -2034,6 +2072,19 @@ class MenuBar extends React.Component {
                                             defaultMessage="Git"
                                             description="Menu bar item to open git window"
                                             id="mw.menuBar.git"
+                                        />
+                                    </MenuItem>
+                                    <MenuItem
+                                        onClick={() => {
+                                            openFractchTerminalWindow({vm: this.props.vm});
+                                            this.props.onRequestCloseTools();
+                                        }}
+                                    >
+                                        <TerminalSquare />
+                                        <FormattedMessage
+                                            defaultMessage="Terminal"
+                                            description="Menu bar item that opens the shell in a window"
+                                            id="mw.menuBar.terminal"
                                         />
                                     </MenuItem>
                                     <MenuItem
@@ -2414,6 +2465,8 @@ MenuBar.propTypes = {
     confirmReadyToReplaceProject: PropTypes.func,
     currentLocale: PropTypes.string.isRequired,
     editMenuOpen: PropTypes.bool,
+    fractchMode: PropTypes.bool,
+    onToggleFractchMode: PropTypes.func,
     editorMenuOpen: PropTypes.bool,
     enableCommunity: PropTypes.bool,
     fileMenuOpen: PropTypes.bool,
