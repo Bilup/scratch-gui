@@ -25,6 +25,7 @@ import {
     setCollaborationRoomPrivacy,
     setCollaborationLoading,
     setCollaborationHostLoadingProgress,
+    setCollaborationReconnecting,
     setSpriteEditor,
     removeSpriteEditor
 } from '../reducers/collaboration';
@@ -79,6 +80,8 @@ class CollaborationContainer extends Component {
         this.handleProjectSyncWait = this.handleProjectSyncWait.bind(this);
         this.handleSessionReady = this.handleSessionReady.bind(this);
         this.handlePresenceEditingChanged = this.handlePresenceEditingChanged.bind(this);
+        this.handleReconnecting = this.handleReconnecting.bind(this);
+        this.handleReconnected = this.handleReconnected.bind(this);
     }
 
     componentDidMount () {
@@ -122,6 +125,8 @@ class CollaborationContainer extends Component {
         this.collaborationService.on('project-sync-wait', this.handleProjectSyncWait);
         this.collaborationService.on('session-ready', this.handleSessionReady);
         this.collaborationService.on('presence-editing-changed', this.handlePresenceEditingChanged);
+        this.collaborationService.on('reconnecting', this.handleReconnecting);
+        this.collaborationService.on('reconnected', this.handleReconnected);
 
         this.projectSyncProgress = 0;
         this.projectSyncLoadingBar = null;
@@ -161,6 +166,13 @@ class CollaborationContainer extends Component {
         this.collaborationService.off('project-sync-wait', this.handleProjectSyncWait);
         this.collaborationService.off('session-ready', this.handleSessionReady);
         this.collaborationService.off('presence-editing-changed', this.handlePresenceEditingChanged);
+        this.collaborationService.off('reconnecting', this.handleReconnecting);
+        this.collaborationService.off('reconnected', this.handleReconnected);
+
+        if (this.attachTimeout) {
+            clearTimeout(this.attachTimeout);
+            this.attachTimeout = null;
+        }
 
         // Clear waiting overlay if it exists
         this.clearWaitingOverlay();
@@ -178,7 +190,7 @@ class CollaborationContainer extends Component {
         try {
             this.props.onSetError(null);
 
-            await this.collaborationService.connectToRoom(roomId, username, false);
+            await this.collaborationService.connectToRoom(roomId, username, false, 'public', this.props.roturHandle);
 
             // Don't set connected immediately - wait for connected-to-host event
             this.props.onSetRoomId(roomId);
@@ -207,7 +219,7 @@ class CollaborationContainer extends Component {
         try {
             this.props.onSetError(null);
 
-            await this.collaborationService.connectToRoom(roomId, username, true, privacy);
+            await this.collaborationService.connectToRoom(roomId, username, true, privacy, this.props.roturHandle);
 
             // For hosts, set connected immediately since they're always connected
             this.props.onSetConnected(true);
@@ -233,6 +245,10 @@ class CollaborationContainer extends Component {
     }
 
     tryAttachToWorkspace () {
+        if (this.attachTimeout) {
+            clearTimeout(this.attachTimeout);
+            this.attachTimeout = null;
+        }
         // Try to find the Blockly workspace via AddonHooks
         if (window.AddonHooks && window.AddonHooks.blocklyWorkspace) {
             this.collaborationService.attachToWorkspace(window.AddonHooks.blocklyWorkspace);
@@ -240,16 +256,15 @@ class CollaborationContainer extends Component {
             // Fallback to global Blockly workspace
             const workspace = window.Blockly.getMainWorkspace();
             this.collaborationService.attachToWorkspace(workspace);
-        } else {
-            // If workspace isn't available yet, try again after a short delay
-            setTimeout(() => {
+        } else if (this.collaborationService.isConnected) {
+            this.attachTimeout = setTimeout(() => {
+                this.attachTimeout = null;
                 this.tryAttachToWorkspace();
             }, 500);
         }
     }
 
     handleWorkspaceReattach () {
-        console.log('🔄 Handling workspace reattach request');
         this.tryAttachToWorkspace();
     }
 
@@ -679,6 +694,15 @@ class CollaborationContainer extends Component {
         this.clearWaitingOverlay();
     }
 
+    handleReconnecting () {
+        this.props.onSetReconnecting(true);
+    }
+
+    handleReconnected () {
+        this.props.onSetReconnecting(false);
+        NotificationSystem.info('Reconnected to the collaboration room', 3000);
+    }
+
     handlePresenceEditingChanged ({userId, username, targetId, previousTargetId}) {
         if (previousTargetId) {
             this.props.onRemoveSpriteEditor(previousTargetId, userId);
@@ -694,6 +718,7 @@ class CollaborationContainer extends Component {
                 visible={this.props.isVisible}
                 currentUsername={this.props.currentUsername}
                 currentUserId={this.getCurrentUserId()}
+                roturHandle={this.props.roturHandle}
                 isConnected={this.props.isConnected}
                 roomId={this.props.roomId}
                 roomPrivacy={this.props.roomPrivacy}
@@ -725,6 +750,7 @@ CollaborationContainer.propTypes = {
     connectedUsers: PropTypes.array.isRequired,
     connectionError: PropTypes.string,
     currentUsername: PropTypes.string,
+    roturHandle: PropTypes.string,
     vm: PropTypes.object.isRequired,
     onRequestClose: PropTypes.func.isRequired,
     onSetConnected: PropTypes.func.isRequired,
@@ -735,6 +761,7 @@ CollaborationContainer.propTypes = {
     onSetUsername: PropTypes.func.isRequired,
     onSetCollabLoading: PropTypes.func.isRequired,
     onSetHostLoadingProgress: PropTypes.func.isRequired,
+    onSetReconnecting: PropTypes.func.isRequired,
     onSetSpriteEditor: PropTypes.func.isRequired,
     onRemoveSpriteEditor: PropTypes.func.isRequired,
     onOpenChangeUsername: PropTypes.func.isRequired
@@ -748,6 +775,7 @@ const mapStateToProps = state => ({
     connectedUsers: state.scratchGui.collaboration.connectedUsers,
     connectionError: state.scratchGui.collaboration.connectionError,
     currentUsername: state.scratchGui.tw.username,
+    roturHandle: state.scratchGui.rotur.username,
     vm: state.scratchGui.vm,
     customShortcuts: state.scratchGui.shortcuts.customShortcuts
 });
@@ -762,6 +790,7 @@ const mapDispatchToProps = dispatch => ({
     onSetUsername: username => dispatch(setUsername(username)),
     onSetCollabLoading: (isLoading, message) => dispatch(setCollaborationLoading(isLoading, message)),
     onSetHostLoadingProgress: progress => dispatch(setCollaborationHostLoadingProgress(progress)),
+    onSetReconnecting: isReconnecting => dispatch(setCollaborationReconnecting(isReconnecting)),
     onSetSpriteEditor: (spriteId, userId, username, timestamp) =>
         dispatch(setSpriteEditor(spriteId, userId, username, timestamp)),
     onRemoveSpriteEditor: (spriteId, userId) => dispatch(removeSpriteEditor(spriteId, userId)),

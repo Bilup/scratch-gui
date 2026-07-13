@@ -23,13 +23,14 @@ import {APP_NAME} from '../../lib/constants/brand.js';
 import {STYLE_GROUPS} from '../../lib/mw-style-settings';
 import StylePreview from './style-preview.jsx';
 import MenuBarLayoutSetting from './menu-bar-layout.jsx';
+import AccentMenuBarToggle from './accent-menu-bar-toggle.jsx';
 import {LanguagePage, ThemePage, WallpaperPage, FontsPage} from './appearance-pages.jsx';
 import CustomThemesPage from './custom-themes-page.jsx';
 import ShortcutManager from '../shortcut-manager/shortcut-manager.jsx';
 import {takeSettingsModalInitialView} from '../../lib/settings/modal-view.js';
 
 import {Settings, Zap, Blocks, Palette, PanelTop, Bug, GitBranch, Variable, Radio,
-    Globe, SunMoon, Wallpaper, Type, SwatchBook, Monitor, Keyboard} from 'lucide-react';
+    Globe, SunMoon, Wallpaper, Type, SwatchBook, Monitor, Keyboard, ChevronLeft} from 'lucide-react';
 import {connect} from 'react-redux';
 
 import {DEFINITIONS as DEBUGGER_SETTINGS, getSetting as getDebuggerSetting,
@@ -107,6 +108,10 @@ const messages = defineMessages({
     headerMenuBar: {
         defaultMessage: 'Menu Bar',
         id: 'mw.settings.menuBarHeader'
+    },
+    headerMenuBarAppearance: {
+        defaultMessage: 'Menu Bar Appearance',
+        id: 'mw.settings.menuBarAppearanceHeader'
     },
     headerDebugger: {
         defaultMessage: 'Debugger',
@@ -1105,6 +1110,15 @@ const pageConfigurations = {
     menuBar: {
         sections: [
             {
+                headerMessage: 'headerMenuBarAppearance',
+                settings: [
+                    {
+                        component: AccentMenuBarToggle,
+                        props: () => ({})
+                    }
+                ]
+            },
+            {
                 headerMessage: 'headerMenuBar',
                 settings: [
                     {
@@ -1862,16 +1876,26 @@ SettingsRouter.propTypes = {
 class SettingsModalComponent extends React.Component {
     constructor (props) {
         super(props);
-        bindAll(this, ['handleNavigate', 'handleStoreProjectOptions', 'handleToggleGroup']);
+        bindAll(this, [
+            'handleNavigate',
+            'handleStoreProjectOptions',
+            'handleToggleGroup',
+            'handleMobileBack'
+        ]);
 
         this.state = {
             currentView: takeSettingsModalInitialView() || 'general',
-            collapsedGroups: {}
+            collapsedGroups: {},
+            mobileView: 'list'
         };
     }
 
     handleNavigate (category) {
-        this.setState({currentView: category});
+        this.setState({currentView: category, mobileView: 'content'});
+    }
+
+    handleMobileBack () {
+        this.setState({mobileView: 'list'});
     }
 
     handleToggleGroup (groupId) {
@@ -2025,7 +2049,7 @@ class SettingsModalComponent extends React.Component {
                 width={880}
                 height={550}
             >
-                <ModalSidebarLayout>
+                <ModalSidebarLayout mobileView={this.state.mobileView}>
                     <ModalSidebar
                         ariaLabel="Settings sections"
                         width="wide"
@@ -2054,6 +2078,17 @@ class SettingsModalComponent extends React.Component {
                         })}
                     </ModalSidebar>
                     <ModalSidebarContent className={styles.contentArea}>
+                        <button
+                            className={styles.mobileBackButton}
+                            onClick={this.handleMobileBack}
+                        >
+                            <ChevronLeft size={18} />
+                            <FormattedMessage
+                                defaultMessage="Settings"
+                                description="Back button in the settings window on mobile"
+                                id="tw.settingsModal.back"
+                            />
+                        </button>
                         <SettingsRouter
                             view={currentView}
                             {...this.props}

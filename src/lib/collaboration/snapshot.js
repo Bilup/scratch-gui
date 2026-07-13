@@ -293,7 +293,7 @@ class ClientSnapshotService extends Emitter {
             return;
         }
 
-        // All bytes are in. Signal "download complete" BEFORE applying the
+// All bytes are in. Signal "download complete" BEFORE applying the
         // project: applyProjectData emits 'project-sync-apply-complete',
         // which is what clears the loading overlay. Emitting
         // 'download-complete' afterwards would re-arm the overlay with no

@@ -59,6 +59,7 @@ import Onboarding from '../../containers/onboarding.jsx';
 
 import {STAGE_SIZE_MODES, FIXED_WIDTH, UNCONSTRAINED_NON_STAGE_WIDTH} from '../../lib/constants/layout-constants';
 import {resolveStageSize} from '../../lib/utils/screen';
+import {getFindBarApi} from '../../lib/find-bar/api';
 import {Theme} from '../../lib/themes';
 
 import {setStageSize} from '../../reducers/stage-size';
@@ -73,6 +74,11 @@ const messages = defineMessages({
         id: 'gui.gui.addExtension',
         description: 'Button to add an extension in the target pane',
         defaultMessage: 'Add Extension'
+    },
+    findBlocks: {
+        id: 'gui.gui.findBlocks',
+        description: 'Button in the block palette that opens block search',
+        defaultMessage: 'Find Blocks'
     }
 });
 
@@ -80,7 +86,8 @@ import {
     Blocks as BlocksIcon,
     PaintbrushVertical as CostumesIcon,
     Volume2 as SoundsIcon,
-    PackagePlus as ExtensionIcon
+    PackagePlus as ExtensionIcon,
+    Search
 } from 'lucide-react';
 
 const getFullscreenBackgroundColor = () => {
@@ -99,6 +106,10 @@ const fullscreenBackgroundColor = getFullscreenBackgroundColor();
 const AUTO_SMALL_STAGE_INNER_WIDTH = Math.round(FIXED_WIDTH);
 const MIN_EDITOR_PANE_WIDTH = 598;
 const MIN_TARGET_PANE_HEIGHT = 180;
+const HIDE_STAGE_DRAG_SLOP = 80;
+const NARROW_LAYOUT_WIDTH = 900;
+const STAGE_RESIZER_WIDTH = 6;
+const MIN_STAGE_PANEL_WIDTH = (FIXED_WIDTH * 0.5) + 18;
 
 const cachedStyleValues = new WeakMap();
 
@@ -207,11 +218,27 @@ const GUIComponent = props => {
     const lastSyncedWidthRef = useRef(null);
     const [stagePanelWidth, setStagePanelWidth] = useState(null);
     const [stageContainerWidth, setStageContainerWidth] = useState(null);
+    const [isNarrowLayout, setIsNarrowLayout] = useState(false);
+    const [playerStageWidth, setPlayerStageWidth] = useState(null);
+
+    const isStageHidden = props.stageSizeMode === STAGE_SIZE_MODES.hidden && !props.isFullScreen;
+    const preferredPanelWidthRef = useRef(null);
+    const isStageHiddenRef = useRef(isStageHidden);
+    isStageHiddenRef.current = isStageHidden;
+
+    const handleOpenSearch = useCallback(() => {
+        const findBar = getFindBarApi();
+        if (findBar) findBar.expand();
+    }, []);
 
     const handleStagePanelResizeDoubleClick = useCallback(() => {
+        preferredPanelWidthRef.current = null;
         setStagePanelWidth(null);
         setStageContainerWidth(null);
-    }, []);
+        if (isStageHiddenRef.current && typeof props.onSetStageSize === 'function') {
+            props.onSetStageSize(STAGE_SIZE_MODES.full);
+        }
+    }, [props.onSetStageSize]);
 
     const getStageBorderExtraWidth = useCallback(containerEl => {
         if (!containerEl || typeof window === 'undefined') return 0;
@@ -320,6 +347,9 @@ const GUIComponent = props => {
             return;
         }
 
+        if (props.stageSizeMode === STAGE_SIZE_MODES.hidden) {
+            return;
+        }
         if (props.stageSizeMode === STAGE_SIZE_MODES.small) {
             setStageWidth(FIXED_WIDTH * 0.5);
         } else if (props.stageSizeMode === STAGE_SIZE_MODES.large) {
@@ -335,6 +365,7 @@ const GUIComponent = props => {
         lastSyncedWidthRef.current = stageContainerWidth;
 
         if (props.isFullScreen) return;
+        if (props.stageSizeMode === STAGE_SIZE_MODES.hidden) return;
         if (typeof stageContainerWidth !== 'number') return;
         if (typeof props.onSetStageSize !== 'function') return;
 
@@ -354,7 +385,82 @@ const GUIComponent = props => {
     }, [stageContainerWidth, props.isFullScreen, props.onSetStageSize, props.stageSizeMode, props.customStageSize, enableStageResize]);
 
     useEffect(() => {
-        if (!enableStageResize) return;
+        if (!props.isPlayerOnly || typeof window === 'undefined') return;
+        const fitPlayer = () => {
+            const naturalWidth = (props.customStageSize && props.customStageSize.width) || FIXED_WIDTH;
+            setPlayerStageWidth(Math.min(window.innerWidth, naturalWidth + 2));
+        };
+        fitPlayer();
+        window.addEventListener('resize', fitPlayer);
+        return () => window.removeEventListener('resize', fitPlayer);
+    }, [props.isPlayerOnly, props.customStageSize]);
+
+    const autoHiddenRef = useRef(false);
+    useEffect(() => {
+        const editorEl = editorWrapperRef.current;
+        const containerEl = editorEl ? editorEl.parentElement : null;
+        if (!containerEl || typeof ResizeObserver === 'undefined') return;
+
+        const fit = () => {
+            if (props.isFullScreen || typeof props.onSetStageSize !== 'function') return;
+
+            const measuredWidth = containerEl.getBoundingClientRect().width;
+            if (!Number.isFinite(measuredWidth) || measuredWidth <= 0) return;
+
+            const containerWidth = Math.min(measuredWidth, window.innerWidth);
+            setIsNarrowLayout(containerWidth < NARROW_LAYOUT_WIDTH);
+            const available = containerWidth - MIN_EDITOR_PANE_WIDTH - STAGE_RESIZER_WIDTH;
+
+            if (available < MIN_STAGE_PANEL_WIDTH) {
+                if (!isStageHiddenRef.current) {
+                    autoHiddenRef.current = true;
+                    isStageHiddenRef.current = true;
+                    syncingModeRef.current = true;
+                    props.onSetStageSize(STAGE_SIZE_MODES.hidden);
+                }
+                return;
+            }
+
+            if (isStageHiddenRef.current) {
+                if (!autoHiddenRef.current) return;
+                autoHiddenRef.current = false;
+                isStageHiddenRef.current = false;
+                props.onSetStageSize(STAGE_SIZE_MODES.small);
+                return;
+            }
+
+            const stageEl = stageAndTargetWrapperRef.current;
+            if (!stageEl) return;
+
+            const outerWidth = stageEl.getBoundingClientRect().width;
+            if (!Number.isFinite(outerWidth) || outerWidth <= 0) return;
+
+            const preferred = preferredPanelWidthRef.current;
+            const target = Math.min(
+                typeof preferred === 'number' ? preferred : outerWidth,
+                available
+            );
+            if (Math.abs(outerWidth - target) <= 1) return;
+
+            const computedStyle = window.getComputedStyle(stageEl);
+            const paddingLeft = Number.parseFloat(computedStyle.paddingLeft) || 0;
+            const paddingRight = Number.parseFloat(computedStyle.paddingRight) || 0;
+            const borderExtra = getStageBorderExtraWidth(stageEl);
+
+            setStageWidth(Math.max(0, target - paddingLeft - paddingRight - borderExtra - 2));
+        };
+
+        fit();
+        const observer = new ResizeObserver(fit);
+        observer.observe(containerEl);
+        window.addEventListener('resize', fit);
+        return () => {
+            observer.disconnect();
+            window.removeEventListener('resize', fit);
+        };
+    }, [props.isFullScreen, props.onSetStageSize, setStageWidth, getStageBorderExtraWidth]);
+
+    useEffect(() => {
         measureStageContainerWidth();
         const el = stageAndTargetWrapperRef.current;
         if (!el || typeof ResizeObserver === 'undefined') return;
@@ -423,13 +529,17 @@ const GUIComponent = props => {
 
         const stageWrapperRect = stageWrapperEl ? stageWrapperEl.getBoundingClientRect() : null;
         const stageCanvasRect = stageCanvasEl ? stageCanvasEl.getBoundingClientRect() : null;
-        const stageOverheadHeight = (stageWrapperRect && stageCanvasRect) ?
+        const stageOverheadHeight = (stageWrapperRect && stageCanvasRect && stageCanvasRect.height > 0) ?
             Math.max(0, stageWrapperRect.height - stageCanvasRect.height) :
             88;
 
+        const panelHeight = startRect.height > 0 ?
+            startRect.height :
+            ((editorRect && editorRect.height > 0) ? editorRect.height : window.innerHeight);
+
         const maxStageCanvasHeight = Math.max(
             0,
-            startRect.height - MIN_TARGET_PANE_HEIGHT - stageOverheadHeight
+            panelHeight - MIN_TARGET_PANE_HEIGHT - stageOverheadHeight
         );
 
         const customSize = props.customStageSize;
@@ -456,9 +566,29 @@ const GUIComponent = props => {
                 
                 const x = (typeof ev.clientX === 'number') ? ev.clientX : 0;
                 const dx = x - startX;
-                const nextWidth = Math.min(maxWidth, Math.max(minWidth, startWidth + (dx * directionFactor)));
+                const rawWidth = startWidth + (dx * directionFactor);
+
+                if (typeof props.onSetStageSize === 'function') {
+                    if (rawWidth < minWidth - HIDE_STAGE_DRAG_SLOP) {
+                        if (!isStageHiddenRef.current) {
+                            isStageHiddenRef.current = true;
+                            syncingModeRef.current = true;
+                            props.onSetStageSize(STAGE_SIZE_MODES.hidden);
+                        }
+                        return;
+                    }
+                    if (isStageHiddenRef.current) {
+                        isStageHiddenRef.current = false;
+                        autoHiddenRef.current = false;
+                        syncingModeRef.current = true;
+                        props.onSetStageSize(STAGE_SIZE_MODES.small);
+                    }
+                }
+
+                const nextWidth = Math.min(maxWidth, Math.max(minWidth, rawWidth));
                 const nextInnerWidth = Math.max(0, nextWidth - paddingLeft - paddingRight - borderExtra);
-                
+                preferredPanelWidthRef.current = nextWidth;
+
                 setStagePanelWidth(nextWidth);
                 setStageContainerWidth(prev => {
                     if (typeof prev === 'number' && Math.abs(prev - nextInnerWidth) < 0.5) {
@@ -687,27 +817,74 @@ const GUIComponent = props => {
         onRequestCloseRoturLogin
     ]);
 
-    // const minDimensions = useMemo(() => ({
-    //     minWidth: typeof stagePanelWidth === 'number' ?
-    //         MIN_EDITOR_PANE_WIDTH + stagePanelWidth + 6 + 16 :
-    //         1024 + Math.max(0, customStageSize.width - 480),
-    //     minHeight: 640 + Math.max(0, customStageSize.height - 360)
-    // }), [customStageSize.width, customStageSize.height, stagePanelWidth]);
+    const minDimensions = useMemo(() => {
+        if (isNarrowLayout) {
+            return {
+                minWidth: 0,
+                minHeight: 0
+            };
+        }
+        if (isStageHidden) {
+            return {
+                minWidth: MIN_EDITOR_PANE_WIDTH + 16,
+                minHeight: 640 + Math.max(0, customStageSize.height - 360)
+            };
+        }
+        return {
+            minWidth: MIN_EDITOR_PANE_WIDTH + MIN_STAGE_PANEL_WIDTH + STAGE_RESIZER_WIDTH + 16,
+            minHeight: 640 + Math.max(0, customStageSize.height - 360)
+        };
+    }, [customStageSize.height, isStageHidden, isNarrowLayout]);
 
     const stagePanelStyle = useMemo(() => {
-        if (!enableStageResize || !stagePanelWidth) return null;
+        if (isStageHidden) {
+            return {
+                width: 'auto',
+                flexBasis: 'auto',
+                flexGrow: 0,
+                flexShrink: 0
+            };
+        }
+        if (!stagePanelWidth) return null;
         return {
             width: `${stagePanelWidth}px`,
             flexBasis: `${stagePanelWidth}px`,
             flexShrink: 0
         };
-    }, [stagePanelWidth, enableStageResize]);
+    }, [stagePanelWidth, isStageHidden]);
 
     return (<MediaQuery minWidth={unconstrainedWidth}>{isUnconstrained => {
-        const stageSize = resolveStageSize(stageSizeMode, isUnconstrained);
+        const stageSize = resolveStageSize(
+            stageSizeMode === STAGE_SIZE_MODES.hidden ? STAGE_SIZE_MODES.small : stageSizeMode,
+            isUnconstrained
+        );
 
         return (
             <React.Fragment>
+                {isWindowFullScreen ? (
+                    <div
+                        className={styles.fullscreenBackground}
+                        style={{
+                            backgroundColor: fullscreenBackgroundColor
+                        }}
+                    />
+                ) : null}
+                <StageWrapper
+                    isFullScreen={isFullScreen}
+                    isEmbedded={isEmbedded}
+                    isRendererSupported={isRendererSupported()}
+                    isRtl={isRtl}
+                    loading={loading}
+                    stageContainerWidth={
+                        typeof playerStageWidth === 'number' ? playerStageWidth : null
+                    }
+                    stageSize={STAGE_SIZE_MODES.full}
+                    vm={vm}
+                >
+                    {alertsVisible ? (
+                        <Alerts className={styles.alertsContainer} />
+                    ) : null}
+                </StageWrapper>
                 {alwaysEnabledModals}
                 {isPlayerOnly ? (
                     <React.Fragment>
@@ -918,9 +1095,19 @@ const GUIComponent = props => {
                                             vm={vm}
                                         />
                                     </Box>
-                                    <Box className={styles.extensionButtonContainer}>
+                                    <Box className={styles.paletteFooter}>
                                         <button
-                                            className={styles.extensionButton}
+                                            className={classNames(styles.paletteButton, styles.paletteSearchButton)}
+                                            title={intl.formatMessage(messages.findBlocks)}
+                                            onClick={handleOpenSearch}
+                                        >
+                                            <Search
+                                                className={styles.paletteButtonIcon}
+                                                size={22}
+                                            />
+                                        </button>
+                                        <button
+                                            className={styles.paletteButton}
                                             title={intl.formatMessage(messages.addExtension)}
                                             onClick={onExtensionButtonClick}
                                         >
@@ -958,7 +1145,9 @@ const GUIComponent = props => {
                         />
 
                         <Box
-                            className={classNames(styles.stageAndTargetWrapper, styles[stageSize])}
+                            className={classNames(styles.stageAndTargetWrapper, styles[stageSize], {
+                                [styles.stageHidden]: isStageHidden
+                            })}
                             ref={stageAndTargetWrapperRef}
                             style={enableStageResize ? stagePanelStyle : undefined}
                         >
@@ -966,18 +1155,21 @@ const GUIComponent = props => {
                                 isFullScreen={isFullScreen}
                                 isRendererSupported={isRendererSupported()}
                                 isRtl={isRtl}
+                                isStageHidden={isStageHidden}
                                 stageSize={stageSize}
                                 stageContainerWidth={
                                     typeof stageContainerWidth === 'number' ? stageContainerWidth : null
                                 }
                                 vm={vm}
                             />
-                            <Box className={styles.targetWrapper}>
-                                <TargetPane
-                                    stageSize={stageSize}
-                                    vm={vm}
-                                />
-                            </Box>
+                            {isStageHidden ? null : (
+                                <Box className={styles.targetWrapper}>
+                                    <TargetPane
+                                        stageSize={stageSize}
+                                        vm={vm}
+                                    />
+                                </Box>
+                            )}
                         </Box>
                     </Box>
                 </Box>

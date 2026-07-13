@@ -53,6 +53,7 @@ import {buildSb3FromFractchTree} from '../../lib/git/fractch-tree';
 
 import TWDesktopSettings from './tw-desktop-settings.jsx';
 import RoturAccount from './mw-rotur-account.jsx';
+import CollabPresence from './mw-collab-presence.jsx';
 
 import { FEEDBACK_URL, APP_NAME } from '../../lib/constants/brand.js';
 
@@ -155,7 +156,7 @@ import {
     FilePlusCorner, Upload, RefreshCcw, ClockPlus, Package, FileInput,
     Save, ArchiveRestore, UserPen, Cloud, Settings, PackagePlus, Puzzle,
     Bookmark, GitBranch, FileCog, Bug, Database, Undo, Redo, Handshake, Sparkles, Wrench, Send,
-    Download, AppWindow, Computer, Shield, Code
+    Download, AppWindow, Computer, Shield, Code, Menu as MenuIcon
 } from 'lucide-react';
 
 import sharedMessages from '../../lib/constants/shared-messages';
@@ -275,6 +276,8 @@ const formatShortcutDisplay = keyCombo => {
         .replace(/ /g, '');
 };
 
+const COLLAPSE_MENU_WIDTH = 900;
+
 class MenuBar extends React.Component {
     constructor(props) {
         super(props);
@@ -288,14 +291,18 @@ class MenuBar extends React.Component {
             canUndo: true,
             canRedo: true,
             gitRepoExists: false,
-            gitRemotes: []
+            gitRemotes: [],
+            menuCollapsed: false,
+            moreMenuOpen: false
         };
-        this.isEditingWorkspaceBookmark = false;
-        this.workspaceBookmarksMenuLabelRef = React.createRef();
+        this.menuBarRef = React.createRef();
+        this.menuResizeObserver = null;
         this.workspaceBookmarksProjectListener = null;
         this.autosaveCountdownInterval = null;
         this.undoRedoChangeListener = null;
         bindAll(this, [
+            'handleDocumentMouseDown',
+            'handleToggleMoreMenu',
             'handleClickSeeInside',
             'handleClickNew',
             'handleClickNewWindow',
@@ -344,6 +351,8 @@ class MenuBar extends React.Component {
     }
     componentDidMount() {
         document.addEventListener('keydown', this.handleKeyPress);
+        document.addEventListener('mousedown', this.handleDocumentMouseDown);
+        this.observeMenuBarWidth();
         this.startAutosaveCountdown();
 
         // Prevent the legacy addon from also injecting a bookmarks menu.
@@ -373,7 +382,11 @@ class MenuBar extends React.Component {
     }
     componentWillUnmount() {
         document.removeEventListener('keydown', this.handleKeyPress);
-
+        document.removeEventListener('mousedown', this.handleDocumentMouseDown);
+        if (this.menuResizeObserver) {
+            this.menuResizeObserver.disconnect();
+            this.menuResizeObserver = null;
+        }
         if (this.autosaveCountdownInterval) {
             clearInterval(this.autosaveCountdownInterval);
             this.autosaveCountdownInterval = null;
@@ -394,7 +407,6 @@ class MenuBar extends React.Component {
     }
 
     getShortcut(keyId) {
-        // Map menu keyId to shortcut registry id
         const keyIdMap = {
             'new': 'new',
             'open': 'loadFromComputer',
@@ -408,15 +420,10 @@ class MenuBar extends React.Component {
             'backpack': 'toggleBackpack',
             'extensionManager': 'extensionManager'
         };
-
-        // Get the correct keyId for the shortcut registry
         const registryKeyId = keyIdMap[keyId] || keyId;
-
-        // Get custom shortcut from props, or return default
         if (this.props.customShortcuts && this.props.customShortcuts[registryKeyId]) {
             return this.props.customShortcuts[registryKeyId];
         }
-        // Default shortcuts
         const defaultShortcuts = {
             'new': 'Ctrl+N',
             'loadFromComputer': 'Ctrl+O',
@@ -433,7 +440,30 @@ class MenuBar extends React.Component {
         return defaultShortcuts[registryKeyId] || '';
     }
 
-    showAlert(title, message) {
+    observeMenuBarWidth () {
+        const el = this.menuBarRef.current;
+        if (!el || typeof ResizeObserver === 'undefined') return;
+        this.menuResizeObserver = new ResizeObserver(() => {
+            const collapsed = el.getBoundingClientRect().width < COLLAPSE_MENU_WIDTH;
+            if (collapsed !== this.state.menuCollapsed) {
+                this.setState({menuCollapsed: collapsed, moreMenuOpen: false});
+            }
+        });
+        this.menuResizeObserver.observe(el);
+    }
+
+    handleDocumentMouseDown (e) {
+        if (!this.state.moreMenuOpen) return;
+        const el = this.menuBarRef.current;
+        if (el && el.contains(e.target)) return;
+        this.setState({moreMenuOpen: false});
+    }
+
+    handleToggleMoreMenu () {
+        this.setState(prevState => ({moreMenuOpen: !prevState.moreMenuOpen}));
+    }
+
+    showAlert (title, message) {
         return new Promise(resolve => {
             this.props.openSimpleDialog({
                 type: 'alert',
@@ -1425,6 +1455,7 @@ class MenuBar extends React.Component {
                     this.props.className,
                     styles.menuBar
                 )}
+                ref={this.menuBarRef}
             >
                 <div
                     className={classNames(
@@ -1434,7 +1465,23 @@ class MenuBar extends React.Component {
                         }
                     )}
                 >
-                    <div className={styles.fileGroup}>
+                    {this.state.menuCollapsed && (
+                        <div
+                            className={classNames(styles.menuBarItem, styles.hoverable, styles.moreMenuButton, {
+                                [styles.active]: this.state.moreMenuOpen
+                            })}
+                            onClick={this.handleToggleMoreMenu}
+                            title="More"
+                        >
+                            <MenuIcon size={20} />
+                        </div>
+                    )}
+                    <div
+                        className={classNames(styles.fileGroup, {
+                            [styles.fileGroupCollapsed]: this.state.menuCollapsed,
+                            [styles.fileGroupExpanded]: this.state.menuCollapsed && this.state.moreMenuOpen
+                        })}
+                    >
                         {this.props.errors.length > 0 && <div data-mw-item="__errors">
                             <MenuLabel
                                 open={this.props.errorsMenuOpen}
@@ -2318,6 +2365,12 @@ class MenuBar extends React.Component {
                             {aboutButton}
                         </div>
                     )}
+                    <div
+                        data-mw-item="collab-presence"
+                        className={styles.menuBarLayoutItem}
+                    >
+                        <CollabPresence />
+                    </div>
                     <div
                         data-mw-item="rotur-account"
                         className={classNames(styles.menuBarLayoutItem, styles.roturAccountSlot)}

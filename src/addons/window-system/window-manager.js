@@ -18,6 +18,79 @@ const css = `
   background: var(--red-primary, #e64a4a);
   color: white;
 }
+
+.addon-window-content {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+.addon-window-content::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.addon-window-content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 6px;
+  margin: 2px;
+}
+
+.addon-window-content::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+  min-height: 20px;
+}
+
+.addon-window-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+  background-clip: content-box;
+}
+
+.addon-window-content::-webkit-scrollbar-thumb:active {
+  background: rgba(0, 0, 0, 0.4);
+  background-clip: content-box;
+}
+
+.addon-window-content::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+@media only screen and (max-width: 900px) {
+  .addon-window {
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+
+  .addon-window .resize-handle {
+    display: none !important;
+  }
+
+  .addon-window-header {
+    cursor: default !important;
+    touch-action: auto !important;
+  }
+
+  .addon-window-btn-maximize,
+  .addon-window-btn-minimize {
+    display: none !important;
+  }
+
+  .addon-window-content {
+    -webkit-overflow-scrolling: touch;
+  }
+}
 `;
 
 const style = document.createElement('style');
@@ -36,8 +109,6 @@ const WINDOW_ON_TOP_Z_INDEX_MAX = 9999;
 let nextOnTopZIndex = WINDOW_ON_TOP_Z_INDEX_BASE;
 let windowCount = 0;
 const activeWindows = new Map();
-
-let animationsEnabled = localStorage.getItem('mw:window-animation') !== 'false';
 
 const IN_PAGE_WINDOW_IDS = new Set([
     'customProceduresModal'
@@ -121,7 +192,6 @@ class AddonWindow {
         this.isVisible = false;
         this.isMinimized = false;
         this.isMaximized = false;
-        this.isDestroying = false;
         this.zIndex = this.alwaysOnTop ? ++nextOnTopZIndex : ++nextZIndex;
         
         this.onClose = options.onClose || (() => {});
@@ -136,14 +206,11 @@ class AddonWindow {
         this.contentElement = null;
         this.isDragging = false;
         this.isResizing = false;
-        this.isTouchDragging = false;
-        this.isTouchResizing = false;
         this.dragOffset = {x: 0, y: 0};
         this.dragPointerId = null;
         this.resizePointerId = null;
         this.resizeHandle = null;
         this.savedState = null; // For maximize/restore
-        this._hideTimer = null;
         
         this.createWindow();
         activeWindows.set(this.id, this);
@@ -169,9 +236,7 @@ class AddonWindow {
             display: none;
             flex-direction: column;
             overflow: hidden;
-            backdrop-filter: blur(20px);
-            will-change: opacity, transform, left, top, width, height, border-radius;
-            transition: opacity 0.2s ease-out, transform 0.2s ease-out, left 0.3s ease-out, top 0.3s ease-out, width 0.3s ease-out, height 0.3s ease-out, border-radius 0.3s ease-out;
+            transition: none !important;
         `;
 
         this.element.addEventListener('pointerdown', () => this.bringToFront());
@@ -260,9 +325,6 @@ class AddonWindow {
             scrollbar-width: thin;
             scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
         `;
-        
-        // Add custom scrollbar styling
-        this.addScrollbarStyling(this.contentElement);
         
         this.element.appendChild(this.headerElement);
         this.element.appendChild(this.contentElement);
@@ -370,6 +432,7 @@ class AddonWindow {
             this.isDragging = true;
             this.dragPointerId = e.pointerId;
             this.bringToFront();
+
             // Get the current position of the window
             const currentX = parseInt(this.element.style.left, 10) || this.x;
             const currentY = parseInt(this.element.style.top, 10) || this.y;
@@ -392,32 +455,6 @@ class AddonWindow {
 
             e.preventDefault();
         });
-        
-        this.headerElement.addEventListener('touchstart', e => {
-            if (e.target.tagName === 'BUTTON') return;
-            if (e.touches.length !== 1) return;
-            
-            this.isDragging = true;
-            this.isTouchDragging = true;
-            this.bringToFront();
-            
-            this.element.style.transition = 'none';
-            
-            const touch = e.touches[0];
-            const currentX = parseInt(this.element.style.left, 10) || this.x;
-            const currentY = parseInt(this.element.style.top, 10) || this.y;
-            
-            this.dragOffset = {
-                x: touch.clientX - currentX,
-                y: touch.clientY - currentY
-            };
-            
-            document.addEventListener('touchmove', this.handleTouchDrag, {passive: false});
-            document.addEventListener('touchend', this.handleTouchDragEnd);
-            document.addEventListener('touchcancel', this.handleTouchDragEnd);
-            
-            e.preventDefault();
-        }, {passive: false});
     }
     
     handleDrag = e => {
@@ -558,17 +595,6 @@ class AddonWindow {
                 this.startResize(e, direction, handle);
             });
             
-            handle.addEventListener('touchstart', e => {
-                if (e.touches.length !== 1) return;
-                e.stopPropagation();
-                this.isTouchResizing = true;
-                this.startResize(e, direction);
-                document.addEventListener('touchmove', this.handleTouchResize, {passive: false});
-                document.addEventListener('touchend', this.handleTouchResizeEnd);
-                document.addEventListener('touchcancel', this.handleTouchResizeEnd);
-                e.preventDefault();
-            }, {passive: false});
-            
             this.element.appendChild(handle);
         });
     }
@@ -581,12 +607,9 @@ class AddonWindow {
         this.bringToFront();
         
         const rect = this.element.getBoundingClientRect();
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        
         this.resizeStart = {
-            x: clientX,
-            y: clientY,
+            x: e.clientX,
+            y: e.clientY,
             width: rect.width,
             height: rect.height,
             left: rect.left,
@@ -682,128 +705,6 @@ class AddonWindow {
         this.resizeHandle = null;
     };
     
-    handleTouchResize = e => {
-        if (!this.isResizing || !this.isTouchResizing) return;
-        if (e.touches.length !== 1) return;
-
-        const touch = e.touches[0];
-        const deltaX = touch.clientX - this.resizeStart.x;
-        const deltaY = touch.clientY - this.resizeStart.y;
-        const direction = this.resizeDirection;
-
-        let newWidth = this.resizeStart.width;
-        let newHeight = this.resizeStart.height;
-        let newX = this.resizeStart.left;
-        let newY = this.resizeStart.top;
-
-        if (direction.includes('e')) newWidth += deltaX;
-        if (direction.includes('w')) {
-            newWidth -= deltaX;
-            newX = this.resizeStart.left + deltaX;
-        }
-        if (direction.includes('s')) newHeight += deltaY;
-        if (direction.includes('n')) {
-            newHeight -= deltaY;
-            newY = this.resizeStart.top + deltaY;
-        }
-
-        const originalNewWidth = newWidth;
-        const originalNewHeight = newHeight;
-
-        newWidth = Math.max(this.minWidth, newWidth);
-        newHeight = Math.max(this.minHeight, newHeight);
-
-        if (this.maxWidth) newWidth = Math.min(this.maxWidth, newWidth);
-        if (this.maxHeight) newHeight = Math.min(this.maxHeight, newHeight);
-
-        if (direction.includes('w') && newWidth !== originalNewWidth) {
-            newX = this.resizeStart.left + (this.resizeStart.width - newWidth);
-        }
-        if (direction.includes('n') && newHeight !== originalNewHeight) {
-            newY = this.resizeStart.top + (this.resizeStart.height - newHeight);
-        }
-
-        const minY = getMenuBarHeight();
-        if (newY < minY) {
-            const bottom = this.resizeStart.top + this.resizeStart.height;
-            newY = minY;
-            newHeight = Math.max(this.minHeight, bottom - newY);
-            if (this.maxHeight) newHeight = Math.min(this.maxHeight, newHeight);
-            if (direction.includes('n')) {
-                newY = Math.max(minY, bottom - newHeight);
-            }
-        }
-
-        this.width = newWidth;
-        this.height = newHeight;
-        this.x = newX;
-        this.y = newY;
-
-        this.element.style.width = `${newWidth}px`;
-        this.element.style.height = `${newHeight}px`;
-        this.element.style.left = `${newX}px`;
-        this.element.style.top = `${newY}px`;
-
-        this.onResize(newWidth, newHeight);
-
-        e.preventDefault();
-    };
-
-    handleTouchResizeEnd = () => {
-        this.isResizing = false;
-        this.isTouchResizing = false;
-        document.removeEventListener('touchmove', this.handleTouchResize);
-        document.removeEventListener('touchend', this.handleTouchResizeEnd);
-        document.removeEventListener('touchcancel', this.handleTouchResizeEnd);
-    };
-
-    addScrollbarStyling () {
-        const newStyle = document.createElement('style');
-        
-        newStyle.textContent = `
-            .addon-window-content {
-                scrollbar-width: thin;
-                scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
-            }
-            
-            .addon-window-content::-webkit-scrollbar {
-                width: 12px;
-                height: 12px;
-            }
-            
-            .addon-window-content::-webkit-scrollbar-track {
-                background: rgba(0, 0, 0, 0.03);
-                border-radius: 6px;
-                margin: 2px;
-            }
-            
-            .addon-window-content::-webkit-scrollbar-thumb {
-                background: rgba(0, 0, 0, 0.2);
-                border-radius: 6px;
-                border: 2px solid transparent;
-                background-clip: content-box;
-                min-height: 20px;
-            }
-
-            .addon-window-content::-webkit-scrollbar-thumb:hover {
-                background: rgba(0, 0, 0, 0.3);
-                background-clip: content-box;
-            }
-
-            .addon-window-content::-webkit-scrollbar-thumb:active {
-                background: rgba(0, 0, 0, 0.4);
-                background-clip: content-box;
-            }
-            
-            .addon-window-content::-webkit-scrollbar-corner {
-                background: transparent;
-            }
-        `;
-        
-        document.head.appendChild(newStyle);
-        this.scrollbarStyle = newStyle;
-    }
-    
     bringToFront () {
         const isOnTopTier = this.alwaysOnTop;
         const baseZ = isOnTopTier ? WINDOW_ON_TOP_Z_INDEX_BASE : WINDOW_Z_INDEX_BASE;
@@ -835,91 +736,33 @@ class AddonWindow {
     }
     
     show () {
-        if (this._hideTimer) {
-            clearTimeout(this._hideTimer);
-            this._hideTimer = null;
-        }
-        if (this.isVisible) {
-            this.bringToFront();
-            return this;
-        }
+        activeWindows.set(this.id, this);
+        // Callers re-show on every render, so only raise when actually becoming visible.
+        // Explicit focus still goes through pointerdown, focus() and the drag/resize handlers.
+        const wasVisible = this.isVisible;
         this.isVisible = true;
         this.element.style.display = 'flex';
-        this.element.style.visibility = 'visible';
-        this.element.style.pointerEvents = 'auto';
-        this.bringToFront();
-        
-        if (animationsEnabled) {
-            this.element.style.opacity = '0';
-            this.element.style.transform = 'scale(0.95) translateY(-8px)';
-            this.element.style.transition = 'none';
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    this.element.style.transition = 'opacity 0.2s ease-out, transform 0.2s ease-out, left 0.3s ease-out, top 0.3s ease-out, width 0.3s ease-out, height 0.3s ease-out, border-radius 0.3s ease-out';
-                    this.element.style.opacity = '1';
-                    this.element.style.transform = 'scale(1) translateY(0)';
-                });
-            });
-        } else {
-            this.element.style.opacity = '1';
-            this.element.style.transform = 'scale(1) translateY(0)';
-            this.element.style.transition = 'none';
+        if (!wasVisible) {
+            this.bringToFront();
         }
         return this;
     }
     
     hide () {
-        if (this._hideTimer) {
-            clearTimeout(this._hideTimer);
-            this._hideTimer = null;
-        }
-        if (!this.isVisible) {
-            return this;
-        }
         this.isVisible = false;
-        
-        if (animationsEnabled) {
-            this.element.style.opacity = '0';
-            this.element.style.transform = 'scale(0.95) translateY(-8px)';
-            this._hideTimer = setTimeout(() => {
-                this._hideTimer = null;
-                if (!this.isVisible) {
-                    this.element.style.display = 'none';
-                }
-            }, 200);
-        } else {
-            this.element.style.display = 'none';
-            this.element.style.opacity = '0';
-            this.element.style.transform = 'scale(0.95) translateY(-8px)';
-        }
+        this.element.style.display = 'none';
         return this;
     }
     
     destroy (callOnClose = true) {
-        if (this._hideTimer) {
-            clearTimeout(this._hideTimer);
-            this._hideTimer = null;
-        }
+        this.hide();
         if (callOnClose) {
-            const shouldClose = this.onClose();
-            if (shouldClose === false) {
-                return;
-            }
+            this.onClose();
         }
-        this.isVisible = false;
-        this.isDestroying = true;
-        this.element.style.opacity = '0';
-        this.element.style.transform = 'scale(0.95) translateY(-8px)';
-        this._hideTimer = setTimeout(() => {
-            this._hideTimer = null;
-            activeWindows.delete(this.id);
-            if (this.scrollbarStyle && this.scrollbarStyle.parentNode) {
-                this.scrollbarStyle.parentNode.removeChild(this.scrollbarStyle);
-            }
-            if (this.element && this.element.parentNode) {
-                this.element.parentNode.removeChild(this.element);
-            }
-        }, 200);
+        activeWindows.delete(this.id);
+        if (this.element && this.element.parentNode) {
+            this.element.parentNode.removeChild(this.element);
+        }
     }
 
     close () {
@@ -948,14 +791,10 @@ class AddonWindow {
                 this.y = this.savedState.y;
                 this.width = this.savedState.width;
                 this.height = this.savedState.height;
-                
-                this.element.style.transition = 'left 0.3s ease-out, top 0.3s ease-out, ' +
-                    'width 0.3s ease-out, height 0.3s ease-out, border-radius 0.3s ease-out';
                 this.element.style.left = `${this.x}px`;
                 this.element.style.top = `${this.y}px`;
                 this.element.style.width = `${this.width}px`;
                 this.element.style.height = `${this.height}px`;
-                this.element.style.borderRadius = '12px';
             }
             this.updateMaximizeButton();
         }
@@ -972,6 +811,7 @@ class AddonWindow {
     maximize () {
         if (this.isMaximized) return this;
         
+        // Save current state
         this.savedState = {
             x: this.x,
             y: this.y,
@@ -985,13 +825,10 @@ class AddonWindow {
         this.width = window.innerWidth;
         this.height = window.innerHeight;
         
-        this.element.style.transition = 'left 0.3s ease-out, top 0.3s ease-out, ' +
-            'width 0.3s ease-out, height 0.3s ease-out, border-radius 0.3s ease-out';
         this.element.style.left = '0px';
         this.element.style.top = '0px';
         this.element.style.width = '100vw';
         this.element.style.height = '100vh';
-        this.element.style.borderRadius = '0px';
         
         this.updateMaximizeButton();
         this.onMaximize();
@@ -1125,6 +962,7 @@ class NativeAddonWindow {
     }
 
     show () {
+        activeWindows.set(this.id, this);
         if (this.popup && !this.popup.closed) {
             this.isVisible = true;
             return this;
@@ -1346,11 +1184,7 @@ const WindowManager = {
     },
     
     getWindow (id) {
-        const window = activeWindows.get(id);
-        if (window && window.isDestroying) {
-            return null;
-        }
-        return window;
+        return activeWindows.get(id);
     },
     
     getAllWindows () {
@@ -1372,22 +1206,9 @@ const WindowManager = {
     
     bringToFront (id) {
         const window = activeWindows.get(id);
-        if (window && !window.isDestroying) {
+        if (window) {
             window.bringToFront();
         }
-    },
-    
-    setAnimationsEnabled (enabled) {
-        animationsEnabled = enabled;
-        try {
-            localStorage.setItem('mw:window-animation', enabled);
-        } catch (err) {
-            // ignore
-        }
-    },
-    
-    getAnimationsEnabled () {
-        return animationsEnabled;
     }
 };
 
