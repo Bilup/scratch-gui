@@ -154,7 +154,7 @@ import oldtimeyLogo from './oldtimey-logo.svg';
 import {
     FilePen, PencilRuler, TriangleAlert, Info, Shuffle, Zap, Gauge,
     FilePlusCorner, Upload, RefreshCcw, ClockPlus, Package, FileInput,
-    Save, ArchiveRestore, UserPen, Cloud, Settings, PackagePlus, Puzzle,
+    Save, ArchiveRestore, UserPen, Cloud, PackagePlus, Puzzle,
     Bookmark, GitBranch, FileCog, Bug, Database, Undo, Redo, Handshake, Sparkles, Wrench, Send,
     Download, AppWindow, Computer, Shield, Code, Menu as MenuIcon
 } from 'lucide-react';
@@ -1847,16 +1847,6 @@ class MenuBar extends React.Component {
                                     </MenuItem>
                                 </MenuSection>
                                 <MenuSection>
-                                    {this.props.onClickSettingsModal && (
-                                        <MenuItem onClick={this.props.onClickSettingsModal}>
-                                            <Settings />
-                                            <FormattedMessage
-                                                defaultMessage="Settings"
-                                                description="Menu bar item to open the settings modal"
-                                                id="tw.menuBar.settings"
-                                            />
-                                        </MenuItem>
-                                    )}
                                     {this.props.onClickAddonSettings && (
                                         <MenuItem
                                             onClick={() => {
@@ -2476,7 +2466,6 @@ MenuBar.propTypes = {
     onClickSave: PropTypes.func,
     onClickSaveAsCopy: PropTypes.func,
     onClickPreferencesModal: PropTypes.func,
-    onClickSettingsModal: PropTypes.func,
     onClickGitModal: PropTypes.func,
     onClickShowTutorial: PropTypes.func,
 
@@ -2606,10 +2595,6 @@ const mapDispatchToProps = dispatch => ({
     onRequestCloseAbout: () => dispatch(closeAboutMenu()),
     onClickRestorePoints: () => dispatch(openRestorePointModal()),
     onClickExtensionManager: () => dispatch(openExtensionManagerModal()),
-    onClickSettingsModal: () => {
-        dispatch(closeEditMenu());
-        dispatch(openSettingsModal());
-    },
     onClickGitModal: () => {
         dispatch(closeEditMenu());
         dispatch(openGitModal());
