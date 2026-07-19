@@ -63,6 +63,7 @@ import TWFullScreenResizerHOC from '../lib/components/tw-fullscreen-resizer-hoc.
 import TWThemeManagerHOC from './tw-theme-manager-hoc.jsx';
 import {initialize as initializeShortcuts, updateShortcuts} from
     '../lib/shortcuts/event-router.js';
+import startFractchLiveReload from '../lib/fractch-live';
 
 const {RequestMetadata, setMetadata, unsetMetadata} = storage.scratchFetch;
 
@@ -133,10 +134,16 @@ class GUI extends React.Component {
 
         // 监听localStorage变化
         window.addEventListener('storage', this.handleStorageChange);
+
+        this.fractchLiveReloadDispose = startFractchLiveReload(this.props.vm);
     }
 
     componentWillUnmount () {
         window.removeEventListener('storage', this.handleStorageChange);
+        if (this.fractchLiveReloadDispose) {
+            this.fractchLiveReloadDispose();
+            this.fractchLiveReloadDispose = null;
+        }
     }
 
     handleStorageChange () {
