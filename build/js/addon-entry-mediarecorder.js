@@ -508,9 +508,7 @@ const setRecordElem = elem => {
           secs: roundedDelay - index
         }));
         if (statusElements && statusElements.timeElement) {
-          statusElements.timeElement.textContent = msg('starting-in', {
-            secs: roundedDelay - index
-          });
+          statusElements.timeElement.textContent = "Starting in ".concat(roundedDelay - index, "s...");
         }
         await new Promise(resolve => setTimeout(resolve, 975));
       }

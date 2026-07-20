@@ -121,7 +121,7 @@ __webpack_require__.r(__webpack_exports__);
       sizeDisplay.querySelector('.sa-project-size-project').innerText = "".concat(sizeText, ": ").concat(targetSize, "/").concat(formatFileSize(projectSize));
     } catch (e) {
       console.error('[Project Size Display] Error updating display:', e);
-      sizeDisplay.innerText = msg('error');
+      sizeDisplay.innerText = 'Error';
     }
   }
   async function init() {
