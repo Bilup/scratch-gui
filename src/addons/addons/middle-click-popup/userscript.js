@@ -232,7 +232,7 @@ export default async function ({ addon, msg }) {
             if (!toolbox || !toolbox.flyout_ || !toolbox.flyout_.getWorkspace()) {
                 console.warn('Middle-click popup: Toolbox not ready yet, retrying...');
                 // Show a loading message
-                popupStatusBar.textContent = 'Loading blocks...';
+                popupStatusBar.textContent = msg('loading-blocks');
                 popupStatusBar.style.display = '';
 
                 // Retry after a short delay
@@ -256,7 +256,7 @@ export default async function ({ addon, msg }) {
             if (!blockTypes || blockTypes.length === 0) {
                 console.warn('Middle-click popup: No block types available, showing empty search');
                 blockTypes = [];
-                popupStatusBar.textContent = 'No blocks available';
+                popupStatusBar.textContent = msg('no-blocks');
                 popupStatusBar.style.display = '';
                 return;
             }
@@ -276,7 +276,7 @@ export default async function ({ addon, msg }) {
             doPerformSearch();
         } catch (error) {
             console.error('Middle-click popup: Error loading blocks', error);
-            popupStatusBar.textContent = 'Error loading blocks';
+            popupStatusBar.textContent = msg('error-loading');
             popupStatusBar.style.display = '';
         }
     }
@@ -306,7 +306,7 @@ export default async function ({ addon, msg }) {
 
         popupContainer.classList.remove('sa-mcp-container-collapsed');
 
-        popupStatusBar.textContent = 'Searching...';
+        popupStatusBar.textContent = msg('searching');
         popupStatusBar.style.display = '';
 
         searchDebounceTimer = setTimeout(doPerformSearch, SEARCH_DEBOUNCE_MS);
@@ -317,13 +317,13 @@ export default async function ({ addon, msg }) {
 
         // Check if blocks are loaded and workspace is indexed
         if (!blockTypes) {
-            popupStatusBar.textContent = 'Loading blocks...';
+            popupStatusBar.textContent = msg('loading-blocks');
             popupStatusBar.style.display = '';
             return;
         }
 
         if (blockTypes.length === 0) {
-            popupStatusBar.textContent = 'No blocks available';
+            popupStatusBar.textContent = msg('no-blocks');
             popupStatusBar.style.display = '';
             return;
         }
