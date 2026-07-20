@@ -1,7 +1,7 @@
 const manifest = {
-    name: 'Sprite File List View',
-    description: 'Transforms the sprite list into a VSCode-style file explorer with folders (works with // folder naming).',
-    tags: ['theme', 'new', 'MistWarp'],
+    name: "Sprite File List View",
+    description: "Transforms the sprite list into a VSCode-style file explorer with folders (works with // folder naming).",
+    tags: ["editor", "sprites", "MistWarp"],
     "credits": [
     {
       "name": "Mistium",
@@ -14,14 +14,14 @@ const manifest = {
   ],
     userscripts: [
         {
-            url: 'userscript.js'
-        }
+            url: "userscript.js",
+        },
     ],
     userstyles: [
         {
-            url: 'style.css'
-        }
+            url: "style.css",
+        },
     ],
-    enabledByDefault: false
+    enabledByDefault: false,
 };
 export default manifest;
