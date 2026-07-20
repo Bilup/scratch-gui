@@ -781,16 +781,13 @@ class AddonWindow {
         this.bringToFront();
         
         if (animationsEnabled) {
+            this.element.style.transition = 'none';
             this.element.style.opacity = '0';
             this.element.style.transform = 'scale(0.95) translateY(-8px)';
-            this.element.style.transition = 'none';
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    this.element.style.transition = 'opacity 0.2s ease-out, transform 0.2s ease-out, left 0.3s ease-out, top 0.3s ease-out, width 0.3s ease-out, height 0.3s ease-out, border-radius 0.3s ease-out';
-                    this.element.style.opacity = '1';
-                    this.element.style.transform = 'scale(1) translateY(0)';
-                });
-            });
+            this.element.offsetHeight;
+            this.element.style.transition = 'opacity 0.2s ease-out, transform 0.2s ease-out, left 0.3s ease-out, top 0.3s ease-out, width 0.3s ease-out, height 0.3s ease-out, border-radius 0.3s ease-out';
+            this.element.style.opacity = '1';
+            this.element.style.transform = 'scale(1) translateY(0)';
         } else {
             this.element.style.opacity = '1';
             this.element.style.transform = 'scale(1) translateY(0)';
@@ -880,8 +877,8 @@ class AddonWindow {
                 this.width = this.savedState.width;
                 this.height = this.savedState.height;
                 
-                this.element.style.transition = 'left 0.3s ease-out, top 0.3s ease-out, ' +
-                    'width 0.3s ease-out, height 0.3s ease-out, border-radius 0.3s ease-out';
+                this.element.style.transition = 'opacity 0.2s ease-out, transform 0.2s ease-out, ' +
+                    'left 0.3s ease-out, top 0.3s ease-out, width 0.3s ease-out, height 0.3s ease-out, border-radius 0.3s ease-out';
                 this.element.style.left = `${this.x}px`;
                 this.element.style.top = `${this.y}px`;
                 this.element.style.width = `${this.width}px`;
@@ -916,8 +913,8 @@ class AddonWindow {
         this.width = window.innerWidth;
         this.height = window.innerHeight;
         
-        this.element.style.transition = 'left 0.3s ease-out, top 0.3s ease-out, ' +
-            'width 0.3s ease-out, height 0.3s ease-out, border-radius 0.3s ease-out';
+        this.element.style.transition = 'opacity 0.2s ease-out, transform 0.2s ease-out, ' +
+            'left 0.3s ease-out, top 0.3s ease-out, width 0.3s ease-out, height 0.3s ease-out, border-radius 0.3s ease-out';
         this.element.style.left = '0px';
         this.element.style.top = '0px';
         this.element.style.width = '100vw';

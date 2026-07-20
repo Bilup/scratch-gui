@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import omit from 'lodash.omit';
 import PropTypes from 'prop-types';
-import React, {useCallback, useEffect, useRef, useState, useMemo} from 'react';
+import React, {useCallback, useEffect, useLayoutEffect, useRef, useState, useMemo} from 'react';
 import {defineMessages, FormattedMessage, injectIntl, intlShape} from 'react-intl';
 import {connect} from 'react-redux';
 import MediaQuery from 'react-responsive';
@@ -146,9 +146,14 @@ const GUIComponent = props => {
                 setWindowAnimation(e.newValue !== 'false');
             }
         };
+        const handleAnimationToggle = (e) => {
+            setWindowAnimation(e.detail.enabled);
+        };
         window.addEventListener('storage', handleStorageChange);
+        window.addEventListener('mw:window-animation-change', handleAnimationToggle);
         return () => {
             window.removeEventListener('storage', handleStorageChange);
+            window.removeEventListener('mw:window-animation-change', handleAnimationToggle);
         };
     }, []);
 
@@ -202,6 +207,7 @@ const GUIComponent = props => {
     const syncingModeRef = useRef(false);
     const prevStageSizeModeRef = useRef(null);
     const lastSyncedWidthRef = useRef(null);
+    const skipNextMeasureRef = useRef(false);
     const [stagePanelWidth, setStagePanelWidth] = useState(null);
     const [stageContainerWidth, setStageContainerWidth] = useState(null);
 
@@ -222,6 +228,10 @@ const GUIComponent = props => {
     const measureStageContainerWidth = useCallback(() => {
         if (!enableStageResize) return;
         if (measureRafRef.current) return;
+        if (skipNextMeasureRef.current) {
+            skipNextMeasureRef.current = false;
+            return;
+        }
         
         measureRafRef.current = requestAnimationFrame(() => {
             measureRafRef.current = null;
@@ -269,6 +279,7 @@ const GUIComponent = props => {
     }, [stageContainerWidth, enableStageResize]);
 
     const setStageWidth = useCallback(contentWidth => {
+        skipNextMeasureRef.current = true;
         if (contentWidth === null) {
             setStagePanelWidth(null);
             setStageContainerWidth(null);
@@ -302,7 +313,7 @@ const GUIComponent = props => {
         setStageContainerWidth(contentWidth + 2);
     }, [getStageBorderExtraWidth]);
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (!enableStageResize) return;
         if (prevStageSizeModeRef.current === null) {
             prevStageSizeModeRef.current = props.stageSizeRequestId;
