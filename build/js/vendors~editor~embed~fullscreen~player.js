@@ -28230,698 +28230,6 @@ return paper;
 
 /***/ }),
 
-/***/ "./node_modules/@turbowarp/sb3fix/src/sb3fix.js":
-/*!******************************************************!*\
-  !*** ./node_modules/@turbowarp/sb3fix/src/sb3fix.js ***!
-  \******************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-/*!
-sb3fix - https://github.com/TurboWarp/sb3fix
-
-Copyright (C) 2023-2025 Thomas Weber
-
-This Source Code Form is subject to the terms of the Mozilla Public
-License, v. 2.0. If a copy of the MPL was not distributed with this
-file, You can obtain one at https://mozilla.org/MPL/2.0/.
-*/
-
-/**
- * @typedef {'scratch'|'turbowarp'} Platform
- */
-
-/**
- * @typedef Options
- * @property {Platform} [platform] Defaults to 'scratch'.
- * @property {(message: string) => void} [logCallback]
- */
-
-/**
- * @param {unknown} obj
- * @returns {obj is object}
- */
-const isObject = (obj) => !!obj && typeof obj === 'object';
-
-/**
- * @typedef PlatformInfo
- * @property {boolean} [allowsNonScalarVariables]
- */
-
-/**
- * @type {Record<Platform, PlatformInfo>}
- */
-const platforms = {
-  scratch: {},
-  turbowarp: {
-    allowsNonScalarVariables: true
-  }
-};
-
-/**
- * @param {Options} options
- * @returns {PlatformInfo}
- */
-const getPlatform = (options) => {
-  if (options && Object.prototype.hasOwnProperty.call(options, 'platform')) {
-    if (Object.prototype.hasOwnProperty.call(platforms, options.platform)) {
-      return platforms[options.platform];
-    }
-    throw new Error(`Unknown platform: ${options.platform}`);
-  }
-  return platforms.scratch;
-};
-
-const BUILTIN_EXTENSIONS = [
-  'control',
-  'data',
-  'event',
-  'looks',
-  'motion',
-  'operators',
-  'procedures',
-  'argument', // "argument_reporter_boolean" is technically not an extension but we should list here anyways
-  'sensing',
-  'sound',
-  'pen',
-  'wedo2',
-  'music',
-  'microbit',
-  'text2speech',
-  'translate',
-  'videoSensing',
-  'ev3',
-  'makeymakey',
-  'boost',
-  'gdxfor'
-  // intentionally not listing TurboWarp's 'tw' extension here.
-];
-
-/**
- * @param {object} project Parsed project.json.
- * @returns {Set<string>} Set of valid extensions, including the primitive ones, that the project loads.
- */
-const getKnownExtensions = (project) => {
-  const extensions = project.extensions;
-  if (!Array.isArray(extensions)) {
-    throw new Error('extensions is not an array');
-  }
-  for (let i = 0; i < extensions.length; i++) {
-    if (typeof extensions[i] !== 'string') {
-      throw new Error(`extension ${i} is not a string`);
-    }
-  }
-  return new Set([
-    ...BUILTIN_EXTENSIONS,
-    ...extensions
-  ]);
-};
-
-/**
- * @param {string|object} data project.json as a string or as a parsed object already. If object provided, it will be modified in-place.
- * @param {Options} [options]
- * @returns {object} Fixed project.json object. If the `data` argument was an object, this will point to the same object.
- */
-const fixJSON = (data, options = {}) => {
-  const platform = getPlatform(options);
-
-  /**
-   * @param {string} message
-   */
-  const log = (message) => {
-    if (options.logCallback) {
-      options.logCallback(message);
-    }
-  };
-
-  /**
-   * @param {string} id
-   * @param {unknown} variable
-   */
-  const fixVariableInPlace = (id, variable) => {
-    if (!Array.isArray(variable)) {
-      throw new Error(`variable object ${id} is not an array`);
-    }
-
-    const name = variable[0];
-    if (typeof name !== 'string') {
-      log(`variable or list ${id} name was not a string`);
-      variable[0] = String(variable[0]);
-    }
-
-    if (!platform.allowsNonScalarVariables) {
-      const value = variable[1];
-      if (typeof value !== 'number' && typeof value !== 'string' && typeof value !== 'boolean') {
-        log(`variable ${id} value was not a Scratch-compatible value`);
-        variable[1] = String(variable[1]);
-      }
-    }
-  };
-
-  /**
-   * @param {string} id
-   * @param {unknown} list
-   */
-  const fixListInPlace = (id, list) => {
-    if (!Array.isArray(list)) {
-      throw new Error(`list object ${id} is not an array`);
-    }
-
-    const name = list[0];
-    if (typeof name !== 'string') {
-      log(`list ${id} name was not a string`);
-      list[0] = String(list[0]);
-    }
-
-    if (!Array.isArray(list[1])) {
-      log(`list ${id} value was not an array`);
-      list[1] = [];
-    }
-
-    const listValue = list[1];
-    for (let i = 0; i < listValue.length; i++) {
-      const value = listValue[i];
-      if (typeof value !== 'number' && typeof value !== 'string' && typeof value !== 'boolean') {
-        log(`list ${id} index ${i} was not a Scratch-compatible value`);
-        listValue[i] = String(value);
-      }
-    }
-  };
-
-  /**
-   * @param {unknown[]} native
-   */
-  const fixCompressedNativeInPlace = (native) => {
-    if (!Array.isArray(native)) {
-      throw new Error('native is not an array');
-    }
-
-    const type = native[0];
-    if (typeof type !== 'number') {
-      throw new Error('native type is not a number');
-    }
-
-    switch (type) {
-      // Number primitive: [4, string|number]
-      // Positive number primitive: [5, string|number]
-      // Whole number primitive: [6, string|number]
-      // Integer primitive: [7, string|number]
-      // Angle primitive: [8, string|number]
-      case 4:
-      case 5:
-      case 6:
-      case 7:
-      case 8: {
-        if (native.length !== 2) {
-          throw new Error(`Number native is of unexpected length: ${native.length}`);
-        }
-        const value = native[1];
-        if (typeof value !== 'string' && typeof value !== 'number') {
-          log('number native had invalid value');
-          native[1] = String(value);
-        }
-        break;
-      }
-
-      // Color: [9, hex color]
-      case 9: {
-        if (native.length !== 2) {
-          throw new Error(`Color native is of unexpected length: ${native.length}`);
-        }
-        const color = native[1];
-        if (typeof color !== 'string' || !/^#[a-f0-9]{6}$/i.test(color)) {
-          log('color native had invalid value');
-          native[1] = '#000000';
-        }
-        break;
-      }
-
-      // Text: [10, string|number]
-      case 10: {
-        if (native.length !== 2) {
-          throw new Error(`Text native is of unexpected length: ${native.length}`);
-        }
-        const value = native[1];
-        if (typeof value !== 'string' && typeof value !== 'number') {
-          log('text native had invalid value');
-          native[1] = String(value);
-        }
-        break;
-      }
-
-      // Variable: [12, variable name, variable id, x?, y?]
-      // List: [13, list name, list id, x?, y?]
-      // x and y only present if the native is a top-level block
-      case 12:
-      case 13: {
-        if (native.length !== 3 && native.length !== 5) {
-          throw new Error(`Variable or list native is of unexpected length: ${native.length}`);
-        }
-        const name = native[1];
-        if (typeof name !== 'string') {
-          log(`variable or list native name was not a string`);
-          native[1] = String(native[1]);
-        }
-        break;
-      }
-    }
-  };
-
-  /**
-   * @param {string} id
-   * @param {unknown} block
-   */
-  const fixBlockInPlace = (id, block) => {
-    if (Array.isArray(block)) {
-      fixCompressedNativeInPlace(block);
-    } else if (isObject(block)) {
-      const inputs = block.inputs;
-      if (!isObject(inputs)) {
-        throw new Error('inputs is not an object');
-      }
-      for (const [inputName, input] of Object.entries(inputs)) {
-        if (!Array.isArray(input)) {
-          throw new Error(`block ${id} input ${inputName} is not an array`);
-        }
-        for (let i = 1; i < input.length; i++) {
-          if (Array.isArray(input[i])) {
-            fixCompressedNativeInPlace(input[i]);
-          }
-        }
-      }
-
-      const fields = block.fields;
-      if (!isObject(fields)) {
-        throw new Error('fields is not an object');
-      }
-      for (const [fieldName, field] of Object.entries(fields)) {
-        if (!Array.isArray(field)) {
-          throw new Error(`block ${id} field ${fieldName} is not an array`);
-        }
-      }
-    } else {
-      throw new Error(`block ${id} is not an object`);
-    }
-  };
-
-  /**
-   * @param {string} id
-   * @param {unknown} comment
-   */
-  const fixCommentInPlace = (id, comment) => {
-    if (!isObject(comment)) {
-      throw new Error('comment is not an object');
-    }
-
-    if (typeof comment.text !== 'string') {
-      throw new Error('comment text is not a string');
-    }
-
-    // Scratch requires comments to not exceed 8000 characters.
-    // We'll store the excess in .extraText so the text won't be truncated if opened in TurboWarp.
-    const MAX_LENGTH = 8000;
-    if (comment.text.length > MAX_LENGTH) {
-      log(`comment ${id} had length ${comment.text.length}`);
-      comment.extraText = comment.text.substring(MAX_LENGTH);
-      comment.text = comment.text.substring(0, MAX_LENGTH);
-    }
-  };
-
-  /**
-   * @param {unknown} target
-   */
-  const fixTargetInPlace = (target) => {
-    const costumes = target.costumes;
-    if (!Array.isArray(costumes)) {
-      throw new Error('costumes is not an array');
-    }
-    for (let i = costumes.length - 1; i >= 0; i--) {
-      const costume = costumes[i];
-      if (!isObject(costume)) {
-        throw new Error(`costume ${i} is not an object`);
-      }
-
-      if (typeof costume.name !== 'string') {
-        log(`costume ${i} name was not a string`);
-        costume.name = String(costume.name);
-      }
-
-      // https://github.com/scratchfoundation/scratch-parser/blob/665f05d739a202d565a4af70a201909393d456b2/lib/sb3_definitions.json#L51
-      const knownCostumeFormats = ['png', 'svg', 'jpeg', 'jpg', 'bmp', 'gif'];
-      if (!knownCostumeFormats.includes(costume.dataFormat)) {
-        if (typeof costume.md5ext === 'string' && costume.md5ext.endsWith('.svg')) {
-          log(`costume ${i} is vector, had invalid dataFormat ${costume.dataFormat}`);
-          costume.dataFormat = 'svg';
-        } else {
-          log(`costume ${i} is bitmap, had invalid dataFormat ${costume.dataFormat}`);
-          // dataFormat is only really used to detect vector or bitmap, so we don't
-          // need to set this to the real format
-          costume.dataFormat = 'png';
-        }
-      }
-
-      if (!('assetId' in costume)) {
-        log(`costume ${i} was missing assetId, deleted`);
-        costumes.splice(i, 1);
-      }
-    }
-    if (costumes.length === 0) {
-      log(`costumes was empty, adding empty costume`);
-      costumes.push({
-        // Empty SVG costume
-        name: 'costume1',
-        bitmapResolution: 1,
-        dataFormat: 'svg',
-        assetId: 'cd21514d0531fdffb22204e0ec5ed84a',
-        md5ext: 'cd21514d0531fdffb22204e0ec5ed84a.svg',
-        rotationCenterX: 0,
-        rotationCenterY: 0
-      });
-    }
-
-    const sounds = target.sounds;
-    if (!Array.isArray(sounds)) {
-      throw new Error('sounds is not an array');
-    }
-    for (let i = sounds.length - 1; i >= 0; i--) {
-      const sound = sounds[i];
-      if (!isObject(sound)) {
-        throw new Error(`sound ${i} is not an object`);
-      }
-
-      // https://github.com/scratchfoundation/scratch-parser/blob/665f05d739a202d565a4af70a201909393d456b2/lib/sb3_definitions.json#L81
-      const knownSoundFormats = ['wav', 'wave', 'mp3'];
-      if (!knownSoundFormats.includes(sound.dataFormat)) {
-        log(`sound ${i} had invalid dataFormat ${sound.dataFormat}`);
-        sound.dataFormat = 'mp3';
-      }
-
-      if (typeof sound.name !== 'string') {
-        log(`sound ${i} name was not a string`);
-        sound.name = String(sound.name);
-      }
-
-      if (!('assetId' in sound)) {
-        log(`sound ${i} was missing assetId, deleted`);
-        sounds.splice(i, 1);
-      }
-    }
-
-    const blocks = target.blocks;
-    if (!isObject(blocks)) {
-      throw new Error('blocks is not an object');
-    }
-    for (const [blockId, block] of Object.entries(blocks)) {
-      fixBlockInPlace(blockId, block);
-    }
-
-    // Comments are not required
-    const comments = target.comments;
-    if (comments) {
-      for (const [commentId, comment] of Object.entries(comments)) {
-        fixCommentInPlace(commentId, comment);
-      }
-    }
-
-    const variables = target.variables;
-    if (!isObject(variables)) {
-      throw new Error('variables is not an object');
-    }
-    for (const [variableId, variable] of Object.entries(variables)) {
-      fixVariableInPlace(variableId, variable);
-    }
-
-    const lists = target.lists;
-    if (!isObject(lists)) {
-      throw new Error('lists is not an object');
-    }
-    for (const [listId, list] of Object.entries(lists)) {
-      fixListInPlace(listId, list);
-    }
-
-    if (target.isStage) {
-      if (target.layerOrder !== 0) {
-        log('stage had invalid layerOrder');
-        target.layerOrder = 0;
-      }
-    } else {
-      if (target.layerOrder < 1) {
-        log('sprite had invalid layerOrder');
-        target.layerOrder = 1;
-      }
-    }
-
-    const ROTATION_STYLES = [
-      'all around',
-      'don\'t rotate',
-      'left-right'
-    ];
-    if (!target.isStage && !ROTATION_STYLES.includes(target.rotationStyle)) {
-      log(`sprite had invalid rotation style ${target.rotationStyle}`);
-      target.rotationStyle = 'all around';
-    }
-
-    if (!target.isStage) {
-      const x = target.x;
-      if (typeof x !== 'number') {
-        log(`target x was ${typeof x}: ${x}`);
-        target.x = +x || 0;
-      }
-  
-      const y = target.y;
-      if (typeof y !== 'number') {
-        log(`target y was ${typeof y}: ${y}`);
-        target.y = +y || 0;
-      }
-    }
-  };
-
-  /**
-   * @param {unknown} stage
-   */
-  const fixStageInPlace = (stage) => {
-    // stage's name must match exactly
-    if (stage.name !== 'Stage') {
-      log(`stage had wrong name: ${stage.name}`);
-      stage.name = 'Stage';
-    }
-
-    // In vanilla Scratch, "turn video < ... >" with anything that isn't the dropdown allows videoState
-    // to be set to something that isn't one of the expected strings. We'll play it safe and default to
-    // off.
-    const VIDEO_STATES = [
-      'on',
-      'off',
-      'on-flipped'
-    ];
-    if (Object.prototype.hasOwnProperty.call(stage, 'videoState') && !VIDEO_STATES.includes(stage.videoState)) {
-      log(`stage had invalid videoState: ${stage.videoState}`);
-      stage.videoState = 'off';
-    }
-  };
-
-  /**
-   * @param {unknown} project
-   */
-  const fixProjectInPlace = (project) => {
-    if ('objName' in project) {
-      throw new Error('Scratch 2 (sb2) projects not supported');
-    }
-
-    if (!isObject(project)) {
-      throw new Error('Root JSON is not an object');
-    }
-
-    if ('name' in project) {
-      // Not a project. Just a sprite.
-      log('project is a sprite');
-      fixTargetInPlace(project);
-      return;
-    }
-
-    const targets = project.targets;
-    if (!Array.isArray(targets)) {
-      throw new Error('targets is not an array');
-    }
-    if (targets.length < 1) {
-      throw new Error('targets is empty');
-    }
-    for (let i = 0; i < targets.length; i++) {
-      log(`checking target ${i}`);
-      const target = targets[i];
-      if (!isObject(target)) {
-        throw new Error('target is not an object');
-      }
-      fixTargetInPlace(target);
-    }
-
-    const allStages = targets.filter((target) => target.isStage);
-    if (allStages.length === 0) {
-      log('stage is missing; adding an empty one');
-      targets.unshift({
-        isStage: true,
-        name: 'Stage',
-        variables: {},
-        lists: {},
-        broadcasts: {},
-        blocks: {},
-        currentCostume: 0,
-        costumes: [
-          {
-            name: 'backdrop1',
-            dataFormat: 'svg',
-            assetId: 'cd21514d0531fdffb22204e0ec5ed84a',
-            md5ext: 'cd21514d0531fdffb22204e0ec5ed84a.svg',
-            rotationCenterX: 240,
-            rotationCenterY: 180
-          }
-        ],
-        sounds: [],
-        volume: 100,
-        layerOrder: 0,
-        tempo: 60,
-        videoTransparency: 50,
-        videoState: "on",
-        textToSpeechLanguage: null
-      });
-    } else {
-      // We will accept the first stage in targets as the real stage
-      const firstStageIndex = targets.findIndex((target) => target.isStage);
-
-      // Stage must be the first target
-      if (firstStageIndex !== 0) {
-        log(`stage was at wrong index: ${firstStageIndex}`);
-        const stage = targets[firstStageIndex];
-        targets.splice(firstStageIndex, 1);
-        targets.unshift(stage);
-      }
-
-      // Remove all the other stages
-      for (let i = targets.length - 1; i > 0; i--) {
-        if (targets[i].isStage) {
-          log(`removing extra stage at index ${i}`);
-          targets.splice(i, 1);
-        }
-      }
-    }
-
-    // Above checks ensure this invariant holds
-    const stage = targets[0];
-    fixStageInPlace(stage);
-
-    const knownExtensions = getKnownExtensions(project);
-    const monitors = project.monitors;
-    if (!Array.isArray(monitors)) {
-      throw new Error('monitors is not an array');
-    }
-    project.monitors = project.monitors.filter((monitor, i) => {
-      const opcode = monitor.opcode;
-      if (typeof opcode !== 'string') {
-        throw new Error(`monitor ${i} opcode is not a string`);
-      }
-      const extension = opcode.split('_')[0];
-      if (!knownExtensions.has(extension)) {
-        log(`removed monitor ${i} from unknown extension ${extension}`);
-        return false;
-      }
-      return true;
-    });
-  };
-
-  if (typeof data === 'object' && data !== null) {
-    // Already parsed.
-    fixProjectInPlace(data);
-    return data;
-  } else if (typeof data === 'string') {
-    // Need to parse.
-    const parsed = JSON.parse(data);
-    fixProjectInPlace(parsed);
-    return parsed;
-  } else {
-    throw new Error('Unable to tell how to interpret input as JSON');
-  }
-};
-
-/**
- * @param {ArrayBuffer|Uint8Array|Blob} data A compressed .sb3 file.
- * @param {Options} [options]
- * @returns {Promise<Uint8Array>} A promise that resolves to a fixed compressed .sb3 file.
- */
-const fixZip = async (data, options = {}) => {
-  /**
-   * @param {string} message
-   */
-  const log = (message) => {
-    if (options.logCallback) {
-      options.logCallback(message);
-    }
-  };
-
-  // JSZip is not a small library, so we'll load it somewhat lazily.
-  const JSZip = __webpack_require__(/*! @turbowarp/jszip */ "./node_modules/@turbowarp/jszip/dist/jszip.min.js");
-
-  let zip = await JSZip.loadAsync(data, {
-    recoverCorrupted: true,
-    onCorruptCentralDirectory: (error) => {
-      log(`zip had corrupt central directory: ${error}`);
-    },
-    onUnrecoverableFileEntry: (error) => {
-      log(`zip had unrecoverable file entry: ${error}`);
-    }
-  });
-
-  /** @type {Array<[string, import("@turbowarp/jszip").JSZipObject]>} */
-  const zipFiles = [];
-  zip.forEach((relativePath, file) => {
-    zipFiles.push([relativePath, file]);
-  });
-
-  // Remove any unreadable files from the zip. This can notably happen if the compressed data in the zip was
-  // corrupted, which would make the uncompressed data size field not match. Scratch/JSZip will refuse to
-  // keep loading the project if that happens. If we remove the asset, at least there's a chance it can now
-  // be downloaded from the asset server instead.
-  for (const [relativePath, file] of zipFiles) {
-    try {
-      await file.async('uint8array');
-    } catch (error) {
-      log(`zip had unreadable file ${relativePath}: ${error}`);
-      zip.remove(relativePath);
-    }
-  }
-
-  // json is not guaranteed to be stored in the root.
-  const jsonFile = zip.file(/(?:project|sprite)\.json/)[0];
-  if (!jsonFile) {
-    throw new Error('Could not find project.json or sprite.json.');
-  }
-
-  const jsonText = await jsonFile.async('text');
-  const fixedJSON = fixJSON(jsonText, options);
-  const newProjectJSONText = JSON.stringify(fixedJSON);
-  zip.file(jsonFile.name, newProjectJSONText);
-
-  // By default, JSZip will use the current date as the modified timestamp, which would generated zips non-deterministic.
-  const date = new Date('Thu, 14 Mar 2024 00:00:00 GMT');
-  for (const file of Object.values(zip.files)) {
-    file.date = date;
-  }
-
-  const compressed = await zip.generateAsync({
-    type: 'uint8array',
-    compression: 'DEFLATE'
-  });
-  return compressed;
-};
-
-module.exports = {
-  fixJSON,
-  fixZip,
-  platforms
-};
-
-
-/***/ }),
-
 /***/ "./node_modules/@turbowarp/startaudiocontext/index.js":
 /*!************************************************************!*\
   !*** ./node_modules/@turbowarp/startaudiocontext/index.js ***!
@@ -66711,9 +66019,14 @@ const type=mode2type$1(mode);const path=buffer.slice(space+1,nullchar).toString(
 // "." and ".." (which resolve outside the working directory), and ".git" (which git
 // disallows as a path component). Checks mirror git's is_ntfs_dotgit() and
 // is_hfs_dotgit(): case-insensitive, trailing dots/spaces stripped (NTFS),
-// NTFS 8.3 short name aliases (git~1..git~9), and HFS+ ignorable Unicode
-// characters stripped (zero-width joiners, directional marks, BOM, etc.).
-const hfsClean=path.replace(/[\u200C-\u200F\u202A-\u202E\u206A-\u206F\uFEFF]/g,'');const normalized=hfsClean.toLowerCase().replace(/[. ]+$/,'');if(path.includes('\\')||path.includes('/')||hfsClean==='.'||hfsClean==='..'||normalized==='.git'||/^\.?git~[1-9]$/.test(normalized)){throw new UnsafeFilepathError(path);}const oid=buffer.slice(nullchar+1,nullchar+21).toString('hex');cursor=nullchar+21;_entries.push({mode,path,oid,type});}return _entries;}function limitModeToAllowed(mode){if(typeof mode==='number'){mode=mode.toString(8);}// tree
+// NTFS 8.3 short name aliases (git~1..git~9), NTFS Alternate Data Streams, and
+// HFS+ ignorable Unicode characters stripped (zero-width joiners, directional
+// marks, BOM, etc.).
+const hfsClean=path.replace(/[\u200C-\u200F\u202A-\u202E\u206A-\u206F\uFEFF]/g,'');// NTFS Alternate Data Streams are referenced as `<name>:<stream>:<type>`, and a
+// directory's default stream lets `.git::$INDEX_ALLOCATION` resolve to the `.git`
+// directory itself. git forbids *any* ADS, so only the portion before the first
+// colon names the actual entry we normalize and check.
+const ntfsClean=hfsClean.split(':')[0];const normalized=ntfsClean.toLowerCase().replace(/[. ]+$/,'');if(path.includes('\\')||path.includes('/')||hfsClean==='.'||hfsClean==='..'||normalized==='.git'||/^\.?git~[1-9]$/.test(normalized)){throw new UnsafeFilepathError(path);}const oid=buffer.slice(nullchar+1,nullchar+21).toString('hex');cursor=nullchar+21;_entries.push({mode,path,oid,type});}return _entries;}function limitModeToAllowed(mode){if(typeof mode==='number'){mode=mode.toString(8);}// tree
 if(mode.match(/^0?4.*/))return'040000';// Directory
 if(mode.match(/^1006.*/))return'100644';// Regular non-executable file
 if(mode.match(/^1007.*/))return'100755';// Regular executable file
@@ -67559,18 +66872,19 @@ await GitRefManager.writeSymbolicRef({fs,gitdir,ref:'HEAD',value:fullref});}}// 
  * await git.branch({ fs, dir: '/tutorial', ref: 'develop' })
  * console.log('done')
  *
- */async function branch(_ref84){let fs=_ref84.fs,dir=_ref84.dir,_ref84$gitdir=_ref84.gitdir,gitdir=_ref84$gitdir===void 0?join(dir,'.git'):_ref84$gitdir,ref=_ref84.ref,object=_ref84.object,_ref84$checkout=_ref84.checkout,checkout=_ref84$checkout===void 0?false:_ref84$checkout,_ref84$force=_ref84.force,force=_ref84$force===void 0?false:_ref84$force;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('ref',ref);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _branch({fs:fsp,gitdir:updatedGitdir,ref,object,checkout,force});}catch(err){err.caller='git.branch';throw err;}}const worthWalking=(filepath,root)=>{if(filepath==='.'||root==null||root.length===0||root==='.'){return true;}if(root.length>=filepath.length){return root.startsWith(filepath);}else{return filepath.startsWith(root);}};// @ts-check
-/**
- * Throw if any leading directory component of `fullpath` (relative to `dir`) is a symbolic
- * link. git does not follow symlinks in the leading path when writing working-tree files;
- * matching that avoids writing through a symlinked parent into a location outside `dir`.
+ */async function branch(_ref84){let fs=_ref84.fs,dir=_ref84.dir,_ref84$gitdir=_ref84.gitdir,gitdir=_ref84$gitdir===void 0?join(dir,'.git'):_ref84$gitdir,ref=_ref84.ref,object=_ref84.object,_ref84$checkout=_ref84.checkout,checkout=_ref84$checkout===void 0?false:_ref84$checkout,_ref84$force=_ref84.force,force=_ref84$force===void 0?false:_ref84$force;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('ref',ref);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _branch({fs:fsp,gitdir:updatedGitdir,ref,object,checkout,force});}catch(err){err.caller='git.branch';throw err;}}/**
+ * Refuse to materialize a working-tree entry whose parent path traverses a
+ * symbolic link. A leading component that is a symlink could otherwise redirect
+ * a write or mkdir outside the working tree. git applies the same check: it does
+ * not follow symlinks in the leading path when writing working-tree files.
  *
  * @param {import('../models/FileSystem.js').FileSystem} fs
  * @param {string} dir
  * @param {string} fullpath
  */async function assertNoSymlinkInLeadingPath(fs,dir,fullpath){const parts=fullpath.split('/');parts.pop();// the final segment is the entry being written, not a leading dir
 let current=dir;for(const part of parts){if(part===''||part==='.')continue;current="".concat(current,"/").concat(part);const stats=await fs.lstat(current);// lstat returns null when the path doesn't exist yet (nothing to traverse).
-if(stats&&stats.isSymbolicLink()){throw new UnsafeFilepathError(fullpath);}}}/**
+if(stats&&stats.isSymbolicLink()){throw new UnsafeFilepathError(fullpath);}}}const worthWalking=(filepath,root)=>{if(filepath==='.'||root==null||root.length===0||root==='.'){return true;}if(root.length>=filepath.length){return root.startsWith(filepath);}else{return filepath.startsWith(root);}};// @ts-check
+/**
  * @param {object} args
  * @param {import('../models/FileSystem.js').FileSystem} args.fs
  * @param {any} args.cache
@@ -67765,7 +67079,7 @@ throw new MergeNotSupportedError();}}},/**
 // if the parent was deleted, the children have to go
 if(!parent)return;// automatically delete directories if they have been emptied
 // except for the root directory
-if(parent&&parent.type==='tree'&&entries.length===0&&parent.path!=='.')return;if(entries.length>0||parent.path==='.'&&entries.length===0){const tree=new GitTree(entries);const object=tree.toObject();const oid=await _writeObject({fs,gitdir,type:'tree',object,dryRun});parent.oid=oid;}return parent;}});if(unmergedFiles.length!==0){if(dir&&!abortOnConflict){await _walk({fs,cache,dir,gitdir,trees:[TREE({ref:results.oid})],map:async function map(filepath,_ref126){let _ref127=_slicedToArray(_ref126,1),entry=_ref127[0];const path="".concat(dir,"/").concat(filepath);if((await entry.type())==='blob'){const mode=await entry.mode();const content=new TextDecoder().decode(await entry.content());await fs.write(path,content,{mode});}return true;}});}return new MergeConflictError(unmergedFiles,bothModified,deleteByUs,deleteByTheirs);}return results.oid;}/**
+if(parent&&parent.type==='tree'&&entries.length===0&&parent.path!=='.')return;if(entries.length>0||parent.path==='.'&&entries.length===0){const tree=new GitTree(entries);const object=tree.toObject();const oid=await _writeObject({fs,gitdir,type:'tree',object,dryRun});parent.oid=oid;}return parent;}});if(unmergedFiles.length!==0){if(dir&&!abortOnConflict){await _walk({fs,cache,dir,gitdir,trees:[TREE({ref:results.oid})],map:async function map(filepath,_ref126){let _ref127=_slicedToArray(_ref126,1),entry=_ref127[0];const path="".concat(dir,"/").concat(filepath);if((await entry.type())==='blob'){const mode=await entry.mode();const content=await entry.content();await fs.write(path,content,{mode});}return true;}});}return new MergeConflictError(unmergedFiles,bothModified,deleteByUs,deleteByTheirs);}return results.oid;}/**
  *
  * @param {Object} args
  * @param {import('../models/FileSystem').FileSystem} args.fs
@@ -67808,8 +67122,15 @@ const ops=await _walk({fs,cache:{},dir,gitdir,trees:[TREE({ref:parentCommit}),TR
 if(!stash&&parent){const method=type==='tree'?'rmdir':'rm';if(type==='tree')dirRemoved.push(filepath);if(type==='blob'&&wasStaged)stageUpdated.push({filepath,oid:await parent.oid()});// stats is undefined, will stage the deletion with index.insert
 return{method,filepath};}const oid=await stash.oid();if(!parent||(await parent.oid())!==oid){// only apply changes if changed from the parent commit or doesn't exist in the parent commit
 if(type==='tree'){return{method:'mkdir',filepath};}else{if(wasStaged)stageUpdated.push({filepath,oid,stats:await fs.lstat(join(dir,filepath))});return{method:'write',filepath,oid};}}}});// apply the changes to work dir
-await acquireLock$1({fs,gitdir,dirRemoved,ops},async()=>{for(const op of ops){const currentFilepath=join(dir,op.filepath);switch(op.method){case'rmdir':await fs.rmdir(currentFilepath);break;case'mkdir':await fs.mkdir(currentFilepath);break;case'rm':await fs.rm(currentFilepath);break;case'write':// only writes if file is not in the removedDirs
-if(!dirRemoved.some(removedDir=>currentFilepath.startsWith(removedDir))){const _await$_readObject9=await _readObject({fs,cache:{},gitdir,oid:op.oid}),object=_await$_readObject9.object;// just like checkout, since mode only applicable to create, not update, delete first
+await acquireLock$1({fs,gitdir,dirRemoved,ops},async()=>{for(const op of ops){const currentFilepath=join(dir,op.filepath);switch(op.method){case'rmdir':await fs.rmdir(currentFilepath);break;case'mkdir':// Don't mkdir through a symlinked leading path: a parent component that
+// is a symlink could otherwise redirect the directory creation outside
+// the working tree. git applies the same check (it does not follow
+// symlinks here) — see checkout.
+await assertNoSymlinkInLeadingPath(fs,dir,op.filepath);await fs.mkdir(currentFilepath);break;case'rm':await fs.rm(currentFilepath);break;case'write':// only writes if file is not in the removedDirs
+if(!dirRemoved.some(removedDir=>currentFilepath.startsWith(removedDir))){// Don't write through a symlinked leading path (see checkout): a
+// parent component that is a symlink could redirect the write to a
+// location outside the working tree.
+await assertNoSymlinkInLeadingPath(fs,dir,op.filepath);const _await$_readObject9=await _readObject({fs,cache:{},gitdir,oid:op.oid}),object=_await$_readObject9.object;// just like checkout, since mode only applicable to create, not update, delete first
 if(await fs.exists(currentFilepath)){await fs.rm(currentFilepath);}await fs.write(currentFilepath,object);// only handles regular files for now
 }break;}}});// update the stage
 await GitIndexManager.acquire({fs,gitdir,cache:{}},async index=>{stageUpdated.forEach(_ref136=>{let filepath=_ref136.filepath,stats=_ref136.stats,oid=_ref136.oid;index.insert({filepath,stats,oid});});});}// @ts-check
@@ -68093,7 +67414,7 @@ const getExternalRefDelta=oid=>_readObject({fs,cache,gitdir,oid});// Look for it
 let result=await hasObjectLoose({fs,gitdir,oid});// Check to see if it's in a packfile.
 if(!result){result=await hasObjectPacked({fs,cache,gitdir,oid,getExternalRefDelta});}// Finally
 return result;}function addCredentialUsername(_ref151){let config=_ref151.config,onAuth=_ref151.onAuth;if(!onAuth)return onAuth;return async(url,auth)=>{const username=auth.username||(await config.get("credential.".concat(url,".username")));return onAuth(url,username?_objectSpread(_objectSpread({},auth),{},{username}):auth);};}// TODO: make a function that just returns obCount. then emptyPackfile = () => sizePack(pack) === 0
-function emptyPackfile(pack){const pheader='5041434b';const version='00000002';const obCount='00000000';const header=pheader+version+obCount;return pack.slice(0,12).toString('hex')===header;}function filterCapabilities(server,client){const serverNames=server.map(cap=>cap.split('=',1)[0]);return client.filter(cap=>{const name=cap.split('=',1)[0];return serverNames.includes(name);});}const pkg={name:'isomorphic-git',version:'1.38.6',agent:'git/isomorphic-git@1.38.6'};class FIFO{constructor(){this._queue=[];}write(chunk){if(this._ended){throw Error('You cannot write to a FIFO that has already been ended!');}if(this._waiting){const resolve=this._waiting;this._waiting=null;resolve({value:chunk});}else{this._queue.push(chunk);}}end(){this._ended=true;if(this._waiting){const resolve=this._waiting;this._waiting=null;resolve({done:true});}}destroy(err){this.error=err;this.end();}async next(){if(this._queue.length>0){return{value:this._queue.shift()};}if(this._ended){return{done:true};}if(this._waiting){throw Error('You cannot call read until the previous call to read has returned!');}return new Promise(resolve=>{this._waiting=resolve;});}}// Note: progress messages are designed to be written directly to the terminal,
+function emptyPackfile(pack){const pheader='5041434b';const version='00000002';const obCount='00000000';const header=pheader+version+obCount;return pack.slice(0,12).toString('hex')===header;}function filterCapabilities(server,client){const serverNames=server.map(cap=>cap.split('=',1)[0]);return client.filter(cap=>{const name=cap.split('=',1)[0];return serverNames.includes(name);});}const pkg={name:'isomorphic-git',version:'1.38.9',agent:'git/isomorphic-git@1.38.9'};class FIFO{constructor(){this._queue=[];}write(chunk){if(this._ended){throw Error('You cannot write to a FIFO that has already been ended!');}if(this._waiting){const resolve=this._waiting;this._waiting=null;resolve({value:chunk});}else{this._queue.push(chunk);}}end(){this._ended=true;if(this._waiting){const resolve=this._waiting;this._waiting=null;resolve({done:true});}}destroy(err){this.error=err;this.end();}async next(){if(this._queue.length>0){return{value:this._queue.shift()};}if(this._ended){return{done:true};}if(this._waiting){throw Error('You cannot call read until the previous call to read has returned!');}return new Promise(resolve=>{this._waiting=resolve;});}}// Note: progress messages are designed to be written directly to the terminal,
 // so they are often sent with just a carriage return to overwrite the last line of output.
 // But there are also messages delimited with newlines.
 // I also include CRLF just in case.
@@ -326337,7 +325658,7 @@ module.exports = function (isSprite, input, callback) {
         try {
             // Load slightly lazily as this is an edge case
             // eslint-disable-next-line global-require
-            var sb3fix = __webpack_require__(/*! @turbowarp/sb3fix */ "./node_modules/@turbowarp/sb3fix/src/sb3fix.js");
+            var sb3fix = __webpack_require__(/*! @turbowarp/sb3fix */ "./node_modules/scratch-parser/node_modules/@turbowarp/sb3fix/src/sb3fix.js");
 
             var fixed = sb3fix.fixJSON(input, {
                 platform: 'turbowarp'
@@ -326355,6 +325676,698 @@ module.exports = function (isSprite, input, callback) {
             callback(err);
         }
     });
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/scratch-parser/node_modules/@turbowarp/sb3fix/src/sb3fix.js":
+/*!**********************************************************************************!*\
+  !*** ./node_modules/scratch-parser/node_modules/@turbowarp/sb3fix/src/sb3fix.js ***!
+  \**********************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+/*!
+sb3fix - https://github.com/TurboWarp/sb3fix
+
+Copyright (C) 2023-2025 Thomas Weber
+
+This Source Code Form is subject to the terms of the Mozilla Public
+License, v. 2.0. If a copy of the MPL was not distributed with this
+file, You can obtain one at https://mozilla.org/MPL/2.0/.
+*/
+
+/**
+ * @typedef {'scratch'|'turbowarp'} Platform
+ */
+
+/**
+ * @typedef Options
+ * @property {Platform} [platform] Defaults to 'scratch'.
+ * @property {(message: string) => void} [logCallback]
+ */
+
+/**
+ * @param {unknown} obj
+ * @returns {obj is object}
+ */
+const isObject = (obj) => !!obj && typeof obj === 'object';
+
+/**
+ * @typedef PlatformInfo
+ * @property {boolean} [allowsNonScalarVariables]
+ */
+
+/**
+ * @type {Record<Platform, PlatformInfo>}
+ */
+const platforms = {
+  scratch: {},
+  turbowarp: {
+    allowsNonScalarVariables: true
+  }
+};
+
+/**
+ * @param {Options} options
+ * @returns {PlatformInfo}
+ */
+const getPlatform = (options) => {
+  if (options && Object.prototype.hasOwnProperty.call(options, 'platform')) {
+    if (Object.prototype.hasOwnProperty.call(platforms, options.platform)) {
+      return platforms[options.platform];
+    }
+    throw new Error(`Unknown platform: ${options.platform}`);
+  }
+  return platforms.scratch;
+};
+
+const BUILTIN_EXTENSIONS = [
+  'control',
+  'data',
+  'event',
+  'looks',
+  'motion',
+  'operators',
+  'procedures',
+  'argument', // "argument_reporter_boolean" is technically not an extension but we should list here anyways
+  'sensing',
+  'sound',
+  'pen',
+  'wedo2',
+  'music',
+  'microbit',
+  'text2speech',
+  'translate',
+  'videoSensing',
+  'ev3',
+  'makeymakey',
+  'boost',
+  'gdxfor'
+  // intentionally not listing TurboWarp's 'tw' extension here.
+];
+
+/**
+ * @param {object} project Parsed project.json.
+ * @returns {Set<string>} Set of valid extensions, including the primitive ones, that the project loads.
+ */
+const getKnownExtensions = (project) => {
+  const extensions = project.extensions;
+  if (!Array.isArray(extensions)) {
+    throw new Error('extensions is not an array');
+  }
+  for (let i = 0; i < extensions.length; i++) {
+    if (typeof extensions[i] !== 'string') {
+      throw new Error(`extension ${i} is not a string`);
+    }
+  }
+  return new Set([
+    ...BUILTIN_EXTENSIONS,
+    ...extensions
+  ]);
+};
+
+/**
+ * @param {string|object} data project.json as a string or as a parsed object already. If object provided, it will be modified in-place.
+ * @param {Options} [options]
+ * @returns {object} Fixed project.json object. If the `data` argument was an object, this will point to the same object.
+ */
+const fixJSON = (data, options = {}) => {
+  const platform = getPlatform(options);
+
+  /**
+   * @param {string} message
+   */
+  const log = (message) => {
+    if (options.logCallback) {
+      options.logCallback(message);
+    }
+  };
+
+  /**
+   * @param {string} id
+   * @param {unknown} variable
+   */
+  const fixVariableInPlace = (id, variable) => {
+    if (!Array.isArray(variable)) {
+      throw new Error(`variable object ${id} is not an array`);
+    }
+
+    const name = variable[0];
+    if (typeof name !== 'string') {
+      log(`variable or list ${id} name was not a string`);
+      variable[0] = String(variable[0]);
+    }
+
+    if (!platform.allowsNonScalarVariables) {
+      const value = variable[1];
+      if (typeof value !== 'number' && typeof value !== 'string' && typeof value !== 'boolean') {
+        log(`variable ${id} value was not a Scratch-compatible value`);
+        variable[1] = String(variable[1]);
+      }
+    }
+  };
+
+  /**
+   * @param {string} id
+   * @param {unknown} list
+   */
+  const fixListInPlace = (id, list) => {
+    if (!Array.isArray(list)) {
+      throw new Error(`list object ${id} is not an array`);
+    }
+
+    const name = list[0];
+    if (typeof name !== 'string') {
+      log(`list ${id} name was not a string`);
+      list[0] = String(list[0]);
+    }
+
+    if (!Array.isArray(list[1])) {
+      log(`list ${id} value was not an array`);
+      list[1] = [];
+    }
+
+    const listValue = list[1];
+    for (let i = 0; i < listValue.length; i++) {
+      const value = listValue[i];
+      if (typeof value !== 'number' && typeof value !== 'string' && typeof value !== 'boolean') {
+        log(`list ${id} index ${i} was not a Scratch-compatible value`);
+        listValue[i] = String(value);
+      }
+    }
+  };
+
+  /**
+   * @param {unknown[]} native
+   */
+  const fixCompressedNativeInPlace = (native) => {
+    if (!Array.isArray(native)) {
+      throw new Error('native is not an array');
+    }
+
+    const type = native[0];
+    if (typeof type !== 'number') {
+      throw new Error('native type is not a number');
+    }
+
+    switch (type) {
+      // Number primitive: [4, string|number]
+      // Positive number primitive: [5, string|number]
+      // Whole number primitive: [6, string|number]
+      // Integer primitive: [7, string|number]
+      // Angle primitive: [8, string|number]
+      case 4:
+      case 5:
+      case 6:
+      case 7:
+      case 8: {
+        if (native.length !== 2) {
+          throw new Error(`Number native is of unexpected length: ${native.length}`);
+        }
+        const value = native[1];
+        if (typeof value !== 'string' && typeof value !== 'number') {
+          log('number native had invalid value');
+          native[1] = String(value);
+        }
+        break;
+      }
+
+      // Color: [9, hex color]
+      case 9: {
+        if (native.length !== 2) {
+          throw new Error(`Color native is of unexpected length: ${native.length}`);
+        }
+        const color = native[1];
+        if (typeof color !== 'string' || !/^#[a-f0-9]{6}$/i.test(color)) {
+          log('color native had invalid value');
+          native[1] = '#000000';
+        }
+        break;
+      }
+
+      // Text: [10, string|number]
+      case 10: {
+        if (native.length !== 2) {
+          throw new Error(`Text native is of unexpected length: ${native.length}`);
+        }
+        const value = native[1];
+        if (typeof value !== 'string' && typeof value !== 'number') {
+          log('text native had invalid value');
+          native[1] = String(value);
+        }
+        break;
+      }
+
+      // Variable: [12, variable name, variable id, x?, y?]
+      // List: [13, list name, list id, x?, y?]
+      // x and y only present if the native is a top-level block
+      case 12:
+      case 13: {
+        if (native.length !== 3 && native.length !== 5) {
+          throw new Error(`Variable or list native is of unexpected length: ${native.length}`);
+        }
+        const name = native[1];
+        if (typeof name !== 'string') {
+          log(`variable or list native name was not a string`);
+          native[1] = String(native[1]);
+        }
+        break;
+      }
+    }
+  };
+
+  /**
+   * @param {string} id
+   * @param {unknown} block
+   */
+  const fixBlockInPlace = (id, block) => {
+    if (Array.isArray(block)) {
+      fixCompressedNativeInPlace(block);
+    } else if (isObject(block)) {
+      const inputs = block.inputs;
+      if (!isObject(inputs)) {
+        throw new Error('inputs is not an object');
+      }
+      for (const [inputName, input] of Object.entries(inputs)) {
+        if (!Array.isArray(input)) {
+          throw new Error(`block ${id} input ${inputName} is not an array`);
+        }
+        for (let i = 1; i < input.length; i++) {
+          if (Array.isArray(input[i])) {
+            fixCompressedNativeInPlace(input[i]);
+          }
+        }
+      }
+
+      const fields = block.fields;
+      if (!isObject(fields)) {
+        throw new Error('fields is not an object');
+      }
+      for (const [fieldName, field] of Object.entries(fields)) {
+        if (!Array.isArray(field)) {
+          throw new Error(`block ${id} field ${fieldName} is not an array`);
+        }
+      }
+    } else {
+      throw new Error(`block ${id} is not an object`);
+    }
+  };
+
+  /**
+   * @param {string} id
+   * @param {unknown} comment
+   */
+  const fixCommentInPlace = (id, comment) => {
+    if (!isObject(comment)) {
+      throw new Error('comment is not an object');
+    }
+
+    if (typeof comment.text !== 'string') {
+      throw new Error('comment text is not a string');
+    }
+
+    // Scratch requires comments to not exceed 8000 characters.
+    // We'll store the excess in .extraText so the text won't be truncated if opened in TurboWarp.
+    const MAX_LENGTH = 8000;
+    if (comment.text.length > MAX_LENGTH) {
+      log(`comment ${id} had length ${comment.text.length}`);
+      comment.extraText = comment.text.substring(MAX_LENGTH);
+      comment.text = comment.text.substring(0, MAX_LENGTH);
+    }
+  };
+
+  /**
+   * @param {unknown} target
+   */
+  const fixTargetInPlace = (target) => {
+    const costumes = target.costumes;
+    if (!Array.isArray(costumes)) {
+      throw new Error('costumes is not an array');
+    }
+    for (let i = costumes.length - 1; i >= 0; i--) {
+      const costume = costumes[i];
+      if (!isObject(costume)) {
+        throw new Error(`costume ${i} is not an object`);
+      }
+
+      if (typeof costume.name !== 'string') {
+        log(`costume ${i} name was not a string`);
+        costume.name = String(costume.name);
+      }
+
+      // https://github.com/scratchfoundation/scratch-parser/blob/665f05d739a202d565a4af70a201909393d456b2/lib/sb3_definitions.json#L51
+      const knownCostumeFormats = ['png', 'svg', 'jpeg', 'jpg', 'bmp', 'gif'];
+      if (!knownCostumeFormats.includes(costume.dataFormat)) {
+        if (typeof costume.md5ext === 'string' && costume.md5ext.endsWith('.svg')) {
+          log(`costume ${i} is vector, had invalid dataFormat ${costume.dataFormat}`);
+          costume.dataFormat = 'svg';
+        } else {
+          log(`costume ${i} is bitmap, had invalid dataFormat ${costume.dataFormat}`);
+          // dataFormat is only really used to detect vector or bitmap, so we don't
+          // need to set this to the real format
+          costume.dataFormat = 'png';
+        }
+      }
+
+      if (!('assetId' in costume)) {
+        log(`costume ${i} was missing assetId, deleted`);
+        costumes.splice(i, 1);
+      }
+    }
+    if (costumes.length === 0) {
+      log(`costumes was empty, adding empty costume`);
+      costumes.push({
+        // Empty SVG costume
+        name: 'costume1',
+        bitmapResolution: 1,
+        dataFormat: 'svg',
+        assetId: 'cd21514d0531fdffb22204e0ec5ed84a',
+        md5ext: 'cd21514d0531fdffb22204e0ec5ed84a.svg',
+        rotationCenterX: 0,
+        rotationCenterY: 0
+      });
+    }
+
+    const sounds = target.sounds;
+    if (!Array.isArray(sounds)) {
+      throw new Error('sounds is not an array');
+    }
+    for (let i = sounds.length - 1; i >= 0; i--) {
+      const sound = sounds[i];
+      if (!isObject(sound)) {
+        throw new Error(`sound ${i} is not an object`);
+      }
+
+      // https://github.com/scratchfoundation/scratch-parser/blob/665f05d739a202d565a4af70a201909393d456b2/lib/sb3_definitions.json#L81
+      const knownSoundFormats = ['wav', 'wave', 'mp3'];
+      if (!knownSoundFormats.includes(sound.dataFormat)) {
+        log(`sound ${i} had invalid dataFormat ${sound.dataFormat}`);
+        sound.dataFormat = 'mp3';
+      }
+
+      if (typeof sound.name !== 'string') {
+        log(`sound ${i} name was not a string`);
+        sound.name = String(sound.name);
+      }
+
+      if (!('assetId' in sound)) {
+        log(`sound ${i} was missing assetId, deleted`);
+        sounds.splice(i, 1);
+      }
+    }
+
+    const blocks = target.blocks;
+    if (!isObject(blocks)) {
+      throw new Error('blocks is not an object');
+    }
+    for (const [blockId, block] of Object.entries(blocks)) {
+      fixBlockInPlace(blockId, block);
+    }
+
+    // Comments are not required
+    const comments = target.comments;
+    if (comments) {
+      for (const [commentId, comment] of Object.entries(comments)) {
+        fixCommentInPlace(commentId, comment);
+      }
+    }
+
+    const variables = target.variables;
+    if (!isObject(variables)) {
+      throw new Error('variables is not an object');
+    }
+    for (const [variableId, variable] of Object.entries(variables)) {
+      fixVariableInPlace(variableId, variable);
+    }
+
+    const lists = target.lists;
+    if (!isObject(lists)) {
+      throw new Error('lists is not an object');
+    }
+    for (const [listId, list] of Object.entries(lists)) {
+      fixListInPlace(listId, list);
+    }
+
+    if (target.isStage) {
+      if (target.layerOrder !== 0) {
+        log('stage had invalid layerOrder');
+        target.layerOrder = 0;
+      }
+    } else {
+      if (target.layerOrder < 1) {
+        log('sprite had invalid layerOrder');
+        target.layerOrder = 1;
+      }
+    }
+
+    const ROTATION_STYLES = [
+      'all around',
+      'don\'t rotate',
+      'left-right'
+    ];
+    if (!target.isStage && !ROTATION_STYLES.includes(target.rotationStyle)) {
+      log(`sprite had invalid rotation style ${target.rotationStyle}`);
+      target.rotationStyle = 'all around';
+    }
+
+    if (!target.isStage) {
+      const x = target.x;
+      if (typeof x !== 'number') {
+        log(`target x was ${typeof x}: ${x}`);
+        target.x = +x || 0;
+      }
+  
+      const y = target.y;
+      if (typeof y !== 'number') {
+        log(`target y was ${typeof y}: ${y}`);
+        target.y = +y || 0;
+      }
+    }
+  };
+
+  /**
+   * @param {unknown} stage
+   */
+  const fixStageInPlace = (stage) => {
+    // stage's name must match exactly
+    if (stage.name !== 'Stage') {
+      log(`stage had wrong name: ${stage.name}`);
+      stage.name = 'Stage';
+    }
+
+    // In vanilla Scratch, "turn video < ... >" with anything that isn't the dropdown allows videoState
+    // to be set to something that isn't one of the expected strings. We'll play it safe and default to
+    // off.
+    const VIDEO_STATES = [
+      'on',
+      'off',
+      'on-flipped'
+    ];
+    if (Object.prototype.hasOwnProperty.call(stage, 'videoState') && !VIDEO_STATES.includes(stage.videoState)) {
+      log(`stage had invalid videoState: ${stage.videoState}`);
+      stage.videoState = 'off';
+    }
+  };
+
+  /**
+   * @param {unknown} project
+   */
+  const fixProjectInPlace = (project) => {
+    if ('objName' in project) {
+      throw new Error('Scratch 2 (sb2) projects not supported');
+    }
+
+    if (!isObject(project)) {
+      throw new Error('Root JSON is not an object');
+    }
+
+    if ('name' in project) {
+      // Not a project. Just a sprite.
+      log('project is a sprite');
+      fixTargetInPlace(project);
+      return;
+    }
+
+    const targets = project.targets;
+    if (!Array.isArray(targets)) {
+      throw new Error('targets is not an array');
+    }
+    if (targets.length < 1) {
+      throw new Error('targets is empty');
+    }
+    for (let i = 0; i < targets.length; i++) {
+      log(`checking target ${i}`);
+      const target = targets[i];
+      if (!isObject(target)) {
+        throw new Error('target is not an object');
+      }
+      fixTargetInPlace(target);
+    }
+
+    const allStages = targets.filter((target) => target.isStage);
+    if (allStages.length === 0) {
+      log('stage is missing; adding an empty one');
+      targets.unshift({
+        isStage: true,
+        name: 'Stage',
+        variables: {},
+        lists: {},
+        broadcasts: {},
+        blocks: {},
+        currentCostume: 0,
+        costumes: [
+          {
+            name: 'backdrop1',
+            dataFormat: 'svg',
+            assetId: 'cd21514d0531fdffb22204e0ec5ed84a',
+            md5ext: 'cd21514d0531fdffb22204e0ec5ed84a.svg',
+            rotationCenterX: 240,
+            rotationCenterY: 180
+          }
+        ],
+        sounds: [],
+        volume: 100,
+        layerOrder: 0,
+        tempo: 60,
+        videoTransparency: 50,
+        videoState: "on",
+        textToSpeechLanguage: null
+      });
+    } else {
+      // We will accept the first stage in targets as the real stage
+      const firstStageIndex = targets.findIndex((target) => target.isStage);
+
+      // Stage must be the first target
+      if (firstStageIndex !== 0) {
+        log(`stage was at wrong index: ${firstStageIndex}`);
+        const stage = targets[firstStageIndex];
+        targets.splice(firstStageIndex, 1);
+        targets.unshift(stage);
+      }
+
+      // Remove all the other stages
+      for (let i = targets.length - 1; i > 0; i--) {
+        if (targets[i].isStage) {
+          log(`removing extra stage at index ${i}`);
+          targets.splice(i, 1);
+        }
+      }
+    }
+
+    // Above checks ensure this invariant holds
+    const stage = targets[0];
+    fixStageInPlace(stage);
+
+    const knownExtensions = getKnownExtensions(project);
+    const monitors = project.monitors;
+    if (!Array.isArray(monitors)) {
+      throw new Error('monitors is not an array');
+    }
+    project.monitors = project.monitors.filter((monitor, i) => {
+      const opcode = monitor.opcode;
+      if (typeof opcode !== 'string') {
+        throw new Error(`monitor ${i} opcode is not a string`);
+      }
+      const extension = opcode.split('_')[0];
+      if (!knownExtensions.has(extension)) {
+        log(`removed monitor ${i} from unknown extension ${extension}`);
+        return false;
+      }
+      return true;
+    });
+  };
+
+  if (typeof data === 'object' && data !== null) {
+    // Already parsed.
+    fixProjectInPlace(data);
+    return data;
+  } else if (typeof data === 'string') {
+    // Need to parse.
+    const parsed = JSON.parse(data);
+    fixProjectInPlace(parsed);
+    return parsed;
+  } else {
+    throw new Error('Unable to tell how to interpret input as JSON');
+  }
+};
+
+/**
+ * @param {ArrayBuffer|Uint8Array|Blob} data A compressed .sb3 file.
+ * @param {Options} [options]
+ * @returns {Promise<Uint8Array>} A promise that resolves to a fixed compressed .sb3 file.
+ */
+const fixZip = async (data, options = {}) => {
+  /**
+   * @param {string} message
+   */
+  const log = (message) => {
+    if (options.logCallback) {
+      options.logCallback(message);
+    }
+  };
+
+  // JSZip is not a small library, so we'll load it somewhat lazily.
+  const JSZip = __webpack_require__(/*! @turbowarp/jszip */ "./node_modules/@turbowarp/jszip/dist/jszip.min.js");
+
+  let zip = await JSZip.loadAsync(data, {
+    recoverCorrupted: true,
+    onCorruptCentralDirectory: (error) => {
+      log(`zip had corrupt central directory: ${error}`);
+    },
+    onUnrecoverableFileEntry: (error) => {
+      log(`zip had unrecoverable file entry: ${error}`);
+    }
+  });
+
+  /** @type {Array<[string, import("@turbowarp/jszip").JSZipObject]>} */
+  const zipFiles = [];
+  zip.forEach((relativePath, file) => {
+    zipFiles.push([relativePath, file]);
+  });
+
+  // Remove any unreadable files from the zip. This can notably happen if the compressed data in the zip was
+  // corrupted, which would make the uncompressed data size field not match. Scratch/JSZip will refuse to
+  // keep loading the project if that happens. If we remove the asset, at least there's a chance it can now
+  // be downloaded from the asset server instead.
+  for (const [relativePath, file] of zipFiles) {
+    try {
+      await file.async('uint8array');
+    } catch (error) {
+      log(`zip had unreadable file ${relativePath}: ${error}`);
+      zip.remove(relativePath);
+    }
+  }
+
+  // json is not guaranteed to be stored in the root.
+  const jsonFile = zip.file(/(?:project|sprite)\.json/)[0];
+  if (!jsonFile) {
+    throw new Error('Could not find project.json or sprite.json.');
+  }
+
+  const jsonText = await jsonFile.async('text');
+  const fixedJSON = fixJSON(jsonText, options);
+  const newProjectJSONText = JSON.stringify(fixedJSON);
+  zip.file(jsonFile.name, newProjectJSONText);
+
+  // By default, JSZip will use the current date as the modified timestamp, which would generated zips non-deterministic.
+  const date = new Date('Thu, 14 Mar 2024 00:00:00 GMT');
+  for (const file of Object.values(zip.files)) {
+    file.date = date;
+  }
+
+  const compressed = await zip.generateAsync({
+    type: 'uint8array',
+    compression: 'DEFLATE'
+  });
+  return compressed;
+};
+
+module.exports = {
+  fixJSON,
+  fixZip,
+  platforms
 };
 
 
@@ -373124,6 +373137,18 @@ const handleCostumeLoadError = function handleCostumeLoadError(costume, runtime)
   const oldRotationY = costume.rotationCenterY;
   const oldBitmapResolution = costume.bitmapResolution;
   const oldDataFormat = costume.dataFormat;
+  if (!runtime.renderer) {
+    log.warn('No rendering module present; cannot load default costume');
+    costume.broken = {};
+    costume.broken.assetId = oldAssetId;
+    costume.broken.md5 = "".concat(oldAssetId, ".").concat(oldDataFormat);
+    costume.broken.asset = oldAsset;
+    costume.broken.dataFormat = oldDataFormat;
+    costume.broken.rotationCenterX = oldRotationX;
+    costume.broken.rotationCenterY = oldRotationY;
+    costume.broken.bitmapResolution = oldBitmapResolution;
+    return Promise.resolve(costume);
+  }
   const AssetType = runtime.storage.AssetType;
   const isVector = costume.dataFormat === AssetType.ImageVector.runtimeFormat;
 

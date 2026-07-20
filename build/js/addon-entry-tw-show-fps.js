@@ -55,7 +55,8 @@ __webpack_require__.r(__webpack_exports__);
 
 /* harmony default export */ __webpack_exports__["default"] = (async function (_ref) {
   let addon = _ref.addon,
-    console = _ref.console;
+    console = _ref.console,
+    msg = _ref.msg;
   // 创建 FPS 显示容器
   const fpsContainerContainer = document.createElement("div");
   addon.tab.displayNoneWhileDisabled(fpsContainerContainer, {
