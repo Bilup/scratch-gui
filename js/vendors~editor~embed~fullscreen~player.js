@@ -66872,19 +66872,18 @@ await GitRefManager.writeSymbolicRef({fs,gitdir,ref:'HEAD',value:fullref});}}// 
  * await git.branch({ fs, dir: '/tutorial', ref: 'develop' })
  * console.log('done')
  *
- */async function branch(_ref84){let fs=_ref84.fs,dir=_ref84.dir,_ref84$gitdir=_ref84.gitdir,gitdir=_ref84$gitdir===void 0?join(dir,'.git'):_ref84$gitdir,ref=_ref84.ref,object=_ref84.object,_ref84$checkout=_ref84.checkout,checkout=_ref84$checkout===void 0?false:_ref84$checkout,_ref84$force=_ref84.force,force=_ref84$force===void 0?false:_ref84$force;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('ref',ref);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _branch({fs:fsp,gitdir:updatedGitdir,ref,object,checkout,force});}catch(err){err.caller='git.branch';throw err;}}/**
- * Refuse to materialize a working-tree entry whose parent path traverses a
- * symbolic link. A leading component that is a symlink could otherwise redirect
- * a write or mkdir outside the working tree. git applies the same check: it does
- * not follow symlinks in the leading path when writing working-tree files.
+ */async function branch(_ref84){let fs=_ref84.fs,dir=_ref84.dir,_ref84$gitdir=_ref84.gitdir,gitdir=_ref84$gitdir===void 0?join(dir,'.git'):_ref84$gitdir,ref=_ref84.ref,object=_ref84.object,_ref84$checkout=_ref84.checkout,checkout=_ref84$checkout===void 0?false:_ref84$checkout,_ref84$force=_ref84.force,force=_ref84$force===void 0?false:_ref84$force;try{assertParameter('fs',fs);assertParameter('gitdir',gitdir);assertParameter('ref',ref);const fsp=new FileSystem(fs);const updatedGitdir=await discoverGitdir({fsp,dotgit:gitdir});return await _branch({fs:fsp,gitdir:updatedGitdir,ref,object,checkout,force});}catch(err){err.caller='git.branch';throw err;}}const worthWalking=(filepath,root)=>{if(filepath==='.'||root==null||root.length===0||root==='.'){return true;}if(root.length>=filepath.length){return root.startsWith(filepath);}else{return filepath.startsWith(root);}};// @ts-check
+/**
+ * Throw if any leading directory component of `fullpath` (relative to `dir`) is a symbolic
+ * link. git does not follow symlinks in the leading path when writing working-tree files;
+ * matching that avoids writing through a symlinked parent into a location outside `dir`.
  *
  * @param {import('../models/FileSystem.js').FileSystem} fs
  * @param {string} dir
  * @param {string} fullpath
  */async function assertNoSymlinkInLeadingPath(fs,dir,fullpath){const parts=fullpath.split('/');parts.pop();// the final segment is the entry being written, not a leading dir
 let current=dir;for(const part of parts){if(part===''||part==='.')continue;current="".concat(current,"/").concat(part);const stats=await fs.lstat(current);// lstat returns null when the path doesn't exist yet (nothing to traverse).
-if(stats&&stats.isSymbolicLink()){throw new UnsafeFilepathError(fullpath);}}}const worthWalking=(filepath,root)=>{if(filepath==='.'||root==null||root.length===0||root==='.'){return true;}if(root.length>=filepath.length){return root.startsWith(filepath);}else{return filepath.startsWith(root);}};// @ts-check
-/**
+if(stats&&stats.isSymbolicLink()){throw new UnsafeFilepathError(fullpath);}}}/**
  * @param {object} args
  * @param {import('../models/FileSystem.js').FileSystem} args.fs
  * @param {any} args.cache
@@ -67079,7 +67078,7 @@ throw new MergeNotSupportedError();}}},/**
 // if the parent was deleted, the children have to go
 if(!parent)return;// automatically delete directories if they have been emptied
 // except for the root directory
-if(parent&&parent.type==='tree'&&entries.length===0&&parent.path!=='.')return;if(entries.length>0||parent.path==='.'&&entries.length===0){const tree=new GitTree(entries);const object=tree.toObject();const oid=await _writeObject({fs,gitdir,type:'tree',object,dryRun});parent.oid=oid;}return parent;}});if(unmergedFiles.length!==0){if(dir&&!abortOnConflict){await _walk({fs,cache,dir,gitdir,trees:[TREE({ref:results.oid})],map:async function map(filepath,_ref126){let _ref127=_slicedToArray(_ref126,1),entry=_ref127[0];const path="".concat(dir,"/").concat(filepath);if((await entry.type())==='blob'){const mode=await entry.mode();const content=await entry.content();await fs.write(path,content,{mode});}return true;}});}return new MergeConflictError(unmergedFiles,bothModified,deleteByUs,deleteByTheirs);}return results.oid;}/**
+if(parent&&parent.type==='tree'&&entries.length===0&&parent.path!=='.')return;if(entries.length>0||parent.path==='.'&&entries.length===0){const tree=new GitTree(entries);const object=tree.toObject();const oid=await _writeObject({fs,gitdir,type:'tree',object,dryRun});parent.oid=oid;}return parent;}});if(unmergedFiles.length!==0){if(dir&&!abortOnConflict){await _walk({fs,cache,dir,gitdir,trees:[TREE({ref:results.oid})],map:async function map(filepath,_ref126){let _ref127=_slicedToArray(_ref126,1),entry=_ref127[0];const path="".concat(dir,"/").concat(filepath);if((await entry.type())==='blob'){const mode=await entry.mode();const content=new TextDecoder().decode(await entry.content());await fs.write(path,content,{mode});}return true;}});}return new MergeConflictError(unmergedFiles,bothModified,deleteByUs,deleteByTheirs);}return results.oid;}/**
  *
  * @param {Object} args
  * @param {import('../models/FileSystem').FileSystem} args.fs
@@ -67122,15 +67121,8 @@ const ops=await _walk({fs,cache:{},dir,gitdir,trees:[TREE({ref:parentCommit}),TR
 if(!stash&&parent){const method=type==='tree'?'rmdir':'rm';if(type==='tree')dirRemoved.push(filepath);if(type==='blob'&&wasStaged)stageUpdated.push({filepath,oid:await parent.oid()});// stats is undefined, will stage the deletion with index.insert
 return{method,filepath};}const oid=await stash.oid();if(!parent||(await parent.oid())!==oid){// only apply changes if changed from the parent commit or doesn't exist in the parent commit
 if(type==='tree'){return{method:'mkdir',filepath};}else{if(wasStaged)stageUpdated.push({filepath,oid,stats:await fs.lstat(join(dir,filepath))});return{method:'write',filepath,oid};}}}});// apply the changes to work dir
-await acquireLock$1({fs,gitdir,dirRemoved,ops},async()=>{for(const op of ops){const currentFilepath=join(dir,op.filepath);switch(op.method){case'rmdir':await fs.rmdir(currentFilepath);break;case'mkdir':// Don't mkdir through a symlinked leading path: a parent component that
-// is a symlink could otherwise redirect the directory creation outside
-// the working tree. git applies the same check (it does not follow
-// symlinks here) — see checkout.
-await assertNoSymlinkInLeadingPath(fs,dir,op.filepath);await fs.mkdir(currentFilepath);break;case'rm':await fs.rm(currentFilepath);break;case'write':// only writes if file is not in the removedDirs
-if(!dirRemoved.some(removedDir=>currentFilepath.startsWith(removedDir))){// Don't write through a symlinked leading path (see checkout): a
-// parent component that is a symlink could redirect the write to a
-// location outside the working tree.
-await assertNoSymlinkInLeadingPath(fs,dir,op.filepath);const _await$_readObject9=await _readObject({fs,cache:{},gitdir,oid:op.oid}),object=_await$_readObject9.object;// just like checkout, since mode only applicable to create, not update, delete first
+await acquireLock$1({fs,gitdir,dirRemoved,ops},async()=>{for(const op of ops){const currentFilepath=join(dir,op.filepath);switch(op.method){case'rmdir':await fs.rmdir(currentFilepath);break;case'mkdir':await fs.mkdir(currentFilepath);break;case'rm':await fs.rm(currentFilepath);break;case'write':// only writes if file is not in the removedDirs
+if(!dirRemoved.some(removedDir=>currentFilepath.startsWith(removedDir))){const _await$_readObject9=await _readObject({fs,cache:{},gitdir,oid:op.oid}),object=_await$_readObject9.object;// just like checkout, since mode only applicable to create, not update, delete first
 if(await fs.exists(currentFilepath)){await fs.rm(currentFilepath);}await fs.write(currentFilepath,object);// only handles regular files for now
 }break;}}});// update the stage
 await GitIndexManager.acquire({fs,gitdir,cache:{}},async index=>{stageUpdated.forEach(_ref136=>{let filepath=_ref136.filepath,stats=_ref136.stats,oid=_ref136.oid;index.insert({filepath,stats,oid});});});}// @ts-check
@@ -67414,7 +67406,7 @@ const getExternalRefDelta=oid=>_readObject({fs,cache,gitdir,oid});// Look for it
 let result=await hasObjectLoose({fs,gitdir,oid});// Check to see if it's in a packfile.
 if(!result){result=await hasObjectPacked({fs,cache,gitdir,oid,getExternalRefDelta});}// Finally
 return result;}function addCredentialUsername(_ref151){let config=_ref151.config,onAuth=_ref151.onAuth;if(!onAuth)return onAuth;return async(url,auth)=>{const username=auth.username||(await config.get("credential.".concat(url,".username")));return onAuth(url,username?_objectSpread(_objectSpread({},auth),{},{username}):auth);};}// TODO: make a function that just returns obCount. then emptyPackfile = () => sizePack(pack) === 0
-function emptyPackfile(pack){const pheader='5041434b';const version='00000002';const obCount='00000000';const header=pheader+version+obCount;return pack.slice(0,12).toString('hex')===header;}function filterCapabilities(server,client){const serverNames=server.map(cap=>cap.split('=',1)[0]);return client.filter(cap=>{const name=cap.split('=',1)[0];return serverNames.includes(name);});}const pkg={name:'isomorphic-git',version:'1.38.9',agent:'git/isomorphic-git@1.38.9'};class FIFO{constructor(){this._queue=[];}write(chunk){if(this._ended){throw Error('You cannot write to a FIFO that has already been ended!');}if(this._waiting){const resolve=this._waiting;this._waiting=null;resolve({value:chunk});}else{this._queue.push(chunk);}}end(){this._ended=true;if(this._waiting){const resolve=this._waiting;this._waiting=null;resolve({done:true});}}destroy(err){this.error=err;this.end();}async next(){if(this._queue.length>0){return{value:this._queue.shift()};}if(this._ended){return{done:true};}if(this._waiting){throw Error('You cannot call read until the previous call to read has returned!');}return new Promise(resolve=>{this._waiting=resolve;});}}// Note: progress messages are designed to be written directly to the terminal,
+function emptyPackfile(pack){const pheader='5041434b';const version='00000002';const obCount='00000000';const header=pheader+version+obCount;return pack.slice(0,12).toString('hex')===header;}function filterCapabilities(server,client){const serverNames=server.map(cap=>cap.split('=',1)[0]);return client.filter(cap=>{const name=cap.split('=',1)[0];return serverNames.includes(name);});}const pkg={name:'isomorphic-git',version:'1.38.7',agent:'git/isomorphic-git@1.38.7'};class FIFO{constructor(){this._queue=[];}write(chunk){if(this._ended){throw Error('You cannot write to a FIFO that has already been ended!');}if(this._waiting){const resolve=this._waiting;this._waiting=null;resolve({value:chunk});}else{this._queue.push(chunk);}}end(){this._ended=true;if(this._waiting){const resolve=this._waiting;this._waiting=null;resolve({done:true});}}destroy(err){this.error=err;this.end();}async next(){if(this._queue.length>0){return{value:this._queue.shift()};}if(this._ended){return{done:true};}if(this._waiting){throw Error('You cannot call read until the previous call to read has returned!');}return new Promise(resolve=>{this._waiting=resolve;});}}// Note: progress messages are designed to be written directly to the terminal,
 // so they are often sent with just a carriage return to overwrite the last line of output.
 // But there are also messages delimited with newlines.
 // I also include CRLF just in case.

@@ -7833,7 +7833,7 @@ __webpack_require__.r(__webpack_exports__);
       if (!toolbox || !toolbox.flyout_ || !toolbox.flyout_.getWorkspace()) {
         console.warn('Middle-click popup: Toolbox not ready yet, retrying...');
         // Show a loading message
-        popupStatusBar.textContent = msg('loading-blocks');
+        popupStatusBar.textContent = 'Loading blocks...';
         popupStatusBar.style.display = '';
 
         // Retry after a short delay
@@ -7856,7 +7856,7 @@ __webpack_require__.r(__webpack_exports__);
       if (!blockTypes || blockTypes.length === 0) {
         console.warn('Middle-click popup: No block types available, showing empty search');
         blockTypes = [];
-        popupStatusBar.textContent = msg('no-blocks');
+        popupStatusBar.textContent = 'No blocks available';
         popupStatusBar.style.display = '';
         return;
       }
@@ -7875,7 +7875,7 @@ __webpack_require__.r(__webpack_exports__);
       doPerformSearch();
     } catch (error) {
       console.error('Middle-click popup: Error loading blocks', error);
-      popupStatusBar.textContent = msg('error-loading');
+      popupStatusBar.textContent = 'Error loading blocks';
       popupStatusBar.style.display = '';
     }
   }
@@ -7899,7 +7899,7 @@ __webpack_require__.r(__webpack_exports__);
       return;
     }
     popupContainer.classList.remove('sa-mcp-container-collapsed');
-    popupStatusBar.textContent = msg('searching');
+    popupStatusBar.textContent = 'Searching...';
     popupStatusBar.style.display = '';
     searchDebounceTimer = setTimeout(doPerformSearch, SEARCH_DEBOUNCE_MS);
   }
@@ -7908,12 +7908,12 @@ __webpack_require__.r(__webpack_exports__);
 
     // Check if blocks are loaded and workspace is indexed
     if (!blockTypes) {
-      popupStatusBar.textContent = msg('loading-blocks');
+      popupStatusBar.textContent = 'Loading blocks...';
       popupStatusBar.style.display = '';
       return;
     }
     if (blockTypes.length === 0) {
-      popupStatusBar.textContent = msg('no-blocks');
+      popupStatusBar.textContent = 'No blocks available';
       popupStatusBar.style.display = '';
       return;
     }
