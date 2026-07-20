@@ -577,7 +577,7 @@ class ShortcutManager extends React.Component {
                             Object.entries(groupedShortcuts).map(([categoryId, categoryShortcuts]) => (
                                 <ShortcutCategory
                                     key={categoryId}
-                                    category={getCategoryLabel(categoryId)}
+                                    category={this.props.intl.formatMessage(messages[`category${categoryId.charAt(0).toUpperCase() + categoryId.slice(1)}`])}
                                     icon={CATEGORY_ICONS[categoryId] || Keyboard}
                                     shortcuts={categoryShortcuts}
                                     onSave={this.handleSaveShortcut}

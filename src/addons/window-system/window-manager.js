@@ -43,6 +43,7 @@ class AddonWindow {
     constructor (options = {}) {
         this.id = options.id || `addon-window-${++windowCount}`;
         this.title = options.title || 'Addon Window';
+        this.msg = options.msg || (key => key);
         this.width = options.width || 400;
         this.height = options.height || 300;
         this.minWidth = options.minWidth || 200;
@@ -161,18 +162,18 @@ class AddonWindow {
         
         // Control buttons
         if (this.minimizable) {
-            const minimizeBtn = this.createControlButton('minimize', 'Minimize', () => this.minimize());
+            const minimizeBtn = this.createControlButton('minimize', this.msg('window-minimize'), () => this.minimize());
             controlsElement.appendChild(minimizeBtn);
         }
 
         if (this.maximizable) {
-            const maximizeBtn = this.createControlButton('maximize', 'Maximize', () => this.toggleMaximize());
+            const maximizeBtn = this.createControlButton('maximize', this.msg('window-maximize'), () => this.toggleMaximize());
             this.maximizeBtn = maximizeBtn; // Store reference to update icon when maximized
             controlsElement.appendChild(maximizeBtn);
         }
         
         if (this.closable) {
-            const closeBtn = this.createControlButton('close', 'Close', () => this.close());
+            const closeBtn = this.createControlButton('close', this.msg('window-close'), () => this.close());
             controlsElement.appendChild(closeBtn);
         }
         
@@ -295,7 +296,7 @@ class AddonWindow {
                         <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
                     </svg>`;
             this.maximizeBtn.innerHTML = svgIcon;
-            this.maximizeBtn.title = this.isMaximized ? 'Restore' : 'Maximize';
+            this.maximizeBtn.title = this.isMaximized ? this.msg('window-restore') : this.msg('window-maximize');
         }
     }
 
@@ -780,16 +781,13 @@ class AddonWindow {
         this.bringToFront();
         
         if (animationsEnabled) {
+            this.element.style.transition = 'none';
             this.element.style.opacity = '0';
             this.element.style.transform = 'scale(0.95) translateY(-8px)';
-            this.element.style.transition = 'none';
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    this.element.style.transition = 'opacity 0.2s ease-out, transform 0.2s ease-out, left 0.3s ease-out, top 0.3s ease-out, width 0.3s ease-out, height 0.3s ease-out, border-radius 0.3s ease-out';
-                    this.element.style.opacity = '1';
-                    this.element.style.transform = 'scale(1) translateY(0)';
-                });
-            });
+            this.element.offsetHeight;
+            this.element.style.transition = 'opacity 0.2s ease-out, transform 0.2s ease-out, left 0.3s ease-out, top 0.3s ease-out, width 0.3s ease-out, height 0.3s ease-out, border-radius 0.3s ease-out';
+            this.element.style.opacity = '1';
+            this.element.style.transform = 'scale(1) translateY(0)';
         } else {
             this.element.style.opacity = '1';
             this.element.style.transform = 'scale(1) translateY(0)';
@@ -879,8 +877,8 @@ class AddonWindow {
                 this.width = this.savedState.width;
                 this.height = this.savedState.height;
                 
-                this.element.style.transition = 'left 0.3s ease-out, top 0.3s ease-out, ' +
-                    'width 0.3s ease-out, height 0.3s ease-out, border-radius 0.3s ease-out';
+                this.element.style.transition = 'opacity 0.2s ease-out, transform 0.2s ease-out, ' +
+                    'left 0.3s ease-out, top 0.3s ease-out, width 0.3s ease-out, height 0.3s ease-out, border-radius 0.3s ease-out';
                 this.element.style.left = `${this.x}px`;
                 this.element.style.top = `${this.y}px`;
                 this.element.style.width = `${this.width}px`;
@@ -915,8 +913,8 @@ class AddonWindow {
         this.width = window.innerWidth;
         this.height = window.innerHeight;
         
-        this.element.style.transition = 'left 0.3s ease-out, top 0.3s ease-out, ' +
-            'width 0.3s ease-out, height 0.3s ease-out, border-radius 0.3s ease-out';
+        this.element.style.transition = 'opacity 0.2s ease-out, transform 0.2s ease-out, ' +
+            'left 0.3s ease-out, top 0.3s ease-out, width 0.3s ease-out, height 0.3s ease-out, border-radius 0.3s ease-out';
         this.element.style.left = '0px';
         this.element.style.top = '0px';
         this.element.style.width = '100vw';

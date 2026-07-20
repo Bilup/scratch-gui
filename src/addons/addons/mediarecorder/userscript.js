@@ -475,7 +475,7 @@ export default async ({addon, console, msg}) => {
             for (let index = 0; index < roundedDelay; index++) {
                 updateRecordButton(msg('starting-in', {secs: roundedDelay - index}));
                 if (statusElements && statusElements.timeElement) {
-                    statusElements.timeElement.textContent = `Starting in ${roundedDelay - index}s...`;
+                    statusElements.timeElement.textContent = msg('starting-in', {secs: roundedDelay - index});
                 }
                 await new Promise(resolve => setTimeout(resolve, 975));
             }

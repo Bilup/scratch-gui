@@ -1,4 +1,4 @@
-﻿{
+{
     "zh-cn":  {
                   "tw.accent.blue":  "蓝色",
                   "tw.accent.purple":  "紫色",
@@ -591,6 +591,17 @@
                   "shortcut-manager.categories":  "分类",
                   "shortcut-manager.cancel":  "取消",
                   "shortcut-manager.macHint":  "在 macOS 上，{cmd} 是 Command，{opt} 是 Option，{shift} 是 Shift。",
+                  "shortcut-manager.reset":  "恢复默认",
+                  "shortcut-manager.recording":  "按下快捷键…",
+                  "shortcut-manager.conflict":  "已被 {label} 使用",
+                  "mw.stylePreview.window":  "窗口",
+                  "mw.stylePreview.preview":  "预览",
+                  "mw.stylePreview.code":  "代码",
+                  "tw.alertOk":  "确定",
+                  "window-minimize":  "最小化",
+                  "window-maximize":  "最大化",
+                  "window-restore":  "还原",
+                  "window-close":  "关闭",
                   "gui.collaboration.title":  "实时协作",
                   "gui.collaboration.alphaWarningLabel":  "Alpha 警告:",
                   "gui.collaboration.alphaWarningMessage":  "此功能处于早期开发阶段。你的项目可能会损坏或出错。使用风险自负。",
