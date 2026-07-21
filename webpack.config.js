@@ -112,7 +112,8 @@ const base = {
                 /node_modules[\\/]isomorphic-git/,
                 /node_modules[\\/]just-bash/,
                 /node_modules[\\/]monaco-editor/,
-                /node_modules[\\/]rotur-sdk/
+                /node_modules[\\/]rotur-sdk/,
+                /node_modules[\\/]brace-expansion/
             ],
             options: {
                 babelrc: false,

@@ -18,21 +18,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
-        with:
-          bun-version: latest
-          cache: true
+          cache: pnpm
       - name: Install dependencies
-        run: bun install
+        run: pnpm install
       # # Update version.json
       # - name: Update version.json
       #   run: |
       #     COMMIT_DATE=$(TZ='Asia/Shanghai' git log -1 --format=%cd --date=format:%Y-%m-%d)
       #     jq --arg date "$COMMIT_DATE" '.latest-date = $date' src/playground/about/version.json > tmp.json && mv tmp.json src/playground/about/version.json
       #     jq '.version_little = ((.version_little | tonumber) + 1 | tostring)' src/playground/about/version.json > tmp.json && mv tmp.json src/playground/about/version.json
-      - run: npm run build
+      - run: pnpm run build
       # Save dist as artifact
       - name: Upload dist
         uses: actions/upload-artifact@v4
