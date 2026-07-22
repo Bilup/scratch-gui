@@ -1176,6 +1176,10 @@ class NativeAddonWindow {
 
 // Window Manager API
 const WindowManager = {
+    getAnimationsEnabled () {
+        return localStorage.getItem('mw:window-animation') !== 'false';
+    },
+    
     createWindow (options = {}) {
         if (canUseNativeWindows() && !IN_PAGE_WINDOW_IDS.has(options.id)) {
             return new NativeAddonWindow(options);

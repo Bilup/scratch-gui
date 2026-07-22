@@ -129,6 +129,11 @@ const messages = defineMessages({
         description: 'Shortcut label',
         id: 'shortcut.restorePoints'
     },
+    spotlightSearch: {
+        defaultMessage: 'Spotlight Search',
+        description: 'Shortcut label',
+        id: 'shortcut.spotlightSearch'
+    },
     settings: {
         defaultMessage: 'Settings',
         description: 'Shortcut label',
@@ -347,6 +352,7 @@ class ShortcutManager extends React.Component {
             'loadFromComputer': messages.loadFromComputer,
             'packageProject': messages.packageProject,
             'restorePoints': messages.restorePoints,
+            'spotlightSearch': messages.spotlightSearch,
             'settings': messages.settings,
             'fullScreen': messages.fullScreen,
             'blocksTab': messages.blocksTab,

@@ -16,6 +16,8 @@ import describeActivity from '../../lib/collaboration/describe-activity.js';
 
 import styles from './collaboration-modal.css';
 
+import {Handshake as CollaborationIcon, User, Crown, UserMinus, Copy, AlertTriangle, PenLine, Settings, X} from 'lucide-react';
+
 class CollaborationModal extends Component {
     constructor(props) {
         super(props);
@@ -338,7 +340,7 @@ class CollaborationModal extends Component {
         return `${randomAdjective}-${randomNoun}-${randomNum}`;
     }
 
-maybeAutoJoin () {
+    maybeAutoJoin () {
         const {roomId, currentUsername, isConnected} = this.props;
         if (!roomId || !currentUsername || isConnected) return;
         if (CollaborationService.getInstance().roomId) return;
@@ -474,6 +476,49 @@ maybeAutoJoin () {
                 console.warn('Could not get pending requests:', error);
             }
         }
+    }
+
+    handleShowSettings () {
+        this.setState({ showSettings: true });
+    }
+
+    handleCloseSettings () {
+        this.setState({ showSettings: false });
+    }
+
+    handleHostChange (value) {
+        this.setState(prevState => ({
+            peerConfig: { ...prevState.peerConfig, host: value }
+        }));
+    }
+
+    handlePortChange (value) {
+        const port = parseInt(value, 10);
+        this.setState(prevState => ({
+            peerConfig: { ...prevState.peerConfig, port: isNaN(port) ? 443 : port }
+        }));
+    }
+
+    handleKeyChange (value) {
+        this.setState(prevState => ({
+            peerConfig: { ...prevState.peerConfig, key: value }
+        }));
+    }
+
+    handlePathChange (value) {
+        this.setState(prevState => ({
+            peerConfig: { ...prevState.peerConfig, path: value }
+        }));
+    }
+
+    handleSecureChange (value) {
+        this.setState(prevState => ({
+            peerConfig: { ...prevState.peerConfig, secure: value }
+        }));
+    }
+
+    handleSaveConfig () {
+        this.setState({ showSettings: false });
     }
 
     describeActivity (userId) {
@@ -750,7 +795,7 @@ maybeAutoJoin () {
                         <h3 className={styles.sectionTitle}>
                             <FormattedMessage
                                 defaultMessage="Connected Users"
-                                description="Users section title"
+                                description="Connected users section title"
                                 id="gui.collaboration.connectedUsers"
                             />
                         </h3>

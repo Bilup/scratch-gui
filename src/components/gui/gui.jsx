@@ -810,7 +810,7 @@ const GUIComponent = props => {
             <MWExtensionManagerModal />
             <MWProjectThemeModal />
             <BilmeModal />
-            <ShortcutManager visible={shortcutManagerModalVisible} />
+            {shortcutManagerModalVisible && <ShortcutManager />}
             {usernameModalVisible && <TWUsernameModal visible={usernameModalVisible} />}
             {settingsModalVisible && (
                 <TWSettingsModal
@@ -903,22 +903,6 @@ const GUIComponent = props => {
                         }}
                     />
                 ) : null}
-                <StageWrapper
-                    isFullScreen={isFullScreen}
-                    isEmbedded={isEmbedded}
-                    isRendererSupported={isRendererSupported()}
-                    isRtl={isRtl}
-                    loading={loading}
-                    stageContainerWidth={
-                        typeof playerStageWidth === 'number' ? playerStageWidth : null
-                    }
-                    stageSize={STAGE_SIZE_MODES.full}
-                    vm={vm}
-                >
-                    {alertsVisible ? (
-                        <Alerts className={styles.alertsContainer} />
-                    ) : null}
-                </StageWrapper>
                 {alwaysEnabledModals}
                 {isPlayerOnly ? (
                     <React.Fragment>

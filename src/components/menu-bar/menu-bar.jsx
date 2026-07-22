@@ -159,7 +159,7 @@ import {
     FilePlusCorner, Upload, RefreshCcw, ClockPlus, Package, FileInput,
     Save, ArchiveRestore, UserPen, Cloud, PackagePlus, Puzzle,
     Bookmark, GitBranch, FileCog, Bug, Database, Undo, Redo, Handshake, Sparkles, Wrench, Send,
-    Download, AppWindow, Computer, Shield, Code, Code2, MessageCircle, TerminalSquare,
+    Download, AppWindow, Computer, Shield, Code, Code2, MessageCircle, TerminalSquare, ChartColumn, ListTodo,
     Blocks as BlocksIcon, Menu as MenuIcon
 } from 'lucide-react';
 

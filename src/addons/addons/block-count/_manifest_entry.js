@@ -23,6 +23,24 @@ const manifest = {
   ],
   "settings": [
     {
+      "name": "Hide block count",
+      "id": "hide_block_count",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "name": "Show costume count",
+      "id": "show_costume_count",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "name": "Show sound count",
+      "id": "show_sound_count",
+      "type": "boolean",
+      "default": false
+    },
+    {
       "name": "Show complexity score in menu bar",
       "id": "show_complexity_score",
       "type": "boolean",
