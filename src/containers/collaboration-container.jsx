@@ -26,8 +26,8 @@ import {
     setCollaborationLoading,
     setCollaborationHostLoadingProgress,
     setCollaborationReconnecting,
-    setSpriteEditor,
-    removeSpriteEditor
+    setUserActivity,
+    removeUserActivity
 } from '../reducers/collaboration';
 
 import {
@@ -138,6 +138,12 @@ class CollaborationContainer extends Component {
             console.log('Shortcuts updated in Redux:', this.props.customShortcuts);
             this.collaborationService.customShortcuts = this.props.customShortcuts;
             console.log('CollaborationService customShortcuts updated:', this.collaborationService.customShortcuts);
+        }
+
+        // The tabs are the one piece of our activity this container owns; the
+        // sprite and the costume/sound index are reported by their own panes.
+        if (this.props.activeTabIndex !== prevProps.activeTabIndex) {
+            this.collaborationService.setActivity({tab: this.props.activeTabIndex});
         }
     }
 
@@ -361,8 +367,10 @@ class CollaborationContainer extends Component {
     handleUsernameChanged (user) {
         console.log('Username changed:', user);
 
-        // If this is our own username change from another client, update local state
+        // If this is our own username change from another client, update local state.
+        // When signed into Rotur the two names are separate, so don't clobber the project name.
         if (
+            !this.props.roturHandle &&
             user.id === this.getCurrentUserId() &&
             user.username !== this.props.currentUsername
         ) this.props.onSetUsername(user.username);
@@ -420,9 +428,10 @@ class CollaborationContainer extends Component {
         // Now we're actually connected and can show the connected UI
         this.props.onSetConnected(true);
 
-        // Sync username with collaboration service
+        // Sync username with collaboration service (guests only; see handleUsernameChanged)
         const serviceUsername = this.collaborationService.username;
         if (
+            !this.props.roturHandle &&
             serviceUsername &&
             serviceUsername !== this.props.currentUsername
         ) this.props.onSetUsername(serviceUsername);
@@ -703,13 +712,12 @@ class CollaborationContainer extends Component {
         NotificationSystem.info('Reconnected to the collaboration room', 3000);
     }
 
-    handlePresenceEditingChanged ({userId, username, targetId, previousTargetId}) {
-        if (previousTargetId) {
-            this.props.onRemoveSpriteEditor(previousTargetId, userId);
+    handlePresenceEditingChanged ({userId, username, handle, activity}) {
+        if (!activity) {
+            this.props.onRemoveUserActivity(userId);
+            return;
         }
-        if (targetId) {
-            this.props.onSetSpriteEditor(targetId, userId, username, Date.now());
-        }
+        this.props.onSetUserActivity(Object.assign({userId, username, handle}, activity));
     }
 
     render () {
@@ -723,6 +731,8 @@ class CollaborationContainer extends Component {
                 roomId={this.props.roomId}
                 roomPrivacy={this.props.roomPrivacy}
                 connectedUsers={this.props.connectedUsers}
+                userActivity={this.props.userActivity}
+                vm={this.props.vm}
                 connectionError={this.props.connectionError}
                 customShortcuts={this.props.customShortcuts}
                 onRequestClose={this.props.onRequestClose}
@@ -762,9 +772,12 @@ CollaborationContainer.propTypes = {
     onSetCollabLoading: PropTypes.func.isRequired,
     onSetHostLoadingProgress: PropTypes.func.isRequired,
     onSetReconnecting: PropTypes.func.isRequired,
-    onSetSpriteEditor: PropTypes.func.isRequired,
-    onRemoveSpriteEditor: PropTypes.func.isRequired,
-    onOpenChangeUsername: PropTypes.func.isRequired
+    onSetUserActivity: PropTypes.func.isRequired,
+    onRemoveUserActivity: PropTypes.func.isRequired,
+    onOpenChangeUsername: PropTypes.func.isRequired,
+    activeTabIndex: PropTypes.number,
+    // eslint-disable-next-line react/forbid-prop-types
+    userActivity: PropTypes.object.isRequired
 };
 
 const mapStateToProps = state => ({
@@ -773,8 +786,13 @@ const mapStateToProps = state => ({
     roomId: state.scratchGui.collaboration.roomId,
     roomPrivacy: state.scratchGui.collaboration.roomPrivacy,
     connectedUsers: state.scratchGui.collaboration.connectedUsers,
+    userActivity: state.scratchGui.collaboration.activity,
+    activeTabIndex: state.scratchGui.editorTab.activeTabIndex,
     connectionError: state.scratchGui.collaboration.connectionError,
-    currentUsername: state.scratchGui.tw.username,
+    // Online identity is the Rotur handle when signed in; the custom name is only a fallback.
+    currentUsername: state.scratchGui.rotur.username ?
+        `@${state.scratchGui.rotur.username}` :
+        state.scratchGui.tw.username,
     roturHandle: state.scratchGui.rotur.username,
     vm: state.scratchGui.vm,
     customShortcuts: state.scratchGui.shortcuts.customShortcuts
@@ -791,9 +809,8 @@ const mapDispatchToProps = dispatch => ({
     onSetCollabLoading: (isLoading, message) => dispatch(setCollaborationLoading(isLoading, message)),
     onSetHostLoadingProgress: progress => dispatch(setCollaborationHostLoadingProgress(progress)),
     onSetReconnecting: isReconnecting => dispatch(setCollaborationReconnecting(isReconnecting)),
-    onSetSpriteEditor: (spriteId, userId, username, timestamp) =>
-        dispatch(setSpriteEditor(spriteId, userId, username, timestamp)),
-    onRemoveSpriteEditor: (spriteId, userId) => dispatch(removeSpriteEditor(spriteId, userId)),
+    onSetUserActivity: activity => dispatch(setUserActivity(activity)),
+    onRemoveUserActivity: userId => dispatch(removeUserActivity(userId)),
     onOpenChangeUsername: () => dispatch(openUsernameModal())
 });
 

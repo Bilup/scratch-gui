@@ -12,6 +12,7 @@ import showAlert from '../../addons/window-system/alert';
 import NotificationSystem from '../../lib/notification-manager.js';
 import CollaborationService from '../../lib/collaboration/index.js';
 import {avatarForCollabUser} from '../../lib/collaboration/avatar.js';
+import describeActivity from '../../lib/collaboration/describe-activity.js';
 
 import styles from './collaboration-modal.css';
 
@@ -475,6 +476,10 @@ maybeAutoJoin () {
         }
     }
 
+    describeActivity (userId) {
+        return describeActivity(this.props.vm, (this.props.userActivity || {})[userId]);
+    }
+
     renderUserIcon (user, isHost) {
         const avatarUrl = avatarForCollabUser(user);
         if (avatarUrl) {
@@ -777,6 +782,11 @@ maybeAutoJoin () {
                                                     description="You badge"
                                                     id="gui.collaboration.you"
                                                 />
+                                            </span>
+                                        )}
+                                        {this.describeActivity(user.id) && (
+                                            <span className={styles.userActivity}>
+                                                {this.describeActivity(user.id)}
                                             </span>
                                         )}
                                     </span>
@@ -1250,6 +1260,10 @@ CollaborationModal.propTypes = {
     })),
     connectionError: PropTypes.string,
     roturHandle: PropTypes.string,
+    // eslint-disable-next-line react/forbid-prop-types
+    userActivity: PropTypes.object,
+    // eslint-disable-next-line react/forbid-prop-types
+    vm: PropTypes.object,
     onRequestClose: PropTypes.func.isRequired,
     onJoinRoom: PropTypes.func.isRequired,
     onCreateRoom: PropTypes.func.isRequired,
