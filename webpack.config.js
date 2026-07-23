@@ -14,7 +14,7 @@ const postcssImport = require('postcss-import');
 const STATIC_PATH = process.env.STATIC_PATH || '/static';
 const {APP_NAME} = require('./src/lib/constants/brand');
 
-const root = process.env.ROOT || '';
+const root = process.env.ROOT || '/';
 if (root.length > 0 && !root.endsWith('/')) {
     throw new Error('If ROOT is defined, it must have a trailing slash.');
 }
@@ -40,11 +40,17 @@ const base = {
         // allows ROUTING_STYLE=wildcard to work properly
         historyApiFallback: {
             rewrites: [
-                {from: /^\/\d+\/?$/, to: '/index.html'},
+                {from: /^\/editor\/?$/, to: '/editor.html'},
+                {from: /^\/fullscreen\/?$/, to: '/fullscreen.html'},
+                {from: /^\/embed\/?$/, to: '/embed.html'},
+                {from: /^\/addons\/?$/, to: '/addons.html'},
+                {from: /^\/credits\/?$/, to: '/credits.html'},
+                {from: /^\/\d+\/?$/, to: '/player.html'},
                 {from: /^\/\d+\/fullscreen\/?$/, to: '/fullscreen.html'},
                 {from: /^\/\d+\/editor\/?$/, to: '/editor.html'},
-                {from: /^\/\d+\/embed\/?$/, to: '/embed.html'},
-                {from: /^\/addons\/?$/, to: '/addons.html'}
+                {from: /^\/\d+\/embed\/?$/, to: '/embed.html'}
+                // anything else (/, /explore, /project/*, /users/*, /settings)
+                // falls through to index.html (the community app)
             ]
         }
     },
@@ -113,7 +119,7 @@ const base = {
                 /node_modules[\\/]just-bash/,
                 /node_modules[\\/]monaco-editor/,
                 /node_modules[\\/]rotur-sdk/,
-                /node_modules[\\/]brace-expansion/
+                /node_modules[\\/]fake-indexeddb/
             ],
             options: {
                 babelrc: false,
@@ -226,6 +232,7 @@ module.exports = [
     // to run editor examples
     defaultsDeep({}, base, {
         entry: {
+            'community': './src/playground/community.jsx',
             'editor': './src/playground/editor.jsx',
             'player': './src/playground/player.jsx',
             'fullscreen': './src/playground/fullscreen.jsx',
@@ -265,7 +272,7 @@ module.exports = [
                 'process.env.DEBUG': Boolean(process.env.DEBUG),
                 'process.env.ENABLE_SERVICE_WORKER': JSON.stringify(process.env.ENABLE_SERVICE_WORKER || ''),
                 'process.env.ROOT': JSON.stringify(root),
-                'process.env.ROUTING_STYLE': JSON.stringify(process.env.ROUTING_STYLE || 'filehash')
+                'process.env.ROUTING_STYLE': JSON.stringify(process.env.ROUTING_STYLE || 'wildcard')
             }),
             new HtmlWebpackPlugin({
                 chunks: ['editor'],
@@ -276,9 +283,16 @@ module.exports = [
                 ...htmlWebpackPluginCommon
             }),
             new HtmlWebpackPlugin({
+                chunks: ['community'],
+                template: 'src/playground/simple.ejs',
+                filename: 'index.html',
+                title: APP_NAME,
+                ...htmlWebpackPluginCommon
+            }),
+            new HtmlWebpackPlugin({
                 chunks: ['player'],
                 template: 'src/playground/index.ejs',
-                filename: 'index.html',
+                filename: 'player.html',
                 title: `${APP_NAME} - Refactoring freedom`,
                 ...htmlWebpackPluginCommon
             }),
