@@ -64,6 +64,7 @@ const base = {
             'react-dom': require.resolve('react-dom'),
             'text-encoding$': path.resolve(__dirname, 'src/lib/tw-text-encoder'),
             'scratch-render-fonts$': path.resolve(__dirname, 'src/lib/tw-scratch-render-fonts'),
+            '@turbowarp/scratch-svg-renderer$': '@bilup/scratch-svg-renderer',
             'exports-loader': require.resolve('exports-loader')
         }
     },
