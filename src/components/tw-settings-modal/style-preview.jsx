@@ -1,6 +1,7 @@
 /* eslint-disable max-len */
 import PropTypes from 'prop-types';
 import React from 'react';
+import {intlShape} from 'react-intl';
 
 const BASE_CSS = {
     tabs: `
@@ -56,35 +57,40 @@ const boxMaxIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" s
 const lucideMinIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14 10 7-7"/><path d="M20 10h-6V4"/><path d="m3 21 7-7"/><path d="M4 14h6v6"/></svg>';
 const lucideMaxIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="m21 3-7 7"/><path d="m3 21 7-7"/><path d="M9 21H3v-6"/></svg>';
 
-const buildWindowMarkup = variant => {
+const buildWindowMarkup = (variant, intl) => {
     const isMac = variant === 'macos';
     const minIcon = isMac ? lucideMinIcon : barMinIcon;
     const maxIcon = isMac ? lucideMaxIcon : boxMaxIcon;
+    const windowTitle = intl ? intl.formatMessage({id: 'mw.stylePreview.window', defaultMessage: 'Window'}) : 'Window';
+    const previewText = intl ? intl.formatMessage({id: 'mw.stylePreview.preview', defaultMessage: 'Preview'}) : 'Preview';
     return `
         <div class="wrap">
             <div class="addon-window">
                 <div class="addon-window-header">
-                    <div class="addon-window-title">Window</div>
+                    <div class="addon-window-title">${windowTitle}</div>
                     <div class="addon-window-controls">
                         <div class="addon-window-btn addon-window-btn-minimize">${minIcon}</div>
                         <div class="addon-window-btn addon-window-btn-maximize">${maxIcon}</div>
                         <div class="addon-window-btn addon-window-btn-close">${closeIcon}</div>
                     </div>
                 </div>
-                <div class="addon-window-content">Preview</div>
+                <div class="addon-window-content">${previewText}</div>
             </div>
         </div>
     `;
 };
 
-const TABS_MARKUP = `
-    <div class="wrap">
-        <div class="gui_tab-list_preview">
-            <div class="gui_tab_preview react-tabs__tab--selected_preview">${tabIcon}<span>Code</span></div>
+const buildTabsMarkup = intl => {
+    const codeLabel = intl ? intl.formatMessage({id: 'mw.stylePreview.code', defaultMessage: 'Code'}) : 'Code';
+    return `
+        <div class="wrap">
+            <div class="gui_tab-list_preview">
+                <div class="gui_tab_preview react-tabs__tab--selected_preview">${tabIcon}<span>${codeLabel}</span></div>
+            </div>
+            <div class="preview-body"></div>
         </div>
-        <div class="preview-body"></div>
-    </div>
-`;
+    `;
+};
 
 class StylePreview extends React.Component {
     componentDidMount () {
@@ -102,7 +108,7 @@ class StylePreview extends React.Component {
             this.shadow = this.host.attachShadow({mode: 'open'});
         }
         const base = BASE_CSS[this.props.type] || '';
-        const markup = this.props.type === 'window' ? buildWindowMarkup(this.props.variant) : TABS_MARKUP;
+        const markup = this.props.type === 'window' ? buildWindowMarkup(this.props.variant, this.props.intl) : buildTabsMarkup(this.props.intl);
         const designWidth = this.props.type === 'window' ? 300 : 190;
         let tabFix = '';
         if (this.props.type === 'tabs') {
@@ -147,7 +153,8 @@ class StylePreview extends React.Component {
 StylePreview.propTypes = {
     type: PropTypes.oneOf(['tabs', 'window']).isRequired,
     variant: PropTypes.string,
-    css: PropTypes.string
+    css: PropTypes.string,
+    intl: intlShape
 };
 
 export default StylePreview;

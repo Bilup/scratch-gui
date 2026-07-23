@@ -80,7 +80,7 @@ export default async function ({ addon, console, msg }) {
             sizeDisplay.querySelector('.sa-project-size-project').innerText = `${sizeText}: ${targetSize}/${formatFileSize(projectSize)}`;
         } catch (e) {
             console.error('[Project Size Display] Error updating display:', e);
-            sizeDisplay.innerText = 'Error';
+            sizeDisplay.innerText = msg('error');
         }
     }
 

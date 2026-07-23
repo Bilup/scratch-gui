@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import classNames from 'classnames';
 import VM from 'scratch-vm';
 
@@ -23,15 +23,30 @@ const StageWrapperComponent = function (props) {
         vm
     } = props;
 
+    const [isExitingFullScreen, setIsExitingFullScreen] = useState(false);
+
+    useEffect(() => {
+        if (isFullScreen) {
+            setIsExitingFullScreen(false);
+        } else {
+            setIsExitingFullScreen(true);
+            const timer = setTimeout(() => {
+                setIsExitingFullScreen(false);
+            }, 250);
+            return () => clearTimeout(timer);
+        }
+    }, [isFullScreen]);
+
     return (
         <Box
             className={classNames(
                 styles.stageWrapper,
                 {
                     [styles.embedded]: isEmbedded,
-                    [styles.fullScreen]: isFullScreen,
+                    [styles.fullScreen]: isFullScreen || isExitingFullScreen,
+                    [styles.exitingFullScreen]: isExitingFullScreen,
                     [styles.loading]: loading,
-                    [styles.offsetControls]: !(isEmbedded || isFullScreen)
+                    [styles.offsetControls]: !(isEmbedded || isFullScreen || isExitingFullScreen)
                 }
             )}
             dir={isRtl ? 'rtl' : 'ltr'}

@@ -12,6 +12,7 @@ import {setSearchParams} from '../lib/utils/navigation';
 import {getAppearanceSetting, setAppearanceSetting} from '../lib/mw-appearance-settings';
 import {getStyleSetting, setStyleSetting} from '../lib/mw-style-settings';
 import {getHideOperatorArrows, setHideOperatorArrows} from '../lib/mw-operator-arrows';
+import WindowManager from '../addons/window-system/window-manager';
 
 const messages = defineMessages({
     newFramerate: {
@@ -250,6 +251,8 @@ class UsernameModal extends React.Component {
 handleWindowAnimationChange (e) {
         const enabled = e.target.checked;
         this.setState({windowAnimation: enabled});
+        WindowManager.setAnimationsEnabled(enabled);
+        window.dispatchEvent(new CustomEvent('mw:window-animation-change', {detail: {enabled}}));
         try {
             localStorage.setItem('mw:window-animation', enabled);
         } catch (err) {
