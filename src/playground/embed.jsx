@@ -7,7 +7,9 @@ import AppStateHOC from '../lib/components/app-state-hoc.jsx';
 import TWEmbedFullScreenHOC from '../lib/components/tw-embed-fullscreen-hoc.jsx';
 import TWStateManagerHOC from '../lib/components/tw-state-manager-hoc.jsx';
 import runAddons from '../addons/entry';
-import {detectTheme} from '../lib/themes/themePersistance';
+import {detectTheme, applyThemeVisuals} from '../lib/themes/themePersistance';
+import {customThemeManager} from '../lib/themes/custom-themes';
+import {captureThumbnailDataUri} from '../lib/community/publish';
 
 import GUI from './render-gui.jsx';
 import render from './app-target';
@@ -60,14 +62,37 @@ render(<WrappedGUI
 />);
 
 window.addEventListener('message', event => {
-    if (!event.data || event.data.type !== 'mw:capture-stage' || !event.source) return;
+    if (!event.data || event.data.type !== 'mw:apply-theme') return;
+    // The embed runs sandboxed, so it can't read the parent's stored theme and
+    // big custom themes don't survive the URL. The parent posts the theme here.
     try {
-        const canvas = document.querySelector('canvas');
-        if (!canvas) throw new Error('no canvas');
-        event.source.postMessage({type: 'mw:stage-capture', dataURL: canvas.toDataURL('image/png')}, '*');
+        if (event.data.theme) {
+            window.localStorage.setItem('tw:theme', event.data.theme);
+        } else {
+            window.localStorage.removeItem('tw:theme');
+        }
+        if (event.data.customThemes) {
+            window.localStorage.setItem('tw:custom-themes', event.data.customThemes);
+        }
+        if (typeof customThemeManager.loadCustomThemes === 'function') {
+            customThemeManager.loadCustomThemes();
+        }
+        applyThemeVisuals(detectTheme());
     } catch (e) {
-        event.source.postMessage({type: 'mw:stage-capture', error: true}, '*');
+        // ignore
     }
+});
+
+window.addEventListener('message', event => {
+    if (!event.data || event.data.type !== 'mw:capture-stage' || !event.source) return;
+    const source = event.source;
+    captureThumbnailDataUri(vm).then(dataURL => {
+        if (dataURL) {
+            source.postMessage({type: 'mw:stage-capture', dataURL}, '*');
+        } else {
+            source.postMessage({type: 'mw:stage-capture', error: true}, '*');
+        }
+    });
 });
 
 if (urlParams.has('addons')) {

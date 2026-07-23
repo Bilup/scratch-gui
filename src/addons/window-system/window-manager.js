@@ -339,8 +339,17 @@ class AddonWindow {
         
         // Add to DOM
         document.body.appendChild(this.element);
+
+        this.escapeHandler = e => {
+            if (e.key !== 'Escape' || !this.closable || !this.isVisible) return;
+            const top = Array.from(activeWindows.values())
+                .filter(w => w.isVisible)
+                .sort((a, b) => b.zIndex - a.zIndex)[0];
+            if (top === this) this.close();
+        };
+        document.addEventListener('keydown', this.escapeHandler);
     }
-    
+
     createControlButton (type, title, onClick) {
         const button = document.createElement('button');
         button.title = title;
@@ -756,6 +765,10 @@ class AddonWindow {
     
     destroy (callOnClose = true) {
         this.hide();
+        if (this.escapeHandler) {
+            document.removeEventListener('keydown', this.escapeHandler);
+            this.escapeHandler = null;
+        }
         if (callOnClose) {
             this.onClose();
         }
@@ -868,8 +881,8 @@ class AddonWindow {
     }
     
     center () {
-        this.x = (window.innerWidth - this.width) / 2;
-        this.y = (window.innerHeight - this.height) / 2;
+        this.x = Math.max(0, (window.innerWidth - this.width) / 2);
+        this.y = Math.max(0, (window.innerHeight - this.height) / 2);
         this.element.style.left = `${this.x}px`;
         this.element.style.top = `${this.y}px`;
         return this;
@@ -1215,5 +1228,9 @@ const WindowManager = {
         }
     }
 };
+
+if (typeof window !== 'undefined') {
+    window.wm = WindowManager;
+}
 
 export default WindowManager;

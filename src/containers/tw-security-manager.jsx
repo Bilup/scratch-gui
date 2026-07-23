@@ -6,6 +6,7 @@ import bindAll from 'lodash.bindall';
 import SecurityManagerModal from '../components/tw-security-manager-modal/security-manager-modal.jsx';
 import SecurityModals from '../lib/constants/security-manager.js';
 import {getPersistedUnsandboxed, setPersistedUnsandboxed} from '../lib/persistence/tw-unsandboxed.js';
+import isTrustedExtensionUrl from '../lib/trusted-extension.js';
 import {shouldWarn, isSecurityManagerDisabled} from '../lib/security-warning-settings.js';
 
 /* eslint-disable require-atomic-updates */
@@ -25,13 +26,18 @@ const manuallyTrustExtension = url => {
  * @returns {boolean} True if the extension can is trusted
  */
 const isTrustedExtension = url => (
-    url.startsWith('https://extensions.turbowarp.org/') ||
-    url.startsWith('https://extensions.bilup.org/') ||
-    url.startsWith('https://extensions.mistium.com/') ||
-    url.startsWith('https://sharkpools-extensions.vercel.app/') ||
-    url.startsWith('https://editors.astras.top/extensions/') ||
+    isTrustedExtensionUrl(url) ||
     extensionsTrustedByUser.has(url)
 );
+
+const isPlatformProjectLoad = () => {
+    try {
+        const params = new URLSearchParams(location.search);
+        return params.has('mw_assets') || params.has('platform_project') || /^#mw-/.test(location.hash);
+    } catch (e) {
+        return false;
+    }
+};
 
 const fetchHostsTrustedByUser = new Set();
 const embedHostsTrustedByUser = new Set();
@@ -267,7 +273,15 @@ class TWSecurityManagerComponent extends React.Component {
             log.info(`Loading extension ${url} automatically`);
             return true;
         }
-        if (!shouldWarn('loadExtension')) return true;
+        if (!isPlatformProjectLoad()) {
+            log.info(`Loading extension ${url} unsandboxed; project is not from the MistWarp platform`);
+            manuallyTrustExtension(url);
+            return true;
+        }
+        if (!shouldWarn('loadExtension')) {
+            manuallyTrustExtension(url);
+            return true;
+        }
         if (url === 'builtin:patching') {
             const {showModal} = await this.acquireModalLock();
             return showModal(SecurityModals.LoadExtension, {
@@ -278,11 +292,15 @@ class TWSecurityManagerComponent extends React.Component {
         }
         if (this.loadAllUnsandboxed) return true;
         const {showModal} = await this.acquireModalLock();
+        let unsandboxed = getPersistedUnsandboxed();
         const allowed = await showModal(SecurityModals.LoadExtension, {
             url,
             showLoadAll: true,
-            unsandboxed: getPersistedUnsandboxed(),
-            onChangeUnsandboxed: this.handleChangeUnsandboxed.bind(this)
+            unsandboxed,
+            onChangeUnsandboxed: e => {
+                unsandboxed = e.target.checked;
+                this.handleChangeUnsandboxed(e);
+            }
         });
         if (!allowed) return false;
 
@@ -291,7 +309,6 @@ class TWSecurityManagerComponent extends React.Component {
             return true;
         }
 
-        const unsandboxed = this.state.data.unsandboxed;
         setPersistedUnsandboxed(unsandboxed);
         if (unsandboxed) {
             manuallyTrustExtension(url);

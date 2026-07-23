@@ -6,7 +6,7 @@ import {
 } from './client.js';
 import {onRoturLogout} from './cloud-sync.js';
 import {clearGitAuth} from './git-api.js';
-import {exchangeValidator, loadSession, storeSession, logout as mistLogout} from '../community/api.js';
+import {runExchange, onAuthInvalid, loadSession, storeSession, logout as mistLogout} from '../community/api.js';
 
 const ROTUR_TOKEN_KEY = 'mw:rotur-token';
 const MIST_SESSION_KEY = 'mw:mistwarp-session';
@@ -52,6 +52,7 @@ const adoptUrlToken = () => {
             return;
         }
         if (token !== readRoturToken()) {
+            roturLogout();
             localStorage.setItem(ROTUR_TOKEN_KEY, token);
             storeSession(null);
         }
@@ -73,7 +74,7 @@ const ensureMistSession = () => {
     if (!token) {
         return Promise.resolve(null);
     }
-    return exchangeValidator(token);
+    return runExchange(token);
 };
 
 const invalidateFailedValidator = error => {
@@ -84,14 +85,17 @@ const invalidateFailedValidator = error => {
     return true;
 };
 
-const restore = async () => {
+let restoreInFlight = null;
+
+const doRestore = async () => {
     setState({status: 'restoring'});
     adoptUrlToken();
     let user = null;
     try {
         user = await roturRestore();
     } catch (_) {
-        user = null;
+        setState({status: 'idle', user: null});
+        return null;
     }
     if (!user) {
         storeSession(null);
@@ -107,9 +111,18 @@ const restore = async () => {
     return user;
 };
 
+const restore = () => {
+    if (!restoreInFlight) {
+        restoreInFlight = doRestore().finally(() => {
+            restoreInFlight = null;
+        });
+    }
+    return restoreInFlight;
+};
+
 const login = async () => {
     const previousUser = state.user;
-    setState({status: 'logging-in', user: null});
+    setState({status: 'logging-in'});
     let user;
     try {
         user = await roturLogin();
@@ -127,12 +140,8 @@ const login = async () => {
     return user;
 };
 
-const logout = async () => {
-    try {
-        await mistLogout();
-    } catch (_) {
-        storeSession(null);
-    }
+const logout = () => {
+    mistLogout().catch(() => null);
     try {
         onRoturLogout();
     } catch (_) {
@@ -144,11 +153,14 @@ const logout = async () => {
         // ignore
     }
     roturLogout();
+    storeSession(null);
     setState({status: 'idle', user: null});
 };
 
 const getMistSession = () => loadSession();
 const getRoturToken = () => getRotur().token || readRoturToken();
+
+onAuthInvalid(() => invalidateFailedValidator({code: 'VALIDATOR_GENERATION_FAILED'}));
 
 if (typeof window !== 'undefined') {
     window.addEventListener('storage', event => {

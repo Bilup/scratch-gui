@@ -227,7 +227,11 @@ class WindowedModal extends React.Component {
             onResize: this.handleWindowResize
         });
         this.createdWindow = true;
-        
+
+        if (this.props.centered && this.window.center) {
+            this.window.center();
+        }
+
         // Create content container with modal styling
         this.contentContainer = document.createElement('div');
         this.contentContainer.className = 'modal-window-content windowed-modal-content';
@@ -404,7 +408,9 @@ class WindowedModal extends React.Component {
     
     handlePopState () {
         // Whenever someone navigates, we want to be closed
-        this.props.onRequestClose();
+        if (this.props.onRequestClose) {
+            this.props.onRequestClose();
+        }
     }
     
     get id () {
@@ -431,6 +437,7 @@ WindowedModal.propTypes = {
     onRequestClose: PropTypes.func,
     children: PropTypes.node,
     className: PropTypes.string,
+    centered: PropTypes.bool,
     contentLabel: PropTypes.oneOfType([
         PropTypes.string,
         PropTypes.object

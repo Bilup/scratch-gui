@@ -9,6 +9,7 @@ import {
     LoadingStates,
     getIsCreatingNew,
     getIsFetchingWithId,
+    getIsFetchingWithoutId,
     getIsLoading,
     getIsShowingProject,
     onFetchedProjectData,
@@ -38,6 +39,43 @@ const cloneProjectFromRepo = async url => {
 };
 
 const isHttpUrl = url => /^https?:\/\//.test(url);
+
+let fetchInitiatedLoad = false;
+
+const clearProjectSourceFromUrl = () => {
+    if (typeof location === 'undefined' || typeof URLSearchParams === 'undefined') return;
+    const params = new URLSearchParams(location.search);
+    let changed = false;
+    for (const key of ['clone', 'project_url', 'platform_project', 'mw_assets']) {
+        if (params.has(key)) {
+            params.delete(key);
+            changed = true;
+        }
+    }
+    const hasMwHash = /^#mw-/.test(location.hash);
+    if (!changed && !hasMwHash) return;
+    const query = params.toString();
+    const hash = hasMwHash ? '' : location.hash;
+    try {
+        history.replaceState(null, '', `${location.pathname}${query ? `?${query}` : ''}${hash}`);
+    } catch (e) {
+        // ignore
+    }
+};
+
+const clearProjectSourceOnForeignLoads = vm => {
+    if (!vm || vm._mwClearsProjectSourceUrl) return;
+    vm._mwClearsProjectSourceUrl = true;
+    const originalLoadProject = vm.loadProject.bind(vm);
+    vm.loadProject = (...args) => {
+        if (fetchInitiatedLoad) {
+            fetchInitiatedLoad = false;
+        } else {
+            clearProjectSourceFromUrl();
+        }
+        return originalLoadProject(...args);
+    };
+};
 
 const loadPlatformProject = async id => {
     const {project} = await getMistWarpProject(id);
@@ -142,6 +180,7 @@ const ProjectFetcherHOC = function (WrappedComponent) {
             storage.setProjectToken(props.projectToken);
             storage.setAssetHost(props.assetHost);
             storage.setTranslatorFunction(props.intl.formatMessage);
+            clearProjectSourceOnForeignLoads(props.vm);
             if (typeof location !== 'undefined' && typeof URLSearchParams !== 'undefined') {
                 const initialPlatformId = new URLSearchParams(location.search).get('platform_project') ||
                     (location.hash.match(/^#mw-([\w-]+)/) || [])[1];
@@ -185,6 +224,12 @@ const ProjectFetcherHOC = function (WrappedComponent) {
             // the project shouldn't be running while fetching the new project
             this.props.vm.clear();
             this.props.vm.quit();
+
+            const isInitialFetch = !this.hasFetchedProject;
+            this.hasFetchedProject = true;
+            if (!isInitialFetch && getIsFetchingWithoutId(loadingState)) {
+                clearProjectSourceFromUrl();
+            }
 
             let assetPromise;
             const searchParams = typeof URLSearchParams === 'undefined' ?
@@ -245,6 +290,7 @@ const ProjectFetcherHOC = function (WrappedComponent) {
             return assetPromise
                 .then(projectAsset => {
                     if (projectAsset) {
+                        fetchInitiatedLoad = true;
                         this.props.onFetchedProjectData(projectAsset.data, loadingState);
                     } else {
                         // Treat failure to load as an error

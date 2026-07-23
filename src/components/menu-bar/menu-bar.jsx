@@ -60,6 +60,7 @@ import {buildSb3FromFractchTree} from '../../lib/git/fractch-tree';
 
 import TWDesktopSettings from './tw-desktop-settings.jsx';
 import RoturAccount from './mw-rotur-account.jsx';
+import MwEditorNav from './mw-editor-nav.jsx';
 import CollabPresence from './mw-collab-presence.jsx';
 
 import { FEEDBACK_URL, APP_NAME } from '../../lib/constants/brand.js';
@@ -168,7 +169,7 @@ import {
     Save, ArchiveRestore, UserPen, Cloud, PackagePlus, Puzzle,
     Bookmark, GitBranch, FileCog, Bug, Database, Undo, Redo, Handshake, Sparkles, Wrench, Send,
     Download, AppWindow, Computer, Shield, Code, Code2, MessageCircle, TerminalSquare, ChartColumn, ListTodo,
-    Blocks as BlocksIcon, Menu as MenuIcon, Globe, ExternalLink
+    Blocks as BlocksIcon, Menu as MenuIcon, Globe, ExternalLink, Pause, Check
 } from 'lucide-react';
 
 import sharedMessages from '../../lib/constants/shared-messages';
@@ -405,6 +406,7 @@ class MenuBar extends React.Component {
             this.menuResizeObserver.disconnect();
             this.menuResizeObserver = null;
         }
+
         if (this.autosaveCountdownInterval) {
             clearInterval(this.autosaveCountdownInterval);
             this.autosaveCountdownInterval = null;
@@ -623,8 +625,8 @@ class MenuBar extends React.Component {
             initialTitle: this.props.projectTitle,
             action: getMistWarpAction(this.state.mistwarpProject, this.props.projectChanged),
             onPublished: result => {
-                this.setState({mistwarpProject: {id: result.id, isOwner: true, shared: true}});
-                window.open(result.url, '_blank', 'noopener');
+                this.setState({mistwarpProject: {id: result.id, isOwner: true, shared: !!result.shared}});
+                this.props.onProjectUnchanged();
             }
         });
     }
@@ -1689,16 +1691,10 @@ class MenuBar extends React.Component {
                                                             description="File menu item to remix a MistWarp project"
                                                             id="mw.menuBar.remix"
                                                         />
-                                                    ) : mistwarpAction === 'update' ? (
-                                                        <FormattedMessage
-                                                            defaultMessage="Update MistWarp project"
-                                                            description="File menu item to update a MistWarp project"
-                                                            id="mw.menuBar.update"
-                                                        />
                                                     ) : (
                                                         <FormattedMessage
-                                                            defaultMessage="Share to MistWarp"
-                                                            description="File menu item to share on MistWarp"
+                                                            defaultMessage="Save to MistWarp"
+                                                            description="File menu item to save the project to MistWarp"
                                                             id="mw.menuBar.share"
                                                         />
                                                     )}
@@ -1876,7 +1872,7 @@ class MenuBar extends React.Component {
                                                         [styles.inactive]: this.state.autosavePaused
                                                     })}
                                                 >
-                                                    {this.state.autosavePaused ? '⏸' : '✓'}
+                                                    {this.state.autosavePaused ? <Pause /> : <Check />}
                                                 </span>
                                                 {' '}
                                                 {this.state.autosavePaused ? (
@@ -1903,7 +1899,7 @@ class MenuBar extends React.Component {
                                                         {'('}
                                                         {this.formatTimeRemaining(this.getAutosaveTimeRemaining())}
                                                         {')'}
-                                                        {this.state.autosavePaused && ' ⏸'}
+                                                        {' '}{this.state.autosavePaused && <Pause />}
                                                     </span>
                                                 )}
                                             </MenuItem>
@@ -1975,7 +1971,7 @@ class MenuBar extends React.Component {
                                 </MenuSection>
                                 {this.props.onToggleFractchMode && !this.props.isPlayerOnly && (
                                     <MenuSection>
-                                        <MenuItem
+                                        {false && <MenuItem
                                             onClick={() => {
                                                 this.props.onRequestCloseEdit();
                                                 this.props.onToggleFractchMode();
@@ -1995,7 +1991,7 @@ class MenuBar extends React.Component {
                                                     id="mw.menuBar.switchToFractch"
                                                 />
                                             )}
-                                        </MenuItem>
+                                        </MenuItem>}
                                     </MenuSection>
                                 )}
                                 <MenuSection>
@@ -2526,6 +2522,12 @@ class MenuBar extends React.Component {
                         className={styles.menuBarLayoutItem}
                     >
                         <CollabPresence />
+                    </div>
+                    <div
+                        data-mw-item="mw-editor-nav"
+                        className={styles.menuBarLayoutItem}
+                    >
+                        <MwEditorNav />
                     </div>
                     <div
                         data-mw-item="rotur-account"

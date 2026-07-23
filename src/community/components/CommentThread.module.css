@@ -93,6 +93,12 @@
     flex-direction: column;
 }
 
+@media (max-width: 620px) {
+    .replies {
+        margin-left: 18px;
+    }
+}
+
 .inlineComposer,
 .inlineComposerSmall {
     display: flex;
@@ -166,4 +172,23 @@
     color: #e0245e;
     font-size: 13px;
     margin-top: 6px;
+}
+
+.showMore {
+    align-self: flex-start;
+    margin-top: 6px;
+    margin-left: 38px;
+    border: none;
+    background: none;
+    color: var(--accent-strong);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.showMore:hover {
+    background: var(--accent-softer);
 }

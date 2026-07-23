@@ -1,6 +1,8 @@
 import React, {useEffect, useState} from 'react';
 import {useSearchParams, Link} from 'react-router-dom';
 import api from '../api';
+import rotur from '../rotur';
+import useLatest from '../use-latest.js';
 import ProjectCard from '../components/ProjectCard.jsx';
 import Avatar from '../components/Avatar.jsx';
 import styles from './Explore.module.css';
@@ -18,21 +20,32 @@ const Explore = () => {
     const [projects, setProjects] = useState([]);
     const [people, setPeople] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [failed, setFailed] = useState(false);
+
+    const beginLoad = useLatest();
 
     useEffect(() => {
+        const fresh = beginLoad();
         setLoading(true);
+        setFailed(false);
         api.explore({sort, q, limit: 48})
-            .then(data => setProjects(data.projects || []))
-            .catch(() => setProjects([]))
-            .finally(() => setLoading(false));
+            .then(fresh(data => setProjects(data.projects || [])))
+            .catch(fresh(() => setFailed(true)))
+            .finally(fresh(() => setLoading(false)));
         if (q.trim()) {
             api.searchUsers(q.trim())
-                .then(data => setPeople(data.users || []))
-                .catch(() => setPeople([]));
+                .then(fresh(data => {
+                    const users = (data.users || []).slice(0, 5);
+                    setPeople(users);
+                    Promise.all(users.map(person =>
+                        rotur.followerCount(person.username).then(followers => ({...person, followers}))
+                    )).then(fresh(enriched => setPeople(enriched)));
+                }))
+                .catch(fresh(() => setPeople([])));
         } else {
             setPeople([]);
         }
-    }, [sort, q]);
+    }, [sort, q, beginLoad]);
 
     const setSort = key => {
         const next = new URLSearchParams(params);
@@ -69,8 +82,8 @@ const Explore = () => {
                             <div className={styles.personInfo}>
                                 <span className={styles.personName}>{person.username}</span>
                                 <span className={styles.personMeta}>
-                                    {person.followers} {person.followers === 1 ? 'follower' : 'followers'}
-                                    {' · '}
+                                    {person.followers ?? 0} {person.followers === 1 ? 'follower' : 'followers'}
+                                    <br />
                                     {person.projects} {person.projects === 1 ? 'project' : 'projects'}
                                 </span>
                             </div>
@@ -80,6 +93,8 @@ const Explore = () => {
             ) : null}
             {loading ? (
                 <p className={styles.status}>Loading…</p>
+            ) : failed ? (
+                <p className={styles.status}>Couldn&apos;t load. Try again.</p>
             ) : projects.length ? (
                 <div className={styles.grid}>
                     {projects.map(project => (
