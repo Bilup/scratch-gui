@@ -2371,38 +2371,6 @@ module.exports = ArgumentType;
 
 /***/ }),
 
-/***/ "./node_modules/scratch-vm/src/extension-support/block-shape.js":
-/*!**********************************************************************!*\
-  !*** ./node_modules/scratch-vm/src/extension-support/block-shape.js ***!
-  \**********************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-// Use the constants instead of manually redefining them again
-const ScratchBlocksConstants = __webpack_require__(/*! ../engine/scratch-blocks-constants */ "./node_modules/scratch-vm/src/engine/scratch-blocks-constants.js");
-
-/**
- * Types of block shapes
- * @enum {number}
- */
-const BlockShape = {
-  /**
-   * Output shape: hexagonal (booleans/predicates).
-   */
-  HEXAGONAL: ScratchBlocksConstants.OUTPUT_SHAPE_HEXAGONAL,
-  /**
-   * Output shape: rounded (numbers).
-   */
-  ROUND: ScratchBlocksConstants.OUTPUT_SHAPE_ROUND,
-  /**
-   * Output shape: squared (any/all values; strings).
-   */
-  SQUARE: ScratchBlocksConstants.OUTPUT_SHAPE_SQUARE
-};
-module.exports = BlockShape;
-
-/***/ }),
-
 /***/ "./node_modules/scratch-vm/src/extension-support/block-type.js":
 /*!*********************************************************************!*\
   !*** ./node_modules/scratch-vm/src/extension-support/block-type.js ***!
@@ -2604,6 +2572,38 @@ module.exports = TargetType;
 
 /***/ }),
 
+/***/ "./node_modules/scratch-vm/src/extension-support/tw-block-shape.js":
+/*!*************************************************************************!*\
+  !*** ./node_modules/scratch-vm/src/extension-support/tw-block-shape.js ***!
+  \*************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+// Use the constants instead of manually redefining them again
+const ScratchBlocksConstants = __webpack_require__(/*! ../engine/scratch-blocks-constants */ "./node_modules/scratch-vm/src/engine/scratch-blocks-constants.js");
+
+/**
+ * Types of block shapes
+ * @enum {number}
+ */
+const BlockShape = {
+  /**
+   * Output shape: hexagonal (booleans/predicates).
+   */
+  HEXAGONAL: ScratchBlocksConstants.OUTPUT_SHAPE_HEXAGONAL,
+  /**
+   * Output shape: rounded (numbers).
+   */
+  ROUND: ScratchBlocksConstants.OUTPUT_SHAPE_ROUND,
+  /**
+   * Output shape: squared (any/all values; strings).
+   */
+  SQUARE: ScratchBlocksConstants.OUTPUT_SHAPE_SQUARE
+};
+module.exports = BlockShape;
+
+/***/ }),
+
 /***/ "./node_modules/scratch-vm/src/extension-support/tw-extension-api-common.js":
 /*!**********************************************************************************!*\
   !*** ./node_modules/scratch-vm/src/extension-support/tw-extension-api-common.js ***!
@@ -2613,15 +2613,17 @@ module.exports = TargetType;
 
 const ArgumentType = __webpack_require__(/*! ./argument-type */ "./node_modules/scratch-vm/src/extension-support/argument-type.js");
 const BlockType = __webpack_require__(/*! ./block-type */ "./node_modules/scratch-vm/src/extension-support/block-type.js");
-const BlockShape = __webpack_require__(/*! ./block-shape */ "./node_modules/scratch-vm/src/extension-support/block-shape.js");
+const BlockShape = __webpack_require__(/*! ./tw-block-shape */ "./node_modules/scratch-vm/src/extension-support/tw-block-shape.js");
 const TargetType = __webpack_require__(/*! ./target-type */ "./node_modules/scratch-vm/src/extension-support/target-type.js");
 const Cast = __webpack_require__(/*! ../util/cast */ "./node_modules/scratch-vm/src/util/cast.js");
+const external = __webpack_require__(/*! ./tw-external */ "./node_modules/scratch-vm/src/extension-support/tw-external.js");
 const Scratch = {
   ArgumentType,
   BlockType,
   BlockShape,
   TargetType,
-  Cast
+  Cast,
+  external
 };
 module.exports = Scratch;
 
@@ -2639,6 +2641,96 @@ module.exports = {
   // centralDispatchService is the object to call postMessage() on to send a message to parent.
   centralDispatchService: self
 };
+
+/***/ }),
+
+/***/ "./node_modules/scratch-vm/src/extension-support/tw-external.js":
+/*!**********************************************************************!*\
+  !*** ./node_modules/scratch-vm/src/extension-support/tw-external.js ***!
+  \**********************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+/**
+ * @param {string} url
+ * @returns {void} if URL is supported
+ * @throws if URL is unsupported
+ */
+const checkURL = url => {
+  // URL might be a very long data: URL, so try to avoid fully parsing it if we can.
+  // The notable requirement here is that the URL must be an absolute URL, not something
+  // relative to where the extension is loaded from or where the extension is running.
+  // This ensures that the same extension file will always load resources from the same
+  // place, regardless of how it is running or packaged or whatever else.
+  if (!url.startsWith('http:') && !url.startsWith('https:') && !url.startsWith('data:') && !url.startsWith('blob:')) {
+    throw new Error("Unsupported URL: ".concat(url));
+  }
+};
+const external = {};
+
+/**
+ * @param {string} url
+ * @template T
+ * @returns {Promise<T>}
+ */
+external.importModule = url => {
+  checkURL(url);
+  // Need to specify webpackIgnore so that webpack compiles this directly to a call to import()
+  // instead of trying making it try to use the webpack import system.
+  return import(/* webpackIgnore: true */url);
+};
+
+/**
+ * @param {string} url
+ * @returns {Promise<Response>}
+ */
+external.fetch = async url => {
+  checkURL(url);
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error("HTTP ".concat(res.status, " fetching ").concat(url));
+  }
+  return res;
+};
+
+/**
+ * @param {string} url
+ * @returns {Promise<string>}
+ */
+external.dataURL = async url => {
+  const res = await external.fetch(url);
+  const blob = await res.blob();
+  return new Promise((resolve, reject) => {
+    const fr = new FileReader();
+    fr.onload = () => resolve(fr.result);
+    fr.onerror = () => reject(fr.error);
+    fr.readAsDataURL(blob);
+  });
+};
+
+/**
+ * @param {string} url
+ * @returns {Promise<Blob>}
+ */
+external.blob = async url => {
+  const res = await external.fetch(url);
+  return res.blob();
+};
+
+/**
+ * @param {string} url
+ * @param {string} returnExpression
+ * @template T
+ * @returns {Promise<T>}
+ */
+external.evalAndReturn = async (url, returnExpression) => {
+  const res = await external.fetch(url);
+  const text = await res.text();
+  const js = "".concat(text, "\nreturn ").concat(returnExpression, ";");
+  const fn = new Function(js);
+  return fn();
+};
+module.exports = external;
 
 /***/ }),
 
