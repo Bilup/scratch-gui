@@ -3,6 +3,10 @@ name: CI
 on:
   push:
   pull_request:
+  workflow_run:
+    workflows: ["Update package-lock.json", "Update pnpm-lock.yaml"]
+    types:
+      - completed
 
 permissions:
   contents: write
