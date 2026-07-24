@@ -249,6 +249,18 @@ Blockly.Msg.OPERATORS_MATHOP_LOG = 'log';
 Blockly.Msg.OPERATORS_MATHOP_EEXP = 'e ^';
 Blockly.Msg.OPERATORS_MATHOP_10EXP = '10 ^';
 
+// Additional operators messages
+Blockly.Msg.OPERATORS_JOIN_LABEL = 'join';
+Blockly.Msg.OPERATORS_ADD_INPUT = 'Add input';
+Blockly.Msg.OPERATORS_REMOVE_INPUT = 'Remove input';
+Blockly.Msg.OPERATORS_CLAMP = 'clamp %1 between %2 and %3';
+Blockly.Msg.OPERATORS_MIN = 'min';
+Blockly.Msg.OPERATORS_MAX = 'max';
+Blockly.Msg.OPERATORS_AND_SEPARATOR = 'and';
+Blockly.Msg.OPERATORS_OR_SEPARATOR = 'or';
+Blockly.Msg.OPERATORS_MOD_SEPARATOR = 'mod';
+Blockly.Msg.OPERATORS_JS_LABEL = 'js';
+
 // Procedures blocks
 Blockly.Msg.PROCEDURES_DEFINITION = 'define %1';
 
@@ -420,6 +432,11 @@ Blockly.Msg.NEW_BROADCAST_MESSAGE = 'New message';
 Blockly.Msg.NEW_BROADCAST_MESSAGE_TITLE = 'New message name:';
 Blockly.Msg.BROADCAST_MODAL_TITLE = 'New Message';
 Blockly.Msg.DEFAULT_BROADCAST_MESSAGE_NAME = 'message1';
+
+// TurboWarp compatibility warnings
+Blockly.Msg.UNSUPPORT_TW_1 = 'Blocks below do not support TurboWarp';
+Blockly.Msg.UNSUPPORT_TW_2 = 'And we highly discourage using them';
+Blockly.Msg.UNSUPPORT_TW_3 = 'They\'re keeping here only for compatibility with MistWarp';
 
 
 /*** EXPORTS FROM exports-loader ***/
@@ -641,6 +658,16 @@ Blockly.ScratchMsgs.locales["en"] =
     "OPERATORS_MATHOP_LOG": "log",
     "OPERATORS_MATHOP_EEXP": "e ^",
     "OPERATORS_MATHOP_10EXP": "10 ^",
+    "OPERATORS_JOIN_LABEL": "join",
+    "OPERATORS_ADD_INPUT": "Add input",
+    "OPERATORS_REMOVE_INPUT": "Remove input",
+    "OPERATORS_CLAMP": "clamp %1 between %2 and %3",
+    "OPERATORS_MIN": "min",
+    "OPERATORS_MAX": "max",
+    "OPERATORS_AND_SEPARATOR": "and",
+    "OPERATORS_OR_SEPARATOR": "or",
+    "OPERATORS_MOD_SEPARATOR": "mod",
+    "OPERATORS_JS_LABEL": "js",
     "PROCEDURES_DEFINITION": "define %1",
     "PROCEDURES_RETURN": "return %1",
     "PROCEDURES_TO_REPORTER": "Change To Reporter",
@@ -742,6 +769,12 @@ Blockly.ScratchMsgs.locales["en"] =
     "DELETE_X_BLOCKS": "Delete %1 Blocks",
     "DELETE_ALL_BLOCKS": "Delete all %1 blocks?",
     "CLEAN_UP": "Clean up Blocks",
+    "ADD_FRAME": "Add Frame",
+    "RENAME_FRAME": "Rename Frame",
+    "DELETE_FRAME": "Delete Frame",
+    "COLLAPSE_FRAME": "Collapse Frame",
+    "EXPAND_FRAME": "Expand Frame",
+    "FRAME_DEFAULT_TITLE": "Frame",
     "HELP": "Help",
     "UNDO": "Undo",
     "REDO": "Redo",
@@ -978,6 +1011,16 @@ Blockly.ScratchMsgs.locales["zh-cn"] =
     "OPERATORS_MATHOP_LOG": "log",
     "OPERATORS_MATHOP_EEXP": "e ^",
     "OPERATORS_MATHOP_10EXP": "10 ^",
+    "OPERATORS_JOIN_LABEL": "连接",
+    "OPERATORS_ADD_INPUT": "添加输入",
+    "OPERATORS_REMOVE_INPUT": "删除输入",
+    "OPERATORS_CLAMP": "将 %1 限制在 %2 和 %3 之间",
+    "OPERATORS_MIN": "最小值",
+    "OPERATORS_MAX": "最大值",
+    "OPERATORS_AND_SEPARATOR": "与",
+    "OPERATORS_OR_SEPARATOR": "或",
+    "OPERATORS_MOD_SEPARATOR": "除以",
+    "OPERATORS_JS_LABEL": "js",
     "PROCEDURES_DEFINITION": "定义 %1",
     "PROCEDURES_RETURN": "返回 %1",
     "PROCEDURES_TO_REPORTER": "改为报告积木",
@@ -1079,6 +1122,12 @@ Blockly.ScratchMsgs.locales["zh-cn"] =
     "DELETE_X_BLOCKS": "删除 %1 积木",
     "DELETE_ALL_BLOCKS": "删除全部 %1 积木？",
     "CLEAN_UP": "整理积木",
+    "ADD_FRAME": "添加帧",
+    "RENAME_FRAME": "重命名帧",
+    "DELETE_FRAME": "删除帧",
+    "COLLAPSE_FRAME": "折叠帧",
+    "EXPAND_FRAME": "展开帧",
+    "FRAME_DEFAULT_TITLE": "帧",
     "HELP": "帮助",
     "UNDO": "撤销",
     "REDO": "重做",
