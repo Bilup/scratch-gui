@@ -41,5 +41,5 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
           git add package-lock.json src/playground/about/version.json
-          git commit -m "chore: update package-lock.json and version.json" || echo "No changes"
+          git commit -m "chore: update package-lock.json" || echo "No changes"
           git push origin develop
