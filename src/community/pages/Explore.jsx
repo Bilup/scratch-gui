@@ -1,10 +1,10 @@
 import React, {useEffect, useState} from 'react';
 import {useSearchParams, Link} from 'react-router-dom';
 import api from '../api';
-import rotur from '../rotur';
 import useLatest from '../use-latest.js';
 import ProjectCard from '../components/ProjectCard.jsx';
 import Avatar from '../components/Avatar.jsx';
+import Button from '../components/ui/Button.jsx';
 import styles from './Explore.module.css';
 
 const SORTS = [
@@ -21,6 +21,7 @@ const Explore = () => {
     const [people, setPeople] = useState([]);
     const [loading, setLoading] = useState(true);
     const [failed, setFailed] = useState(false);
+    const [attempt, setAttempt] = useState(0);
 
     const beginLoad = useLatest();
 
@@ -34,18 +35,12 @@ const Explore = () => {
             .finally(fresh(() => setLoading(false)));
         if (q.trim()) {
             api.searchUsers(q.trim())
-                .then(fresh(data => {
-                    const users = (data.users || []).slice(0, 5);
-                    setPeople(users);
-                    Promise.all(users.map(person =>
-                        rotur.followerCount(person.username).then(followers => ({...person, followers}))
-                    )).then(fresh(enriched => setPeople(enriched)));
-                }))
+                .then(fresh(data => setPeople((data.users || []).slice(0, 5))))
                 .catch(fresh(() => setPeople([])));
         } else {
             setPeople([]);
         }
-    }, [sort, q, beginLoad]);
+    }, [sort, q, beginLoad, attempt]);
 
     const setSort = key => {
         const next = new URLSearchParams(params);
@@ -94,7 +89,10 @@ const Explore = () => {
             {loading ? (
                 <p className={styles.status}>Loading…</p>
             ) : failed ? (
-                <p className={styles.status}>Couldn&apos;t load. Try again.</p>
+                <p className={styles.status}>
+                    Couldn&apos;t load.{' '}
+                    <Button onClick={() => setAttempt(a => a + 1)}>Try again</Button>
+                </p>
             ) : projects.length ? (
                 <div className={styles.grid}>
                     {projects.map(project => (

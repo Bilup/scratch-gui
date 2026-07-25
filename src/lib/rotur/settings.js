@@ -9,8 +9,13 @@ const APP_NAME = 'MistWarp';
 
 const DEFAULTS = {
     presenceEnabled: true,
-    includeEditDuration: true
+    includeEditDuration: true,
+    // How project extensions may show activity on your Rotur profile:
+    // 'ask' (prompt per project), 'all' (always allow), 'off' (never).
+    activitySharing: 'ask'
 };
+
+const SHARING_MODES = ['ask', 'all', 'off'];
 
 /** @type {Set<(settings: typeof DEFAULTS) => void>} */
 const listeners = new Set();
@@ -22,7 +27,9 @@ const readAll = () => {
         const parsed = JSON.parse(raw);
         return {
             presenceEnabled: parsed.presenceEnabled !== false,
-            includeEditDuration: parsed.includeEditDuration !== false
+            includeEditDuration: parsed.includeEditDuration !== false,
+            activitySharing: SHARING_MODES.includes(parsed.activitySharing) ?
+                parsed.activitySharing : 'ask'
         };
     } catch (_) {
         return {...DEFAULTS};
@@ -64,8 +71,8 @@ const updateRoturSettings = patch => {
 };
 
 /**
- * @param {{collaborating?: boolean}|string|null|undefined} [ctx] Activity context.
- * @returns {string}
+ * @param {object|string} [ctx] - Activity context.
+ * @returns {string} Activity title
  */
 const formatActivityTitle = ctx =>
     ((ctx && typeof ctx === 'object' && ctx.collaborating) ?
@@ -73,8 +80,8 @@ const formatActivityTitle = ctx =>
         `Editing In ${APP_NAME}`);
 
 /**
- * @param {string|{projectTitle?: string, doing?: string}|null|undefined} projectTitleOrCtx
- * @returns {string}
+ * @param {string|object} projectTitleOrCtx - Project title or activity context.
+ * @returns {string} Activity status
  */
 const formatActivityStatus = projectTitleOrCtx => {
     const ctx = typeof projectTitleOrCtx === 'object' && projectTitleOrCtx !== null ?
@@ -86,8 +93,8 @@ const formatActivityStatus = projectTitleOrCtx => {
 };
 
 /**
- * @param {(settings: typeof DEFAULTS) => void} handler
- * @returns {() => void}
+ * @param {Function} handler - Settings change handler
+ * @returns {Function} Unsubscribe function
  */
 const subscribeRoturSettings = handler => {
     listeners.add(handler);

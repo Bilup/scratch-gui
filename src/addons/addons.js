@@ -3,7 +3,6 @@
 const addons = [
     'cat-blocks',
     'editor-devtools',
-    'middle-click-popup',
     'jump-to-def',
     'tab-styles',
     'reorder-custom-inputs',
@@ -11,7 +10,6 @@ const addons = [
     'data-category-tweaks-v2',
     'block-palette-icons',
     'hide-flyout',
-    'mediarecorder',
     'drag-drop',
     'debugger',
     'canvas-screenshot',
@@ -21,7 +19,6 @@ const addons = [
     'mouse-pos',
     'color-picker',
     'remove-sprite-confirm',
-    'block-count',
     'onion-skinning',
     'paint-snap',
     'default-costume-editor-color',
@@ -33,7 +30,6 @@ const addons = [
     'custom-block-shape',
     'editor-square-inputs',
     'zebra-striping',
-    'custom-menu-bar',
     'editor-theme3',
     'custom-block-text',
     'editor-colored-context-menus',
@@ -75,21 +71,20 @@ const addons = [
     'fullscreen',
     'tw-straighten-comments',
     'tw-remove-backpack',
-    'tw-remove-feedback',
     'tw-disable-cloud-variables',
-    'autosave',
     'no-category-text',
     'green-flag-order',
     'remove-extension-button',
-    'project-size-display'
+    'project-size-display',
+    'merge-operators'
 ];
 
 const newAddons = [
-    'autosave',
     'no-category-text',
     'green-flag-order',
     'remove-extension-button',
-    'tab-styles'
+    'tab-styles',
+    'merge-operators'
 ];
 
 // eslint-disable-next-line import/no-commonjs

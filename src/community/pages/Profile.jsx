@@ -6,8 +6,7 @@ import {
 import api from '../api';
 import rotur from '../rotur';
 import {payUser} from '../../lib/rotur/client.js';
-import {isInsufficientFunds} from '../credits';
-import BuyCreditsModal from '../components/BuyCreditsModal.jsx';
+import {isInsufficientFunds, KO_FI_SHOP_URL} from '../credits';
 import {useUser} from '../UserContext.jsx';
 import ProjectCard from '../components/ProjectCard.jsx';
 import CommentThread from '../components/CommentThread.jsx';
@@ -15,6 +14,7 @@ import ReportModal from '../components/ReportModal.jsx';
 import Avatar from '../components/Avatar.jsx';
 import RichText from '../components/RichText.jsx';
 import useLatest from '../use-latest.js';
+import useEscape from '../use-escape.js';
 import setPageMeta from '../page-meta.js';
 import styles from './Profile.module.css';
 
@@ -38,6 +38,7 @@ const Profile = () => {
     const [error, setError] = useState(null);
     const [actionError, setActionError] = useState(null);
     const [followBusy, setFollowBusy] = useState(false);
+    const [commentsBusy, setCommentsBusy] = useState(false);
     const [reporting, setReporting] = useState(false);
     const [adminProjects, setAdminProjects] = useState([]);
     const [presence, setPresence] = useState(null);
@@ -125,12 +126,16 @@ const Profile = () => {
         setFollowBusy(true);
         setActionError(null);
         try {
+            const me = user.username;
             if (profile.followed) {
                 await rotur.unfollow(name);
+                setProfile(p => ({...p, followed: false, followers: Math.max(0, (p.followers || 1) - 1)}));
+                setFollowers(fs => fs.filter(f => f.toLowerCase() !== me.toLowerCase()));
             } else {
                 await rotur.follow(name);
+                setProfile(p => ({...p, followed: true, followers: (p.followers || 0) + 1}));
+                setFollowers(fs => [me, ...fs.filter(f => f.toLowerCase() !== me.toLowerCase())]);
             }
-            load();
         } catch (e) {
             setActionError(e.message || 'Could not update follow.');
         } finally {
@@ -142,12 +147,16 @@ const Profile = () => {
     const commentsOff = Boolean(mwUser && mwUser.commentsOff);
 
     const toggleComments = async () => {
+        if (commentsBusy) return;
+        setCommentsBusy(true);
         setActionError(null);
         try {
             await api.updateProfile({commentsOff: !commentsOff});
             load();
         } catch (e) {
             setActionError(e.message || 'Could not update comments.');
+        } finally {
+            setCommentsBusy(false);
         }
     };
 
@@ -362,6 +371,7 @@ const Profile = () => {
                             <button
                                 className={styles.commentsToggle}
                                 onClick={toggleComments}
+                                disabled={commentsBusy}
                             >
                                 {commentsOff ? <MessageSquare size={14} /> : <MessageSquareOff size={14} />}
                                 {commentsOff ? 'Turn on comments' : 'Turn off comments'}
@@ -387,7 +397,7 @@ const DonateModal = ({recipient, onClose}) => {
     const [busy, setBusy] = useState(false);
     const [status, setStatus] = useState(null);
     const [sent, setSent] = useState(0);
-    const [needCredits, setNeedCredits] = useState(0);
+    useEscape(onClose);
 
     const send = async () => {
         const value = Math.round((Number(amount) || 0) * 100) / 100;
@@ -402,7 +412,7 @@ const DonateModal = ({recipient, onClose}) => {
             setSent(value);
         } catch (e) {
             if (isInsufficientFunds(e)) {
-                setNeedCredits(value);
+                window.location.assign(KO_FI_SHOP_URL);
             } else {
                 setStatus(e.needsReauth ?
                     'Your current login cannot send credits. Log out and back in, then try again.' :
@@ -412,15 +422,6 @@ const DonateModal = ({recipient, onClose}) => {
             setBusy(false);
         }
     };
-
-    if (needCredits) {
-        return (
-            <BuyCreditsModal
-                needed={needCredits}
-                onClose={onClose}
-            />
-        );
-    }
 
     return (
         <div

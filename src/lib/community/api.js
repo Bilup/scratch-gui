@@ -1,3 +1,5 @@
+import {clearContentCache} from './cached-fetch.js';
+
 const API_BASE = 'https://mwapi.mistium.com/api';
 
 const SESSION_KEY = 'mw:mistwarp-session';
@@ -30,6 +32,47 @@ const storeSession = token => {
         }
     } catch (e) {
         // ignore
+    }
+};
+
+const GET_CACHE_PREFIX = 'mw:api-cache:';
+const GET_CACHE_TTL = 60 * 1000;
+
+const getCacheKey = path => {
+    const session = loadSession();
+    return `${GET_CACHE_PREFIX}${session ? session.slice(-8) : 'anon'}:${path}`;
+};
+
+const clearApiCache = () => {
+    try {
+        for (let i = sessionStorage.length - 1; i >= 0; i--) {
+            const key = sessionStorage.key(i);
+            if (key && key.startsWith(GET_CACHE_PREFIX)) {
+                sessionStorage.removeItem(key);
+            }
+        }
+    } catch (e) {
+        // ignore
+    }
+};
+
+const readApiCache = path => {
+    try {
+        const raw = sessionStorage.getItem(getCacheKey(path));
+        if (!raw) return null;
+        const {data, at} = JSON.parse(raw);
+        if (!at || Date.now() - at > GET_CACHE_TTL) return null;
+        return data;
+    } catch (e) {
+        return null;
+    }
+};
+
+const writeApiCache = (path, data) => {
+    try {
+        sessionStorage.setItem(getCacheKey(path), JSON.stringify({data, at: Date.now()}));
+    } catch (e) {
+        clearApiCache();
     }
 };
 
@@ -72,12 +115,20 @@ const onAuthInvalid = handler => {
     authInvalidHandler = handler;
 };
 
+let bannedHandler = null;
+const onBanned = handler => {
+    bannedHandler = handler;
+};
+
 const runExchange = token => {
     if (!exchangeInFlight) {
         exchangeInFlight = exchangeValidator(token)
             .catch(error => {
                 if (error.code === 'VALIDATOR_GENERATION_FAILED' && authInvalidHandler) {
                     authInvalidHandler();
+                }
+                if (error.code === 'banned' && bannedHandler) {
+                    bannedHandler(error.message);
                 }
                 throw error;
             })
@@ -89,6 +140,13 @@ const runExchange = token => {
 };
 
 const request = async (path, {method = 'GET', body, headers = {}, raw = false} = {}) => {
+    const cacheable = method === 'GET' && !raw;
+    if (cacheable) {
+        const hit = readApiCache(path);
+        if (hit) return hit;
+    } else if (method !== 'GET' && !path.endsWith('/view')) {
+        clearApiCache();
+    }
     const doFetch = () => {
         const session = loadSession();
         const finalHeaders = {...headers};
@@ -127,7 +185,11 @@ const request = async (path, {method = 'GET', body, headers = {}, raw = false} =
     if (raw) {
         return response;
     }
-    return parseResponse(response);
+    const data = await parseResponse(response);
+    if (cacheable) {
+        writeApiCache(path, data);
+    }
+    return data;
 };
 
 const logout = async () => {
@@ -189,6 +251,9 @@ const uploadProject = async (id, sb3Blob, thumbnailBlob, onUploadProgress) => {
         if (!roturToken) throw e;
         await runExchange(roturToken);
         return uploadXhr(path, form, onUploadProgress);
+    } finally {
+        clearApiCache();
+        clearContentCache();
     }
 };
 
@@ -204,12 +269,40 @@ const remixProject = id => request(`/projects/${id}/remix`, {method: 'POST'});
 
 const deleteProject = id => request(`/projects/${id}`, {method: 'DELETE'});
 
+const HANDOFF_KEY = 'mw:project-handoff';
+const HANDOFF_MAX_AGE = 5 * 60 * 1000;
+
+const stashProjectHandoff = project => {
+    try {
+        sessionStorage.setItem(HANDOFF_KEY, JSON.stringify({project, at: Date.now()}));
+    } catch (e) {
+        // ignore
+    }
+};
+
+const takeProjectHandoff = id => {
+    try {
+        const raw = sessionStorage.getItem(HANDOFF_KEY);
+        if (!raw) return null;
+        sessionStorage.removeItem(HANDOFF_KEY);
+        const {project, at} = JSON.parse(raw);
+        if (!project || String(project.id) !== String(id)) return null;
+        if (!at || Date.now() - at > HANDOFF_MAX_AGE) return null;
+        return project;
+    } catch (e) {
+        return null;
+    }
+};
+
 export {
     loadSession,
+    stashProjectHandoff,
+    takeProjectHandoff,
     storeSession,
     exchangeValidator,
     runExchange,
     onAuthInvalid,
+    onBanned,
     logout,
     createProject,
     uploadProject,

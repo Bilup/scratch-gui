@@ -10,9 +10,11 @@ import {formatBytes} from '../format';
 import {getAccountSummary} from '../../lib/rotur/client.js';
 import {useUser} from '../UserContext.jsx';
 import ProjectCard from '../components/ProjectCard.jsx';
+import ProjectThumbnail from '../components/ProjectThumbnail.jsx';
 import StatChart, {historyRows} from '../components/StatChart.jsx';
-import BuyCreditsModal from '../components/BuyCreditsModal.jsx';
+import {KO_FI_SHOP_URL} from '../credits';
 import Sidebar from '../components/Sidebar.jsx';
+import useEscape from '../use-escape.js';
 import styles from './MyStuff.module.css';
 
 const fmt = value => (Number(value) || 0).toLocaleString();
@@ -25,7 +27,7 @@ const visibilityLabel = project => {
     return 'Draft';
 };
 
-const Overview = ({stats, account, quota, onBuyCredits}) => {
+const Overview = ({stats, account, quota}) => {
     const weekViews = historyRows(stats.viewHistory, 7).reduce((sum, row) => sum + row.value, 0);
     const pct = quota ? (quota.used / quota.limit) * 100 : 0;
     return (
@@ -74,10 +76,10 @@ const Overview = ({stats, account, quota, onBuyCredits}) => {
                         <span className={styles.dashIcon}><Wallet size={18} /></span>
                         <span className={styles.dashNumber}>{fmtCredits(account.balance)}</span>
                         <span className={styles.dashLabel}>Balance</span>
-                        <button
+                        <a
                             className={styles.dashBuy}
-                            onClick={onBuyCredits}
-                        >Buy credits</button>
+                            href={KO_FI_SHOP_URL}
+                        >Buy credits</a>
                     </div>
                 ) : null}
                 {account && account.donationsReceived > 0 ? (
@@ -148,10 +150,11 @@ const UploadUsage = ({quota, onRefresh}) => {
         setResetKey('');
         setResetError('');
     }, []);
+    useEscape(showConfirm ? dismiss : null);
 
-    const oldestDate = quota && quota.oldestEventMs
-        ? new Date(quota.oldestEventMs).toLocaleDateString()
-        : null;
+    const oldestDate = quota && quota.oldestEventMs ?
+        new Date(quota.oldestEventMs).toLocaleDateString() :
+        null;
 
     if (!quota) {
         return <p className={styles.status}>Loading upload info…</p>;
@@ -178,7 +181,9 @@ const UploadUsage = ({quota, onRefresh}) => {
             <div className={styles.uploadBarSection}>
                 <div className={styles.uploadBarLabel}>
                     {Math.round(pct)}% full
-                    {pct >= 80 ? <span className={styles.uploadWarn}> <AlertTriangle size={14} /> Nearly full</span> : null}
+                    {pct >= 80 ? (
+                        <span className={styles.uploadWarn}> <AlertTriangle size={14} /> Nearly full</span>
+                    ) : null}
                 </div>
                 <div className={styles.uploadBarBg}>
                     <div
@@ -274,7 +279,9 @@ const AgreementTab = () => {
                 if (!stale) setAgreement(data.agreement);
             })
             .catch(() => {});
-        return () => { stale = true; };
+        return () => {
+            stale = true;
+        };
     }, []);
 
     const handleAccept = async () => {
@@ -359,7 +366,6 @@ const MyStuff = () => {
     const [quota, setQuota] = useState(null);
     const [stats, setStats] = useState(null);
     const [account, setAccount] = useState(null);
-    const [showBuyCredits, setShowBuyCredits] = useState(false);
     const [pendingUploadFile, setPendingUploadFile] = useState(null);
     const [showAgreeModal, setShowAgreeModal] = useState(false);
     const [agreeData, setAgreeData] = useState(null);
@@ -382,7 +388,7 @@ const MyStuff = () => {
         return () => {
             stale = true;
         };
-    }, [user, projects]);
+    }, [user]);
 
     useEffect(() => {
         setFeaturedProject(user ? user.featuredProject : '');
@@ -398,13 +404,21 @@ const MyStuff = () => {
         api.stats()
             .then(data => !stale && setStats(data.stats || null))
             .catch(() => {});
+        return () => {
+            stale = true;
+        };
+    }, [user]);
+
+    useEffect(() => {
+        if (!user) return;
+        let stale = false;
         getAccountSummary()
             .then(data => !stale && setAccount(data))
             .catch(() => {});
         return () => {
             stale = true;
         };
-    }, [user, projects]);
+    }, [user]);
 
     const load = useCallback(() => {
         if (!user || tab === 'overview' || tab === 'uploads') {
@@ -437,6 +451,12 @@ const MyStuff = () => {
         return () => window.removeEventListener('mousedown', onDown);
     }, [openMenu]);
 
+    const refreshUsage = useCallback(() => {
+        if (!user) return;
+        api.quota().then(data => setQuota(data)).catch(() => {});
+        api.stats().then(data => setStats(data.stats || null)).catch(() => {});
+    }, [user]);
+
     const clearFeaturedIf = async id => {
         if (featuredProject !== id) return;
         setFeaturedProject('');
@@ -453,6 +473,7 @@ const MyStuff = () => {
             await api.unpublish(id);
             await clearFeaturedIf(id);
             load();
+            refreshUsage();
         } catch (e) {
             setActionError(e.message);
         }
@@ -463,6 +484,7 @@ const MyStuff = () => {
             setActionError('');
             await api.publish(id);
             load();
+            refreshUsage();
         } catch (e) {
             setActionError(e.message);
         }
@@ -478,6 +500,7 @@ const MyStuff = () => {
             await api.deleteProject(id);
             await clearFeaturedIf(id);
             load();
+            refreshUsage();
         } catch (e) {
             setActionError(e.message);
         }
@@ -501,6 +524,10 @@ const MyStuff = () => {
         if (!file) return;
         if (!file.name.toLowerCase().endsWith('.sb3')) {
             setActionError('Choose a Scratch .sb3 project file.');
+            return;
+        }
+        if (quota && quota.used >= quota.limit) {
+            setActionError('Your weekly upload quota is full. Free up space or reset it before uploading.');
             return;
         }
 
@@ -570,11 +597,7 @@ const MyStuff = () => {
         setAgreeData(null);
         setAgreeError('');
     }, []);
-
-    const refreshQuota = useCallback(() => {
-        if (!user) return;
-        api.quota().then(data => setQuota(data)).catch(() => {});
-    }, [user]);
+    useEscape(showAgreeModal ? cancelAgreeModal : null);
 
     if (loading) {
         return <main className={styles.page}><p className={styles.status}>Loading…</p></main>;
@@ -617,19 +640,13 @@ const MyStuff = () => {
 
             {quota && (quota.used / quota.limit) * 100 >= 80 ? (
                 <p className={styles.quotaWarning}>
-                    <AlertTriangle size={14} /> You've used {formatBytes(quota.used)} of your {formatBytes(quota.limit)} upload quota
+                    <AlertTriangle size={14} /> You&apos;ve used {formatBytes(quota.used)} of
+                    your {formatBytes(quota.limit)} upload quota
                     ({Math.round((quota.used / quota.limit) * 100)}%).{' '}
-                    {quota.used >= quota.limit
-                        ? 'You cannot upload new projects until usage drops.'
-                        : 'Consider managing your projects to free up space.'}
+                    {quota.used >= quota.limit ?
+                        'You cannot upload new projects until usage drops.' :
+                        'Consider managing your projects to free up space.'}
                 </p>
-            ) : null}
-
-            {showBuyCredits ? (
-                <BuyCreditsModal
-                    balance={account && account.balance}
-                    onClose={() => setShowBuyCredits(false)}
-                />
             ) : null}
 
             {showAgreeModal && agreeData ? (
@@ -684,7 +701,6 @@ const MyStuff = () => {
                                 stats={stats}
                                 account={account}
                                 quota={quota}
-                                onBuyCredits={() => setShowBuyCredits(true)}
                             />
                         ) : (
                             <p className={styles.status}>Loading…</p>
@@ -692,7 +708,7 @@ const MyStuff = () => {
                     ) : tab === 'uploads' ? (
                         <UploadUsage
                             quota={quota}
-                            onRefresh={refreshQuota}
+                            onRefresh={refreshUsage}
                         />
                     ) : tab === 'agreement' ? (
                         <AgreementTab />
@@ -737,12 +753,10 @@ const MyStuff = () => {
                                             to={projectUrl(project.id)}
                                             className={styles.thumb}
                                         >
-                                            {project.thumbUrl ? (
-                                                <img
-                                                    src={project.thumbUrl}
-                                                    alt=""
-                                                />
-                                            ) : <span>{(project.title || '?')[0]}</span>}
+                                            <ProjectThumbnail
+                                                project={project}
+                                                lazy
+                                            />
                                         </Link>
                                         <div className={styles.info}>
                                             <Link
@@ -831,15 +845,14 @@ const MyStuff = () => {
                                                                 {featured ?
                                                                     'Remove profile feature' : 'Feature on profile'}
                                                             </button>
-                                                        ) : (
-                                                            <button
-                                                                className={styles.danger}
-                                                                onClick={() => deleteProject(project.id)}
-                                                            >
-                                                                <Trash2 size={14} />
-                                                                Delete
-                                                            </button>
-                                                        )}
+                                                        ) : null}
+                                                        <button
+                                                            className={styles.danger}
+                                                            onClick={() => deleteProject(project.id)}
+                                                        >
+                                                            <Trash2 size={14} />
+                                                            Delete
+                                                        </button>
                                                     </div>
                                                 ) : null}
                                             </div>

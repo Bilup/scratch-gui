@@ -309,6 +309,7 @@ const executeVMAction = shortcut => {
         case 'deleteSprite':
             if (vm.deleteSprite && vm.editingTarget) {
                 const spriteId = vm.editingTarget.id;
+                // eslint-disable-next-line no-alert
                 if (window.confirm('Are you sure you want to delete this sprite?')) {
                     vm.deleteSprite(spriteId);
                 }
@@ -340,6 +341,11 @@ const executeCallbackAction = shortcut => {
 
     try {
         switch (shortcut.action) {
+        case 'saveSmart':
+            if (callbacks.saveSmart) {
+                callbacks.saveSmart();
+            }
+            break;
         case 'loadFromComputer':
             if (callbacks.loadFromComputer) {
                 callbacks.loadFromComputer();
@@ -437,11 +443,15 @@ const updateShortcuts = customShortcuts => {
 
 const getShortcuts = () => shortcuts;
 
-const getCallbacks = () => callbacks;
-
 const updateCallbacks = newCallbacks => {
-    // Update callbacks with new values
-    const updatedCallbacks = {...callbacks, ...newCallbacks};
+    // Only update callbacks if they don't already exist
+    const updatedCallbacks = {...callbacks};
+    for (const key of Object.keys(newCallbacks)) {
+        const existing = updatedCallbacks[key];
+        if (!(key in updatedCallbacks) || existing === null || typeof existing === 'undefined') {
+            updatedCallbacks[key] = newCallbacks[key];
+        }
+    }
     callbacks = updatedCallbacks;
 };
 

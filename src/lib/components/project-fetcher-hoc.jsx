@@ -5,6 +5,7 @@ import bindAll from 'lodash.bindall';
 import {connect} from 'react-redux';
 
 import {setProjectUnchanged} from '../../reducers/project-changed.js';
+import {setProjectTitle} from '../../reducers/project-title.js';
 import {
     LoadingStates,
     getIsCreatingNew,
@@ -30,7 +31,9 @@ import {cloneRepo} from '../git/browser-git.js';
 import {buildSb3FromFractchTree} from '../git/fractch-tree.js';
 import {getAuth as getRoturGitAuth} from '../rotur/git-api.js';
 import {rememberPlatformProject} from '../community/publish.js';
-import {getProject as getMistWarpProject} from '../community/api.js';
+import {getProject as getMistWarpProject, takeProjectHandoff} from '../community/api.js';
+import {hasBridge, bridgeFetch} from '../community/embed-bridge.js';
+import {cachedFetchBuffer} from '../community/cached-fetch.js';
 
 const cloneProjectFromRepo = async url => {
     const {fs, dir} = await cloneRepo({url, onAuth: getRoturGitAuth});
@@ -77,17 +80,18 @@ const clearProjectSourceOnForeignLoads = vm => {
     };
 };
 
-const loadPlatformProject = async id => {
-    const {project} = await getMistWarpProject(id);
+const fetchArrayBuffer = url => cachedFetchBuffer(url);
+
+const loadPlatformProject = async (id, source) => {
+    const project = source || takeProjectHandoff(id) || (await getMistWarpProject(id)).project;
     if (project.assetsBase && isHttpUrl(project.assetsBase)) {
         storage.addMistWarpAssetStore(project.assetsBase);
     }
     rememberPlatformProject(project);
-    const response = await fetch(project.projectJsonUrl);
-    if (!response.ok) {
-        throw new Error(`Request returned status ${response.status}`);
-    }
-    return {data: await response.arrayBuffer()};
+    const data = hasBridge() ?
+        await bridgeFetch(project.projectJsonUrl).catch(() => fetchArrayBuffer(project.projectJsonUrl)) :
+        await fetchArrayBuffer(project.projectJsonUrl);
+    return {data, title: project.title};
 };
 
 // TW: Temporary hack for project tokens
@@ -247,8 +251,14 @@ const ProjectFetcherHOC = function (WrappedComponent) {
                 storage.addMistWarpAssetStore(mistwarpAssets);
             }
             let projectUrl = searchParams && searchParams.get('project_url');
-            if (hashProjectId) {
-                assetPromise = loadPlatformProject(hashProjectId);
+            if (hashProjectId || platformProject) {
+                const id = hashProjectId || platformProject;
+                const source = platformProject && !hashProjectId && projectUrl ? {
+                    id,
+                    projectJsonUrl: projectUrl,
+                    assetsBase: mistwarpAssets
+                } : null;
+                assetPromise = loadPlatformProject(id, source);
             } else if (cloneUrl) {
                 assetPromise = cloneProjectFromRepo(cloneUrl);
             } else if (projectUrl) {
@@ -259,20 +269,11 @@ const ProjectFetcherHOC = function (WrappedComponent) {
                 ) {
                     projectUrl = `https://${projectUrl}`;
                 }
-                
-                // TW: Determine asset host based on project URL source
-                const determinedAssetHost = determineAssetHost(projectUrl, projectId);
-                storage.setAssetHost(determinedAssetHost);
-                log.info(`Project from URL, using asset host: ${determinedAssetHost}`);
-                
-                assetPromise = fetch(projectUrl)
-                    .then(r => {
-                        if (!r.ok) {
-                            throw new Error(`Request returned status ${r.status}`);
-                        }
-                        return r.arrayBuffer();
-                    })
-                    .then(buffer => ({data: buffer}));
+                const jsonUrl = projectUrl;
+                assetPromise = (hasBridge() ?
+                    bridgeFetch(jsonUrl).catch(() => fetchArrayBuffer(jsonUrl)) :
+                    fetchArrayBuffer(jsonUrl)
+                ).then(buffer => ({data: buffer}));
             } else {
                 // TW: Determine asset host based on project ID source
                 const determinedAssetHost = determineAssetHost(null, projectId);
@@ -291,6 +292,9 @@ const ProjectFetcherHOC = function (WrappedComponent) {
                 .then(projectAsset => {
                     if (projectAsset) {
                         fetchInitiatedLoad = true;
+                        if (projectAsset.title) {
+                            this.props.onSetProjectTitle(projectAsset.title);
+                        }
                         this.props.onFetchedProjectData(projectAsset.data, loadingState);
                     } else {
                         // Treat failure to load as an error
@@ -343,6 +347,7 @@ const ProjectFetcherHOC = function (WrappedComponent) {
         onError: PropTypes.func,
         onFetchedProjectData: PropTypes.func,
         onProjectUnchanged: PropTypes.func,
+        onSetProjectTitle: PropTypes.func,
         projectHost: PropTypes.string,
         projectToken: PropTypes.string,
         projectId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
@@ -370,7 +375,8 @@ const ProjectFetcherHOC = function (WrappedComponent) {
         onFetchedProjectData: (projectData, loadingState) =>
             dispatch(onFetchedProjectData(projectData, loadingState)),
         setProjectId: projectId => dispatch(setProjectId(projectId)),
-        onProjectUnchanged: () => dispatch(setProjectUnchanged())
+        onProjectUnchanged: () => dispatch(setProjectUnchanged()),
+        onSetProjectTitle: title => dispatch(setProjectTitle(title))
     });
     // Allow incoming props to override redux-provided props. Used to mock in tests.
     const mergeProps = (stateProps, dispatchProps, ownProps) => Object.assign(

@@ -24,6 +24,7 @@ import {
     rememberPlatformProject
 } from '../../lib/community/publish.js';
 import {getProject as getMistWarpProject} from '../../lib/community/api.js';
+import communityEnabled from '../../lib/community/enabled.js';
 import {ComingSoonTooltip} from '../coming-soon/coming-soon.jsx';
 import Divider from '../divider/divider.jsx';
 // import SaveStatus from './save-status.jsx';
@@ -57,6 +58,7 @@ import {
     getFs as getGitFs
 } from '../../lib/git/browser-git';
 import {buildSb3FromFractchTree} from '../../lib/git/fractch-tree';
+import RestorePointAPI from '../../lib/api/restore-points';
 
 import TWDesktopSettings from './tw-desktop-settings.jsx';
 import RoturAccount from './mw-rotur-account.jsx';
@@ -72,6 +74,7 @@ import {
     openProjectMetadataModal,
     openGitModal,
     openExtensionManagerModal,
+    openHelp,
     openSimpleDialog
 } from '../../reducers/modals';
 import { showOnboarding } from '../../reducers/onboarding';
@@ -126,19 +129,21 @@ import {
 import {setFileHandle} from '../../reducers/tw.js';
 import {setProjectUnchanged} from '../../reducers/project-changed';
 import {showStandardAlert, showAlertWithTimeout, closeAlertWithId} from '../../reducers/alerts';
-import {
-    setAutosaveEnabled,
-    setAutosaveInterval,
-    setAutosaveNotifications
-} from '../../reducers/autosave.js';
-
 import collectMetadata from '../../lib/collect-metadata';
 import LazyScratchBlocks from '../../lib/tw-lazy-scratch-blocks';
-import SettingsStore from '../../addons/settings-store-singleton.js';
+import {mediaRecorderSupported} from '../../addons/environment.js';
+import addonEnglish from '../../addons/addons-l10n/en.json';
+import initBlockCount from '../../lib/menu-bar/block-count-analysis.js';
+import {
+    getSetting as getMenuBarSetting,
+    getSettings as getMenuBarSettings,
+    onSettingsChanged
+} from '../../lib/menu-bar/settings.js';
 
 import openFractchTerminalWindow from '../../lib/mw/open-fractch-terminal-window.js';
 
 import WorkspaceBookmarksMenu from './workspace-bookmarks-menu.jsx';
+import MediaRecorderButton from './media-recorder.jsx';
 
 import {
     createWorkspaceBookmarksExportData,
@@ -150,6 +155,7 @@ import {
 } from '../../lib/mw/workspace-bookmarks.js';
 
 import styles from './menu-bar.css';
+import '!!style-loader!css-loader!./block-count.css';
 
 // import helpIcon from '../../lib/assets/icon--tutorials.svg';
 // import mystuffIcon from './icon--mystuff.png';
@@ -169,7 +175,7 @@ import {
     Save, ArchiveRestore, UserPen, Cloud, PackagePlus, Puzzle,
     Bookmark, GitBranch, FileCog, Bug, Database, Undo, Redo, Handshake, Sparkles, Wrench, Send,
     Download, AppWindow, Computer, Shield, Code, Code2, MessageCircle, TerminalSquare, ChartColumn, ListTodo,
-    Blocks as BlocksIcon, Menu as MenuIcon, Globe, ExternalLink, Pause, Check
+    Blocks as BlocksIcon, Menu as MenuIcon, Globe, ExternalLink, Pause, Play, HelpCircle
 } from 'lucide-react';
 
 import sharedMessages from '../../lib/constants/shared-messages';
@@ -290,6 +296,10 @@ const formatShortcutDisplay = keyCombo => {
 };
 
 const COLLAPSE_MENU_WIDTH = 900;
+const addonMessage = (intl, addonId) => (id, values) => intl.formatMessage({
+    id: `${addonId}/${id}`,
+    defaultMessage: addonEnglish[`${addonId}/${id}`] || id
+}, values);
 
 class MenuBar extends React.Component {
     constructor(props) {
@@ -307,9 +317,13 @@ class MenuBar extends React.Component {
             gitRemotes: [],
             menuCollapsed: false,
             moreMenuOpen: false,
+            menuBarSettings: getMenuBarSettings(),
             mistwarpProject: getRememberedPlatformProjectState()
         };
         this.menuBarRef = React.createRef();
+        this.blockCountRef = React.createRef();
+        this.blockCountController = null;
+        this.disposeMenuBarSettings = null;
         this.menuResizeObserver = null;
         this.workspaceBookmarksProjectListener = null;
         this.autosaveCountdownInterval = null;
@@ -372,6 +386,26 @@ class MenuBar extends React.Component {
         this.observeMenuBarWidth();
         this.startAutosaveCountdown();
         this.refreshMistWarpShared();
+        if (this.blockCountRef.current) {
+            this.blockCountController = initBlockCount({
+                vm: this.props.vm,
+                display: this.blockCountRef.current,
+                getSetting: getMenuBarSetting,
+                getBlockly: this.ensureScratchBlocks,
+                msg: addonMessage(this.props.intl, 'block-count')
+            });
+        }
+        this.disposeMenuBarSettings = onSettingsChanged(() => {
+            const previousSettings = this.state.menuBarSettings;
+            const menuBarSettings = getMenuBarSettings();
+            this.setState({menuBarSettings}, () => {
+                if (this.blockCountController) this.blockCountController.update();
+                if (menuBarSettings.autosave_enabled !== previousSettings.autosave_enabled ||
+                    menuBarSettings.autosave_interval !== previousSettings.autosave_interval) {
+                    this.startAutosaveCountdown();
+                }
+            });
+        });
 
         // Prevent the legacy addon from also injecting a bookmarks menu.
         window.__bilupNativeWorkspaceBookmarks = true;
@@ -402,6 +436,8 @@ class MenuBar extends React.Component {
     componentWillUnmount() {
         document.removeEventListener('keydown', this.handleKeyPress);
         document.removeEventListener('mousedown', this.handleDocumentMouseDown);
+        if (this.blockCountController) this.blockCountController.destroy();
+        if (this.disposeMenuBarSettings) this.disposeMenuBarSettings();
         if (this.menuResizeObserver) {
             this.menuResizeObserver.disconnect();
             this.menuResizeObserver = null;
@@ -564,7 +600,7 @@ class MenuBar extends React.Component {
     }
     handleClickProjectMetadata () {
         this.props.onClickProjectMetadata();
-        this.props.onRequestCloseFile();
+        this.props.onRequestCloseTools();
     }
     handleClickAddRestorePoint = () => {
         if (this.props.vm) {
@@ -596,7 +632,7 @@ class MenuBar extends React.Component {
         this.props.onClickCollaboration();
     }
     refreshMistWarpShared () {
-        const remembered = getRememberedPlatformProjectState();
+        const remembered = communityEnabled ? getRememberedPlatformProjectState() : null;
         if (!remembered) {
             this.setState({mistwarpProject: null});
             return;
@@ -694,8 +730,20 @@ class MenuBar extends React.Component {
 
     async handleClickGitPull (remote) {
         this.props.onRequestCloseFile();
+        if (this.props.projectChanged) {
+            // eslint-disable-next-line no-alert
+            const ok = window.confirm(this.props.intl.formatMessage({
+                defaultMessage: 'Pulling will replace your project with the repository version. Continue?',
+                description: 'Confirmation before git pull replaces the open project',
+                id: 'mw.menuBar.gitPull.confirmReplace'
+            }));
+            if (!ok) {
+                return;
+            }
+        }
         this.props.onShowGitStatus('gitPulling');
         try {
+            await RestorePointAPI.createSafetyRestorePoint(this.props.vm, this.props.projectTitle);
             await gitPull({
                 vm: this.props.vm,
                 remote,
@@ -740,8 +788,6 @@ class MenuBar extends React.Component {
                     message: message.trim(),
                     author: getDefaultAuthor()
                 });
-                // Mark unchanged so the Commit item hides until the next edit.
-                this.props.onProjectUnchanged();
                 this.props.onGitStatusDone('gitCommitSuccess');
             } catch (e) {
                 console.error(e);
@@ -1247,19 +1293,11 @@ class MenuBar extends React.Component {
             }
         };
     }
-    handleToggleAutosave() {
-        // Instead of enabling/disabling, just pause/resume the timer
-        this.setState(prevState => ({ autosavePaused: !prevState.autosavePaused }));
-        this.props.onRequestCloseFile();
+    handleToggleAutosave () {
+        this.setState(prevState => ({autosavePaused: !prevState.autosavePaused}));
     }
-    getAutosaveEnabled() {
-        // Check if autosave addon is enabled and use its settings
-        const isAutosaveAddonEnabled = SettingsStore.getAddonEnabled('autosave');
-
-        if (isAutosaveAddonEnabled) {
-            return SettingsStore.getAddonSetting('autosave', 'autosaveEnabled');
-        }
-        return this.props.autosaveEnabled;
+    getAutosaveEnabled () {
+        return this.state.menuBarSettings.autosave_enabled;
     }
     getAutosaveTimeRemaining() {
         return this.state.autosaveTimeRemaining;
@@ -1276,15 +1314,7 @@ class MenuBar extends React.Component {
             return;
         }
 
-        // Get interval from addon settings or Redux state
-        const isAutosaveAddonEnabled = SettingsStore.getAddonEnabled('autosave');
-        let intervalMinutes;
-
-        if (isAutosaveAddonEnabled) {
-            intervalMinutes = SettingsStore.getAddonSetting('autosave', 'interval') || 5;
-        } else {
-            intervalMinutes = this.props.autosaveInterval || 5;
-        }
+        const intervalMinutes = this.state.menuBarSettings.autosave_interval;
 
         // Set initial time
         const totalSeconds = intervalMinutes * 60;
@@ -1309,20 +1339,13 @@ class MenuBar extends React.Component {
             });
         }, 1000);
     }
-    performAutosave() {
+    performAutosave () {
+        if (this.state.menuBarSettings.autosave_only_when_changed && !this.props.projectChanged) return;
         // Save to the current file using the same method as manual save
         if (this.props.handleSaveProject) {
             this.props.handleSaveProject();
 
-            // Show notification if enabled
-            const isAutosaveAddonEnabled = SettingsStore.getAddonEnabled('autosave');
-            let showNotifications = true;
-
-            if (isAutosaveAddonEnabled) {
-                showNotifications = SettingsStore.getAddonSetting('autosave', 'showNotifications');
-            }
-
-            if (showNotifications) {
+            if (this.state.menuBarSettings.autosave_notifications) {
                 this.showAutosaveNotification('Project autosaved successfully!', 'success');
             }
         }
@@ -1472,7 +1495,9 @@ class MenuBar extends React.Component {
         };
     }
     render () {
-        const mistwarpAction = getMistWarpAction(this.state.mistwarpProject, this.props.projectChanged);
+        const mistwarpAction = communityEnabled ?
+            getMistWarpAction(this.state.mistwarpProject, this.props.projectChanged) :
+            null;
         const saveNowMessage = (
             <FormattedMessage
                 defaultMessage="Save now"
@@ -1520,7 +1545,11 @@ class MenuBar extends React.Component {
             <Box
                 className={classNames(
                     this.props.className,
-                    styles.menuBar
+                    styles.menuBar,
+                    {
+                        [styles.iconsOnly]: this.state.menuBarSettings.menu_labels === 'icons',
+                        [styles.labelsOnly]: this.state.menuBarSettings.menu_labels === 'labels'
+                    }
                 )}
                 ref={this.menuBarRef}
             >
@@ -1854,27 +1883,11 @@ class MenuBar extends React.Component {
                                                 id="tw.menuBar.createRestorePoint"
                                             />
                                         </MenuItem>
-                                        <MenuItem onClick={this.handleClickProjectMetadata}>
-                                            <Info />
-                                            <FormattedMessage
-                                                defaultMessage="Project metadata"
-                                                // eslint-disable-next-line max-len
-                                                description="Menu bar item to view the open project's metadata (author, dates, contents)"
-                                                id="mw.menuBar.projectMetadata"
-                                            />
-                                        </MenuItem>
                                     </MenuSection>
                                     {this.getAutosaveEnabled() && (
                                         <MenuSection>
                                             <MenuItem onClick={this.handleToggleAutosave}>
-                                                <span
-                                                    className={classNames({
-                                                        [styles.inactive]: this.state.autosavePaused
-                                                    })}
-                                                >
-                                                    {this.state.autosavePaused ? <Pause /> : <Check />}
-                                                </span>
-                                                {' '}
+                                                {this.state.autosavePaused ? <Play /> : <Pause />}
                                                 {this.state.autosavePaused ? (
                                                     <FormattedMessage
                                                         defaultMessage="Resume autosave"
@@ -1899,7 +1912,6 @@ class MenuBar extends React.Component {
                                                         {'('}
                                                         {this.formatTimeRemaining(this.getAutosaveTimeRemaining())}
                                                         {')'}
-                                                        {' '}{this.state.autosavePaused && <Pause />}
                                                     </span>
                                                 )}
                                             </MenuItem>
@@ -2103,6 +2115,19 @@ class MenuBar extends React.Component {
                                             id="tw.menuBar.showTutorial"
                                         />
                                     </MenuItem>
+                                    <MenuItem
+                                        onClick={() => {
+                                            this.props.onClickHelp();
+                                            this.props.onRequestCloseEdit();
+                                        }}
+                                    >
+                                        <HelpCircle />
+                                        <FormattedMessage
+                                            defaultMessage="Help"
+                                            description="Menu bar item that opens the help window"
+                                            id="mw.menuBar.help"
+                                        />
+                                    </MenuItem>
                                 </MenuSection>
                                 <MenuSection>
                                     <MenuItemLink href="https://originchats.mistium.com?server=chats.mistium.com">
@@ -2218,6 +2243,15 @@ class MenuBar extends React.Component {
                                             defaultMessage="Live Collaboration"
                                             description="Menu bar item for live collaboration"
                                             id="tw.menuBar.collaboration"
+                                        />
+                                    </MenuItem>
+                                    <MenuItem onClick={this.handleClickProjectMetadata}>
+                                        <Info />
+                                        <FormattedMessage
+                                            defaultMessage="Project metadata"
+                                            // eslint-disable-next-line max-len
+                                            description="Menu bar item to view the open project's metadata (author, dates, contents)"
+                                            id="mw.menuBar.projectMetadata"
                                         />
                                     </MenuItem>
                                 </MenuSection>
@@ -2365,6 +2399,23 @@ class MenuBar extends React.Component {
                         )}
                         {(this.props.canChangeTheme || this.props.canChangeLanguage) && <SettingsMenu />}
                     </div>
+
+                    {!this.props.isPlayerOnly && mediaRecorderSupported &&
+                        this.state.menuBarSettings.show_media_recorder && (
+                        <MediaRecorderButton
+                            className={classNames(styles.menuBarItem, styles.hoverable)}
+                            labelClassName={styles.collapsibleLabel}
+                            projectTitle={this.props.projectTitle}
+                            vm={this.props.vm}
+                        />
+                    )}
+                    {!this.props.isPlayerOnly && (
+                        <button
+                            className="sa-block-count-display"
+                            data-mw-item="block-count"
+                            ref={this.blockCountRef}
+                        />
+                    )}
 
                     <div
                         data-mw-item="__divider"
@@ -2557,8 +2608,6 @@ MenuBar.propTypes = {
     authorThumbnailUrl: PropTypes.string,
     authorUsername: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
     autoUpdateProject: PropTypes.func,
-    autosaveEnabled: PropTypes.bool,
-    autosaveInterval: PropTypes.number,
     canChangeLanguage: PropTypes.bool,
     canChangeTheme: PropTypes.bool,
     canCreateCopy: PropTypes.bool,
@@ -2639,6 +2688,7 @@ MenuBar.propTypes = {
     onClickPreferencesModal: PropTypes.func,
     onClickGitModal: PropTypes.func,
     onClickShowTutorial: PropTypes.func,
+    onClickHelp: PropTypes.func,
 
     onOpenSettingsModal: PropTypes.func,
     onLogOut: PropTypes.func,
@@ -2659,9 +2709,6 @@ MenuBar.propTypes = {
     onRequestCloseTools: PropTypes.func,
     onRequestOpenAbout: PropTypes.func,
     onSeeCommunity: PropTypes.func,
-    onSetAutosaveEnabled: PropTypes.func,
-    onSetAutosaveInterval: PropTypes.func,
-    onSetAutosaveNotifications: PropTypes.func,
     onSetTimeTravelMode: PropTypes.func,
     onShare: PropTypes.func,
     onStartSelectingFileUpload: PropTypes.func,
@@ -2704,8 +2751,6 @@ const mapStateToProps = (state, ownProps) => {
         projectId: state.scratchGui.projectState.projectId,
         aboutMenuOpen: aboutMenuOpen(state),
         accountMenuOpen: accountMenuOpen(state),
-        autosaveEnabled: state.scratchGui.autosave.enabled,
-        autosaveInterval: state.scratchGui.autosave.interval,
         currentLocale: state.locales.locale,
         customShortcuts: state.scratchGui.shortcuts.customShortcuts,
         fileMenuOpen: fileMenuOpen(state),
@@ -2776,6 +2821,7 @@ const mapDispatchToProps = dispatch => ({
         localStorage.removeItem('mw:has-seen-onboarding');
         dispatch(showOnboarding());
     },
+    onClickHelp: () => dispatch(openHelp()),
     onOpenSettingsModal: () => dispatch(openSettingsModal()),
     onClickNew: needSave => {
         dispatch(setPlayer(false));
@@ -2786,9 +2832,6 @@ const mapDispatchToProps = dispatch => ({
     onClickSave: () => dispatch(manualUpdateProject()),
     onClickSaveAsCopy: () => dispatch(saveProjectAsCopy()),
     onSeeCommunity: () => dispatch(setPlayer(true)),
-    onSetAutosaveEnabled: enabled => dispatch(setAutosaveEnabled(enabled)),
-    onSetAutosaveInterval: interval => dispatch(setAutosaveInterval(interval)),
-    onSetAutosaveNotifications: showNotifications => dispatch(setAutosaveNotifications(showNotifications)),
     onSetTimeTravelMode: mode => dispatch(setTimeTravel(mode))
 });
 

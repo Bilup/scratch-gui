@@ -12,10 +12,13 @@ const REQUIRED_PERMISSIONS = [
         'following.follow',
         'following.unfollow',
         'validators.generate',
-        'me.transfer'
+        'me.transfer',
+        'me.claimDaily'
     ]),
     'credits:view'
 ];
+const PRESENCE_PERMISSION = 'account:profile';
+const LOGIN_PERMISSIONS = [...REQUIRED_PERMISSIONS, PRESENCE_PERMISSION];
 const ACTIVITY_ID = 'MistWarp';
 const APP_URL = 'https://warp.mistium.com';
 const APP_IMAGE = 'https://raw.githubusercontent.com/MistWarp/desktop/master/art/icon.png';
@@ -50,14 +53,19 @@ const storeToken = token => {
     }
 };
 
-/** Stable avatar URL derived only from username. */
+/**
+ * Stable avatar URL derived only from username.
+ * @param {string} username - Account username
+ * @returns {string} Avatar URL
+ */
 const getAvatarUrl = username => (
     `https://avatars.rotur.dev/${encodeURIComponent(String(username).toLowerCase())}`
 );
 
 /**
  * Normalize me.get() / profile payloads into a stable shape.
- * @returns {{username: string, id: string|null, avatarUrl: string, bio: string|null}|null}
+ * @param {object} data - Raw profile payload
+ * @returns {object|null} Normalized user or null
  */
 const normalizeUser = data => {
     if (!data || typeof data !== 'object' || data.error) {
@@ -127,6 +135,51 @@ const tokenHasRequiredPermissions = async () => {
     }
 };
 
+/** Whether the current token may publish status/activity over the status socket. */
+const presenceSupported = async () => {
+    const rotur = getClient();
+    if (!rotur.loggedIn) {
+        return false;
+    }
+    try {
+        const abilities = await rotur.me.abilities();
+        if (!abilities || abilities.error || abilities.token_type === 'main') {
+            return true;
+        }
+        const granted = Array.isArray(abilities.permissions) ? abilities.permissions : [];
+        return granted.includes('full') || granted.includes(PRESENCE_PERMISSION);
+    } catch (_) {
+        return true;
+    }
+};
+
+const RESTORE_CACHE_KEY = 'mw:rotur-restore';
+const RESTORE_CACHE_TTL = 5 * 60 * 1000;
+
+const readRestoreCache = token => {
+    try {
+        const raw = sessionStorage.getItem(RESTORE_CACHE_KEY);
+        if (!raw) return null;
+        const {user, at, token: cachedToken} = JSON.parse(raw);
+        if (cachedToken !== token || !at || Date.now() - at > RESTORE_CACHE_TTL) return null;
+        return user || null;
+    } catch (_) {
+        return null;
+    }
+};
+
+const writeRestoreCache = (token, user) => {
+    try {
+        if (user) {
+            sessionStorage.setItem(RESTORE_CACHE_KEY, JSON.stringify({user, token, at: Date.now()}));
+        } else {
+            sessionStorage.removeItem(RESTORE_CACHE_KEY);
+        }
+    } catch (_) {
+        // ignore
+    }
+};
+
 /** Restore a previous session from localStorage. */
 const restoreSession = async () => {
     const token = loadStoredToken();
@@ -135,18 +188,18 @@ const restoreSession = async () => {
     }
     const rotur = getClient();
     rotur.setToken(token);
-    const user = await fetchCurrentUser();
-    if (!user) {
-        rotur.logout();
-        storeToken(null);
-        return null;
+    const cached = readRestoreCache(token);
+    if (cached) {
+        return cached;
     }
-    if (!(await tokenHasRequiredPermissions())) {
+    const [user, hasPermissions] = await Promise.all([fetchCurrentUser(), tokenHasRequiredPermissions()]);
+    if (!user || !hasPermissions) {
         rotur.logout();
         storeToken(null);
         return null;
     }
     storeToken(rotur.token);
+    writeRestoreCache(rotur.token, user);
     return user;
 };
 
@@ -154,7 +207,7 @@ const buildAuthUrl = (returnTo = (typeof window === 'undefined' ? '' : window.lo
     const params = new URLSearchParams({
         system: 'rotur',
         return_to: returnTo,
-        requires: REQUIRED_PERMISSIONS.join(',')
+        requires: LOGIN_PERMISSIONS.join(',')
     });
     return `https://rotur.dev/auth?${params.toString()}`;
 };
@@ -165,14 +218,31 @@ const login = async () => {
     await rotur.login({
         system: 'rotur',
         timeout: 120000,
-        requires: REQUIRED_PERMISSIONS
+        requires: LOGIN_PERMISSIONS
     });
     storeToken(rotur.token);
     const user = await fetchCurrentUser();
     if (!user) {
         throw new Error('Logged in but could not load Rotur profile');
     }
+    writeRestoreCache(rotur.token, user);
     return user;
+};
+
+const clearActivity = () => {
+    const rotur = getClient();
+    if (!rotur.loggedIn || !rotur.socket) {
+        return;
+    }
+    try {
+        if (typeof rotur.socket.removeActivity === 'function') {
+            rotur.socket.removeActivity(ACTIVITY_ID);
+        } else if (typeof rotur.socket.clearActivity === 'function') {
+            rotur.socket.clearActivity(ACTIVITY_ID);
+        }
+    } catch (_) {
+        // ignore
+    }
 };
 
 const logout = () => {
@@ -180,6 +250,7 @@ const logout = () => {
     const rotur = getClient();
     rotur.logout();
     storeToken(null);
+    writeRestoreCache(null, null);
 };
 
 const ensureSocket = async () => {
@@ -203,7 +274,8 @@ const ensureSocket = async () => {
 /**
  * Publish MistWarp editing presence.
  * Title/status are fixed strings; edit duration uses start_time only.
- * @param {{projectTitle?: string, editingSince?: number}|string} projectTitleOrCtx
+ * @param {object|string} projectTitleOrCtx - Project title or activity context.
+ * @param {object} [extra] - Extra activity fields.
  */
 const syncActivity = async (projectTitleOrCtx, extra = {}) => {
     const rotur = getClient();
@@ -269,24 +341,48 @@ const syncActivity = async (projectTitleOrCtx, extra = {}) => {
     }
 };
 
-const clearActivity = () => {
-    const rotur = getClient();
-    if (!rotur.loggedIn || !rotur.socket) {
-        return;
-    }
-    try {
-        if (typeof rotur.socket.removeActivity === 'function') {
-            rotur.socket.removeActivity(ACTIVITY_ID);
-        } else if (typeof rotur.socket.clearActivity === 'function') {
-            rotur.socket.clearActivity(ACTIVITY_ID);
-        }
-    } catch (_) {
-        // ignore
-    }
-};
-
 const isLoggedIn = () => getClient().loggedIn;
 const getRotur = () => getClient();
+
+// Ensure the current session token can exercise every scope in `scopes`. If the
+// token is already sufficient (or is a full-access main token) this is a no-op;
+// otherwise it re-runs the Rotur login popup requesting the union of the existing
+// login scopes plus the requested ones, broadening the same session in place. No
+// separate per-project sub-token is minted.
+const ensureScopes = async scopes => {
+    const rotur = getClient();
+    if (!rotur.loggedIn) {
+        return false;
+    }
+    const wanted = Array.isArray(scopes) ? scopes.filter(Boolean) : [];
+    if (!wanted.length) {
+        return true;
+    }
+    let granted = null;
+    try {
+        const abilities = await rotur.me.abilities();
+        if (!abilities || abilities.error || abilities.token_type === 'main') {
+            return true;
+        }
+        granted = Array.isArray(abilities.permissions) ? abilities.permissions : [];
+    } catch (_) {
+        return true;
+    }
+    if (granted.includes('full')) {
+        return true;
+    }
+    const missing = wanted.filter(scope => !granted.includes(scope));
+    if (!missing.length) {
+        return true;
+    }
+    await rotur.login({
+        system: 'rotur',
+        timeout: 120000,
+        requires: [...new Set([...LOGIN_PERMISSIONS, ...wanted])]
+    });
+    storeToken(rotur.token);
+    return true;
+};
 
 const isPaymentPermissionError = error => {
     const message = String((error && error.message) || error || '').toLowerCase();
@@ -403,10 +499,12 @@ export {
     syncActivity,
     clearActivity,
     isLoggedIn,
+    presenceSupported,
     getRotur,
     fetchCurrentUser,
     getBalance,
     getAccountSummary,
     payUser,
-    claimDaily
+    claimDaily,
+    ensureScopes
 };

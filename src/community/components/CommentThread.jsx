@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useCallback} from 'react';
+import React, {useEffect, useState, useCallback, useMemo} from 'react';
 import {Link} from 'react-router-dom';
 import {Trash2, Reply, Flag} from 'lucide-react';
 import {useUser} from '../UserContext.jsx';
@@ -100,7 +100,7 @@ const InlineComposer = ({user, value, onChange, onSubmit, onCancel, placeholder,
     </div>
 );
 
-const CommentThread = ({source, canModerate, disabled, reportContext}) => {
+const CommentThread = ({source, canModerate, disabled, disabledReason, reportContext}) => {
     const {user} = useUser();
     const [comments, setComments] = useState([]);
     const [content, setContent] = useState('');
@@ -148,6 +148,19 @@ const CommentThread = ({source, canModerate, disabled, reportContext}) => {
         load();
     }, [load]);
 
+    // If the page was opened deep-linking to a reply (e.g. from a notification),
+    // expand that reply's thread so the anchor can be found and scrolled to.
+    useEffect(() => {
+        if (!comments.length) return;
+        const match = window.location.hash.match(/^#comment-id-(.+)$/);
+        if (!match) return;
+        const target = comments.find(c => String(c.id) === match[1]);
+        if (target && target.parent) {
+            const replyCount = comments.filter(c => c.parent === target.parent).length;
+            setReplyLimits(prev => ({...prev, [target.parent]: replyCount}));
+        }
+    }, [comments]);
+
     const submit = async (text, parent) => {
         if (!text.trim() || busy) return;
         setBusy(true);
@@ -169,17 +182,29 @@ const CommentThread = ({source, canModerate, disabled, reportContext}) => {
         if (!window.confirm('Delete this comment?')) return;
         try {
             await source.remove(commentId);
-            load();
+            setComments(cs => cs.filter(c => c.id !== commentId && c.parent !== commentId));
         } catch (e) {
             setError(e.message || 'Could not delete comment.');
         }
     };
 
+    const toggleReaction = (reactions, type, username) => {
+        const had = (reactions[type] || []).some(name => sameUser(name, username));
+        const next = {};
+        for (const key of Object.keys(reactions)) {
+            next[key] = (reactions[key] || []).filter(name => !sameUser(name, username));
+        }
+        if (!had) next[type] = [...(next[type] || []), username];
+        return next;
+    };
+
     const react = async (commentId, type) => {
-        if (!source.react) return;
+        if (!source.react || !user) return;
         try {
             await source.react(commentId, type);
-            load();
+            setComments(cs => cs.map(c => (c.id === commentId ?
+                {...c, reactions: toggleReaction(c.reactions || {}, type, user.username)} :
+                c)));
         } catch (e) {
             setError(e.message || 'Could not react.');
         }
@@ -191,19 +216,29 @@ const CommentThread = ({source, canModerate, disabled, reportContext}) => {
         setError(null);
     };
 
-    const canDelete = comment => Boolean(user) && (canModerate || sameUser(comment.author, user.username));
+    const canDelete = comment => Boolean(user) &&
+        (canModerate || user.isAdmin || sameUser(comment.author, user.username));
     const canReport = comment => Boolean(user) && !sameUser(comment.author, user.username);
     const canReply = Boolean(user) && !disabled;
 
-    const roots = comments.filter(c => !c.parent);
-    const repliesOf = parentId => comments
-        .filter(c => c.parent === parentId)
-        .sort((a, b) => (a.created || 0) - (b.created || 0));
+    const {roots, replyMap} = useMemo(() => {
+        const map = new Map();
+        for (const c of comments) {
+            if (!c.parent) continue;
+            if (!map.has(c.parent)) map.set(c.parent, []);
+            map.get(c.parent).push(c);
+        }
+        for (const list of map.values()) {
+            list.sort((a, b) => (a.created || 0) - (b.created || 0));
+        }
+        return {roots: comments.filter(c => !c.parent), replyMap: map};
+    }, [comments]);
+    const repliesOf = parentId => replyMap.get(parentId) || [];
 
     return (
         <div className={styles.thread}>
             {disabled ? (
-                <p className={styles.signedOut}>Comments are turned off.</p>
+                <p className={styles.signedOut}>{disabledReason || 'Comments are turned off.'}</p>
             ) : user ? (
                 <InlineComposer
                     user={user}
@@ -227,6 +262,7 @@ const CommentThread = ({source, canModerate, disabled, reportContext}) => {
                     <CommentRow
                         comment={comment}
                         id={`comment-id-${comment.id}`}
+                        onReply={() => openReply(comment.id)}
                         onDelete={() => remove(comment.id)}
                         onReact={type => react(comment.id, type)}
                         onReport={() => setReportId(comment.id)}

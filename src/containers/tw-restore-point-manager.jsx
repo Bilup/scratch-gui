@@ -55,6 +55,7 @@ class TWRestorePointManager extends React.Component {
             'handleClickCreate',
             'handleClickDelete',
             'handleClickDeleteAll',
+            'handleClickRefresh',
             'handleChangeInterval',
             'handleClickExport',
             'handleClickLoad',
@@ -111,6 +112,10 @@ class TWRestorePointManager extends React.Component {
             .catch(error => {
                 this.handleModalError(error);
             });
+    }
+
+    handleClickRefresh () {
+        this.refreshState();
     }
 
     handleClickDelete (id) {
@@ -200,7 +205,11 @@ class TWRestorePointManager extends React.Component {
         this.props.onCloseModal();
         this.props.onStartLoadingRestorePoint(this.props.loadingState);
 
-        RestorePointAPI.loadRestorePoint(this.props.vm, id)
+        const backup = this.props.projectChanged ?
+            RestorePointAPI.createSafetyRestorePoint(this.props.vm, this.props.projectTitle) :
+            Promise.resolve();
+        backup
+            .then(() => RestorePointAPI.loadRestorePoint(this.props.vm, id))
             .then(() => {
                 this.props.onFinishLoadingRestorePoint(true, this.props.loadingState);
                 setTimeout(() => {
@@ -317,6 +326,7 @@ class TWRestorePointManager extends React.Component {
                     onClickDeleteAll={this.handleClickDeleteAll}
                     onClickExport={this.handleClickExport}
                     onClickLoad={this.handleClickLoad}
+                    onClickRefresh={this.handleClickRefresh}
                     interval={this.state.interval}
                     onChangeInterval={this.handleChangeInterval}
                     isExporting={this.isExportingRestorePoint}

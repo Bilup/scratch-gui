@@ -5,7 +5,8 @@ import {
     exchangeValidator,
     logout,
     createProject,
-    uploadProject
+    uploadProject,
+    stashProjectHandoff
 } from '../lib/community/api.js';
 
 const editorUrl = ({clone, platformProject, projectJson, assets} = {}) => {
@@ -28,10 +29,32 @@ const readStored = key => {
     }
 };
 
+let themeCustomCacheKey;
+let themeCustomCacheValue = '';
+const themeCustomFor = theme => {
+    const library = readStored('tw:custom-themes') || '[]';
+    const cacheKey = `${theme}\n${library}`;
+    if (cacheKey !== themeCustomCacheKey) {
+        themeCustomCacheKey = cacheKey;
+        themeCustomCacheValue = '';
+        try {
+            const uuid = JSON.parse(theme).customThemeUuid;
+            const parsed = JSON.parse(library);
+            const active = Array.isArray(parsed) ? parsed.filter(entry => entry.uuid === uuid) : [];
+            if (active.length) themeCustomCacheValue = JSON.stringify(active);
+        } catch (e) {
+            // leave theme_custom out rather than shipping the whole library
+        }
+    }
+    return themeCustomCacheValue;
+};
+
 const embedUrl = (project, {unsandboxed = false, applyProjectTheme = true} = {}) => {
     const params = new URLSearchParams();
     params.set('project_url', project.projectJsonUrl);
     params.set('mw_assets', project.assetsBase);
+    params.set('mw_bridge', '1');
+    if (project.id) params.set('platform_project', project.id);
     if (!applyProjectTheme) {
         params.set('apply_project_theme', '0');
     }
@@ -39,14 +62,8 @@ const embedUrl = (project, {unsandboxed = false, applyProjectTheme = true} = {})
     if (theme) {
         params.set('theme', theme);
         if (theme.includes('custom')) {
-            try {
-                const uuid = JSON.parse(theme).customThemeUuid;
-                const library = JSON.parse(readStored('tw:custom-themes') || '[]');
-                const active = Array.isArray(library) ? library.filter(entry => entry.uuid === uuid) : [];
-                if (active.length) params.set('theme_custom', JSON.stringify(active));
-            } catch (e) {
-                // leave theme_custom out rather than shipping the whole library
-            }
+            const themeCustom = themeCustomFor(theme);
+            if (themeCustom) params.set('theme_custom', themeCustom);
         }
     }
     if (unsandboxed) params.set('allow_all', '1');
@@ -116,7 +133,8 @@ const api = {
         request('/reports', {method: 'POST', body: {type, target, reason, context}}),
     admin: {
         reports: () => request('/admin/reports'),
-        reportAction: (id, action, reason) => request('/admin/reports/action', {method: 'POST', body: {id, action, reason}}),
+        reportAction: (id, action, reason) =>
+            request('/admin/reports/action', {method: 'POST', body: {id, action, reason}}),
         reportEvidence: id => request(`/admin/reports/evidence/${id}`),
         admins: () => request('/admin/admins'),
         addAdmin: username => request('/admin/admins', {method: 'POST', body: {username}}),
@@ -133,7 +151,9 @@ const api = {
             request('/admin/user/profile', {method: 'POST', body: {username, ...patch}}),
         searchProjects: q => request(`/admin/projects?q=${encodeURIComponent(q)}`),
         stats: () => request('/admin/stats'),
-        users: () => request('/admin/users')
+        users: () => request('/admin/users'),
+        payouts: () => request('/admin/payouts'),
+        retryPayouts: () => request('/admin/payouts/retry', {method: 'POST'})
     },
     news: () => request('/news'),
     postNews: (title, body) => request('/news', {method: 'POST', body: {title, body}}),
@@ -158,4 +178,4 @@ const api = {
 };
 
 export default api;
-export {editorUrl, embedUrl, projectUrl, loadSession, storeSession, exchangeValidator, request};
+export {editorUrl, embedUrl, projectUrl, loadSession, storeSession, exchangeValidator, request, stashProjectHandoff};

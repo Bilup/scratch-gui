@@ -6,11 +6,19 @@ import {
     ShieldCheck, ShieldAlert, MoreHorizontal, Trash2, Link2, Link as LinkIcon, Lock, Coins, SlidersHorizontal,
     Palette, Bookmark, BookmarkCheck
 } from 'lucide-react';
-import api, {projectUrl, editorUrl, embedUrl} from '../api';
+import api, {projectUrl, editorUrl, embedUrl, stashProjectHandoff} from '../api';
+import {cachedFetchBuffer, cachedFetchJson} from '../../lib/community/cached-fetch.js';
 import {buyProject} from '../purchase';
-import {isInsufficientFunds} from '../credits';
-import BuyCreditsModal from '../components/BuyCreditsModal.jsx';
+import {isInsufficientFunds, KO_FI_SHOP_URL} from '../credits';
+import RoturConsentModal from '../components/RoturConsentModal.jsx';
 import {getBalance} from '../../lib/rotur/client.js';
+import {
+    hasFullGrant, commitGrant, callRotur,
+    activityAllowed, rememberActivityDecision, isActivityMethod
+} from '../../lib/rotur/extension-bridge.js';
+import {getRoturSettings, setRoturSetting} from '../../lib/rotur/settings.js';
+import {getUsernameOverride} from '../../lib/rotur/cloud-sync.js';
+import useEscape from '../use-escape.js';
 import rotur from '../rotur';
 import {Theme} from '../../lib/themes';
 import {CustomTheme} from '../../lib/themes/custom-themes.js';
@@ -123,13 +131,13 @@ const analyzeBlocks = data => {
         }
     }
     const topCategories = topFive(categories)
-        .map(([prefix, count]) => ({label: catLabel(prefix), count, color: catColor(prefix)}));
+        .map(([prefix, count]) => ({id: prefix, label: catLabel(prefix), count, color: catColor(prefix)}));
     return {total, topCategories};
 };
 
 const Project = () => {
     const {id} = useParams();
-    const {user} = useUser();
+    const {user, loading: userLoading} = useUser();
     const navigate = useNavigate();
     const [project, setProject] = useState(null);
     const [error, setError] = useState(null);
@@ -150,15 +158,15 @@ const Project = () => {
     const [customExtensions, setCustomExtensions] = useState([]);
     const [unsandboxed, setUnsandboxed] = useState(false);
     const [buying, setBuying] = useState(false);
-    const [showBuyCredits, setShowBuyCredits] = useState(false);
-    const [creditBalance, setCreditBalance] = useState(null);
     const [confirmBuy, setConfirmBuy] = useState(false);
     const [confirmBalance, setConfirmBalance] = useState(null);
     const [savingLibrary, setSavingLibrary] = useState(false);
     const [projectThemeApplied, setProjectThemeApplied] = useState(false);
     const [revertTheme, setRevertTheme] = useState(false);
     const [followsOwner, setFollowsOwner] = useState(false);
+    const [roturModal, setRoturModal] = useState(null);
     const themeMode = getProjectThemeMode();
+    useEscape(confirmBuy ? () => setConfirmBuy(false) : null);
 
     const beginLoad = useLatest();
 
@@ -213,9 +221,9 @@ const Project = () => {
     useEffect(() => {
         const hash = window.location.hash;
         if (!hash) return;
-        const id = hash.replace('#', '');
+        const anchorId = hash.replace('#', '');
         const tryScroll = (attempts = 0) => {
-            const el = document.getElementById(id);
+            const el = document.getElementById(anchorId);
             if (el) {
                 el.scrollIntoView({behavior: 'smooth', block: 'center'});
                 return;
@@ -257,14 +265,14 @@ const Project = () => {
     }, [project]);
 
     const projectJsonUrl = project && project.projectJsonUrl;
+    const projectJsonBytes = project && project.jsonBytes;
     useEffect(() => {
         setBlockStats(null);
         setCustomExtensions([]);
         setUnsandboxed(false);
         let cancelled = false;
-        if (projectJsonUrl) {
-            fetch(projectJsonUrl)
-                .then(response => response.json())
+        if (projectJsonUrl && !(projectJsonBytes > 5 * 1024 * 1024)) {
+            cachedFetchJson(projectJsonUrl)
                 .then(data => {
                     if (cancelled) return;
                     setBlockStats(analyzeBlocks(data));
@@ -275,7 +283,7 @@ const Project = () => {
         return () => {
             cancelled = true;
         };
-    }, [projectJsonUrl]);
+    }, [projectJsonUrl, projectJsonBytes]);
 
     const runUnsandboxed = () => {
         // eslint-disable-next-line no-alert
@@ -318,6 +326,183 @@ const Project = () => {
         }
     };
 
+    useEffect(() => {
+        if (!project || !project.projectJsonUrl) return;
+        const assetsBase = project.assetsBase ? `${project.assetsBase.replace(/\/+$/, '')}/` : null;
+        const allowed = url => typeof url === 'string' &&
+            (url === project.projectJsonUrl || (assetsBase && url.startsWith(assetsBase)));
+        const onMessage = event => {
+            const frame = stageFrame.current;
+            if (!frame || event.source !== frame.contentWindow) return;
+            const data = event.data;
+            if (!data || data.type !== 'mw:fetch' || !allowed(data.url)) return;
+            const reply = (message, transfer) => {
+                try {
+                    event.source.postMessage(message, '*', transfer);
+                } catch (e) {
+                    // ignore
+                }
+            };
+            cachedFetchBuffer(data.url)
+                .then(buffer => reply({type: 'mw:fetch-result', id: data.id, buffer}, [buffer]))
+                .catch(() => reply({type: 'mw:fetch-result', id: data.id}));
+        };
+        window.addEventListener('message', onMessage);
+        return () => window.removeEventListener('message', onMessage);
+    }, [project]);
+
+    const userMessage = useMemo(() => ({
+        type: 'mw:rotur-user',
+        user: {
+            loggedIn: Boolean(user && user.username),
+            username: (user && user.username) || '',
+            id: (user && user.id) || ''
+        },
+        displayName: user && user.username ? getUsernameOverride() || `@${user.username}` : '',
+        projectId: (project && project.id) || id || '',
+        projectName: (project && (project.title || project.name)) || '',
+        projectImage: (project && project.thumbUrl) || ''
+    }), [user, project, id]);
+
+    // Rotur bridge for the embedded player. The project iframe cannot hold the
+    // token or render trusted UI, so its Rotur blocks post requests up here; this
+    // page holds the token (via lib/rotur/client) and renders consent/confirm UI
+    // that the sandboxed project cannot read or approve on its own.
+    useEffect(() => {
+        const identity = userMessage.user;
+        const onMessage = event => {
+            const frame = stageFrame.current;
+            if (!frame || event.source !== frame.contentWindow) return;
+            const data = event.data;
+            if (!data || data.type !== 'mw:rotur') return;
+            const source = event.source;
+            const reply = payload => {
+                try {
+                    source.postMessage({type: 'mw:rotur-result', ...payload}, '*');
+                } catch (e) {
+                    // ignore
+                }
+            };
+
+            if (data.kind === 'hello') {
+                // While identity is still restoring, stay silent: answering now
+                // would settle the embed's cache as logged-out. The proactive
+                // push below runs once loading finishes and answers instead.
+                if (userLoading) return;
+                try {
+                    source.postMessage(userMessage, '*');
+                } catch (e) {
+                    // ignore
+                }
+                return;
+            }
+
+            if (data.kind === 'consent') {
+                const scopes = data.scopes || [];
+                const meta = data.meta || {};
+                if (!identity.loggedIn) {
+                    reply({id: data.id, ok: true, result: false});
+                    return;
+                }
+                if (hasFullGrant(meta, scopes)) {
+                    reply({id: data.id, ok: true, result: true});
+                    return;
+                }
+                setRoturModal({
+                    type: 'consent',
+                    data: {scopes, username: identity.username, name: meta.name},
+                    onAllow: async () => {
+                        setRoturModal(null);
+                        try {
+                            await commitGrant(meta, scopes);
+                            reply({id: data.id, ok: true, result: true});
+                        } catch (e) {
+                            reply({id: data.id, ok: false, error: String((e && e.message) || e)});
+                        }
+                    },
+                    onDeny: () => {
+                        setRoturModal(null);
+                        reply({id: data.id, ok: true, result: false});
+                    }
+                });
+                return;
+            }
+
+            if (data.kind === 'call') {
+                const {method, args, opts} = data;
+                const perform = async () => {
+                    try {
+                        const result = await callRotur(method, args);
+                        reply({id: data.id, ok: true, result});
+                    } catch (e) {
+                        reply({id: data.id, ok: false, error: String((e && e.message) || e)});
+                    }
+                };
+                if (isActivityMethod(method)) {
+                    const key = (project && project.id) || id || `name:${(project && project.title) || ''}`;
+                    const decision = activityAllowed(getRoturSettings().activitySharing, key);
+                    if (decision === true) {
+                        perform();
+                        return;
+                    }
+                    if (decision === false) {
+                        reply({id: data.id, ok: true, result: ''});
+                        return;
+                    }
+                    setRoturModal({
+                        type: 'share',
+                        data: {username: identity.username, name: (project && project.title) || ''},
+                        onShareThis: () => {
+                            setRoturModal(null);
+                            rememberActivityDecision(key, true);
+                            perform();
+                        },
+                        onShareAll: () => {
+                            setRoturModal(null);
+                            setRoturSetting('activitySharing', 'all');
+                            perform();
+                        },
+                        onShareNo: () => {
+                            setRoturModal(null);
+                            rememberActivityDecision(key, false);
+                            reply({id: data.id, ok: true, result: ''});
+                        }
+                    });
+                    return;
+                }
+                if (opts && opts.sensitive) {
+                    setRoturModal({
+                        type: 'confirm',
+                        data: {label: (opts && opts.label) || method, username: identity.username},
+                        onAllow: () => {
+                            setRoturModal(null);
+                            perform();
+                        },
+                        onDeny: () => {
+                            setRoturModal(null);
+                            reply({id: data.id, ok: false, error: 'You cancelled this Rotur action'});
+                        }
+                    });
+                } else {
+                    perform();
+                }
+            }
+        };
+        window.addEventListener('message', onMessage);
+        // Push identity proactively so a login (or logout) after the embed has
+        // loaded refreshes its cache, instead of waiting for a hello that only
+        // fires once.
+        try {
+            const frame = stageFrame.current;
+            if (!userLoading && frame && frame.contentWindow) {
+                frame.contentWindow.postMessage(userMessage, '*');
+            }
+        } catch (e) {
+            // ignore
+        }
+        return () => window.removeEventListener('message', onMessage);
+    }, [user, userLoading, project, id, userMessage]);
+
     const sendThemeToStage = useCallback(() => {
         try {
             const frame = stageFrame.current;
@@ -327,10 +512,13 @@ const Project = () => {
                 theme: localStorage.getItem('tw:theme'),
                 customThemes: localStorage.getItem('tw:custom-themes')
             }, '*');
+            if (!userLoading) {
+                frame.contentWindow.postMessage(userMessage, '*');
+            }
         } catch (e) {
             // ignore
         }
-    }, []);
+    }, [userLoading, userMessage]);
 
     const handleTitleKeyDown = event => {
         if (event.key === 'Enter') {
@@ -390,7 +578,7 @@ const Project = () => {
         } catch (e) {
             setConfirmBuy(false);
             if (isInsufficientFunds(e)) {
-                setShowBuyCredits(true);
+                window.location.assign(KO_FI_SHOP_URL);
             } else if (e.needsReauth) {
                 setActionError('Your current login cannot send credits. Log out and back in, then try again.');
             } else {
@@ -612,6 +800,7 @@ const Project = () => {
                             className={styles.remixButton}
                             onClick={remix}
                             disabled={!user}
+                            title={!user ? 'Sign in to remix' : null}
                         >
                             <GitFork size={16} />
                             Remix
@@ -621,6 +810,7 @@ const Project = () => {
                         <a
                             className={styles.primary}
                             href={seeInsideHref}
+                            onClick={() => stashProjectHandoff(project)}
                         >
                             <ExternalLink size={16} />
                             See inside
@@ -707,11 +897,15 @@ const Project = () => {
                     onClose={() => setReporting(false)}
                 />
             ) : null}
-            {showBuyCredits ? (
-                <BuyCreditsModal
-                    needed={price}
-                    balance={creditBalance}
-                    onClose={() => setShowBuyCredits(false)}
+            {roturModal ? (
+                <RoturConsentModal
+                    type={roturModal.type}
+                    data={roturModal.data}
+                    onAllow={() => roturModal.onAllow && roturModal.onAllow()}
+                    onDeny={() => roturModal.onDeny && roturModal.onDeny()}
+                    onShareThis={() => roturModal.onShareThis && roturModal.onShareThis()}
+                    onShareAll={() => roturModal.onShareAll && roturModal.onShareAll()}
+                    onShareNo={() => roturModal.onShareNo && roturModal.onShareNo()}
                 />
             ) : null}
             {confirmBuy ? (
@@ -738,17 +932,13 @@ const Project = () => {
                                 onClick={() => setConfirmBuy(false)}
                             >Cancel</button>
                             {confirmBalance !== null && confirmBalance < price ? (
-                                <button
+                                <a
                                     className={styles.confirmButton}
-                                    onClick={() => {
-                                        setConfirmBuy(false);
-                                        setCreditBalance(confirmBalance);
-                                        setShowBuyCredits(true);
-                                    }}
+                                    href={KO_FI_SHOP_URL}
                                 >
                                     <Coins size={15} />
                                     Buy credits
-                                </button>
+                                </a>
                             ) : (
                                 <button
                                     className={styles.confirmButton}
@@ -830,6 +1020,7 @@ const Project = () => {
                                         <a
                                             className={styles.paywallButton}
                                             href={editorUrl({platformProject: project.id})}
+                                            onClick={() => stashProjectHandoff(project)}
                                         >
                                             <ExternalLink size={16} />
                                             Open in editor
@@ -897,7 +1088,7 @@ const Project = () => {
                             className={project.myReaction === 'heart' ? styles.statOn : styles.statButton}
                             onClick={() => react('heart')}
                             disabled={!user || locked}
-                            title={locked ? 'Buy this project to react' : null}
+                            title={locked ? 'Buy this project to react' : (!user ? 'Sign in to react' : null)}
                         >
                             <Heart
                                 size={16}
@@ -909,7 +1100,7 @@ const Project = () => {
                             className={project.myReaction === 'brokenheart' ? styles.statOn : styles.statButton}
                             onClick={() => react('brokenheart')}
                             disabled={!user || locked}
-                            title={locked ? 'Buy this project to react' : null}
+                            title={locked ? 'Buy this project to react' : (!user ? 'Sign in to react' : null)}
                         >
                             <ThumbsDown
                                 size={16}
@@ -997,6 +1188,8 @@ const Project = () => {
                             source={commentSource}
                             canModerate={project.isOwner}
                             disabled={Boolean(project.commentsOff) || locked}
+                            disabledReason={locked && !project.commentsOff ?
+                                'Buy this project to comment.' : 'Comments are turned off.'}
                             reportContext={`project ${id}`}
                         />
                     )}
@@ -1028,7 +1221,7 @@ const BarChart = ({title, rows}) => {
             <ul className={styles.chartRows}>
                 {rows.map(row => (
                     <li
-                        key={row.label}
+                        key={row.id}
                         className={styles.chartRow}
                     >
                         <span
@@ -1097,12 +1290,21 @@ const RemixTree = ({id}) => {
         setTree(null);
         api.remixTree(id).then(setTree).catch(() => setTree({nodes: []}));
     }, [id]);
+    const childMap = useMemo(() => {
+        const map = new Map();
+        for (const node of (tree && tree.nodes) || []) {
+            if (!map.has(node.remixParent)) map.set(node.remixParent, []);
+            map.get(node.remixParent).push(node);
+        }
+        for (const list of map.values()) {
+            list.sort((a, b) => (a.sharedAt || a.created || 0) - (b.sharedAt || b.created || 0));
+        }
+        return map;
+    }, [tree]);
     if (!tree) return <p className={styles.status}>Loading…</p>;
     const nodes = tree.nodes || [];
     if (nodes.length < 2) return <p className={styles.sideEmpty}>No remixes yet.</p>;
-    const childrenOf = parentId => nodes
-        .filter(node => node.remixParent === parentId)
-        .sort((a, b) => (a.sharedAt || a.created || 0) - (b.sharedAt || b.created || 0));
+    const childrenOf = parentId => childMap.get(parentId) || [];
     const root = nodes.find(node => node.id === tree.root);
     if (!root) return <p className={styles.sideEmpty}>No remixes yet.</p>;
     return (
@@ -1140,6 +1342,8 @@ const PullList = ({id, canMerge, onChange}) => {
     const [pulls, setPulls] = useState(null);
     const [openPull, setOpenPull] = useState(null);
     const [diff, setDiff] = useState(null);
+    const [merging, setMerging] = useState(false);
+    const [mergeError, setMergeError] = useState(null);
 
     const reload = useCallback(() => {
         api.pulls(id).then(d => setPulls(d.pulls || [])).catch(() => setPulls([]));
@@ -1150,6 +1354,7 @@ const PullList = ({id, canMerge, onChange}) => {
     const view = async pull => {
         setOpenPull(pull);
         setDiff(null);
+        setMergeError(null);
         try {
             setDiff(await api.pullDiff(id, pull.index));
         } catch (e) {
@@ -1158,16 +1363,20 @@ const PullList = ({id, canMerge, onChange}) => {
     };
 
     const merge = async pull => {
+        if (merging) return;
+        setMerging(true);
+        setMergeError(null);
         try {
             await api.mergePull(id, pull.index);
             setOpenPull(null);
             reload();
             onChange();
         } catch (e) {
-            // eslint-disable-next-line no-alert
-            alert(e.code === 'conflict' ?
+            setMergeError(e.code === 'conflict' ?
                 'This pull request has conflicts. Open it in the editor and pull to resolve.' :
                 'Merge failed.');
+        } finally {
+            setMerging(false);
         }
     };
 
@@ -1186,11 +1395,13 @@ const PullList = ({id, canMerge, onChange}) => {
                 <p className={styles.muted}>
                     #{openPull.index} by {openPull.user} into {openPull.baseBranch}
                 </p>
+                {mergeError ? <div className={styles.actionError}>{mergeError}</div> : null}
                 {canMerge && openPull.state === 'open' ? (
                     <button
                         className={styles.primary}
                         onClick={() => merge(openPull)}
-                    >Merge</button>
+                        disabled={merging}
+                    >{merging ? 'Merging…' : 'Merge'}</button>
                 ) : null}
                 <DiffView diff={diff} />
             </div>

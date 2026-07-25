@@ -23,6 +23,7 @@ import {APP_NAME} from '../../lib/constants/brand.js';
 import {STYLE_GROUPS} from '../../lib/mw-style-settings';
 import StylePreview from './style-preview.jsx';
 import MenuBarLayoutSetting from './menu-bar-layout.jsx';
+import MenuBarFeatureSettings from './menu-bar-settings.jsx';
 import {LanguagePage, ThemePage, WallpaperPage, FontsPage} from './appearance-pages.jsx';
 import LoadingScreenPage from './loading-screen-page.jsx';
 import ShortcutManager from '../shortcut-manager/shortcut-manager.jsx';
@@ -47,6 +48,7 @@ import {
     formatActivityTitle,
     formatActivityStatus
 } from '../../lib/rotur/settings.js';
+import {readActivityGrants, writeActivityGrants} from '../../lib/rotur/extension-bridge.js';
 
 const BufferedInput = BufferedInputHOC(Input);
 
@@ -109,6 +111,18 @@ const messages = defineMessages({
         defaultMessage: 'Menu Bar',
         id: 'mw.settings.menuBarHeader'
     },
+    headerMenuBarLayout: {
+        defaultMessage: 'Layout',
+        id: 'mw.settings.menuBarLayoutHeader'
+    },
+    headerMenuBarItems: {
+        defaultMessage: 'Menu Items',
+        id: 'mw.settings.menuBarItemsHeader'
+    },
+    headerAutosave: {
+        defaultMessage: 'Autosave',
+        id: 'mw.settings.autosaveHeader'
+    },
     headerDebugger: {
         defaultMessage: 'Debugger',
         id: 'mw.settings.debuggerHeader'
@@ -124,6 +138,18 @@ const messages = defineMessages({
     headerRotur: {
         defaultMessage: 'Rotur',
         id: 'mw.settings.roturHeader'
+    },
+    activitySharingAsk: {
+        defaultMessage: 'Ask each project',
+        id: 'mw.settings.rotur.activitySharing.ask'
+    },
+    activitySharingAll: {
+        defaultMessage: 'Always allow',
+        id: 'mw.settings.rotur.activitySharing.all'
+    },
+    activitySharingOff: {
+        defaultMessage: 'Never',
+        id: 'mw.settings.rotur.activitySharing.off'
     }
 });
 
@@ -1146,11 +1172,45 @@ const pageConfigurations = {
     menuBar: {
         sections: [
             {
-                headerMessage: 'headerMenuBar',
+                headerMessage: 'headerMenuBarLayout',
                 settings: [
                     {
                         component: MenuBarLayoutSetting,
                         props: () => ({})
+                    }
+                ]
+            },
+            {
+                headerMessage: 'headerMenuBarItems',
+                settings: [
+                    {
+                        component: MenuBarFeatureSettings,
+                        props: () => ({
+                            ids: [
+                                'menu_labels',
+                                'show_block_count',
+                                'show_costume_count',
+                                'show_sound_count',
+                                'show_complexity_score',
+                                'show_media_recorder'
+                            ]
+                        })
+                    }
+                ]
+            },
+            {
+                headerMessage: 'headerAutosave',
+                settings: [
+                    {
+                        component: MenuBarFeatureSettings,
+                        props: () => ({
+                            ids: [
+                                'autosave_enabled',
+                                'autosave_interval',
+                                'autosave_notifications',
+                                'autosave_only_when_changed'
+                            ]
+                        })
                     }
                 ]
             }
@@ -1513,9 +1573,11 @@ class UnwrappedRoturPage extends React.Component {
         super(props);
         bindAll(this, [
             'handlePresenceChange',
-            'handleIncludeDurationChange'
+            'handleIncludeDurationChange',
+            'handleActivitySharingChange',
+            'handleResetActivityGrants'
         ]);
-        this.state = getRoturSettings();
+        this.state = {...getRoturSettings(), activityGrantCount: Object.keys(readActivityGrants()).length};
     }
     setSetting (key, value) {
         setRoturSetting(key, value);
@@ -1527,9 +1589,16 @@ class UnwrappedRoturPage extends React.Component {
     handleIncludeDurationChange (e) {
         this.setSetting('includeEditDuration', e.target.checked);
     }
+    handleActivitySharingChange (e) {
+        this.setSetting('activitySharing', e.target.value);
+    }
+    handleResetActivityGrants () {
+        writeActivityGrants({});
+        this.setState({activityGrantCount: 0});
+    }
     render () {
         const {intl, loggedIn, username, projectTitle} = this.props;
-        const {presenceEnabled, includeEditDuration} = this.state;
+        const {presenceEnabled, includeEditDuration, activitySharing, activityGrantCount} = this.state;
 
         return (
             <Box className={styles.body}>
@@ -1573,6 +1642,42 @@ class UnwrappedRoturPage extends React.Component {
                         id="mw.settings.rotur.includeEditDurationHelp"
                     />}
                 />
+
+                <div className={styles.setting}>
+                    <div className={styles.textSettingLabel}>
+                        <FormattedMessage
+                            defaultMessage="Let projects show activity on your profile"
+                            id="mw.settings.rotur.activitySharing"
+                        />
+                    </div>
+                    <select
+                        value={activitySharing}
+                        onChange={this.handleActivitySharingChange}
+                    >
+                        <option value="ask">{intl.formatMessage(messages.activitySharingAsk)}</option>
+                        <option value="all">{intl.formatMessage(messages.activitySharingAll)}</option>
+                        <option value="off">{intl.formatMessage(messages.activitySharingOff)}</option>
+                    </select>
+                    <p className={styles.detail}>
+                        <FormattedMessage
+                            // eslint-disable-next-line max-len
+                            defaultMessage="Projects can show what you're playing on your profile. Be asked per project, always allow, or never."
+                            id="mw.settings.rotur.activitySharingHelp"
+                        />
+                    </p>
+                    {activityGrantCount > 0 ? (
+                        <button
+                            className={styles.button}
+                            onClick={this.handleResetActivityGrants}
+                        >
+                            <FormattedMessage
+                                defaultMessage="Reset per-project choices ({count})"
+                                id="mw.settings.rotur.resetActivityGrants"
+                                values={{count: activityGrantCount}}
+                            />
+                        </button>
+                    ) : null}
+                </div>
 
                 <p className={styles.detail}>
                     <FormattedMessage

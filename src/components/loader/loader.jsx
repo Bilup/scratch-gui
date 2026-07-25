@@ -7,7 +7,7 @@ import bindAll from 'lodash.bindall';
 import {PackageOpen, FileJson, ShieldCheck, Blocks, Cat, Palette, Github} from 'lucide-react';
 import {getLoaderSettings} from '../../lib/mw/loader-settings';
 import styles from './loader.css';
-import {getIsLoadingWithId} from '../../reducers/project-state';
+import {getIsFetchingWithId, getIsLoadingWithId} from '../../reducers/project-state';
 import topBlock from './top-block.svg';
 import middleBlock from './middle-block.svg';
 import bottomBlock from './bottom-block.svg';
@@ -338,7 +338,9 @@ class LoaderComponent extends React.Component {
                         hidden={!settings.showProgress}
                     >
                         <div
-                            className={styles.barInner}
+                            className={classNames(styles.barInner, {
+                                [styles.indeterminate]: this.props.isFetching
+                            })}
                             ref={this.barInnerRef}
                         />
                     </div>
@@ -381,6 +383,7 @@ class LoaderComponent extends React.Component {
 
 LoaderComponent.propTypes = {
     intl: intlShape,
+    isFetching: PropTypes.bool,
     isFullScreen: PropTypes.bool,
     isRemote: PropTypes.bool,
     messageId: PropTypes.string,
@@ -401,10 +404,14 @@ LoaderComponent.defaultProps = {
     messageId: 'gui.loader.headline'
 };
 
-const mapStateToProps = state => ({
-    isRemote: getIsLoadingWithId(state.scratchGui.projectState.loadingState),
-    vm: state.scratchGui.vm
-});
+const mapStateToProps = state => {
+    const loadingState = state.scratchGui.projectState.loadingState;
+    return {
+        isFetching: getIsFetchingWithId(loadingState),
+        isRemote: getIsLoadingWithId(loadingState),
+        vm: state.scratchGui.vm
+    };
+};
 
 const mapDispatchToProps = () => ({});
 

@@ -13,7 +13,7 @@ import extensionLibraryContent, {
 import extensionTags from '../lib/libraries/tw-extension-tags';
 import {getVanillaPalette} from '../lib/mw-vanilla-palette';
 
-import LibraryComponent from '../components/library/library.jsx';
+import LibraryComponent from '../components/tw-extension-library/extension-library.jsx';
 import extensionIcon from '../components/action-menu/icon--sprite.svg';
 
 const messages = defineMessages({
@@ -97,7 +97,8 @@ const fetchLibrary = async (onProgress) => {
                 extensionId: extension.id,
                 extensionURL: `https://extensions.turbowarp.org/${extension.slug}.js`,
                 iconURL: `https://extensions.turbowarp.org/${extension.image || 'images/unknown.svg'}`,
-                tags: ['tw'],
+                source: 'tw',
+        tags: ['tw'],
                 credits: [
                     ...(extension.by || []),
                     ...(extension.original || [])
@@ -142,7 +143,8 @@ const fetchLibrary = async (onProgress) => {
                     extensionId: extension.id,
                     extensionURL: `https://extensions.mistium.com/featured/${extension.name}.js`,
                     iconURL: extension.image ? `https://extensions.mistium.com/${extension.image}` : emptyBanner,
-                    tags: ['mistium'],
+                    source: 'mistium',
+            tags: ['mistium'],
                     credits: [
                         ...(extension.by || []),
                         ...(extension.original || [])

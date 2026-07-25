@@ -1,6 +1,8 @@
 import ScratchStorage from '@bilup/scratch-storage';
 
 import defaultProject from '../default-project';
+import {hasBridge, bridgeFetch} from '../community/embed-bridge';
+import {cachedFetchBuffer} from '../community/cached-fetch';
 
 /**
  * Wrapper for ScratchStorage which adds default web sources.
@@ -50,6 +52,20 @@ class Storage extends ScratchStorage {
             return;
         }
         this.mistwarpAssetsBase = base;
+        if (hasBridge()) {
+            this.addHelper({
+                load: (assetType, assetId, dataFormat) =>
+                    bridgeFetch(`${this.mistwarpAssetsBase}/${assetId}.${dataFormat}`)
+                        .then(buffer => this.createAsset(assetType, dataFormat, new Uint8Array(buffer), assetId))
+            });
+        } else {
+            this.addHelper({
+                load: (assetType, assetId, dataFormat) =>
+                    cachedFetchBuffer(`${this.mistwarpAssetsBase}/${assetId}.${dataFormat}`)
+                        .then(buffer => this.createAsset(assetType, dataFormat, new Uint8Array(buffer), assetId))
+                        .catch(() => null)
+            });
+        }
         this.addWebStore(
             [
                 this.AssetType.ImageVector,

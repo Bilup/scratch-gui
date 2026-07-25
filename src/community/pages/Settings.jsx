@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import {Menu, Palette, Radio, Store, SwatchBook, User, ShieldAlert, Brush} from 'lucide-react';
+import {Menu, Palette, Radio, Store, SwatchBook, User, Brush} from 'lucide-react';
 import {applyTheme, detectTheme} from '../../lib/themes/themePersistance.js';
 import {ThemeAccentPanel} from '../../components/tw-settings-modal/theme-accent-panel.jsx';
 import CustomThemesPage from '../../components/tw-settings-modal/custom-themes-page.jsx';
@@ -18,29 +18,12 @@ import {
     MENU_BAR_TEXT_OPTIONS
 } from '../../lib/themes/menu-bar-accent.js';
 import {getRoturSettings, updateRoturSettings} from '../../lib/rotur/settings.js';
-import {
-    getSecurityWarningSettings,
-    setSecurityWarningSetting
-} from '../../lib/security-warning-settings.js';
+import {presenceSupported} from '../../lib/rotur/client.js';
 import styles from './Settings.module.css';
 
 const PRESENCE_LABELS = {
     presenceEnabled: 'Share editor presence',
     includeEditDuration: 'Include edit duration'
-};
-
-const SECURITY_WARNING_LABELS = {
-    loadExtension: 'Project extensions or JavaScript patching',
-    fetch: 'Contacting websites',
-    openWindow: 'Opening websites',
-    redirect: 'Redirecting this page',
-    recordAudio: 'Microphone access',
-    recordVideo: 'Camera access',
-    readClipboard: 'Reading the clipboard',
-    notify: 'Desktop notifications',
-    geolocate: 'Location access',
-    embed: 'Embedding websites',
-    download: 'Project downloads'
 };
 
 const PROJECT_THEME_MODE_KEY = 'mw:project-theme-mode';
@@ -65,20 +48,42 @@ const SECTIONS = [
     {key: 'warptheme', label: 'WarpTheme', icon: Store},
     {key: 'menu-bar', label: 'Menu bar', icon: Menu},
     {key: 'presence', label: 'Presence', icon: Radio},
-    {key: 'security', label: 'Security warnings', icon: ShieldAlert},
     {key: 'identity', label: 'Identity', icon: User}
 ];
 
 const Settings = () => {
-    const {user} = useUser();
+    const {user, login, logout} = useUser();
     const [theme, setTheme] = useState(detectTheme());
     const [username, setUsername] = useState(getUsernameOverride() || '');
     const [accentMenuBar, setAccentMenuBarState] = useState(getAccentMenuBar());
     const [menuBarText, setMenuBarTextState] = useState(getMenuBarText());
     const [presence, setPresence] = useState(getRoturSettings());
-    const [securityWarnings, setSecurityWarnings] = useState(getSecurityWarningSettings());
     const [projectThemeMode, setProjectThemeMode] = useState(getProjectThemeMode());
     const [activeSection, setActiveSection] = useState(SECTIONS[0].key);
+    const [presenceOk, setPresenceOk] = useState(true);
+
+    useEffect(() => {
+        if (!user) {
+            setPresenceOk(true);
+            return;
+        }
+        let cancelled = false;
+        presenceSupported().then(supported => {
+            if (!cancelled) setPresenceOk(supported);
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [user]);
+
+    const reloginForPresence = async () => {
+        try {
+            await logout();
+            await login();
+        } catch (e) {
+            // ignore
+        }
+    };
 
     const changeProjectThemeMode = value => {
         setProjectThemeMode(value);
@@ -96,9 +101,6 @@ const Settings = () => {
         setMenuBarTextState(getMenuBarText());
         setPresence(getRoturSettings());
     }, [user]);
-    const securityWarningEntries = Object.entries(securityWarnings).filter(([key]) => key !== 'disabled');
-    const securitySettingsClass = `${styles.settingRows} ${securityWarnings.disabled ?
-        styles.settingsDisabled : ''}`;
 
     const applyAndPersist = next => {
         applyTheme(next);
@@ -123,16 +125,6 @@ const Settings = () => {
         updateRoturSettings({[key]: enabled});
         setPresence(current => ({...current, [key]: enabled}));
     };
-    const changeSecurityWarning = (key, enabled) => {
-        setSecurityWarnings(setSecurityWarningSetting(key, enabled));
-    };
-    const changeSecurityDisabled = enabled => {
-        if (enabled && !window.confirm(
-            'Disable all security protections? Projects and extensions will have full access without warnings.'
-        )) return;
-        changeSecurityWarning('disabled', enabled);
-    };
-
     return (
         <main className={styles.page}>
             <h1>Settings</h1>
@@ -216,6 +208,23 @@ const Settings = () => {
                     {activeSection === 'presence' ? (
                         <section className={styles.card}>
                             <h2>Presence</h2>
+                            {user && !presenceOk ? (
+                                <div className={styles.risk}>
+                                    {'Your current Rotur login is missing the '}
+                                    <strong>{'account:profile'}</strong>
+                                    {' permission, so your editor activity cannot be shared. '}
+                                    {'Log in again to grant it.'}
+                                    <div>
+                                        <button
+                                            className={styles.riskAction}
+                                            type="button"
+                                            onClick={reloginForPresence}
+                                        >
+                                            {'Log in again'}
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : null}
                             <div className={styles.settingRows}>
                                 {Object.entries(presence).map(([key, enabled]) => (
                                     <label
@@ -277,45 +286,6 @@ const Settings = () => {
                                     placeholder="Use account username"
                                 />
                             </label>
-                        </section>
-                    ) : null}
-
-                    {activeSection === 'security' ? (
-                        <section className={styles.card}>
-                            <h2>Security warnings</h2>
-                            <p className={styles.risk}>
-                                At your own risk: turning off a warning lets projects perform that action without
-                                asking first. Malicious projects may steal account data, spy on you, or take actions
-                                you did not intend.
-                            </p>
-                            <label className={`${styles.settingRow} ${styles.masterSecurityToggle}`}>
-                                <span>
-                                    I know what I&apos;m doing and take full responsibility: disable all security
-                                </span>
-                                <input
-                                    className={styles.checkbox}
-                                    type="checkbox"
-                                    checked={securityWarnings.disabled}
-                                    onChange={event => changeSecurityDisabled(event.target.checked)}
-                                />
-                            </label>
-                            <div className={securitySettingsClass}>
-                                {securityWarningEntries.map(([key, enabled]) => (
-                                    <label
-                                        key={key}
-                                        className={styles.settingRow}
-                                    >
-                                        <span>Warn before: {SECURITY_WARNING_LABELS[key] || key}</span>
-                                        <input
-                                            className={styles.checkbox}
-                                            type="checkbox"
-                                            checked={enabled}
-                                            disabled={securityWarnings.disabled}
-                                            onChange={event => changeSecurityWarning(key, event.target.checked)}
-                                        />
-                                    </label>
-                                ))}
-                            </div>
                         </section>
                     ) : null}
 

@@ -37,6 +37,7 @@ const showAlert = (intl, message, options = {}) => new Promise(resolve => {
             try {
                 win.close();
             } catch (err) {
+                // ignore
             }
             resolve();
             cleanup();
@@ -49,7 +50,9 @@ const showAlert = (intl, message, options = {}) => new Promise(resolve => {
     }, 100);
 
     const content = document.createElement('div');
-    content.style.cssText = 'padding:18px;display:flex;flex-direction:column;gap:12px;align-items:stretch;justify-content:center;min-height:100%;box-sizing:border-box;font-family:inherit;color:var(--ui-modal-foreground, #111);';
+    content.style.cssText = 'padding:18px;display:flex;flex-direction:column;gap:12px;' +
+        'align-items:stretch;justify-content:center;min-height:100%;box-sizing:border-box;' +
+        'font-family:inherit;color:var(--ui-modal-foreground, #111);';
 
     const msgEl = document.createElement('div');
     msgEl.innerText = String(message === null ? '' : message);
@@ -61,12 +64,14 @@ const showAlert = (intl, message, options = {}) => new Promise(resolve => {
     const okBtn = document.createElement('button');
     okBtn.innerText = options.okLabel || 'OK';
     okBtn.className = 'mw-alert-ok-btn';
-    okBtn.style.cssText = 'padding:8px 14px;border-radius:8px;border:none;background:var(--looks-secondary, #4C97FF);color:white;cursor:pointer;font-weight:600;';
+    okBtn.style.cssText = 'padding:8px 14px;border-radius:8px;border:none;' +
+        'background:var(--ui-primary, #4C97FF);color:white;cursor:pointer;font-weight:600;';
 
     okBtn.addEventListener('click', () => {
         try {
             win.close();
         } catch (e) {
+            // ignore
         }
         cleanup();
         resolve();
@@ -78,6 +83,7 @@ const showAlert = (intl, message, options = {}) => new Promise(resolve => {
             try {
                 win.close();
             } catch (err) {
+                // ignore
             }
             cleanup();
             resolve();
@@ -95,6 +101,7 @@ const showAlert = (intl, message, options = {}) => new Promise(resolve => {
         try {
             okBtn.focus();
         } catch (e) {
+            // ignore
         }
         document.addEventListener('keydown', keyHandler);
     }, 10);
@@ -106,6 +113,7 @@ const showAlert = (intl, message, options = {}) => new Promise(resolve => {
         try {
             origOnClose();
         } catch (e) {
+            // ignore
         }
         resolve();
     };

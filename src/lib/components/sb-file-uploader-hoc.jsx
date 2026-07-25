@@ -8,6 +8,7 @@ import sharedMessages from '../constants/shared-messages';
 import {setFileHandle, setProjectError} from '../../reducers/tw';
 import unpackage from '../unpackager';
 import {importRepoFromSb3} from '../git/browser-git';
+import RestorePointAPI from '../api/restore-points';
 
 import {
     LoadingStates,
@@ -131,7 +132,6 @@ const SBFileUploaderHOC = function (WrappedComponent) {
             console.log('[SBFileUploader] Step 3: File selected, handling change');
             const {
                 intl,
-                isShowingWithoutId,
                 loadingState,
                 projectChanged,
                 userOwnsProject
@@ -146,8 +146,7 @@ const SBFileUploaderHOC = function (WrappedComponent) {
                 // replace it. (If they don't own the project and haven't
                 // changed it, no need to confirm.)
                 let uploadAllowed = true;
-                if (userOwnsProject || (projectChanged && isShowingWithoutId)) {
-                    console.log('[SBFileUploader] Step 3: Requesting confirmation from user');
+                if (userOwnsProject || projectChanged) {
                     uploadAllowed = confirm( // eslint-disable-line no-alert
                         intl.formatMessage(sharedMessages.replaceProjectWarning)
                     );
@@ -213,7 +212,9 @@ const SBFileUploaderHOC = function (WrappedComponent) {
                 this.props.onLoadingStarted();
                 const filename = this.fileToUpload && this.fileToUpload.name;
                 let loadingSuccess = false;
-                console.log('[SBFileUploader] Step 6: Loading file:', filename);
+                if (this.props.projectChanged) {
+                    await RestorePointAPI.createSafetyRestorePoint(this.props.vm, this.props.projectTitle);
+                }
                 // tw: stop when loading new project
                 console.log('[SBFileUploader] Step 6: Quitting VM before loading new project');
                 this.props.vm.quit();
@@ -301,6 +302,7 @@ const SBFileUploaderHOC = function (WrappedComponent) {
                 onSetFileHandle,
                 onSetProjectTitle,
                 projectChanged,
+                projectTitle,
                 requestProjectUpload: requestProjectUploadProp,
                 userOwnsProject,
                 /* eslint-enable no-unused-vars */
@@ -331,6 +333,7 @@ const SBFileUploaderHOC = function (WrappedComponent) {
         onLoadingStarted: PropTypes.func,
         onSetProjectTitle: PropTypes.func,
         projectChanged: PropTypes.bool,
+        projectTitle: PropTypes.string,
         requestProjectUpload: PropTypes.func,
         showOpenFilePicker: PropTypes.func,
         userOwnsProject: PropTypes.bool,
@@ -357,6 +360,7 @@ const SBFileUploaderHOC = function (WrappedComponent) {
             isShowingWithoutId: getIsShowingWithoutId(loadingState),
             loadingState: loadingState,
             projectChanged: state.scratchGui.projectChanged,
+            projectTitle: state.scratchGui.projectTitle,
             userOwnsProject: ownProps.authorUsername && user &&
                 (ownProps.authorUsername === user.username),
             vm: state.scratchGui.vm

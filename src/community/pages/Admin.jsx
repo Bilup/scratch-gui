@@ -82,10 +82,14 @@ const QuotaTile = ({quota}) => {
     );
 };
 
+const num = v => Number(v || 0).toLocaleString();
+
 const StatsOverview = () => {
     const [stats, setStats] = useState(null);
     const [quota, setQuota] = useState(null);
     const [error, setError] = useState('');
+    const [payoutBusy, setPayoutBusy] = useState(false);
+    const [payoutNote, setPayoutNote] = useState('');
 
     useEffect(() => {
         api.admin.stats()
@@ -95,6 +99,22 @@ const StatsOverview = () => {
             .then(setQuota)
             .catch(() => {});
     }, []);
+
+    const retryPayouts = async () => {
+        if (payoutBusy) return;
+        setPayoutBusy(true);
+        setPayoutNote('');
+        try {
+            const result = await api.admin.retryPayouts();
+            setPayoutNote(`Paid ${result.paid}, ${result.remaining} still pending.`);
+            const fresh = await api.admin.stats();
+            setStats(fresh);
+        } catch (e) {
+            setPayoutNote(e.message || 'Could not retry payouts.');
+        } finally {
+            setPayoutBusy(false);
+        }
+    };
 
     if (error) {
         return <div><h2>Overview</h2><p className={styles.error}>{error}</p></div>;
@@ -106,32 +126,48 @@ const StatsOverview = () => {
         <div>
             <h2>Overview</h2>
 
+            {stats.pendingPayouts > 0 ? (
+                <div className={styles.quotaWarning}>
+                    <AlertTriangle size={14} /> {stats.pendingPayouts} creator payout
+                    {stats.pendingPayouts === 1 ? '' : 's'} failed and{' '}
+                    {stats.pendingPayouts === 1 ? 'is' : 'are'} owed
+                    ({Math.round((stats.pendingPayoutAmount || 0) * 100) / 100} credits total).{' '}
+                    <button
+                        className={styles.secondary}
+                        onClick={retryPayouts}
+                        disabled={payoutBusy}
+                    >{payoutBusy ? 'Retrying…' : 'Retry now'}</button>
+                    {payoutNote ? <span>{` ${payoutNote}`}</span> : null}
+                </div>
+            ) : null}
+
             {quota && (quota.used / quota.limit) * 100 >= 80 ? (
                 <p className={styles.quotaWarning}>
-                    <AlertTriangle size={14} /> You've used {formatBytes(quota.used)} of your {formatBytes(quota.limit)} upload quota
+                    <AlertTriangle size={14} /> You&apos;ve used {formatBytes(quota.used)} of
+                    your {formatBytes(quota.limit)} upload quota
                     ({Math.round((quota.used / quota.limit) * 100)}%).{' '}
-                    {quota.used >= quota.limit
-                        ? 'You cannot upload new projects until usage drops.'
-                        : 'Consider managing your projects to free up space.'}
+                    {quota.used >= quota.limit ?
+                        'You cannot upload new projects until usage drops.' :
+                        'Consider managing your projects to free up space.'}
                 </p>
             ) : null}
 
             <div className={styles.statGrid}>
                 <StatTile
                     label="Projects"
-                    value={stats.totalProjects.toLocaleString()}
+                    value={num(stats.totalProjects)}
                 />
                 <StatTile
                     label="Shared"
-                    value={stats.sharedProjects.toLocaleString()}
+                    value={num(stats.sharedProjects)}
                 />
                 <StatTile
                     label="Unshared"
-                    value={stats.unsharedProjects.toLocaleString()}
+                    value={num(stats.unsharedProjects)}
                 />
                 <StatTile
                     label="Users"
-                    value={stats.totalUsers.toLocaleString()}
+                    value={num(stats.totalUsers)}
                 />
                 <StatTile
                     label="Storage used"
@@ -139,27 +175,27 @@ const StatsOverview = () => {
                 />
                 <StatTile
                     label="Total views"
-                    value={stats.totalViews.toLocaleString()}
+                    value={num(stats.totalViews)}
                 />
                 <StatTile
                     label="Total loves"
-                    value={stats.totalLoves.toLocaleString()}
+                    value={num(stats.totalLoves)}
                 />
                 <StatTile
                     label="Active sessions"
-                    value={stats.activeSessions.toLocaleString()}
+                    value={num(stats.activeSessions)}
                 />
                 <StatTile
                     label="Open reports"
-                    value={stats.openReports.toLocaleString()}
+                    value={num(stats.openReports)}
                 />
                 <StatTile
                     label="Banned users"
-                    value={stats.bannedUsers.toLocaleString()}
+                    value={num(stats.bannedUsers)}
                 />
                 <StatTile
                     label="News posts"
-                    value={stats.newsPosts.toLocaleString()}
+                    value={num(stats.newsPosts)}
                 />
                 {quota ? <QuotaTile quota={quota} /> : null}
             </div>
@@ -369,7 +405,14 @@ const UserDetailCard = ({username, onBack}) => {
         }
     };
 
-    if (error) return <div><p className={styles.error}>{error}</p><button className={styles.secondary} onClick={onBack}>Back to list</button></div>;
+    if (error) {
+        return (
+            <div>
+                <p className={styles.error}>{error}</p>
+                <button className={styles.secondary} onClick={onBack}>Back to list</button>
+            </div>
+        );
+    }
     if (!data) return <p className={styles.status}>Loading user details…</p>;
 
     return (
@@ -452,9 +495,15 @@ const UserDetailCard = ({username, onBack}) => {
                                 </div>
                                 <div className={styles.rowActions}>
                                     {project.shared ? (
-                                        <button className={styles.secondary} onClick={() => unshareProject(project.id)}>Unshare</button>
+                                        <button
+                                            className={styles.secondary}
+                                            onClick={() => unshareProject(project.id)}
+                                        >Unshare</button>
                                     ) : null}
-                                    <button className={styles.danger} onClick={() => deleteProject(project.id)}>Delete</button>
+                                    <button
+                                        className={styles.danger}
+                                        onClick={() => deleteProject(project.id)}
+                                    >Delete</button>
                                 </div>
                             </div>
                         ))}
@@ -488,9 +537,9 @@ const UserManager = () => {
             });
     }, []);
 
-    const filtered = query.trim()
-        ? users.filter(u => u.username.toLowerCase().includes(query.toLowerCase()))
-        : users;
+    const filtered = query.trim() ?
+        users.filter(u => u.username.toLowerCase().includes(query.toLowerCase())) :
+        users;
 
     if (selected) {
         return (
@@ -530,13 +579,20 @@ const UserManager = () => {
                                 onClick={() => setSelected(user.username)}
                                 role="button"
                                 tabIndex={0}
-                                onKeyDown={e => { if (e.key === 'Enter') setSelected(user.username); }}
+                                onKeyDown={e => {
+                                    if (e.key === 'Enter') setSelected(user.username);
+                                }}
                             >
                                 <Avatar username={user.username} size={32} />
                                 <div className={styles.rowInfo}>
                                     <span className={styles.rowTitle}>
                                         {`@${user.username}`}
-                                        {user.banned ? <span className={styles.badge} style={{borderColor: '#e25555', color: '#e25555'}}>banned</span> : null}
+                                        {user.banned ? (
+                                            <span
+                                                className={styles.badge}
+                                                style={{borderColor: '#e25555', color: '#e25555'}}
+                                            >banned</span>
+                                        ) : null}
                                     </span>
                                     <span className={styles.rowMeta}>
                                         {`${user.followerCount} followers · ${user.projectCount} projects`}
@@ -666,10 +722,16 @@ const Admin = () => {
         }
     };
 
-    const warnFromReport = (report) => {
+    const warnFromReport = report => {
         const reason = window.prompt('Reason for the warning (shown to the user):');
         if (reason === null) return; // cancelled
         act(report.id, 'warn_user', reason.trim());
+    };
+
+    const banFromReport = report => {
+        const who = report.type === 'project' ? 'the owner of this project' : `@${report.target}`;
+        if (!window.confirm(`Ban ${who}? They will be locked out of MistWarp until unbanned.`)) return;
+        act(report.id, 'ban_user');
     };
 
     const banByName = async () => {
@@ -792,11 +854,19 @@ const Admin = () => {
                                                             const target = report.target;
                                                             if (ctx.startsWith('project ')) {
                                                                 const pid = ctx.slice(8);
-                                                                return <Link to={`${projectUrl(pid)}#comment-id-${target}`}>{`Comment ${target}`}</Link>;
+                                                                return (
+                                                                    <Link
+                                                                        to={`${projectUrl(pid)}#comment-id-${target}`}
+                                                                    >{`Comment ${target}`}</Link>
+                                                                );
                                                             }
                                                             if (ctx.startsWith('profile ')) {
                                                                 const uname = ctx.slice(8);
-                                                                return <Link to={`/users/${uname}#comment-id-${target}`}>{`Comment ${target}`}</Link>;
+                                                                return (
+                                                                    <Link
+                                                                        to={`/users/${uname}#comment-id-${target}`}
+                                                                    >{`Comment ${target}`}</Link>
+                                                                );
                                                             }
                                                             return `Comment ${target}`;
                                                         })()
@@ -826,7 +896,7 @@ const Admin = () => {
                                                 >{report.type === 'project' ? 'Warn owner' : 'Warn user'}</button>
                                                 <button
                                                     className={styles.danger}
-                                                    onClick={() => act(report.id, 'ban_user')}
+                                                    onClick={() => banFromReport(report)}
                                                 >{report.type === 'project' ? 'Ban owner' : 'Ban user'}</button>
                                                 <button
                                                     className={styles.secondary}

@@ -224,6 +224,7 @@ const publishToMistWarp = async ({
     // created, delete it so we never leave a data-less project behind.
     try {
         onProgress({phase: 'package', message: 'Packaging project'});
+        await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 0)));
         let sb3Blob;
         try {
             sb3Blob = await buildSparseSb3(vm, platformId);
@@ -243,7 +244,7 @@ const publishToMistWarp = async ({
                 });
             });
         } catch (e) {
-            if (e.code !== 'debounced') {
+            if (e.code !== 'debounced' || createdNow) {
                 throw e;
             }
         }
