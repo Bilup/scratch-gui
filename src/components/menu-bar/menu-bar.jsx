@@ -77,9 +77,8 @@ import {
     openHelp,
     openSimpleDialog
 } from '../../reducers/modals';
-import { showOnboarding } from '../../reducers/onboarding';
-import { openCollaborationModal } from '../../reducers/collaboration';
-import { setPlayer } from '../../reducers/mode';
+import {openCollaborationModal} from '../../reducers/collaboration';
+import {setPlayer} from '../../reducers/mode';
 import {
     isTimeTravel220022BC,
     isTimeTravel1920,
@@ -173,7 +172,7 @@ import {
     FilePen, PencilRuler, TriangleAlert, Info, Shuffle, Zap, Gauge,
     FilePlusCorner, Upload, RefreshCcw, ClockPlus, Package, FileInput,
     Save, ArchiveRestore, UserPen, Cloud, PackagePlus, Puzzle,
-    Bookmark, GitBranch, FileCog, Bug, Database, Undo, Redo, Handshake, Sparkles, Wrench, Send,
+    Bookmark, GitBranch, FileCog, Bug, Database, Undo, Redo, Handshake, Wrench, Send,
     Download, AppWindow, Computer, Shield, Code, Code2, MessageCircle, TerminalSquare, ChartColumn, ListTodo,
     Blocks as BlocksIcon, Menu as MenuIcon, Globe, ExternalLink, Pause, Play, HelpCircle
 } from 'lucide-react';
@@ -2104,19 +2103,6 @@ class MenuBar extends React.Component {
                                 <MenuSection>
                                     <MenuItem
                                         onClick={() => {
-                                            this.props.onClickShowTutorial();
-                                            this.props.onRequestCloseEdit();
-                                        }}
-                                    >
-                                        <Sparkles />
-                                        <FormattedMessage
-                                            defaultMessage="Show Tutorial"
-                                            description="Menu bar item to show the tutorial"
-                                            id="tw.menuBar.showTutorial"
-                                        />
-                                    </MenuItem>
-                                    <MenuItem
-                                        onClick={() => {
                                             this.props.onClickHelp();
                                             this.props.onRequestCloseEdit();
                                         }}
@@ -2687,7 +2673,6 @@ MenuBar.propTypes = {
     onClickSaveAsCopy: PropTypes.func,
     onClickPreferencesModal: PropTypes.func,
     onClickGitModal: PropTypes.func,
-    onClickShowTutorial: PropTypes.func,
     onClickHelp: PropTypes.func,
 
     onOpenSettingsModal: PropTypes.func,
@@ -2816,10 +2801,6 @@ const mapDispatchToProps = dispatch => ({
     onClickGitModal: () => {
         dispatch(closeEditMenu());
         dispatch(openGitModal());
-    },
-    onClickShowTutorial: () => {
-        localStorage.removeItem('mw:has-seen-onboarding');
-        dispatch(showOnboarding());
     },
     onClickHelp: () => dispatch(openHelp()),
     onOpenSettingsModal: () => dispatch(openSettingsModal()),
