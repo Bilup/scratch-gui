@@ -46,9 +46,9 @@ const projectMeta = async id => {
     if (!data || !data.project || data.project.shared !== true) return null;
     const project = data.project;
     return {
-        title: `${project.title} by ${project.owner} - MistWarp`,
+        title: `${project.title} by ${project.owner} - Bilup`,
         description: flatten(project.instructions || project.description) ||
-            `Play ${project.title} on MistWarp.`,
+            `Play ${project.title} on Bilup.`,
         image: project.thumbUrl || null,
         card: project.thumbUrl ? 'summary_large_image' : 'summary'
     };
@@ -59,9 +59,9 @@ const userMeta = async name => {
     if (!data || data.exists !== true) return null;
     const username = data.username || name;
     return {
-        title: `${username} - MistWarp`,
+        title: `${username} - Bilup`,
         description: flatten(data.bio) ||
-            `${username} has shared ${(data.projects || []).length} projects on MistWarp.`,
+            `${username} has shared ${(data.projects || []).length} projects on Bilup.`,
         image: `${AVATARS}/${encodeURIComponent(username.toLowerCase())}`,
         card: 'summary'
     };

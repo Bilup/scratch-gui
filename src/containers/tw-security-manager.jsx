@@ -57,6 +57,23 @@ const isOwnedPlatformProject = () => {
     return Boolean(isPlatformProjectLoad() && project && project.isOwner === true);
 };
 
+const isLocalProjectUrl = url => {
+    try {
+        const parsed = new URL(url);
+        return ['http:', 'https:'].includes(parsed.protocol) &&
+            ['127.0.0.1', 'localhost'].includes(parsed.hostname);
+    } catch (e) {
+        return false;
+    }
+};
+
+const canTrustLoadedProject = vm => {
+    const projectUrl = typeof location === 'undefined' ?
+        null :
+        new URLSearchParams(location.search).get('project_url');
+    return isOwnedPlatformProject() || Boolean(vm._mwCanTrustProject) || isLocalProjectUrl(projectUrl);
+};
+
 const fetchHostsTrustedByUser = new Set();
 const embedHostsTrustedByUser = new Set();
 
@@ -138,7 +155,6 @@ class TWSecurityManagerComponent extends React.Component {
         bindAll(this, SECURITY_MANAGER_METHODS);
         this.nextModalCallbacks = [];
         this.modalLocked = false;
-        this.loadAllUnsandboxed = false;
         this.state = {
             type: null,
             data: null,
@@ -154,7 +170,7 @@ class TWSecurityManagerComponent extends React.Component {
             vmSecurityManager[method] = withSecurityBypass(
                 method,
                 propsSecurityManager[method] || this[method],
-                () => this.loadAllUnsandboxed ||
+                () => this.props.vm.runtime._mwProjectTrusted === true ||
                     (typeof window !== 'undefined' && window.__mwAllowAllSecurity === true)
             );
         }
@@ -254,13 +270,13 @@ class TWSecurityManagerComponent extends React.Component {
     }
 
     handleLoadAll () {
-        this.loadAllUnsandboxed = true;
+        this.props.vm.runtime._mwProjectTrusted = true;
         this.state.callback(true);
     }
 
     handleProjectLoading ({stage}) {
         if (stage !== 'building') return;
-        this.loadAllUnsandboxed = false;
+        this.props.vm.runtime._mwProjectTrusted = false;
         extensionsTrustedByUser.clear();
         fetchHostsTrustedByUser.clear();
         embedHostsTrustedByUser.clear();
@@ -325,7 +341,7 @@ class TWSecurityManagerComponent extends React.Component {
                 unsandboxed: true
             });
         }
-        if (this.loadAllUnsandboxed) return true;
+        if (this.props.vm.runtime._mwProjectTrusted === true) return true;
         const {showModal} = await this.acquireModalLock();
         let unsandboxed = getPersistedUnsandboxed();
         const allowed = await showModal(SecurityModals.LoadExtension, {
@@ -338,7 +354,7 @@ class TWSecurityManagerComponent extends React.Component {
         });
         if (!allowed) return false;
 
-        if (this.loadAllUnsandboxed) {
+        if (this.props.vm.runtime._mwProjectTrusted === true) {
             return true;
         }
 
@@ -480,7 +496,7 @@ class TWSecurityManagerComponent extends React.Component {
                 <SecurityManagerModal
                     type={this.state.type}
                     data={this.state.data}
-                    showLoadAll={isOwnedPlatformProject()}
+                    showLoadAll={canTrustLoadedProject(this.props.vm)}
                     onAllowed={this.handleAllowed}
                     onDenied={this.handleDenied}
                     onLoadAll={this.handleLoadAll}
@@ -499,7 +515,8 @@ TWSecurityManagerComponent.propTypes = {
         off: PropTypes.func.isRequired,
         runtime: PropTypes.shape({
             on: PropTypes.func.isRequired,
-            off: PropTypes.func.isRequired
+            off: PropTypes.func.isRequired,
+            _mwProjectTrusted: PropTypes.bool
         }).isRequired,
         extensionManager: PropTypes.shape({
             securityManager: PropTypes.shape(
@@ -533,5 +550,7 @@ export {
     manuallyTrustExtension,
     isTrustedExtension,
     isPlatformTrustedExtension,
-    isOwnedPlatformProject
+    isOwnedPlatformProject,
+    isLocalProjectUrl,
+    canTrustLoadedProject
 };

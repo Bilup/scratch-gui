@@ -241,8 +241,7 @@ const SBFileUploaderHOC = function (WrappedComponent) {
                 // Snapshot the resolved bytes so the async handler below reads a
                 // stable value (projectData may have been reassigned for .html).
                 const loadedBytes = projectData;
-                console.log('[SBFileUploader] Step 6: Calling vm.loadProject...');
-                this.props.vm.loadProject(loadedBytes)
+                this.props.vm.loadProject(loadedBytes, {mwCanTrustProject: true})
                     .then(async () => {
                         console.log('[SBFileUploader] Step 6: VM loadProject succeeded');
                         if (filename) {
