@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import React from 'react';
-import {FormattedMessage} from 'react-intl';
+import {FormattedMessage, injectIntl, intlShape} from 'react-intl';
 import {connect} from 'react-redux';
 import locales from '@bilup/scratch-l10n';
 
@@ -250,7 +250,10 @@ class UnconnectedWallpaperPage extends React.Component {
                         <Input
                             type="url"
                             className={styles.textInput}
-                            placeholder="Enter image URL..."
+                            placeholder={this.props.intl.formatMessage({
+                                id: 'mw.settings.wallpaperPlaceholder',
+                                defaultMessage: 'Enter image URL...'
+                            })}
                             value={this.state.url}
                             onChange={e => this.setState({url: e.target.value})}
                         />
@@ -371,8 +374,14 @@ class UnconnectedWallpaperPage extends React.Component {
                             <button
                                 type="button"
                                 className={styles.iconButton}
-                                title="Remove wallpaper"
-                                aria-label="Remove wallpaper"
+                                title={this.props.intl.formatMessage({
+                                    id: 'mw.settings.removeWallpaper',
+                                    defaultMessage: 'Remove wallpaper'
+                                })}
+                                aria-label={this.props.intl.formatMessage({
+                                    id: 'mw.settings.removeWallpaper',
+                                    defaultMessage: 'Remove wallpaper'
+                                })}
                                 onClick={e => {
                                     e.stopPropagation();
                                     this.handleRemove(url);
@@ -389,9 +398,11 @@ class UnconnectedWallpaperPage extends React.Component {
 }
 UnconnectedWallpaperPage.propTypes = {
     theme: PropTypes.instanceOf(Theme),
-    onChangeTheme: PropTypes.func
+    onChangeTheme: PropTypes.func,
+    intl: intlShape
 };
-export const WallpaperPage = connect(themeStateToProps, themeDispatchToProps)(UnconnectedWallpaperPage);
+const InjectedWallpaperPage = injectIntl(UnconnectedWallpaperPage);
+export const WallpaperPage = connect(themeStateToProps, themeDispatchToProps)(InjectedWallpaperPage);
 
 class UnconnectedFontsPage extends React.Component {
     static contextTypes = {
@@ -474,7 +485,10 @@ class UnconnectedFontsPage extends React.Component {
                                 type="button"
                                 className={styles.iconButton}
                                 onClick={this.handleReset}
-                                title="Remove font"
+                                title={this.props.intl.formatMessage({
+                                    id: 'mw.settings.removeFont',
+                                    defaultMessage: 'Remove font'
+                                })}
                             >
                                 {'×'}
                             </button>
@@ -541,8 +555,10 @@ UnconnectedFontsPage.propTypes = {
     onChangeTheme: PropTypes.func,
     locale: PropTypes.string,
     messages: PropTypes.object,
-    vm: PropTypes.object
+    vm: PropTypes.object,
+    intl: intlShape
 };
+const InjectedFontsPage = injectIntl(UnconnectedFontsPage);
 export const FontsPage = connect(
     state => ({
         theme: state.scratchGui.theme.theme,
@@ -551,4 +567,4 @@ export const FontsPage = connect(
         vm: state.scratchGui.vm
     }),
     themeDispatchToProps
-)(UnconnectedFontsPage);
+)(InjectedFontsPage);

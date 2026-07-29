@@ -33,8 +33,8 @@ const BetaBanner = () => {
                 className={styles.icon}
             />
             <span className={styles.text}>
-                The new MistWarp is a beta. Expect bugs, and please report them on{' '}
-                <Link to="/users/mist">mist&apos;s profile</Link>.
+                The new Bilup is a beta. Expect bugs, and please report them via{' '}
+                <a href="mailto:support@bilup.com">support@bilup.com</a>.
             </span>
             <button
                 className={styles.dismiss}

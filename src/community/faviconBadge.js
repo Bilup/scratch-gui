@@ -1,4 +1,4 @@
-import logo from './assets/mistwarp-logo.png';
+import logo from './assets/bilup-logo.svg';
 
 let link = null;
 let badged = false;

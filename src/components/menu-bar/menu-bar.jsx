@@ -162,7 +162,7 @@ import '!!style-loader!css-loader!./block-count.css';
 
 import ChevronDown from './ChevronDown.jsx';
 
-import mistwarpLogo from '../../community/assets/mistwarp-logo.png';
+import bilupLogo from './bilup-logo.svg';
 import ninetiesLogo from './nineties_logo.svg';
 import catLogo from './cat_logo.svg';
 import prehistoricLogo from './prehistoric-logo.svg';
@@ -194,6 +194,26 @@ const twMessages = defineMessages({
         id: 'tw.menuBar.compileError',
         defaultMessage: '{sprite}: {error}',
         description: 'Error message in error menu'
+    },
+    bilupHome: {
+        id: 'tw.menuBar.bilupHome',
+        defaultMessage: 'Bilup home',
+        description: 'Title for the home link in the menu bar'
+    },
+    bilupLogoAlt: {
+        id: 'tw.menuBar.bilupLogoAlt',
+        defaultMessage: 'Bilup',
+        description: 'Alt text for the Bilup logo'
+    },
+    bilupWordmark: {
+        id: 'tw.menuBar.bilupWordmark',
+        defaultMessage: 'Bilup',
+        description: 'Bilup brand wordmark text in the menu bar'
+    },
+    moreMenu: {
+        id: 'tw.menuBar.moreMenu',
+        defaultMessage: 'More',
+        description: 'Title for the More menu button'
     }
 });
 
@@ -1563,16 +1583,17 @@ class MenuBar extends React.Component {
                     <a
                         href="/"
                         className={classNames(styles.menuBarItem, styles.hoverable, styles.homeLink)}
-                        title="MistWarp home"
+                        title={this.props.intl.formatMessage(twMessages.bilupHome)}
                         data-mw-item="__home"
                     >
                         <img
-                            src={mistwarpLogo}
-                            alt="MistWarp"
+                            src={bilupLogo}
+                            alt={this.props.intl.formatMessage(twMessages.bilupLogoAlt)}
                             className={styles.homeLogo}
+                            style={{transform: 'scale(0.9)'}}
                         />
                         <span className={styles.homeWordmark}>
-                            {'MistWarp'}
+                            {this.props.intl.formatMessage(twMessages.bilupWordmark)}
                         </span>
                     </a>
                     {this.state.menuCollapsed && (
@@ -1581,7 +1602,7 @@ class MenuBar extends React.Component {
                                 [styles.active]: this.state.moreMenuOpen
                             })}
                             onClick={this.handleToggleMoreMenu}
-                            title="More"
+                            title={this.props.intl.formatMessage(twMessages.moreMenu)}
                         >
                             <MenuIcon size={20} />
                         </div>
@@ -1715,14 +1736,14 @@ class MenuBar extends React.Component {
                                                     <Globe />
                                                     {mistwarpAction === 'remix' ? (
                                                         <FormattedMessage
-                                                            defaultMessage="Remix to MistWarp"
-                                                            description="File menu item to remix a MistWarp project"
+                                                            defaultMessage="Remix to Bilup"
+                                                            description="File menu item to remix a Bilup project"
                                                             id="mw.menuBar.remix"
                                                         />
                                                     ) : (
                                                         <FormattedMessage
-                                                            defaultMessage="Save to MistWarp"
-                                                            description="File menu item to save the project to MistWarp"
+                                                            defaultMessage="Save to Bilup"
+                                                            description="File menu item to save the project to Bilup"
                                                             id="mw.menuBar.share"
                                                         />
                                                     )}
@@ -1733,7 +1754,7 @@ class MenuBar extends React.Component {
                                                     <ExternalLink />
                                                     <FormattedMessage
                                                         defaultMessage="See project page"
-                                                        description="File menu item opening the MistWarp project page"
+                                                        description="File menu item opening the Bilup project page"
                                                         id="mw.menuBar.projectPage"
                                                     />
                                                 </MenuItem>

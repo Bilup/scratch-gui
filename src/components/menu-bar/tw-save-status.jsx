@@ -36,7 +36,7 @@ const TWSaveStatus = ({
         return null;
     }
     if (!platformState || !mistwarpAction) return null;
-    const mistwarpLabel = mistwarpAction === 'remix' ? 'Remix to MistWarp' : 'Save to MistWarp';
+    const mistwarpLabel = mistwarpAction === 'remix' ? 'Remix to Bilup' : 'Save to Bilup';
     return (
         <div
             className={styles.saveNow}

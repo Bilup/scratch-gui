@@ -226,7 +226,10 @@ class UnwrappedMenuBarLayoutSetting extends React.Component {
                 <div
                     className={styles.alignSelector}
                     role="radiogroup"
-                    aria-label="Menu bar alignment"
+                    aria-label={intl.formatMessage({
+                        id: 'mw.settings.menuBar.alignment',
+                        defaultMessage: 'Menu bar alignment'
+                    })}
                 >
                     {ALIGN_OPTIONS.map(option => {
                         const Icon = option.icon;

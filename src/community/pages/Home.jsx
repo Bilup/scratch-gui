@@ -9,7 +9,7 @@ import Avatar from '../components/Avatar.jsx';
 import Button from '../components/ui/Button.jsx';
 import ProjectCard from '../components/ProjectCard.jsx';
 import NewsItem from '../components/NewsItem.jsx';
-import logo from '../assets/mistwarp-logo.png';
+import logo from '../assets/bilup-logo.svg';
 import styles from './Home.module.css';
 
 const ACTIVITY_ICONS = {
@@ -312,7 +312,7 @@ const Home = () => {
                 <div className={styles.heroText}>
                     <h1>Build, share, and remix projects together.</h1>
                     <p>
-                        A visual coding community on the MistWarp editor, with version control,
+                        A visual coding community on the Bilup editor, with version control,
                         forking, and pull requests behind every project.
                     </p>
                     <div className={styles.heroActions}>
@@ -333,7 +333,7 @@ const Home = () => {
                         )}
                         <a
                             className={styles.secondaryButton}
-                            href="https://github.com/mistwarp"
+                            href="https://github.com/bilup"
                             target="_blank"
                             rel="noreferrer"
                         >

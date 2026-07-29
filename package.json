@@ -246,10 +246,7 @@
     "overrides": {
       "webpack@4.47.0>terser-webpack-plugin": "^4.2.3",
       "cheerio": "1.0.0-rc.12",
-      "scratch-blocks": "link:../scratch-blocks",
-      "scratch-render": "link:../scratch-render",
-      "scratch-vm": "link:../scratch-vm",
-      "scratch-paint": "link:../scratch-paint",
+      "scratch-blocks": "link:../new-scratch-blocks",
       "brace-expansion": "1.1.11"
     }
   }

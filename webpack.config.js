@@ -15,7 +15,7 @@ try {
     // .env is optional
 }
 
-const ENABLE_COMMUNITY = process.env.MW_COMMUNITY === 'true';
+const ENABLE_COMMUNITY = process.env.MW_COMMUNITY !== 'false';
 
 // Plugins
 const CopyWebpackPlugin = require('copy-webpack-plugin');
@@ -47,7 +47,7 @@ const base = {
     mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
     devtool: process.env.SOURCEMAP || (process.env.NODE_ENV === 'production' ? false : 'cheap-module-source-map'),
     devServer: {
-        contentBase: path.resolve(__dirname, 'build'),
+        contentBase: false,
         host: '0.0.0.0',
         disableHostCheck: true,
         compress: true,
@@ -309,7 +309,7 @@ module.exports = [
                 chunks: ['editor'],
                 template: 'src/playground/index.ejs',
                 filename: 'index.html',
-                title: `${APP_NAME} - Enhance Your Scratch Experience`,
+                title: `${APP_NAME} - Refactoring freedom`,
                 isEditor: true,
                 ...htmlWebpackPluginCommon
             }),

@@ -617,7 +617,7 @@ DisableCompiler.propTypes = {
 
 const STYLE_OPTIONS = {
     'tab-style': [
-        {value: 'mistwarp', labelId: 'mw.settingsModal.tabStyle.mistwarp', label: 'MistWarp'},
+        {value: 'bilup', labelId: 'mw.settingsModal.tabStyle.bilup', label: 'Bilup'},
         {value: 'turbowarp', labelId: 'mw.settingsModal.tabStyle.turbowarp', label: 'TurboWarp'},
         {value: 'scratchbox', labelId: 'mw.settingsModal.tabStyle.scratchbox', label: 'ScratchBox'}
     ],
@@ -627,7 +627,7 @@ const STYLE_OPTIONS = {
         {value: 'text-only', labelId: 'mw.settingsModal.tabLooks.textOnly', label: 'Text Only'}
     ],
     'window-style': [
-        {value: 'mistwarp', labelId: 'mw.settingsModal.windowStyle.mistwarp', label: 'MistWarp'},
+        {value: 'bilup', labelId: 'mw.settingsModal.windowStyle.bilup', label: 'Bilup'},
         {value: 'macos', labelId: 'mw.settingsModal.windowStyle.macos', label: 'macOS'},
         {value: 'windows10', labelId: 'mw.settingsModal.windowStyle.windows10', label: 'Windows 10'}
     ]

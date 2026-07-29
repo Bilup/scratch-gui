@@ -2,7 +2,7 @@
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import React from 'react';
-import {FormattedMessage} from 'react-intl';
+import {FormattedMessage, injectIntl, intlShape} from 'react-intl';
 
 import Box from '../box/box.jsx';
 import {Theme} from '../../lib/themes/index.js';
@@ -176,7 +176,10 @@ class CustomThemesPage extends React.Component {
             const gradientInfo = customThemeManager.getThemeGradientInfo(themeUuid);
             const theme = customThemeManager.getTheme(themeUuid);
             if (!gradientInfo || !theme) {
-                await showAlert('Could not load gradient information for this theme');
+                await showAlert(this.props.intl.formatMessage({
+                    id: 'tw.customThemes.loadGradientInfo.failed',
+                    defaultMessage: 'Could not load gradient information for this theme'
+                }));
                 return;
             }
             this.setState({
@@ -277,7 +280,7 @@ class CustomThemesPage extends React.Component {
                 .split('T')[0];
             this.downloadJSON(
                 customThemeManager.exportAllThemes(),
-                `mistwarp-themes-${date}.json`
+                `bilup-themes-${date}.json`
             );
             this.setState({statusMessage: 'Exported all themes.'});
         } catch (error) {
@@ -291,10 +294,14 @@ class CustomThemesPage extends React.Component {
                 version: '2.0',
                 timestamp: Date.now(),
                 themes: [theme.export()],
-                platform: 'MistWarp'
+                platform: 'Bilup'
             }, `${theme.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}-theme.json`);
         } catch (error) {
-            await showAlert(`Failed to export theme: ${error.message}`);
+            await showAlert(this.props.intl.formatMessage({
+                id: 'tw.customThemes.export.failed',
+                defaultMessage: 'Failed to export theme: {error}',
+                values: {error: error.message}
+            }));
         }
     };
 
@@ -479,7 +486,13 @@ class CustomThemesPage extends React.Component {
                                         <span className={styles.ctCardDesc}>{customTheme.description}</span>
                                     ) : (
                                         <span className={styles.ctCardDescMuted}>
-                                            {isGradient ? 'Gradient theme' : 'Custom theme'}
+                                            {isGradient ? this.props.intl.formatMessage({
+                                                id: 'tw.customThemes.gradientTheme',
+                                                defaultMessage: 'Gradient theme'
+                                            }) : this.props.intl.formatMessage({
+                                                id: 'tw.customThemes.customTheme',
+                                                defaultMessage: 'Custom theme'
+                                            })}
                                             {customTheme.author && customTheme.author !== 'User' ?
                                                 ` · ${customTheme.author}` : ''}
                                         </span>
@@ -491,7 +504,10 @@ class CustomThemesPage extends React.Component {
                                     <button
                                         type="button"
                                         className={styles.iconButton}
-                                        title="Edit gradient"
+                                        title={this.props.intl.formatMessage({
+                                            id: 'tw.customThemes.editGradient',
+                                            defaultMessage: 'Edit gradient'
+                                        })}
                                         onClick={() => this.handleEditGradient(customTheme.uuid)}
                                     >
                                         <Edit size={15} />
@@ -500,7 +516,10 @@ class CustomThemesPage extends React.Component {
                                 <button
                                     type="button"
                                     className={styles.iconButton}
-                                    title="Export theme"
+                                    title={this.props.intl.formatMessage({
+                                        id: 'tw.customThemes.exportTheme',
+                                        defaultMessage: 'Export theme'
+                                    })}
                                     onClick={() => this.handleExportSingleTheme(customTheme)}
                                 >
                                     <Download size={15} />
@@ -508,7 +527,10 @@ class CustomThemesPage extends React.Component {
                                 <button
                                     type="button"
                                     className={styles.iconButton}
-                                    title="Delete theme"
+                                    title={this.props.intl.formatMessage({
+                                        id: 'tw.customThemes.deleteTheme',
+                                        defaultMessage: 'Delete theme'
+                                    })}
                                     onClick={() => this.handleDeleteTheme(customTheme.uuid, customTheme.name)}
                                 >
                                     <Trash size={15} />
@@ -619,7 +641,10 @@ class CustomThemesPage extends React.Component {
                                 className={styles.ctInput}
                                 value={this.state.createName}
                                 onChange={e => this.setState({createName: e.target.value})}
-                                placeholder="My Custom Theme"
+                                placeholder={this.props.intl.formatMessage({
+                                    id: 'tw.customThemes.createDialog.namePlaceholder',
+                                    defaultMessage: 'My Custom Theme'
+                                })}
                                 maxLength={50}
                                 autoComplete="off"
                             />
@@ -636,7 +661,10 @@ class CustomThemesPage extends React.Component {
                                 className={styles.ctTextarea}
                                 value={this.state.createDescription}
                                 onChange={e => this.setState({createDescription: e.target.value})}
-                                placeholder="A custom theme based on current settings"
+                                placeholder={this.props.intl.formatMessage({
+                                    id: 'tw.customThemes.createDialog.descriptionPlaceholder',
+                                    defaultMessage: 'A custom theme based on current settings'
+                                })}
                                 maxLength={200}
                                 rows={3}
                             />
@@ -797,7 +825,8 @@ class CustomThemesPage extends React.Component {
 CustomThemesPage.propTypes = {
     theme: PropTypes.instanceOf(Theme),
     onChangeTheme: PropTypes.func,
-    onOpenWarpThemeMarketplace: PropTypes.func
+    onOpenWarpThemeMarketplace: PropTypes.func,
+    intl: intlShape
 };
 
-export default CustomThemesPage;
+export default injectIntl(CustomThemesPage);

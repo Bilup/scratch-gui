@@ -174,8 +174,7 @@ class WildcardRouter extends Router {
                 history.replaceState(null, null, `${location.pathname}${location.search}`);
             }
         } else {
-            // Do not detect page type here as it is already setup by index.html, editor.html, etc.
-            this.parseURL(false);
+            this.parseURL(true);
         }
     }
 
@@ -220,6 +219,18 @@ class WildcardRouter extends Router {
     }
 
     generateURL ({projectId, isPlayerOnly, isFullScreen}) {
+        // If the current URL doesn't match a known WildcardRouter format,
+        // don't rewrite it — this preserves paths like /settings, /explore, etc.
+        const currentPath = location.pathname.substr(this.root.length);
+        const currentParts = currentPath.split('/').filter(Boolean);
+        if (currentParts.length > 0) {
+            const isNumeric = +currentParts[0] && Number.isFinite(+currentParts[0]);
+            const isKnownPageType = ['editor', 'fullscreen', 'embed'].includes(currentParts[0]);
+            if (!isNumeric && !isKnownPageType) {
+                return null;
+            }
+        }
+
         const parts = [];
 
         if (projectId !== '0') {

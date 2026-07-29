@@ -3,7 +3,7 @@ import {Link, useNavigate} from 'react-router-dom';
 import {Search, Compass, Plus, FolderOpen, Bell, LogIn, ShieldCheck, Wallet} from 'lucide-react';
 import {useUser} from '../UserContext.jsx';
 import api, {editorUrl} from '../api';
-import logo from '../assets/mistwarp-logo.png';
+import logo from '../assets/bilup-logo.svg';
 import Avatar from './Avatar.jsx';
 import setFaviconBadge from '../faviconBadge';
 import ProjectThumbnail from './ProjectThumbnail.jsx';
@@ -150,7 +150,7 @@ const NavBar = () => {
                         src={logo}
                         alt=""
                     />
-                    <span className={styles.wordmark}>MistWarp</span>
+                    <span className={styles.wordmark}>Bilup</span>
                 </Link>
 
                 <nav className={styles.links}>

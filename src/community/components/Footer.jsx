@@ -2,7 +2,7 @@ import React from 'react';
 import {Link} from 'react-router-dom';
 import {Github} from 'lucide-react';
 import {editorUrl} from '../api';
-import logo from '../assets/mistwarp-logo.png';
+import logo from '../assets/bilup-logo.svg';
 import styles from './Footer.module.css';
 
 const Footer = () => (
@@ -15,7 +15,7 @@ const Footer = () => (
                     alt=""
                 />
                 <div>
-                    <span className={styles.wordmark}>MistWarp</span>
+                    <span className={styles.wordmark}>Bilup</span>
                     <p className={styles.tagline}>Build, share, and remix projects together.</p>
                 </div>
             </div>
@@ -31,12 +31,12 @@ const Footer = () => (
                     <Link to="/explore">Explore</Link>
                     <Link to="/leaderboard">Leaderboard</Link>
                     <Link to="/news">News</Link>
-                    <Link to="/users/mist">Report a bug</Link>
+                    <a href="mailto:support@bilup.com">Report a bug</a>
                 </div>
                 <div className={styles.column}>
                     <span className={styles.columnTitle}>More</span>
                     <a
-                        href="https://github.com/mistwarp"
+                        href="https://github.com/bilup"
                         target="_blank"
                         rel="noreferrer"
                         className={styles.iconRow}
@@ -54,7 +54,7 @@ const Footer = () => (
             </div>
         </div>
         <div className={styles.legal}>
-            MistWarp is a mod of TurboWarp and Scratch. Not affiliated with Scratch or the Scratch Foundation.
+            Bilup is a mod of TurboWarp and Scratch. Not affiliated with Scratch or the Scratch Foundation.
         </div>
     </footer>
 );
