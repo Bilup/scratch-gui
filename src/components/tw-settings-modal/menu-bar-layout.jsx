@@ -31,7 +31,7 @@ const LABELS = {
     'tools': 'mw.menuBar.tools',
     'mode': 'mw.menuBar.mode',
     'block-count': 'mw.menuBar.blockCount',
-    'media-recorder': 'Video Recorder',
+    'media-recorder': 'mw.settings.menuBar.videoRecorder',
     'save-status': 'mw.menuBar.saveStatus',
     'addons': 'mw.menuBar.addons',
     'settings': 'mw.menuBar.settings',
@@ -40,11 +40,6 @@ const LABELS = {
     'community': 'mw.menuBar.community',
     'rotur-account': 'mw.menuBar.roturAccount'
 };
-
-const SECTIONS = [
-    {label: 'Menus', zones: ['left']},
-    {label: 'Top-right', zones: ['right']}
-];
 
 const ALIGN_OPTIONS = [
     {

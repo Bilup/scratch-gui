@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React from 'react';
+import {injectIntl, intlShape} from 'react-intl';
 
 import FancyCheckbox from '../tw-fancy-checkbox/checkbox.jsx';
 import Input from '../forms/input.jsx';
@@ -46,13 +47,19 @@ class MenuBarSettings extends React.Component {
     }
 
     renderSetting (definition) {
+        const {intl} = this.props;
         const value = this.state.values[definition.id];
         return (
             <label
                 className={styles.menuBarSettingRow}
                 key={definition.id}
             >
-                <span>{definition.label}</span>
+                <span>
+                    {intl.formatMessage({
+                        id: definition.labelId,
+                        defaultMessage: definition.label
+                    })}
+                </span>
                 {definition.type === 'boolean' ? (
                     <FancyCheckbox
                         checked={value}
@@ -69,7 +76,10 @@ class MenuBarSettings extends React.Component {
                                 key={option.value}
                                 value={option.value}
                             >
-                                {option.label}
+                                {intl.formatMessage({
+                                    id: option.labelId,
+                                    defaultMessage: option.label
+                                })}
                             </option>
                         ))}
                     </select>
@@ -99,7 +109,8 @@ class MenuBarSettings extends React.Component {
 }
 
 MenuBarSettings.propTypes = {
-    ids: PropTypes.arrayOf(PropTypes.string).isRequired
+    ids: PropTypes.arrayOf(PropTypes.string).isRequired,
+    intl: intlShape.isRequired
 };
 
-export default MenuBarSettings;
+export default injectIntl(MenuBarSettings);

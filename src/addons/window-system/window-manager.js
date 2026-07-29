@@ -201,6 +201,7 @@ class AddonWindow {
         this.onResize = options.onResize || (() => {});
         this.onMove = options.onMove || (() => {});
         
+        this._animTimer = null; // Track pending animation timeout
         this.element = null;
         this.headerElement = null;
         this.contentElement = null;
@@ -745,36 +746,147 @@ class AddonWindow {
     }
     
     show () {
+        // Cancel any pending animation timer
+        if (this._animTimer) {
+            clearTimeout(this._animTimer);
+            this._animTimer = null;
+        }
+
         activeWindows.set(this.id, this);
-        // Callers re-show on every render, so only raise when actually becoming visible.
-        // Explicit focus still goes through pointerdown, focus() and the drag/resize handlers.
         const wasVisible = this.isVisible;
         this.isVisible = true;
+
+        // Always ensure the element is displayed immediately
         this.element.style.display = 'flex';
+        this.element.style.pointerEvents = 'auto';
+
         if (!wasVisible) {
             this.bringToFront();
+            if (WindowManager.getAnimationsEnabled()) {
+                // Set initial hidden state
+                this.element.style.opacity = '0';
+                this.element.style.transform = 'scale(0.92)';
+                this.element.style.transition = 'opacity 0.2s ease-out, transform 0.2s ease-out';
+
+                // Force browser to apply initial state before animating
+                // eslint-disable-next-line no-unused-expressions
+                this.element.offsetHeight;
+
+                // Kick off the animation
+                this.element.style.opacity = '1';
+                this.element.style.transform = 'scale(1)';
+
+                this._animTimer = setTimeout(() => {
+                    this._animTimer = null;
+                    if (this.element && this.element.style) {
+                        this.element.style.transition = 'none';
+                    }
+                }, 220);
+            }
         }
         return this;
     }
-    
+
     hide () {
+        // Cancel any pending animation timer
+        if (this._animTimer) {
+            clearTimeout(this._animTimer);
+            this._animTimer = null;
+        }
+
+        if (!this.isVisible) {
+            this.element.style.display = 'none';
+            this.element.style.transition = 'none';
+            return this;
+        }
+
         this.isVisible = false;
-        this.element.style.display = 'none';
+
+        if (!WindowManager.getAnimationsEnabled()) {
+            this.element.style.display = 'none';
+            this.element.style.transition = 'none';
+            return this;
+        }
+
+        // Start close animation
+        this.element.style.pointerEvents = 'none';
+        // Ensure no transition interference — remove any previous transition first
+        this.element.style.transition = 'none';
+        // eslint-disable-next-line no-unused-expressions
+        this.element.offsetHeight;
+        // Now set the animated transition
+        this.element.style.transition = 'opacity 0.18s ease-in, transform 0.18s ease-in';
+        // eslint-disable-next-line no-unused-expressions
+        this.element.offsetHeight;
+        this.element.style.opacity = '0';
+        this.element.style.transform = 'scale(0.92)';
+
+        this._animTimer = setTimeout(() => {
+            this._animTimer = null;
+            if (this.element && this.element.style) {
+                this.element.style.display = 'none';
+                this.element.style.transition = 'none';
+            }
+        }, 200);
+
         return this;
     }
     
     destroy (callOnClose = true) {
-        this.hide();
+        // Cancel any pending animation timer
+        if (this._animTimer) {
+            clearTimeout(this._animTimer);
+            this._animTimer = null;
+        }
+
+        const needsAnimation = WindowManager.getAnimationsEnabled() && this.isVisible;
+
+        // Clean up event handlers immediately
         if (this.escapeHandler) {
             document.removeEventListener('keydown', this.escapeHandler);
             this.escapeHandler = null;
         }
-        if (callOnClose) {
-            this.onClose();
-        }
         activeWindows.delete(this.id);
-        if (this.element && this.element.parentNode) {
-            this.element.parentNode.removeChild(this.element);
+
+        if (needsAnimation) {
+            // Play hide animation
+            this.isVisible = false;
+            this.element.style.pointerEvents = 'none';
+            this.element.style.transition = 'none';
+            // eslint-disable-next-line no-unused-expressions
+            this.element.offsetHeight;
+            this.element.style.transition = 'opacity 0.18s ease-in, transform 0.18s ease-in';
+            // eslint-disable-next-line no-unused-expressions
+            this.element.offsetHeight;
+            this.element.style.opacity = '0';
+            this.element.style.transform = 'scale(0.92)';
+
+            if (callOnClose) {
+                this.onClose();
+            }
+
+            const element = this.element;
+            this._animTimer = setTimeout(() => {
+                this._animTimer = null;
+                if (element && element.parentNode) {
+                    if (element.style) {
+                        element.style.display = 'none';
+                        element.style.transition = 'none';
+                    }
+                    element.parentNode.removeChild(element);
+                }
+            }, 200);
+        } else {
+            // No animation — immediate cleanup
+            this.isVisible = false;
+            this.element.style.display = 'none';
+            this.element.style.transition = 'none';
+            if (callOnClose) {
+                this.onClose();
+            }
+            if (this.element && this.element.parentNode) {
+                this.element.parentNode.removeChild(this.element);
+            }
         }
     }
 
@@ -800,6 +912,9 @@ class AddonWindow {
         if (this.isMaximized) {
             this.isMaximized = false;
             if (this.savedState) {
+                if (WindowManager.getAnimationsEnabled()) {
+                    this.element.style.transition = 'left 0.25s ease-in, top 0.25s ease-in, width 0.25s ease-in, height 0.25s ease-in';
+                }
                 this.x = this.savedState.x;
                 this.y = this.savedState.y;
                 this.width = this.savedState.width;
@@ -808,6 +923,9 @@ class AddonWindow {
                 this.element.style.top = `${this.y}px`;
                 this.element.style.width = `${this.width}px`;
                 this.element.style.height = `${this.height}px`;
+                if (WindowManager.getAnimationsEnabled()) {
+                    setTimeout(() => { this.element.style.transition = 'none'; }, 250);
+                }
             }
             this.updateMaximizeButton();
         }
@@ -832,6 +950,10 @@ class AddonWindow {
             height: this.height
         };
         
+        if (WindowManager.getAnimationsEnabled()) {
+            this.element.style.transition = 'left 0.25s ease-out, top 0.25s ease-out, width 0.25s ease-out, height 0.25s ease-out';
+        }
+
         this.isMaximized = true;
         this.x = 0;
         this.y = 0;
@@ -843,6 +965,10 @@ class AddonWindow {
         this.element.style.width = '100vw';
         this.element.style.height = '100vh';
         
+        if (WindowManager.getAnimationsEnabled()) {
+            setTimeout(() => { this.element.style.transition = 'none'; }, 250);
+        }
+
         this.updateMaximizeButton();
         this.onMaximize();
         return this;

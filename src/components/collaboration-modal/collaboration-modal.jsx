@@ -7,6 +7,7 @@ import Modal from '../../containers/windowed-modal.jsx';
 import Box from '../box/box.jsx';
 import Button from '../button/button.jsx';
 import Input from '../forms/input.jsx';
+import BufferedInputHOC from '../forms/buffered-input-hoc.jsx';
 
 import showAlert from '../../addons/window-system/alert';
 import NotificationSystem from '../../lib/notification-manager.js';
@@ -17,6 +18,8 @@ import describeActivity from '../../lib/collaboration/describe-activity.js';
 import styles from './collaboration-modal.css';
 
 import {Handshake as CollaborationIcon, User, Crown, UserMinus, Copy, AlertTriangle, PenLine, Settings, X} from 'lucide-react';
+
+const BufferedInput = BufferedInputHOC(Input);
 
 class CollaborationModal extends Component {
     constructor(props) {

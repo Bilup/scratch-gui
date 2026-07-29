@@ -7,47 +7,54 @@ const DEFINITIONS = [
         type: 'select',
         default: 'both',
         label: 'Menu item labels',
+        labelId: 'mw.settings.menuBar.itemLabels',
         options: [
-            {value: 'both', label: 'Icons and labels'},
-            {value: 'icons', label: 'Icons only'},
-            {value: 'labels', label: 'Labels only'}
+            {value: 'both', label: 'Icons and labels', labelId: 'mw.settings.menuBar.itemLabels.both'},
+            {value: 'icons', label: 'Icons only', labelId: 'mw.settings.menuBar.itemLabels.icons'},
+            {value: 'labels', label: 'Labels only', labelId: 'mw.settings.menuBar.itemLabels.labels'}
         ]
     },
     {
         id: 'show_block_count',
         type: 'boolean',
         default: true,
-        label: 'Show block count'
+        label: 'Show block count',
+        labelId: 'mw.settings.menuBar.showBlockCount'
     },
     {
         id: 'show_costume_count',
         type: 'boolean',
         default: false,
-        label: 'Show costume count'
+        label: 'Show costume count',
+        labelId: 'mw.settings.menuBar.showCostumeCount'
     },
     {
         id: 'show_sound_count',
         type: 'boolean',
         default: false,
-        label: 'Show sound count'
+        label: 'Show sound count',
+        labelId: 'mw.settings.menuBar.showSoundCount'
     },
     {
         id: 'show_complexity_score',
         type: 'boolean',
         default: false,
-        label: 'Show complexity score'
+        label: 'Show complexity score',
+        labelId: 'mw.settings.menuBar.showComplexityScore'
     },
     {
         id: 'show_media_recorder',
         type: 'boolean',
         default: false,
-        label: 'Show project video recorder'
+        label: 'Show project video recorder',
+        labelId: 'mw.settings.menuBar.showVideoRecorder'
     },
     {
         id: 'autosave_enabled',
         type: 'boolean',
         default: false,
-        label: 'Enable autosave'
+        label: 'Enable autosave',
+        labelId: 'mw.settings.menuBar.enableAutosave'
     },
     {
         id: 'autosave_interval',
@@ -55,19 +62,22 @@ const DEFINITIONS = [
         default: 5,
         min: 1,
         max: 60,
-        label: 'Autosave interval (minutes)'
+        label: 'Autosave interval (minutes)',
+        labelId: 'mw.settings.menuBar.autosaveInterval'
     },
     {
         id: 'autosave_notifications',
         type: 'boolean',
         default: true,
-        label: 'Show autosave notifications'
+        label: 'Show autosave notifications',
+        labelId: 'mw.settings.menuBar.showAutosaveNotifications'
     },
     {
         id: 'autosave_only_when_changed',
         type: 'boolean',
         default: true,
-        label: 'Only autosave changed projects'
+        label: 'Only autosave changed projects',
+        labelId: 'mw.settings.menuBar.onlyAutosaveChanged'
     }
 ];
 

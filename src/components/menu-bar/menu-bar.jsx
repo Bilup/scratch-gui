@@ -341,6 +341,7 @@ class MenuBar extends React.Component {
         };
         this.menuBarRef = React.createRef();
         this.blockCountRef = React.createRef();
+        this.workspaceBookmarksMenuLabelRef = React.createRef();
         this.blockCountController = null;
         this.disposeMenuBarSettings = null;
         this.menuResizeObserver = null;

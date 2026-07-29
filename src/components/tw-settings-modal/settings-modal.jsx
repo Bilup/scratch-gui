@@ -63,6 +63,31 @@ const messages = defineMessages({
         description: 'Hover text of help icon in settings',
         id: 'tw.settingsModal.help'
     },
+    settingsSectionsAria: {
+        defaultMessage: 'Settings sections',
+        description: 'Aria label for the settings sidebar',
+        id: 'mw.settings.ariaLabel'
+    },
+    desktopSystemDefault: {
+        defaultMessage: 'System default',
+        id: 'mw.settingsModal.desktop.systemDefault'
+    },
+    desktopUpdateAll: {
+        defaultMessage: 'All updates, including betas',
+        id: 'mw.settingsModal.desktop.updateAll'
+    },
+    desktopUpdateStable: {
+        defaultMessage: 'Stable updates',
+        id: 'mw.settingsModal.desktop.updateStable'
+    },
+    desktopUpdateSecurity: {
+        defaultMessage: 'Security updates only',
+        id: 'mw.settingsModal.desktop.updateSecurity'
+    },
+    desktopUpdateNever: {
+        defaultMessage: 'Never',
+        id: 'mw.settingsModal.desktop.updateNever'
+    },
     headerFeatured: {
         defaultMessage: 'Featured',
         description: 'Settings modal section',
@@ -150,6 +175,18 @@ const messages = defineMessages({
     activitySharingOff: {
         defaultMessage: 'Never',
         id: 'mw.settings.rotur.activitySharing.off'
+    },
+    cloudServerPlaceholder: {
+        defaultMessage: 'ws://localhost:8000',
+        id: 'mw.settings.cloudServerPlaceholder'
+    },
+    authorEmailPlaceholder: {
+        defaultMessage: 'user@example.com',
+        id: 'mw.settings.vc.authorEmailPlaceholder'
+    },
+    defaultBranchPlaceholder: {
+        defaultMessage: 'main',
+        id: 'mw.settings.vc.defaultBranchPlaceholder'
     }
 });
 
@@ -861,7 +898,9 @@ CustomStageSize.propTypes = {
     onStageHeightChange: PropTypes.func
 };
 
-const CloudVariableServer = props => (
+const CloudVariableServer = props => {
+    const {intl} = props;
+    return (
     <Setting
         primary={
             <div className={classNames(styles.label, styles['cloud-variable-server'])}>
@@ -875,7 +914,7 @@ const CloudVariableServer = props => (
                     onSubmit={props.onCloudVariableServerChange}
                     className={styles['cloud-variable-server-input']}
                     type="text"
-                    placeholder="ws://localhost:8000"
+                    placeholder={intl.formatMessage(messages.cloudServerPlaceholder)}
                 />
             </div>
         }
@@ -887,12 +926,13 @@ const CloudVariableServer = props => (
                 id="tw.settingsModal.cloudVariableServerHelp"
             />
         }
-    />
-);
+    />);
+};
 
 CloudVariableServer.propTypes = {
     cloudVariableServer: PropTypes.string,
-    onCloudVariableServerChange: PropTypes.func
+    onCloudVariableServerChange: PropTypes.func,
+    intl: intlShape
 };
 
 const StoreProjectOptions = ({
@@ -1419,7 +1459,7 @@ class UnwrappedVersionControlPage extends React.Component {
                     />}
                     value={this.state.authorEmail}
                     onSubmit={this.handleEmailChange}
-                    placeholder="user@example.com"
+                    placeholder={intl.formatMessage(messages.authorEmailPlaceholder)}
                 />
                 <TextSetting
                     label={<FormattedMessage
@@ -1432,7 +1472,7 @@ class UnwrappedVersionControlPage extends React.Component {
                     />}
                     value={this.state.defaultBranch}
                     onSubmit={this.handleBranchChange}
-                    placeholder="main"
+                    placeholder={intl.formatMessage(messages.defaultBranchPlaceholder)}
                 />
                 <BooleanSetting
                     value={this.state.autoCommit}
@@ -1694,7 +1734,7 @@ class UnwrappedRoturPage extends React.Component {
                         />
                     </div>
                     <p className={styles.detail}>
-                        <strong>MistWarp</strong>
+                        <strong>{APP_NAME}</strong>
                         <br />
                         {formatActivityTitle()}
                         <br />
@@ -1807,6 +1847,7 @@ class DesktopPage extends React.Component {
     }
 
     renderDeviceSelect (key, label, help, kind) {
+        const {intl} = this.props;
         const devices = this.state.devices.filter(device => device.kind === kind);
         return (
             <DesktopSelectSetting
@@ -1816,7 +1857,7 @@ class DesktopPage extends React.Component {
                 options={[
                     {
                         value: '',
-                        label: 'System default'
+                        label: intl.formatMessage(messages.desktopSystemDefault)
                     },
                     ...devices.map(device => ({
                         value: device.deviceId,
@@ -1830,6 +1871,7 @@ class DesktopPage extends React.Component {
 
     render () {
         const s = this.state.settings;
+        const {intl} = this.props;
         if (!s) {
             return null;
         }
@@ -1848,13 +1890,13 @@ class DesktopPage extends React.Component {
                         value={s.updateChecker}
                         options={[
                             {value: 'unstable',
-                                label: 'All updates, including betas'},
+                                label: intl.formatMessage(messages.desktopUpdateAll)},
                             {value: 'stable',
-                                label: 'Stable updates'},
+                                label: intl.formatMessage(messages.desktopUpdateStable)},
                             {value: 'security',
-                                label: 'Security updates only'},
+                                label: intl.formatMessage(messages.desktopUpdateSecurity)},
                             {value: 'never',
-                                label: 'Never'}
+                                label: intl.formatMessage(messages.desktopUpdateNever)}
                         ]}
                         onChange={e => this.set('updateChecker', e.target.value)}
                     />
@@ -2186,7 +2228,7 @@ class SettingsModalComponent extends React.Component {
             >
                 <ModalSidebarLayout mobileView={this.state.mobileView}>
                     <ModalSidebar
-                        ariaLabel="Settings sections"
+                        ariaLabel={intl.formatMessage(messages.settingsSectionsAria)}
                         width="wide"
                     >
                         {sidebarGroups.map(group => {
