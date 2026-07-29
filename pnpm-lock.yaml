@@ -7,7 +7,7 @@ settings:
 overrides:
   webpack@4.47.0>terser-webpack-plugin: ^4.2.3
   cheerio: 1.0.0-rc.12
-  scratch-blocks: link:e:\Bilup\new-scratch-blocks
+  scratch-blocks: link:../new-scratch-blocks
   brace-expansion: 1.1.11
 
 importers:
@@ -249,7 +249,7 @@ importers:
         specifier: github:Bilup/scratch-audio#develop-builds
         version: https://codeload.github.com/Bilup/scratch-audio/tar.gz/6b71026b568d63998b647409ffe360cc6d772c32
       scratch-blocks:
-        specifier: link:e:\Bilup\new-scratch-blocks
+        specifier: link:../new-scratch-blocks
         version: link:../new-scratch-blocks
       scratch-paint:
         specifier: github:Bilup/scratch-paint#develop
