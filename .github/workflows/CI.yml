@@ -30,7 +30,16 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install
+        run: |
+          # Remove local-only link overrides that don't exist in CI
+          node -e "
+            const pkg = require('./package.json');
+            if (pkg.pnpm && pkg.pnpm.overrides && pkg.pnpm.overrides['scratch-blocks'] && pkg.pnpm.overrides['scratch-blocks'].startsWith('link:')) {
+              delete pkg.pnpm.overrides['scratch-blocks'];
+              require('fs').writeFileSync('./package.json', JSON.stringify(pkg, null, 2) + '\n');
+            }
+          "
+          pnpm install
 
       - run: pnpm run build
 
