@@ -33,13 +33,33 @@ jobs:
         run: |
           # Remove local-only link overrides that don't exist in CI
           node -e "
-            const pkg = require('./package.json');
-            if (pkg.pnpm && pkg.pnpm.overrides && pkg.pnpm.overrides['scratch-blocks'] && pkg.pnpm.overrides['scratch-blocks'].startsWith('link:')) {
-              delete pkg.pnpm.overrides['scratch-blocks'];
-              require('fs').writeFileSync('./package.json', JSON.stringify(pkg, null, 2) + '\n');
+            const fs = require('fs');
+
+            // 1. Remove link overrides from package.json
+            const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
+            if (pkg.pnpm && pkg.pnpm.overrides) {
+              for (const [key, val] of Object.entries(pkg.pnpm.overrides)) {
+                if (typeof val === 'string' && val.startsWith('link:')) {
+                  delete pkg.pnpm.overrides[key];
+                }
+              }
+              fs.writeFileSync('./package.json', JSON.stringify(pkg, null, 2) + '\n');
             }
+
+            // 2. Remove link overrides from pnpm-lock.yaml overrides section
+            let lockfile = fs.readFileSync('./pnpm-lock.yaml', 'utf8');
+            // Remove lines containing link: in the overrides section (between 'overrides:' and 'importers:')
+            lockfile = lockfile.replace(/(overrides:\n)((?:\s+[^\n]+\n)*)/, (match, header, body) => {
+              const cleanedBody = body.split('\n')
+                .filter(line => !line.trim() || !line.includes('link:'))
+                .join('\n');
+              return header + cleanedBody;
+            });
+            fs.writeFileSync('./pnpm-lock.yaml', lockfile);
+
+            console.log('Cleaned up local-only link overrides for CI');
           "
-          pnpm install
+          pnpm install --no-frozen-lockfile
 
       - run: pnpm run build
 
