@@ -24,6 +24,7 @@ import {getIsLoading} from '../reducers/project-state.js';
 // import DOMElementRenderer from '../containers/dom-element-renderer.jsx';
 import AppStateHOC from '../lib/components/app-state-hoc.jsx';
 import ErrorBoundaryHOC from '../lib/components/error-boundary-hoc.jsx';
+import LocalizationHOC from '../lib/components/localization-hoc.jsx';
 import TWProjectMetaFetcherHOC from '../lib/components/tw-project-meta-fetcher-hoc.jsx';
 import TWStateManagerHOC from '../lib/components/tw-state-manager-hoc.jsx';
 import SBFileUploaderHOC from '../lib/components/sb-file-uploader-hoc.jsx';
@@ -136,11 +137,7 @@ if (typeof window !== 'undefined') {
         
         // Create new settings window
         settingsWindow = windowManager.createWindow({
-            title: this.props.intl.formatMessage({
-                defaultMessage: 'Addons',
-                description: 'Title of the addons window',
-                id: 'tw.addons.title'
-            }),
+            title: 'Addons',
             width: 900,
             height: 700,
             minWidth: 600,
@@ -532,6 +529,7 @@ const ConnectedInterface = injectIntl(connect(
 )(Interface));
 
 const WrappedInterface = compose(
+    LocalizationHOC,
     AppStateHOC,
     ErrorBoundaryHOC('TW Interface'),
     TWProjectMetaFetcherHOC,

@@ -43,6 +43,18 @@ const CATEGORY_ICONS = {
     [SHORTCUT_CATEGORIES.WINDOW_MANAGEMENT]: AppWindow
 };
 
+const CATEGORY_MESSAGE_MAP = {
+    [SHORTCUT_CATEGORIES.FILE]: 'categoryFile',
+    [SHORTCUT_CATEGORIES.EDIT]: 'categoryEdit',
+    [SHORTCUT_CATEGORIES.VIEW]: 'categoryView',
+    [SHORTCUT_CATEGORIES.PROJECT_CONTROLS]: 'categoryProjectControls',
+    [SHORTCUT_CATEGORIES.EDITOR_NAVIGATION]: 'categoryEditorNavigation',
+    [SHORTCUT_CATEGORIES.LIBRARY_ACCESS]: 'categoryLibraryAccess',
+    [SHORTCUT_CATEGORIES.SPRITE_MANAGEMENT]: 'categorySpriteManagement',
+    [SHORTCUT_CATEGORIES.WINDOW_MANAGEMENT]: 'categoryWindowManagement',
+    [SHORTCUT_CATEGORIES.COLLABORATION]: 'categoryCollaboration'
+};
+
 const messages = defineMessages({
     search: {
         defaultMessage: 'Search shortcuts',
@@ -469,17 +481,23 @@ class ShortcutManager extends React.Component {
                     )}
 
                     {hasResults ? (
-                        Object.entries(groupedShortcuts).map(([categoryId, categoryShortcuts]) => (
-                            <ShortcutCategory
-                                key={categoryId}
-                                category={getCategoryLabel(categoryId)}
-                                icon={CATEGORY_ICONS[categoryId] || Keyboard}
-                                shortcuts={categoryShortcuts}
-                                onSave={this.handleSaveShortcut}
-                                onReset={this.handleResetShortcut}
-                                getConflict={this.getConflict}
-                            />
-                        ))
+                        Object.entries(groupedShortcuts).map(([categoryId, categoryShortcuts]) => {
+                            const categoryMsgKey = CATEGORY_MESSAGE_MAP[categoryId];
+                            const categoryLabel = categoryMsgKey
+                                ? this.props.intl.formatMessage(messages[categoryMsgKey])
+                                : getCategoryLabel(categoryId);
+                            return (
+                                <ShortcutCategory
+                                    key={categoryId}
+                                    category={categoryLabel}
+                                    icon={CATEGORY_ICONS[categoryId] || Keyboard}
+                                    shortcuts={categoryShortcuts}
+                                    onSave={this.handleSaveShortcut}
+                                    onReset={this.handleResetShortcut}
+                                    getConflict={this.getConflict}
+                                />
+                            );
+                        })
                     ) : (
                         <div className={styles.noResults}>
                             <Search size={28} />

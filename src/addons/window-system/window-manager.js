@@ -861,11 +861,8 @@ class AddonWindow {
             this.element.style.opacity = '0';
             this.element.style.transform = 'scale(0.92)';
 
-            if (callOnClose) {
-                this.onClose();
-            }
-
             const element = this.element;
+            const shouldCallOnClose = callOnClose;
             this._animTimer = setTimeout(() => {
                 this._animTimer = null;
                 if (element && element.parentNode) {
@@ -874,6 +871,11 @@ class AddonWindow {
                         element.style.transition = 'none';
                     }
                     element.parentNode.removeChild(element);
+                }
+                // Call onClose after animation completes so React content
+                // stays visible during the closing animation
+                if (shouldCallOnClose) {
+                    this.onClose();
                 }
             }, 200);
         } else {

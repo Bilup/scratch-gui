@@ -1646,7 +1646,7 @@ class UnwrappedRoturPage extends React.Component {
                 <p className={styles.detail}>
                     {loggedIn ? (
                         <FormattedMessage
-                            defaultMessage="Signed in as {username}. These options control how MistWarp appears on your Rotur profile."
+                            defaultMessage="Signed in as {username}. These options control how Bilup appears on your Rotur profile."
                             id="mw.settings.rotur.signedInAs"
                             values={{username}}
                         />
@@ -1662,11 +1662,11 @@ class UnwrappedRoturPage extends React.Component {
                     value={presenceEnabled}
                     onChange={this.handlePresenceChange}
                     label={<FormattedMessage
-                        defaultMessage="Show MistWarp activity on Rotur"
+                        defaultMessage="Show Bilup activity on Rotur"
                         id="mw.settings.rotur.presenceEnabled"
                     />}
                     help={<FormattedMessage
-                        defaultMessage="When signed in, friends on Rotur can see that you are editing in MistWarp."
+                        defaultMessage="When signed in, friends on Rotur can see that you are editing in Bilup."
                         id="mw.settings.rotur.presenceEnabledHelp"
                     />}
                 />

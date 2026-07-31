@@ -387,15 +387,20 @@ class WindowedModal extends React.Component {
     };
     
     handleWindowMinimize = () => {
-        if (this.props.onRequestClose) {
-            const shouldClose = this.props.onRequestClose();
-            if (shouldClose === false) {
-                return false;
+        // Delay Redux update and cleanup until after the close animation completes.
+        // This ensures the portal content stays visible during the animation.
+        // Use 220ms to ensure the destroy() animation (200ms) finishes first.
+        setTimeout(() => {
+            if (this.props.onRequestClose) {
+                const shouldClose = this.props.onRequestClose();
+                if (shouldClose === false) {
+                    return;
+                }
             }
-        }
-        this.window = null;
-        this.contentContainer = null;
-        this.createdWindow = false;
+            this.window = null;
+            this.contentContainer = null;
+            this.createdWindow = false;
+        }, 220);
     };
     
     addEventListeners () {

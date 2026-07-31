@@ -86,6 +86,16 @@ const extensionDevelopers = [
         username: '蓝立方Blue3',
         userID:'25786611',
         // userImage:'https://i1.hdslb.com/bfs/face/62a30dec6dc1aa1e319db1e77e5e948fd37e85e3.jpg@128w_128h_1c_1s.webp', 
+    },
+    {
+        userUrlType: 'github',
+        userID: '148440803',
+        username: 'RyaninCn11'
+    },
+    {
+        userUrlType: 'bilibili',
+        username: '勇敢的菠萝🍍',
+        userID:'521949499',
     }
 ].map(fromHardcoded);
 

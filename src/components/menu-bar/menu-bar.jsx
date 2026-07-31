@@ -1591,7 +1591,7 @@ class MenuBar extends React.Component {
                             src={bilupLogo}
                             alt={this.props.intl.formatMessage(twMessages.bilupLogoAlt)}
                             className={styles.homeLogo}
-                            style={{transform: 'scale(0.9)'}}
+                            style={{transform: 'scale(0.8)'}}
                         />
                         <span className={styles.homeWordmark}>
                             {this.props.intl.formatMessage(twMessages.bilupWordmark)}
