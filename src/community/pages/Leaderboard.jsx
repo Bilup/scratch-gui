@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {Link} from 'react-router-dom';
+import {useIntl} from '../../lib/tw-use-intl.jsx';
 import {Users, Trophy, Heart, Play} from 'lucide-react';
 import rotur from '../rotur';
 import api from '../api';
@@ -9,33 +10,16 @@ import styles from './Leaderboard.module.css';
 
 const PODIUM_CLASSES = [styles.podium1, styles.podium2, styles.podium3];
 
-const BOARDS = [
-    {
-        key: 'followers',
-        label: 'Followers',
-        title: 'Most followed users',
-        lead: 'The most followed public Rotur accounts.'
-    },
-    {
-        key: 'loves',
-        label: 'Loves',
-        title: 'Most loved creators',
-        lead: 'Creators with the most loves across all their shared projects.'
-    },
-    {
-        key: 'views',
-        label: 'Views',
-        title: 'Most viewed creators',
-        lead: 'Creators with the most views across all their shared projects.'
-    }
-];
-
 const Stat = ({board, person}) => {
+    const intl = useIntl();
     if (board === 'loves') {
         return (
             <span className={styles.stat}>
                 <Heart size={16} />
-                {(person.loves || 0).toLocaleString()} loves
+                {intl.formatMessage({
+                    id: 'mw.community.leaderboard.loves',
+                    defaultMessage: '{count} loves'
+                }, {count: (person.loves || 0).toLocaleString()})}
             </span>
         );
     }
@@ -43,24 +27,62 @@ const Stat = ({board, person}) => {
         return (
             <span className={styles.stat}>
                 <Play size={16} />
-                {(person.views || 0).toLocaleString()} views
+                {intl.formatMessage({
+                    id: 'mw.community.leaderboard.views',
+                    defaultMessage: '{count} views'
+                }, {count: (person.views || 0).toLocaleString()})}
             </span>
         );
     }
     return (
         <span className={styles.stat}>
             <Users size={16} />
-            {(person.follower_count || 0).toLocaleString()} followers
+            {intl.formatMessage({
+                id: 'mw.community.leaderboard.followers',
+                defaultMessage: '{count} followers'
+            }, {count: (person.follower_count || 0).toLocaleString()})}
         </span>
     );
 };
 
+const BOARDS = [
+    {
+        key: 'followers',
+        labelKey: 'mw.community.leaderboard.board.followers',
+        labelDefault: 'Followers',
+        titleKey: 'mw.community.leaderboard.title.followers',
+        titleDefault: 'Most followed users',
+        leadKey: 'mw.community.leaderboard.lead.followers',
+        leadDefault: 'The most followed public Rotur accounts.'
+    },
+    {
+        key: 'loves',
+        labelKey: 'mw.community.leaderboard.board.loves',
+        labelDefault: 'Loves',
+        titleKey: 'mw.community.leaderboard.title.loves',
+        titleDefault: 'Most loved creators',
+        leadKey: 'mw.community.leaderboard.lead.loves',
+        leadDefault: 'Creators with the most loves across all their shared projects.'
+    },
+    {
+        key: 'views',
+        labelKey: 'mw.community.leaderboard.board.views',
+        labelDefault: 'Views',
+        titleKey: 'mw.community.leaderboard.title.views',
+        titleDefault: 'Most viewed creators',
+        leadKey: 'mw.community.leaderboard.lead.views',
+        leadDefault: 'Creators with the most views across all their shared projects.'
+    }
+];
+
 const Leaderboard = () => {
+    const intl = useIntl();
     const [board, setBoard] = useState('followers');
     const [users, setUsers] = useState(null);
     const [error, setError] = useState('');
     const beginLoad = useLatest();
     const active = BOARDS.find(item => item.key === board);
+    const boardLabel = item => intl.formatMessage({id: item.labelKey, defaultMessage: item.labelDefault});
 
     useEffect(() => {
         const fresh = beginLoad();
@@ -73,14 +95,17 @@ const Leaderboard = () => {
             .then(fresh(setUsers))
             .catch(fresh(() => {
                 setUsers([]);
-                setError('Could not load the leaderboard.');
+                setError(intl.formatMessage({
+                    id: 'mw.community.leaderboard.loadFailed',
+                    defaultMessage: 'Could not load the leaderboard.'
+                }));
             }));
-    }, [board]);
+    }, [board, intl]);
 
     return (
         <main className={styles.page}>
-            <h1>{active.title}</h1>
-            <p className={styles.lead}>{active.lead}</p>
+            <h1>{intl.formatMessage({id: active.titleKey, defaultMessage: active.titleDefault})}</h1>
+            <p className={styles.lead}>{intl.formatMessage({id: active.leadKey, defaultMessage: active.leadDefault})}</p>
             <div className={styles.tabs}>
                 {BOARDS.map(item => (
                     <button
@@ -88,16 +113,22 @@ const Leaderboard = () => {
                         className={item.key === board ? styles.tabActive : styles.tab}
                         onClick={() => setBoard(item.key)}
                     >
-                        {item.label}
+                        {boardLabel(item)}
                     </button>
                 ))}
             </div>
             {users === null ? (
-                <p className={styles.status}>Loading…</p>
+                <p className={styles.status}>{intl.formatMessage({
+                    id: 'mw.community.leaderboard.loading',
+                    defaultMessage: 'Loading…'
+                })}</p>
             ) : error ? (
                 <p className={styles.status}>{error}</p>
             ) : !users.length ? (
-                <p className={styles.status}>No one on this leaderboard yet.</p>
+                <p className={styles.status}>{intl.formatMessage({
+                    id: 'mw.community.leaderboard.empty',
+                    defaultMessage: 'No one on this leaderboard yet.'
+                })}</p>
             ) : (
                 <ol className={styles.list}>
                     {users.map((person, position) => (
@@ -117,12 +148,19 @@ const Leaderboard = () => {
                                     <strong>{person.username}</strong>
                                     {board === 'followers' ? (
                                         <span>{typeof person.index === 'number' ?
-                                            `Account #${person.index}` : 'Account number unavailable'}</span>
+                                            intl.formatMessage({
+                                                id: 'mw.community.leaderboard.accountNumber',
+                                                defaultMessage: 'Account #{index}'
+                                            }, {index: person.index}) :
+                                            intl.formatMessage({
+                                                id: 'mw.community.leaderboard.accountUnavailable',
+                                                defaultMessage: 'Account number unavailable'
+                                            })}</span>
                                     ) : (
-                                        <span>
-                                            {`${person.projects || 0} shared `}
-                                            {person.projects === 1 ? 'project' : 'projects'}
-                                        </span>
+                                        <span>{intl.formatMessage({
+                                            id: 'mw.community.leaderboard.sharedProjects',
+                                            defaultMessage: '{count} shared {count, plural, one {project} other {projects}}'
+                                        }, {count: person.projects || 0})}</span>
                                     )}
                                     {board === 'followers' && person.status ? (
                                         <span>{person.status.status || person.status.presence}</span>

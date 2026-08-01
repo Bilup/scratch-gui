@@ -1,5 +1,6 @@
 import React from 'react';
 import {Link} from 'react-router-dom';
+import {FormattedMessage} from 'react-intl';
 import {Heart, Play, Coins} from 'lucide-react';
 import {projectUrl} from '../api';
 import ProjectThumbnail from './ProjectThumbnail.jsx';
@@ -16,7 +17,13 @@ const ProjectCard = ({project}) => {
                 {price > 0 ? (
                     <span className={styles.priceBadge}>
                         <Coins size={12} />
-                        {project.bought ? 'Owned' : price}
+                        {project.bought ? (
+                            <FormattedMessage
+                                defaultMessage="Owned"
+                                description="Badge on a project card the user has purchased"
+                                id="mw.community.projectCard.owned"
+                            />
+                        ) : price}
                     </span>
                 ) : null}
                 <ProjectThumbnail
@@ -30,7 +37,14 @@ const ProjectCard = ({project}) => {
                     className={styles.title}
                     title={project.title}
                 >{project.title}</div>
-                <div className={styles.owner}>by {project.owner}</div>
+                <div className={styles.owner}>
+                    <FormattedMessage
+                        defaultMessage="by {owner}"
+                        description="Project card attribution"
+                        id="mw.community.nav.byUser"
+                        values={{owner: project.owner}}
+                    />
+                </div>
                 {project.description ? (
                     <p className={styles.desc}>{project.description}</p>
                 ) : null}

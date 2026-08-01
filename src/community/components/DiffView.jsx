@@ -1,4 +1,5 @@
 import React from 'react';
+import {useIntl} from '../../lib/tw-use-intl.jsx';
 import styles from './DiffView.module.css';
 
 const lineClass = line => {
@@ -11,11 +12,12 @@ const lineClass = line => {
 };
 
 const DiffView = ({diff}) => {
+    const intl = useIntl();
     if (diff === null || typeof diff === 'undefined') {
-        return <p className={styles.empty}>Loading diff…</p>;
+        return <p className={styles.empty}>{intl.formatMessage({id: 'mw.community.diff.loading', defaultMessage: 'Loading diff…'})}</p>;
     }
     if (!diff) {
-        return <p className={styles.empty}>No changes.</p>;
+        return <p className={styles.empty}>{intl.formatMessage({id: 'mw.community.diff.noChanges', defaultMessage: 'No changes.'})}</p>;
     }
     const lines = diff.split('\n');
     return (

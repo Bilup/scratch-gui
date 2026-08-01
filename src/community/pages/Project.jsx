@@ -1,5 +1,7 @@
 import React, {useEffect, useState, useCallback, useMemo, useRef} from 'react';
 import {useParams, Link, useNavigate} from 'react-router-dom';
+import {FormattedMessage} from 'react-intl';
+import {useIntl} from '../../lib/tw-use-intl.jsx';
 import {
     Heart, ThumbsDown, ArrowLeft, Play, GitFork, ExternalLink, EyeOff,
     MessageSquareOff, MessageSquare, ImageUp, MonitorPlay, Upload, Blocks, Flag,
@@ -141,6 +143,9 @@ const analyzeBlocks = data => {
 
 const Project = () => {
     const {id} = useParams();
+    const intl = useIntl();
+    const t = useCallback((id, defaultMessage, values) =>
+        intl.formatMessage({id, defaultMessage}, values), [intl]);
     const {user, loading: userLoading} = useUser();
     const navigate = useNavigate();
     const [project, setProject] = useState(null);
@@ -182,7 +187,9 @@ const Project = () => {
                 setError(null);
             }))
             .catch(fresh(e => setError(
-                e && e.status === 404 ? 'Project not found.' : 'Could not load this project.'
+                e && e.status === 404 ?
+                    t('mw.community.project.notFound', 'Project not found.') :
+                    t('mw.community.project.loadFailed', 'Could not load this project.')
             )));
     }, [id, beginLoad]);
 
@@ -279,7 +286,17 @@ const Project = () => {
             cachedFetchJson(projectJsonUrl)
                 .then(async data => {
                     if (cancelled) return;
-                    setBlockStats(analyzeBlocks(data));
+                    const stats = analyzeBlocks(data);
+                    if (stats) {
+                        stats.topCategories = stats.topCategories.map(cat => ({
+                            ...cat,
+                            label: t(
+                                `mw.community.project.categories.${cat.id}`,
+                                cat.label
+                            )
+                        }));
+                    }
+                    setBlockStats(stats);
                     setCustomExtensions(await getCustomExtensions(
                         data,
                         project.trustedExtensions || []
@@ -294,12 +311,12 @@ const Project = () => {
 
     const runUnsandboxed = () => {
         // eslint-disable-next-line no-alert
-        const ok = window.confirm(
+        const ok = window.confirm(t('mw.community.project.unsandboxedConfirm',
             'This project uses custom extensions.\n\n' +
             'Running it without the sandbox gives it full access to your Bilup account. ' +
             'It could read your login session, act as you, or change your data. ' +
             'Only continue if you trust the person who made this project.'
-        );
+        ));
         if (ok) setUnsandboxed(true);
     };
 
@@ -316,7 +333,7 @@ const Project = () => {
         const next = title.trim();
         if (!next) {
             setTitle(project.title);
-            setActionError('Project titles cannot be empty.');
+            setActionError(t('mw.community.project.titleEmpty', 'Project titles cannot be empty.'));
             return;
         }
         if (next === project.title) return;
@@ -327,7 +344,7 @@ const Project = () => {
             setActionError(null);
         } catch (e) {
             setTitle(project.title);
-            setActionError(e.message || 'Could not update the title.');
+            setActionError(e.message || t('mw.community.project.titleUpdateFailed', 'Could not update the title.'));
         } finally {
             setSavingTitle(false);
         }
@@ -539,7 +556,7 @@ const Project = () => {
             await api.reactProject(id, type);
             load();
         } catch (e) {
-            setActionError(e.message || 'Could not react.');
+            setActionError(e.message || t('mw.community.project.reactFailed', 'Could not react.'));
         }
     };
 
@@ -549,7 +566,7 @@ const Project = () => {
             const result = await api.remix(id);
             window.location.href = editorUrl({platformProject: result.id});
         } catch (e) {
-            setActionError('Could not remix this project.');
+            setActionError(t('mw.community.project.remixFailed', 'Could not remix this project.'));
         }
     };
 
@@ -559,7 +576,7 @@ const Project = () => {
             setActionError(null);
             load();
         } catch (e) {
-            setActionError(e.message || 'Could not update visibility.');
+            setActionError(e.message || t('mw.community.project.visibilityFailed', 'Could not update visibility.'));
         }
     };
 
@@ -587,9 +604,10 @@ const Project = () => {
             if (isInsufficientFunds(e)) {
                 window.location.assign(KO_FI_SHOP_URL);
             } else if (e.needsReauth) {
-                setActionError('Your current login cannot send credits. Log out and back in, then try again.');
+                setActionError(t('mw.community.project.reauthNeeded',
+                    'Your current login cannot send credits. Log out and back in, then try again.'));
             } else {
-                setActionError(e.message || 'Could not complete the purchase.');
+                setActionError(e.message || t('mw.community.project.purchaseFailed', 'Could not complete the purchase.'));
             }
         } finally {
             setBuying(false);
@@ -602,18 +620,18 @@ const Project = () => {
             setActionError(null);
             load();
         } catch (e) {
-            setActionError(e.message || 'Could not update comments.');
+            setActionError(e.message || t('mw.community.project.commentsUpdateFailed', 'Could not update comments.'));
         }
     };
 
     const removeProject = async () => {
         setMenuOpen(false);
-        if (!window.confirm('Delete this project? This cannot be undone.')) return;
+        if (!window.confirm(t('mw.community.project.deleteConfirm', 'Delete this project? This cannot be undone.'))) return;
         try {
             await api.deleteProject(id);
             navigate(`/users/${project.owner}`);
         } catch (e) {
-            setActionError(e.message || 'Could not delete this project.');
+            setActionError(e.message || t('mw.community.project.deleteFailed', 'Could not delete this project.'));
         }
     };
 
@@ -630,7 +648,7 @@ const Project = () => {
             setProject(current => ({...current, saved: !current.saved}));
             setActionError(null);
         } catch (e) {
-            setActionError(e.message || 'Could not update your library.');
+            setActionError(e.message || t('mw.community.project.libraryFailed', 'Could not update your library.'));
         } finally {
             setSavingLibrary(false);
         }
@@ -645,7 +663,7 @@ const Project = () => {
                 setCopied(true);
                 window.setTimeout(() => setCopied(false), 2000);
             })
-            .catch(() => setActionError('Could not copy the link.'));
+            .catch(() => setActionError(t('mw.community.project.copyFailed', 'Could not copy the link.')));
     };
     const menuRemix = () => {
         setMenuOpen(false);
@@ -686,7 +704,7 @@ const Project = () => {
             })
             .catch(e => {
                 setThumbnailStatus('idle');
-                setActionError(e.message || 'Could not set thumbnail.');
+                setActionError(e.message || t('mw.community.project.thumbnailFailed', 'Could not set thumbnail.'));
             });
     };
 
@@ -694,7 +712,7 @@ const Project = () => {
         setThumbnailMenu(false);
         const frame = stageFrame.current;
         if (!frame || !frame.contentWindow) {
-            setActionError('Stage is not ready yet.');
+            setActionError(t('mw.community.project.stageNotReady', 'Stage is not ready yet.'));
             return;
         }
         setThumbnailStatus('saving');
@@ -707,7 +725,7 @@ const Project = () => {
             clearTimeout(timeout);
             if (event.data.error || !event.data.dataURL) {
                 setThumbnailStatus('idle');
-                setActionError('Could not capture the current stage.');
+                setActionError(t('mw.community.project.captureFailed', 'Could not capture the current stage.'));
                 return;
             }
             fetch(event.data.dataURL)
@@ -720,13 +738,13 @@ const Project = () => {
                 })
                 .catch(e => {
                     setThumbnailStatus('idle');
-                    setActionError(e.message || 'Could not set thumbnail.');
+                    setActionError(e.message || t('mw.community.project.thumbnailFailed', 'Could not set thumbnail.'));
                 });
         };
         timeout = setTimeout(() => {
             window.removeEventListener('message', onMessage);
             setThumbnailStatus('idle');
-            setActionError('Could not capture the current stage.');
+            setActionError(t('mw.community.project.captureFailed', 'Could not capture the current stage.'));
         }, 5000);
         window.addEventListener('message', onMessage);
         frame.contentWindow.postMessage({type: 'mw:capture-stage'}, '*');
@@ -748,7 +766,7 @@ const Project = () => {
         return <main className={styles.page}><p className={styles.status}>{error}</p></main>;
     }
     if (!project) {
-        return <main className={styles.page}><p className={styles.status}>Loading…</p></main>;
+        return <main className={styles.page}><p className={styles.status}>{t('mw.community.project.loading', 'Loading…')}</p></main>;
     }
 
     const seeInsideHref = editorUrl({platformProject: project.id});
@@ -782,7 +800,7 @@ const Project = () => {
                                     className={styles.titleInput}
                                     value={title}
                                     maxLength={100}
-                                    aria-label="Project title"
+                                    aria-label={t('mw.community.project.titleAria', 'Project title')}
                                     disabled={savingTitle}
                                     onChange={event => setTitle(event.target.value)}
                                     onBlur={saveTitle}
@@ -793,7 +811,7 @@ const Project = () => {
                         <Link
                             to={`/users/${project.owner}`}
                             className={styles.byline}
-                        >by {project.owner}</Link>
+                        >{t('mw.community.project.by', 'by {owner}', {owner: project.owner})}</Link>
                     </div>
                 </div>
                 <div className={styles.topActions}>
@@ -807,10 +825,10 @@ const Project = () => {
                             className={styles.remixButton}
                             onClick={remix}
                             disabled={!user}
-                            title={!user ? 'Sign in to remix' : null}
+                            title={!user ? t('mw.community.project.signInToRemix', 'Sign in to remix') : null}
                         >
                             <GitFork size={16} />
-                            Remix
+                            {t('mw.community.project.remix', 'Remix')}
                         </button>
                     ) : null}
                     {!locked && project.canSeeInside !== false ? (
@@ -820,7 +838,7 @@ const Project = () => {
                             onClick={() => stashProjectHandoff(project)}
                         >
                             <ExternalLink size={16} />
-                            See inside
+                            {t('mw.community.project.seeInside', 'See inside')}
                         </a>
                     ) : null}
                     <div
@@ -829,8 +847,8 @@ const Project = () => {
                     >
                         <button
                             className={styles.remixButton}
-                            title="More actions"
-                            aria-label="More actions"
+                            title={t('mw.community.project.moreActions', 'More actions')}
+                            aria-label={t('mw.community.project.moreActions', 'More actions')}
                             onClick={() => setMenuOpen(open => !open)}
                         >
                             <MoreHorizontal size={18} />
@@ -839,7 +857,7 @@ const Project = () => {
                             <div className={styles.actionMenu}>
                                 <button onClick={copyLink}>
                                     <Link2 size={15} />
-                                    Copy link
+                                    {t('mw.community.project.copyLink', 'Copy link')}
                                 </button>
                                 {user ? (
                                     <button
@@ -847,7 +865,9 @@ const Project = () => {
                                         disabled={savingLibrary}
                                     >
                                         {project.saved ? <BookmarkCheck size={15} /> : <Bookmark size={15} />}
-                                        {project.saved ? 'Remove from library' : 'Save to library'}
+                                        {project.saved ?
+                                            t('mw.community.project.removeFromLibrary', 'Remove from library') :
+                                            t('mw.community.project.saveToLibrary', 'Save to library')}
                                     </button>
                                 ) : null}
                                 {project.isOwner ? (
@@ -856,7 +876,7 @@ const Project = () => {
                                         onClick={() => setMenuOpen(false)}
                                     >
                                         <SlidersHorizontal size={15} />
-                                        Manage &amp; analytics
+                                        {t('mw.community.project.manageAnalytics', 'Manage & analytics')}
                                     </Link>
                                 ) : null}
                                 {project.isOwner ? (
@@ -865,7 +885,7 @@ const Project = () => {
                                         disabled={!user}
                                     >
                                         <GitFork size={15} />
-                                        Remix
+                                        {t('mw.community.project.remix', 'Remix')}
                                     </button>
                                 ) : null}
                                 {project.isOwner ? (
@@ -873,13 +893,15 @@ const Project = () => {
                                         {project.commentsOff ?
                                             <MessageSquare size={15} /> :
                                             <MessageSquareOff size={15} />}
-                                        {project.commentsOff ? 'Turn on comments' : 'Turn off comments'}
+                                        {project.commentsOff ?
+                                            t('mw.community.project.turnOnComments', 'Turn on comments') :
+                                            t('mw.community.project.turnOffComments', 'Turn off comments')}
                                     </button>
                                 ) : null}
                                 {user && !sameUser(project.owner, user.username) ? (
                                     <button onClick={menuReport}>
                                         <Flag size={15} />
-                                        Report
+                                        {t('mw.community.project.report', 'Report')}
                                     </button>
                                 ) : null}
                                 {project.isOwner ? (
@@ -888,7 +910,7 @@ const Project = () => {
                                         onClick={removeProject}
                                     >
                                         <Trash2 size={15} />
-                                        Delete project
+                                        {t('mw.community.project.deleteProject', 'Delete project')}
                                     </button>
                                 ) : null}
                             </div>
@@ -926,25 +948,28 @@ const Project = () => {
                         role="dialog"
                         aria-modal="true"
                     >
-                        <h3 className={styles.confirmTitle}>Confirm purchase</h3>
+                        <h3 className={styles.confirmTitle}>{t('mw.community.project.confirmPurchase', 'Confirm purchase')}</h3>
                         <p className={styles.confirmText}>
-                            {`Buy ${project.title} for ${price} credits?`}
+                            {t('mw.community.project.buyProjectPrompt', 'Buy {title} for {price} credits?', {
+                                title: project.title,
+                                price
+                            })}
                         </p>
                         {confirmBalance !== null ? (
-                            <p className={styles.confirmBalance}>{`Your balance: ${confirmBalance} credits`}</p>
+                            <p className={styles.confirmBalance}>{t('mw.community.project.yourBalance', 'Your balance: {balance} credits', {balance: confirmBalance})}</p>
                         ) : null}
                         <div className={styles.confirmActions}>
                             <button
                                 className={styles.confirmCancel}
                                 onClick={() => setConfirmBuy(false)}
-                            >Cancel</button>
+                            >{t('mw.community.project.cancel', 'Cancel')}</button>
                             {confirmBalance !== null && confirmBalance < price ? (
                                 <a
                                     className={styles.confirmButton}
                                     href={KO_FI_SHOP_URL}
                                 >
                                     <Coins size={15} />
-                                    Buy credits
+                                    {t('mw.community.project.buyCredits', 'Buy credits')}
                                 </a>
                             ) : (
                                 <button
@@ -953,7 +978,9 @@ const Project = () => {
                                     disabled={buying}
                                 >
                                     <Coins size={15} />
-                                    {buying ? 'Processing…' : `Pay ${price} credits`}
+                                    {buying ?
+                                        t('mw.community.project.processing', 'Processing…') :
+                                        t('mw.community.project.payCredits', 'Pay {price} credits', {price})}
                                 </button>
                             )}
                         </div>
@@ -961,23 +988,27 @@ const Project = () => {
                 </div>
             ) : null}
             {actionError ? <div className={styles.actionError}>{actionError}</div> : null}
-            {copied ? <div className={styles.actionSuccess}>Link copied to clipboard.</div> : null}
+            {copied ? <div className={styles.actionSuccess}>{t('mw.community.project.linkCopied', 'Link copied to clipboard.')}</div> : null}
             {thumbnailStatus !== 'idle' ? (
                 <div className={styles.actionSuccess}>
-                    {thumbnailStatus === 'saving' ? 'Saving thumbnail…' : 'Thumbnail updated.'}
+                    {thumbnailStatus === 'saving' ?
+                        t('mw.community.project.savingThumbnail', 'Saving thumbnail…') :
+                        t('mw.community.project.thumbnailUpdated', 'Thumbnail updated.')}
                 </div>
             ) : null}
 
             {visibility === 'unlisted' ? (
                 <div className={styles.visibilityNotice}>
                     <LinkIcon size={16} />
-                    <span>Unlisted. Hidden from search and profiles, but anyone with the link can open it.</span>
+                    <span>{t('mw.community.project.unlistedNotice',
+                        'Unlisted. Hidden from search and profiles, but anyone with the link can open it.')}</span>
                 </div>
             ) : null}
             {visibility === 'private' ? (
                 <div className={styles.visibilityNotice}>
                     <EyeOff size={16} />
-                    <span>Unshared. Only you can see this project.</span>
+                    <span>{t('mw.community.project.privateNotice',
+                        'Unshared. Only you can see this project.')}</span>
                 </div>
             ) : null}
             {price > 0 ? (
@@ -985,28 +1016,29 @@ const Project = () => {
                     <Coins size={16} />
                     <span>
                         {project.isOwner ?
-                            `Paywalled at ${price} credits.` :
+                            t('mw.community.project.paywalledOwner', 'Paywalled at {price} credits.', {price}) :
                             project.bought ?
-                                'You own this project.' :
-                                `${price} credits to play this project.`}
+                                t('mw.community.project.youOwn', 'You own this project.') :
+                                t('mw.community.project.playPrice', '{price} credits to play this project.', {price})}
                     </span>
                 </div>
             ) : null}
             {projectThemeApplied && !revertTheme ? (
                 <div className={styles.themeNotice}>
                     <Palette size={16} />
-                    <span className={styles.themeNoticeText}>This project applied its own theme.</span>
+                    <span className={styles.themeNoticeText}>{t('mw.community.project.themeApplied',
+                        'This project applied its own theme.')}</span>
                     <button
                         className={styles.themeNoticeButton}
                         onClick={() => {
                             setRevertTheme(true);
                             restoreUserTheme();
                         }}
-                    >Use my theme</button>
+                    >{t('mw.community.project.useMyTheme', 'Use my theme')}</button>
                     <Link
                         to="/settings"
                         className={styles.themeNoticeButton}
-                    >Preferences</Link>
+                    >{t('mw.community.project.preferences', 'Preferences')}</Link>
                 </div>
             ) : null}
 
@@ -1017,11 +1049,13 @@ const Project = () => {
                             {!locked && !hasContent ? (
                                 <div className={styles.paywall}>
                                     <Upload size={32} />
-                                    <h2 className={styles.paywallTitle}>Nothing here yet</h2>
+                                    <h2 className={styles.paywallTitle}>{t('mw.community.project.nothingHere', 'Nothing here yet')}</h2>
                                     <p className={styles.paywallText}>
                                         {project.isOwner ?
-                                            'No content yet. Open it in the editor and save to upload.' :
-                                            'This project has not been uploaded yet.'}
+                                            t('mw.community.project.noContentOwner',
+                                                'No content yet. Open it in the editor and save to upload.') :
+                                            t('mw.community.project.notUploadedYet',
+                                                'This project has not been uploaded yet.')}
                                     </p>
                                     {project.isOwner ? (
                                         <a
@@ -1030,16 +1064,17 @@ const Project = () => {
                                             onClick={() => stashProjectHandoff(project)}
                                         >
                                             <ExternalLink size={16} />
-                                            Open in editor
+                                            {t('mw.community.project.openInEditor', 'Open in editor')}
                                         </a>
                                     ) : null}
                                 </div>
                             ) : locked ? (
                                 <div className={styles.paywall}>
                                     <Lock size={32} />
-                                    <h2 className={styles.paywallTitle}>{price} credits to play</h2>
+                                    <h2 className={styles.paywallTitle}>{t('mw.community.project.creditsToPlay', '{price} credits to play', {price})}</h2>
                                     <p className={styles.paywallText}>
-                                        Buy once to play {project.title} whenever you like.
+                                        {t('mw.community.project.buyOnce',
+                                            'Buy once to play {title} whenever you like.', {title: project.title})}
                                     </p>
                                     <button
                                         className={styles.paywallButton}
@@ -1047,10 +1082,10 @@ const Project = () => {
                                         disabled={!user || buying}
                                     >
                                         <Coins size={16} />
-                                        {`Buy for ${price} credits`}
+                                        {t('mw.community.project.buyFor', 'Buy for {price} credits', {price})}
                                     </button>
                                     {!user ? (
-                                        <p className={styles.paywallHint}>Log in to buy this project.</p>
+                                        <p className={styles.paywallHint}>{t('mw.community.project.logInToBuy', 'Log in to buy this project.')}</p>
                                     ) : null}
                                 </div>
                             ) : (
@@ -1074,19 +1109,21 @@ const Project = () => {
                             {unsandboxed ? <ShieldAlert size={16} /> : <ShieldCheck size={16} />}
                             <span className={styles.sandboxText}>
                                 {unsandboxed ?
-                                    'Running with full access to your account. Only for projects you trust.' :
-                                    'Uses custom extensions, running in a sandbox. Saved data will not persist.'}
+                                    t('mw.community.project.fullAccess',
+                                        'Running with full access to your account. Only for projects you trust.') :
+                                    t('mw.community.project.sandboxed',
+                                        'Uses custom extensions, running in a sandbox. Saved data will not persist.')}
                             </span>
                             {unsandboxed ? (
                                 <button
                                     className={styles.sandboxButton}
                                     onClick={() => setUnsandboxed(false)}
-                                >Back to sandbox</button>
+                                >{t('mw.community.project.backToSandbox', 'Back to sandbox')}</button>
                             ) : (
                                 <button
                                     className={styles.sandboxButton}
                                     onClick={runUnsandboxed}
-                                >Run without sandbox</button>
+                                >{t('mw.community.project.runUnsandboxed', 'Run without sandbox')}</button>
                             )}
                         </div>
                     ) : null}
@@ -1095,7 +1132,9 @@ const Project = () => {
                             className={project.myReaction === 'heart' ? styles.statOn : styles.statButton}
                             onClick={() => react('heart')}
                             disabled={!user || locked}
-                            title={locked ? 'Buy this project to react' : (!user ? 'Sign in to react' : null)}
+                            title={locked ?
+                                t('mw.community.project.buyToReact', 'Buy this project to react') :
+                                (!user ? t('mw.community.project.signInToReact', 'Sign in to react') : null)}
                         >
                             <Heart
                                 size={16}
@@ -1107,7 +1146,9 @@ const Project = () => {
                             className={project.myReaction === 'brokenheart' ? styles.statOn : styles.statButton}
                             onClick={() => react('brokenheart')}
                             disabled={!user || locked}
-                            title={locked ? 'Buy this project to react' : (!user ? 'Sign in to react' : null)}
+                            title={locked ?
+                                t('mw.community.project.buyToReact', 'Buy this project to react') :
+                                (!user ? t('mw.community.project.signInToReact', 'Sign in to react') : null)}
                         >
                             <ThumbsDown
                                 size={16}
@@ -1122,7 +1163,7 @@ const Project = () => {
                         {blockStats ? (
                             <span className={styles.statMuted}>
                                 <Blocks size={15} />
-                                {blockStats.total.toLocaleString()} blocks
+                                {t('mw.community.project.blocksCount', '{count} blocks', {count: blockStats.total.toLocaleString()})}
                             </span>
                         ) : null}
                         <span className={styles.statSpacer} />
@@ -1133,22 +1174,24 @@ const Project = () => {
                             >
                                 <button
                                     className={styles.statButton}
-                                    title="Set the project thumbnail"
+                                    title={t('mw.community.project.setThumbnail', 'Set the project thumbnail')}
                                     disabled={thumbnailStatus === 'saving'}
                                     onClick={() => setThumbnailMenu(open => !open)}
                                 >
                                     <ImageUp size={15} />
-                                    {thumbnailStatus === 'saving' ? 'Saving…' : 'Thumbnail'}
+                                    {thumbnailStatus === 'saving' ?
+                                        t('mw.community.project.saving', 'Saving…') :
+                                        t('mw.community.project.thumbnail', 'Thumbnail')}
                                 </button>
                                 {thumbnailMenu ? (
                                     <div className={styles.thumbnailMenu}>
                                         <button onClick={useStageThumbnail}>
                                             <MonitorPlay size={15} />
-                                            Use current stage
+                                            {t('mw.community.project.useCurrentStage', 'Use current stage')}
                                         </button>
                                         <button onClick={chooseThumbnailUpload}>
                                             <Upload size={15} />
-                                            Upload image
+                                            {t('mw.community.project.uploadImage', 'Upload image')}
                                         </button>
                                     </div>
                                 ) : null}
@@ -1183,11 +1226,11 @@ const Project = () => {
                                         key={name}
                                         className={name === tab ? styles.tabActive : styles.tab}
                                         onClick={() => setTab(name)}
-                                    >{name}</button>
+                                    >{t(`mw.community.project.tab.${name.toLowerCase()}`, name)}</button>
                                 ))}
                             </nav>
                         ) : (
-                            <h2 className={styles.colTitle}>Comments</h2>
+                            <h2 className={styles.colTitle}>{t('mw.community.project.comments', 'Comments')}</h2>
                         )}
                     </div>
                     {tab === 'Comments' && (
@@ -1196,7 +1239,8 @@ const Project = () => {
                             canModerate={project.isOwner}
                             disabled={Boolean(project.commentsOff) || locked}
                             disabledReason={locked && !project.commentsOff ?
-                                'Buy this project to comment.' : 'Comments are turned off.'}
+                                t('mw.community.project.buyToComment', 'Buy this project to comment.') :
+                                t('mw.community.project.commentsOff', 'Comments are turned off.')}
                             reportContext={`project ${id}`}
                         />
                     )}
@@ -1212,7 +1256,7 @@ const Project = () => {
 
                 <aside className={styles.remixCol}>
                     <BlockStats stats={blockStats} />
-                    <h2 className={styles.colTitle}>Remixes</h2>
+                    <h2 className={styles.colTitle}>{t('mw.community.project.remixes', 'Remixes')}</h2>
                     <RemixTree id={id} />
                 </aside>
             </div>
@@ -1250,11 +1294,12 @@ const BarChart = ({title, rows}) => {
 };
 
 const BlockStats = ({stats}) => {
+    const intl = useIntl();
     if (!stats || stats.total < 500) return null;
     return (
         <div className={styles.chartStack}>
             <BarChart
-                title="Top categories"
+                title={intl.formatMessage({id: 'mw.community.project.topCategories', defaultMessage: 'Top categories'})}
                 rows={stats.topCategories}
             />
         </div>
@@ -1292,6 +1337,7 @@ const RemixTreeNode = ({node, childrenOf, currentId}) => (
 );
 
 const RemixTree = ({id}) => {
+    const intl = useIntl();
     const [tree, setTree] = useState(null);
     useEffect(() => {
         setTree(null);
@@ -1308,12 +1354,12 @@ const RemixTree = ({id}) => {
         }
         return map;
     }, [tree]);
-    if (!tree) return <p className={styles.status}>Loading…</p>;
+    if (!tree) return <p className={styles.status}>{intl.formatMessage({id: 'mw.community.project.loading', defaultMessage: 'Loading…'})}</p>;
     const nodes = tree.nodes || [];
-    if (nodes.length < 2) return <p className={styles.sideEmpty}>No remixes yet.</p>;
+    if (nodes.length < 2) return <p className={styles.sideEmpty}>{intl.formatMessage({id: 'mw.community.project.noRemixes', defaultMessage: 'No remixes yet.'})}</p>;
     const childrenOf = parentId => childMap.get(parentId) || [];
     const root = nodes.find(node => node.id === tree.root);
-    if (!root) return <p className={styles.sideEmpty}>No remixes yet.</p>;
+    if (!root) return <p className={styles.sideEmpty}>{intl.formatMessage({id: 'mw.community.project.noRemixes', defaultMessage: 'No remixes yet.'})}</p>;
     return (
         <ul className={styles.tree}>
             <RemixTreeNode
@@ -1326,12 +1372,13 @@ const RemixTree = ({id}) => {
 };
 
 const HistoryList = ({id}) => {
+    const intl = useIntl();
     const [commits, setCommits] = useState(null);
     useEffect(() => {
         api.commits(id).then(d => setCommits(d.commits || [])).catch(() => setCommits([]));
     }, [id]);
-    if (!commits) return <p className={styles.status}>Loading…</p>;
-    if (!commits.length) return <p className={styles.status}>No commit history available.</p>;
+    if (!commits) return <p className={styles.status}>{intl.formatMessage({id: 'mw.community.project.loading', defaultMessage: 'Loading…'})}</p>;
+    if (!commits.length) return <p className={styles.status}>{intl.formatMessage({id: 'mw.community.project.noCommitHistory', defaultMessage: 'No commit history available.'})}</p>;
     return (
         <ul className={styles.commitList}>
             {commits.map(commit => (
@@ -1346,6 +1393,7 @@ const HistoryList = ({id}) => {
 };
 
 const PullList = ({id, canMerge, onChange}) => {
+    const intl = useIntl();
     const [pulls, setPulls] = useState(null);
     const [openPull, setOpenPull] = useState(null);
     const [diff, setDiff] = useState(null);
@@ -1365,7 +1413,7 @@ const PullList = ({id, canMerge, onChange}) => {
         try {
             setDiff(await api.pullDiff(id, pull.index));
         } catch (e) {
-            setDiff('Could not load diff.');
+            setDiff(intl.formatMessage({id: 'mw.community.project.couldNotLoadDiff', defaultMessage: 'Could not load diff.'}));
         }
     };
 
@@ -1380,14 +1428,15 @@ const PullList = ({id, canMerge, onChange}) => {
             onChange();
         } catch (e) {
             setMergeError(e.code === 'conflict' ?
-                'This pull request has conflicts. Open it in the editor and pull to resolve.' :
-                'Merge failed.');
+                intl.formatMessage({id: 'mw.community.project.conflictError',
+                    defaultMessage: 'This pull request has conflicts. Open it in the editor and pull to resolve.'}) :
+                intl.formatMessage({id: 'mw.community.project.mergeFailed', defaultMessage: 'Merge failed.'}));
         } finally {
             setMerging(false);
         }
     };
 
-    if (!pulls) return <p className={styles.status}>Loading…</p>;
+    if (!pulls) return <p className={styles.status}>{intl.formatMessage({id: 'mw.community.project.loading', defaultMessage: 'Loading…'})}</p>;
     if (openPull) {
         return (
             <div>
@@ -1396,11 +1445,14 @@ const PullList = ({id, canMerge, onChange}) => {
                     onClick={() => setOpenPull(null)}
                 >
                     <ArrowLeft size={14} />
-                    Back to pull requests
+                    {intl.formatMessage({id: 'mw.community.project.backToPulls', defaultMessage: 'Back to pull requests'})}
                 </button>
                 <h3>{openPull.title}</h3>
                 <p className={styles.muted}>
-                    #{openPull.index} by {openPull.user} into {openPull.baseBranch}
+                    {intl.formatMessage({
+                        id: 'mw.community.project.pullBy',
+                        defaultMessage: '#{index} by {user} into {baseBranch}'
+                    }, {index: openPull.index, user: openPull.user, baseBranch: openPull.baseBranch})}
                 </p>
                 {mergeError ? <div className={styles.actionError}>{mergeError}</div> : null}
                 {canMerge && openPull.state === 'open' ? (
@@ -1408,13 +1460,15 @@ const PullList = ({id, canMerge, onChange}) => {
                         className={styles.primary}
                         onClick={() => merge(openPull)}
                         disabled={merging}
-                    >{merging ? 'Merging…' : 'Merge'}</button>
+                    >{merging ?
+                        intl.formatMessage({id: 'mw.community.project.merging', defaultMessage: 'Merging…'}) :
+                        intl.formatMessage({id: 'mw.community.project.merge', defaultMessage: 'Merge'})}</button>
                 ) : null}
                 <DiffView diff={diff} />
             </div>
         );
     }
-    if (!pulls.length) return <p className={styles.status}>No pull requests.</p>;
+    if (!pulls.length) return <p className={styles.status}>{intl.formatMessage({id: 'mw.community.project.noPulls', defaultMessage: 'No pull requests.'})}</p>;
     return (
         <ul className={styles.plainList}>
             {pulls.map(pull => (

@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {Link} from 'react-router-dom';
+import {useIntl} from '../../lib/tw-use-intl.jsx';
 import {Coins, Wallet as WalletIcon, HeartHandshake, Send, ExternalLink, CalendarCheck} from 'lucide-react';
 import api, {projectUrl} from '../api';
 import {getAccountSummary, claimDaily} from '../../lib/rotur/client.js';
@@ -19,6 +20,7 @@ const formatDate = ms => {
 };
 
 const Wallet = () => {
+    const intl = useIntl();
     const {user, loading} = useUser();
     const [account, setAccount] = useState(null);
     const [accountLoaded, setAccountLoaded] = useState(false);
@@ -49,10 +51,10 @@ const Wallet = () => {
     }, [user]);
 
     if (loading) {
-        return <main className={styles.page}><p className={styles.status}>Loading…</p></main>;
+        return <main className={styles.page}><p className={styles.status}>{intl.formatMessage({id: 'mw.community.wallet.loading', defaultMessage: 'Loading…'})}</p></main>;
     }
     if (!user) {
-        return <main className={styles.page}><p className={styles.status}>Sign in to view your wallet.</p></main>;
+        return <main className={styles.page}><p className={styles.status}>{intl.formatMessage({id: 'mw.community.wallet.signIn', defaultMessage: 'Sign in to view your wallet.'})}</p></main>;
     }
 
     const balance = account && account.balance !== null ? account.balance : null;
@@ -63,7 +65,7 @@ const Wallet = () => {
         setClaimMsg('');
         try {
             await claimDaily();
-            setClaimMsg('Daily credits claimed!');
+            setClaimMsg(intl.formatMessage({id: 'mw.community.wallet.claimed', defaultMessage: 'Daily credits claimed!'}));
             const data = await getAccountSummary();
             if (data) {
                 setAccount(data);
@@ -71,11 +73,11 @@ const Wallet = () => {
             }
         } catch (e) {
             if (e.waitHours) {
-                setClaimMsg(`Already claimed. Come back in ${e.waitHours}h.`);
+                setClaimMsg(intl.formatMessage({id: 'mw.community.wallet.claimedWait', defaultMessage: 'Already claimed. Come back in {hours}h.'}, {hours: e.waitHours}));
             } else if (e.needsReauth) {
-                setClaimMsg('Your current login cannot claim daily credits. Log out and back in, then try again.');
+                setClaimMsg(intl.formatMessage({id: 'mw.community.wallet.reauthNeeded', defaultMessage: 'Your current login cannot claim daily credits. Log out and back in, then try again.'}));
             } else {
-                setClaimMsg(e.message || 'Could not claim daily credits.');
+                setClaimMsg(e.message || intl.formatMessage({id: 'mw.community.wallet.claimFailed', defaultMessage: 'Could not claim daily credits.'}));
             }
         } finally {
             setClaiming(false);
@@ -84,21 +86,21 @@ const Wallet = () => {
 
     return (
         <main className={styles.page}>
-            <h1 className={styles.heading}>Wallet</h1>
+            <h1 className={styles.heading}>{intl.formatMessage({id: 'mw.community.wallet.title', defaultMessage: 'Wallet'})}</h1>
 
             <section className={styles.balanceCard}>
                 <span className={styles.balanceIcon}><WalletIcon size={22} /></span>
                 <div>
-                    <div className={styles.balanceLabel}>Your balance</div>
+                    <div className={styles.balanceLabel}>{intl.formatMessage({id: 'mw.community.wallet.yourBalance', defaultMessage: 'Your balance'})}</div>
                     <div className={styles.balanceValue}>
                         {balance !== null ? (
                             <>
                                 {fmtCredits(balance).toLocaleString()}
-                                <span className={styles.balanceUnit}>credits</span>
+                                <span className={styles.balanceUnit}>{intl.formatMessage({id: 'mw.community.wallet.credits', defaultMessage: 'credits'})}</span>
                             </>
                         ) : (
                             <span className={styles.balanceUnknown}>
-                                {accountLoaded ? 'Could not load your balance right now' : '…'}
+                                {accountLoaded ? intl.formatMessage({id: 'mw.community.wallet.balanceFailed', defaultMessage: 'Could not load your balance right now'}) : '…'}
                             </span>
                         )}
                     </div>
@@ -110,7 +112,9 @@ const Wallet = () => {
                     disabled={claiming}
                 >
                     <CalendarCheck size={16} />
-                    {claiming ? 'Claiming…' : 'Claim daily'}
+                    {claiming ?
+                        intl.formatMessage({id: 'mw.community.wallet.claiming', defaultMessage: 'Claiming…'}) :
+                        intl.formatMessage({id: 'mw.community.wallet.claimDaily', defaultMessage: 'Claim daily'})}
                 </button>
             </section>
 
@@ -119,22 +123,22 @@ const Wallet = () => {
                     {account.donationsReceived > 0 ? (
                         <div className={styles.donationCard}>
                             <HeartHandshake size={16} />
-                            <span>{`${fmtCredits(account.donationsReceived)} received in donations`}</span>
+                            <span>{intl.formatMessage({id: 'mw.community.wallet.donationsReceived', defaultMessage: '{count} received in donations'}, {count: fmtCredits(account.donationsReceived)})}</span>
                         </div>
                     ) : null}
                     {account.donationsGiven > 0 ? (
                         <div className={styles.donationCard}>
                             <Send size={16} />
-                            <span>{`${fmtCredits(account.donationsGiven)} given in donations`}</span>
+                            <span>{intl.formatMessage({id: 'mw.community.wallet.donationsGiven', defaultMessage: '{count} given in donations'}, {count: fmtCredits(account.donationsGiven)})}</span>
                         </div>
                     ) : null}
                 </div>
             ) : null}
 
             <section className={styles.section}>
-                <h2 className={styles.sectionTitle}>Buy credits</h2>
+                <h2 className={styles.sectionTitle}>{intl.formatMessage({id: 'mw.community.wallet.buyCredits', defaultMessage: 'Buy credits'})}</h2>
                 <p className={styles.sectionLead}>
-                    Top up through Ko-fi. Credits are added to your Rotur account after checkout.
+                    {intl.formatMessage({id: 'mw.community.wallet.buyCreditsLead', defaultMessage: 'Top up through Ko-fi. Credits are added to your Rotur account after checkout.'})}
                 </p>
                 <div className={styles.tiers}>
                     {PURCHASE_TIERS.map(tier => (
@@ -147,7 +151,7 @@ const Wallet = () => {
                         >
                             <span className={styles.tierCredits}>
                                 {tier.credits.toLocaleString()}
-                                <span> credits</span>
+                                <span>{intl.formatMessage({id: 'mw.community.wallet.credits', defaultMessage: 'credits'})}</span>
                             </span>
                             <span className={styles.tierPrice}>${tier.price.toFixed(2)}</span>
                         </a>
@@ -156,9 +160,9 @@ const Wallet = () => {
             </section>
 
             <section className={styles.section}>
-                <h2 className={styles.sectionTitle}>Purchase history</h2>
+                <h2 className={styles.sectionTitle}>{intl.formatMessage({id: 'mw.community.wallet.purchaseHistory', defaultMessage: 'Purchase history'})}</h2>
                 {purchases === null ? (
-                    <p className={styles.status}>Loading…</p>
+                    <p className={styles.status}>{intl.formatMessage({id: 'mw.community.wallet.loading', defaultMessage: 'Loading…'})}</p>
                 ) : purchases.length ? (
                     <ul className={styles.purchases}>
                         {purchases.map((purchase, index) => (
@@ -184,12 +188,12 @@ const Wallet = () => {
                     </ul>
                 ) : (
                     <p className={styles.empty}>
-                        You have not bought any projects yet.{' '}
+                        {intl.formatMessage({id: 'mw.community.wallet.noPurchases', defaultMessage: 'You have not bought any projects yet.'})}{' '}
                         <Link
                             to="/explore"
                             className={styles.exploreLink}
                         >
-                            Explore projects
+                            {intl.formatMessage({id: 'mw.community.wallet.exploreProjects', defaultMessage: 'Explore projects'})}
                             <ExternalLink size={13} />
                         </Link>
                     </p>

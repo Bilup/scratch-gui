@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import classNames from 'classnames';
 import {defineMessages, FormattedMessage, injectIntl, intlShape} from 'react-intl';
-import {Search} from 'lucide-react';
+import {CheckCircle, Search} from 'lucide-react';
 
 import Modal from '../../containers/windowed-modal.jsx';
 import {
@@ -73,9 +73,10 @@ ExtensionSection.propTypes = {
     title: PropTypes.node.isRequired
 };
 
-const ExtensionCard = ({item, onSelect}) => {
+const ExtensionCard = ({item, onSelect, isLoaded}) => {
     const handleClick = React.useCallback(() => onSelect(item), [onSelect, item]);
     const icon = item.iconURL || item.rawURL;
+    const loaded = isLoaded ? isLoaded(item) : false;
     const content = (
         <React.Fragment>
             {icon ? (
@@ -187,6 +188,16 @@ const ExtensionCard = ({item, onSelect}) => {
                     {content}
                 </button>
             )}
+            {loaded ? (
+                <div className={styles.cardAdded}>
+                    <CheckCircle size={14} />
+                    <FormattedMessage
+                        defaultMessage="Added"
+                        description="Badge on an extension card that has already been added"
+                        id="gui.extensionLibrary.added"
+                    />
+                </div>
+            ) : null}
             {info}
         </div>
     );
@@ -195,7 +206,8 @@ const ExtensionCard = ({item, onSelect}) => {
 ExtensionCard.propTypes = {
     // eslint-disable-next-line react/forbid-prop-types
     item: PropTypes.object.isRequired,
-    onSelect: PropTypes.func.isRequired
+    onSelect: PropTypes.func.isRequired,
+    isLoaded: PropTypes.func
 };
 
 class TWExtensionLibrary extends React.Component {
@@ -234,7 +246,7 @@ class TWExtensionLibrary extends React.Component {
     }
 
     render () {
-        const {intl, tags, title, onRequestClose, onItemSelected} = this.props;
+        const {intl, tags, title, onRequestClose, onItemSelected, isLoaded} = this.props;
         const data = this.props.data || [];
         const divider = data.indexOf('---');
         const builtIn = data.slice(0, divider === -1 ? data.length : divider).filter(isExtension);
@@ -311,6 +323,7 @@ class TWExtensionLibrary extends React.Component {
                                                     key={`${item.extensionId || 'link'}-${index}`}
                                                     item={item}
                                                     onSelect={onItemSelected}
+                                                    isLoaded={isLoaded}
                                                 />
                                             ))}
                                         </div>
@@ -325,6 +338,7 @@ class TWExtensionLibrary extends React.Component {
                                                     key={`${item.extensionId || 'link'}-${index}`}
                                                     item={item}
                                                     onSelect={onItemSelected}
+                                                    isLoaded={isLoaded}
                                                 />
                                             ))}
                                         </ExtensionSection>
@@ -337,6 +351,7 @@ class TWExtensionLibrary extends React.Component {
                                             key={`${item.extensionId || 'link'}-${index}`}
                                             item={item}
                                             onSelect={onItemSelected}
+                                            isLoaded={isLoaded}
                                         />
                                     ))}
                                 </div>
@@ -356,7 +371,8 @@ TWExtensionLibrary.propTypes = {
     tags: PropTypes.arrayOf(PropTypes.object),
     title: PropTypes.string,
     onItemSelected: PropTypes.func.isRequired,
-    onRequestClose: PropTypes.func
+    onRequestClose: PropTypes.func,
+    isLoaded: PropTypes.func
 };
 
 export default injectIntl(TWExtensionLibrary);

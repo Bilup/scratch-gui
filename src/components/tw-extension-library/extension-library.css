@@ -185,3 +185,17 @@
     color: inherit;
     text-decoration: underline;
 }
+
+.card-added {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    align-self: flex-start;
+    margin: 0 14px 12px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: color-mix(in srgb, $looks-secondary 15%, transparent);
+    color: $looks-secondary;
+    font-size: 0.75rem;
+    font-weight: 600;
+}

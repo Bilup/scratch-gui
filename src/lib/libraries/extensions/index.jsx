@@ -90,82 +90,190 @@ export default [
         featured: true
     },
     {
-        name: 'Patching',
+        name: (
+            <FormattedMessage
+                defaultMessage="Patching"
+                description="Name of the Patching extension"
+                id="tw.extension.patching.name"
+            />
+        ),
         extensionId: 'patching',
         iconURL: patchingIcon,
-        description: 'Inject JavaScript into compiled projects.',
+        description: (
+            <FormattedMessage
+                defaultMessage="Inject JavaScript into compiled projects."
+                description="Description of the Patching extension"
+                id="tw.extension.patching.description"
+            />
+        ),
         incompatibleWithScratch: true,
         tags: ['mistium'],
         featured: true
     },
     {
-        name: 'Rotur Account',
+        name: (
+            <FormattedMessage
+                defaultMessage="Rotur Account"
+                description="Name of the Rotur Account extension"
+                id="tw.extension.rotur.name"
+            />
+        ),
         extensionId: 'rotur',
         iconURL: roturAccountIcon,
-        description: 'Log in with Rotur and read who the player is.',
+        description: (
+            <FormattedMessage
+                defaultMessage="Log in with Rotur and read who the player is."
+                description="Description of the Rotur Account extension"
+                id="tw.extension.rotur.description"
+            />
+        ),
         incompatibleWithScratch: true,
         tags: ['rotur'],
         featured: true
     },
     {
-        name: 'Rotur Economy',
+        name: (
+            <FormattedMessage
+                defaultMessage="Rotur Economy"
+                description="Name of the Rotur Economy extension"
+                id="tw.extension.roturEconomy.name"
+            />
+        ),
         extensionId: 'roturEconomy',
         iconURL: roturEconomyIcon,
-        description: 'Credits, transfers, and daily rewards.',
+        description: (
+            <FormattedMessage
+                defaultMessage="Credits, transfers, and daily rewards."
+                description="Description of the Rotur Economy extension"
+                id="tw.extension.roturEconomy.description"
+            />
+        ),
         incompatibleWithScratch: true,
         tags: ['rotur'],
         featured: true
     },
     {
-        name: 'Rotur Keys',
+        name: (
+            <FormattedMessage
+                defaultMessage="Rotur Keys"
+                description="Name of the Rotur Keys extension"
+                id="tw.extension.roturKeys.name"
+            />
+        ),
         extensionId: 'roturKeys',
         iconURL: roturKeysIcon,
-        description: 'Buy, sell, and check Rotur keys.',
+        description: (
+            <FormattedMessage
+                defaultMessage="Buy, sell, and check Rotur keys."
+                description="Description of the Rotur Keys extension"
+                id="tw.extension.roturKeys.description"
+            />
+        ),
         incompatibleWithScratch: true,
         tags: ['rotur'],
         featured: true
     },
     {
-        name: 'Rotur Status',
+        name: (
+            <FormattedMessage
+                defaultMessage="Rotur Status"
+                description="Name of the Rotur Status extension"
+                id="tw.extension.roturStatus.name"
+            />
+        ),
         extensionId: 'roturStatus',
         iconURL: roturStatusIcon,
-        description: 'Read and set Rotur status and presence.',
+        description: (
+            <FormattedMessage
+                defaultMessage="Read and set Rotur status and presence."
+                description="Description of the Rotur Status extension"
+                id="tw.extension.roturStatus.description"
+            />
+        ),
         incompatibleWithScratch: true,
         tags: ['rotur'],
         featured: true
     },
     {
-        name: 'Rotur Social',
+        name: (
+            <FormattedMessage
+                defaultMessage="Rotur Social"
+                description="Name of the Rotur Social extension"
+                id="tw.extension.roturSocial.name"
+            />
+        ),
         extensionId: 'roturSocial',
         iconURL: roturSocialIcon,
-        description: 'Posts, follows, and friends on Rotur.',
+        description: (
+            <FormattedMessage
+                defaultMessage="Posts, follows, and friends on Rotur."
+                description="Description of the Rotur Social extension"
+                id="tw.extension.roturSocial.description"
+            />
+        ),
         incompatibleWithScratch: true,
         tags: ['rotur'],
         featured: true
     },
     {
-        name: 'Rotur Shop',
+        name: (
+            <FormattedMessage
+                defaultMessage="Rotur Shop"
+                description="Name of the Rotur Shop extension"
+                id="tw.extension.roturShop.name"
+            />
+        ),
         extensionId: 'roturShop',
         iconURL: roturShopIcon,
-        description: 'Items and cosmetics marketplace.',
+        description: (
+            <FormattedMessage
+                defaultMessage="Items and cosmetics marketplace."
+                description="Description of the Rotur Shop extension"
+                id="tw.extension.roturShop.description"
+            />
+        ),
         incompatibleWithScratch: true,
         tags: ['rotur'],
         featured: true
     },
     {
-        name: 'Rotur Groups',
+        name: (
+            <FormattedMessage
+                defaultMessage="Rotur Groups"
+                description="Name of the Rotur Groups extension"
+                id="tw.extension.roturGroups.name"
+            />
+        ),
         extensionId: 'roturGroups',
         iconURL: roturGroupsIcon,
-        description: 'Communities, roles, and group economy.',
+        description: (
+            <FormattedMessage
+                defaultMessage="Communities, roles, and group economy."
+                description="Description of the Rotur Groups extension"
+                id="tw.extension.roturGroups.description"
+            />
+        ),
         incompatibleWithScratch: true,
         tags: ['rotur'],
         featured: true
     },
     {
-        name: 'Rotur Files',
+        name: (
+            <FormattedMessage
+                defaultMessage="Rotur Files"
+                description="Name of the Rotur Files extension"
+                id="tw.extension.roturFiles.name"
+            />
+        ),
         extensionId: 'roturFiles',
         iconURL: roturFilesIcon,
-        description: 'Read and manage your Rotur file storage.',
+        description: (
+            <FormattedMessage
+                defaultMessage="Read and manage your Rotur file storage."
+                description="Description of the Rotur Files extension"
+                id="tw.extension.roturFiles.description"
+            />
+        ),
         incompatibleWithScratch: true,
         tags: ['rotur'],
         featured: true

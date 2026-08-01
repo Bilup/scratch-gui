@@ -1,5 +1,7 @@
 import React, {useState, useEffect, useRef} from 'react';
 import {Link, useNavigate} from 'react-router-dom';
+import {FormattedMessage} from 'react-intl';
+import {useIntl} from '../../lib/tw-use-intl.jsx';
 import {Search, Compass, Plus, FolderOpen, Bell, LogIn, ShieldCheck, Wallet} from 'lucide-react';
 import {useUser} from '../UserContext.jsx';
 import api, {editorUrl} from '../api';
@@ -12,6 +14,7 @@ import styles from './NavBar.module.css';
 
 const NavBar = () => {
     const {user, loading, login, logout} = useUser();
+    const intl = useIntl();
     const [loginError, setLoginError] = useState('');
     const [signingIn, setSigningIn] = useState(false);
     const [query, setQuery] = useState('');
@@ -117,8 +120,14 @@ const NavBar = () => {
             } else {
                 setLoginError(
                     e && /popup|blocked|window/i.test(String(e.message || '')) ?
-                        'Sign-in window was blocked. Allow popups for this site and try again.' :
-                        (e && e.message) || 'Sign-in did not complete. Please try again.'
+                        intl.formatMessage({
+                            id: 'mw.community.nav.signInBlocked',
+                            defaultMessage: 'Sign-in window was blocked. Allow popups for this site and try again.'
+                        }) :
+                        (e && e.message) || intl.formatMessage({
+                            id: 'mw.community.nav.signInFailed',
+                            defaultMessage: 'Sign-in did not complete. Please try again.'
+                        })
                 );
             }
         } finally {
@@ -159,14 +168,26 @@ const NavBar = () => {
                         className={styles.link}
                     >
                         <Plus size={17} />
-                        <span className={styles.linkLabel}>Create</span>
+                        <span className={styles.linkLabel}>
+                            <FormattedMessage
+                                defaultMessage="Create"
+                                description="NavBar link to the editor"
+                                id="mw.community.nav.create"
+                            />
+                        </span>
                     </a>
                     <Link
                         to="/explore"
                         className={styles.link}
                     >
                         <Compass size={17} />
-                        <span className={styles.linkLabel}>Explore</span>
+                        <span className={styles.linkLabel}>
+                            <FormattedMessage
+                                defaultMessage="Explore"
+                                description="NavBar link to explore projects"
+                                id="mw.community.nav.explore"
+                            />
+                        </span>
                     </Link>
                 </nav>
 
@@ -181,7 +202,10 @@ const NavBar = () => {
                     />
                     <input
                         className={styles.searchInput}
-                        placeholder="Search projects and people"
+                        placeholder={intl.formatMessage({
+                            id: 'mw.community.nav.searchPlaceholder',
+                            defaultMessage: 'Search projects and people'
+                        })}
                         value={query}
                         onChange={e => {
                             setQuery(e.target.value);
@@ -204,7 +228,14 @@ const NavBar = () => {
                                         fallbackClassName={styles.suggestionThumbFallback}
                                     />
                                     <span>{project.title}</span>
-                                    <span className={styles.suggestionMeta}>by {project.owner}</span>
+                                    <span className={styles.suggestionMeta}>
+                                        <FormattedMessage
+                                            defaultMessage="by {owner}"
+                                            description="Project suggestion attribution"
+                                            id="mw.community.nav.byUser"
+                                            values={{owner: project.owner}}
+                                        />
+                                    </span>
                                 </button>
                             ))}
                             {suggestions.map(person => (
@@ -220,7 +251,12 @@ const NavBar = () => {
                                     />
                                     <span>{person.username}</span>
                                     <span className={styles.suggestionMeta}>
-                                        {person.followers ?? 0} followers · {person.projects} projects
+                                        <FormattedMessage
+                                            defaultMessage="{followers} followers · {projects} projects"
+                                            description="User search suggestion follower and project counts"
+                                            id="mw.community.nav.followersProjects"
+                                            values={{followers: person.followers ?? 0, projects: person.projects}}
+                                        />
                                     </span>
                                 </button>
                             ))}
@@ -235,8 +271,13 @@ const NavBar = () => {
                                 <Link
                                     to="/admin"
                                     className={`${styles.iconLink} ${styles.bellLink}`}
-                                    title="Admin"
-                                    aria-label={openReports > 0 ? `Admin (${openReports} open reports)` : 'Admin'}
+                                    title={intl.formatMessage({id: 'mw.community.nav.admin', defaultMessage: 'Admin'})}
+                                    aria-label={openReports > 0 ?
+                                        intl.formatMessage({
+                                            id: 'mw.community.nav.adminReports',
+                                            defaultMessage: 'Admin ({count} open reports)'
+                                        }, {count: openReports}) :
+                                        intl.formatMessage({id: 'mw.community.nav.admin', defaultMessage: 'Admin'})}
                                 >
                                     <ShieldCheck size={19} />
                                     {openReports > 0 ? (
@@ -247,24 +288,29 @@ const NavBar = () => {
                             <Link
                                 to="/mystuff"
                                 className={styles.iconLink}
-                                title="My stuff"
-                                aria-label="My stuff"
+                                title={intl.formatMessage({id: 'mw.community.nav.myStuff', defaultMessage: 'My stuff'})}
+                                aria-label={intl.formatMessage({id: 'mw.community.nav.myStuff', defaultMessage: 'My stuff'})}
                             >
                                 <FolderOpen size={19} />
                             </Link>
                             <Link
                                 to="/wallet"
                                 className={styles.iconLink}
-                                title="Wallet"
-                                aria-label="Wallet"
+                                title={intl.formatMessage({id: 'mw.community.nav.wallet', defaultMessage: 'Wallet'})}
+                                aria-label={intl.formatMessage({id: 'mw.community.nav.wallet', defaultMessage: 'Wallet'})}
                             >
                                 <Wallet size={19} />
                             </Link>
                             <Link
                                 to="/notifications"
                                 className={`${styles.iconLink} ${styles.bellLink}`}
-                                title="Notifications"
-                                aria-label={unread > 0 ? `Notifications (${unread} unread)` : 'Notifications'}
+                                title={intl.formatMessage({id: 'mw.community.nav.notifications', defaultMessage: 'Notifications'})}
+                                aria-label={unread > 0 ?
+                                    intl.formatMessage({
+                                        id: 'mw.community.nav.notificationsUnread',
+                                        defaultMessage: 'Notifications ({count} unread)'
+                                    }, {count: unread}) :
+                                    intl.formatMessage({id: 'mw.community.nav.notifications', defaultMessage: 'Notifications'})}
                             >
                                 <Bell size={19} />
                                 {unread > 0 ? (
@@ -286,8 +332,8 @@ const NavBar = () => {
                             className={styles.signIn}
                             onClick={doLogin}
                             disabled={signingIn}
-                            title="Sign in"
-                            aria-label="Sign in"
+                            title={intl.formatMessage({id: 'mw.community.nav.signIn', defaultMessage: 'Sign in'})}
+                            aria-label={intl.formatMessage({id: 'mw.community.nav.signIn', defaultMessage: 'Sign in'})}
                         >
                             <LogIn size={19} />
                         </button>
@@ -303,7 +349,7 @@ const NavBar = () => {
                     <button
                         className={styles.loginErrorClose}
                         onClick={() => setLoginError('')}
-                        aria-label="Dismiss"
+                        aria-label={intl.formatMessage({id: 'mw.community.nav.dismiss', defaultMessage: 'Dismiss'})}
                     >×</button>
                 </div>
             ) : null}

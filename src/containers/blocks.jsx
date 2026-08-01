@@ -652,6 +652,11 @@ class Blocks extends React.Component {
                 this.workspace.getFlyout().setRecyclingEnabled(false);
                 this.props.vm.refreshWorkspace();
                 this.requestToolboxUpdate();
+                // The initial toolbox in the redux store is generated before
+                // scratch-blocks finishes loading, so block text (operators,
+                // strings, etc.) falls back to English. Rebuild it now that
+                // the translated block messages are available.
+                this.requestToolboxStateUpdate();
                 this.withToolboxUpdates(() => {
                     this.workspace.getFlyout().setRecyclingEnabled(true);
                 });

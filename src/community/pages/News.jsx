@@ -1,4 +1,5 @@
 import React, {useEffect, useState, useCallback} from 'react';
+import {useIntl} from '../../lib/tw-use-intl.jsx';
 import api from '../api';
 import {useUser} from '../UserContext.jsx';
 import NewsItem from '../components/NewsItem.jsx';
@@ -6,6 +7,7 @@ import Button from '../components/ui/Button.jsx';
 import styles from './News.module.css';
 
 const News = () => {
+    const intl = useIntl();
     const {user} = useUser();
     const [items, setItems] = useState(null);
     const [title, setTitle] = useState('');
@@ -34,7 +36,10 @@ const News = () => {
             setBody('');
             load();
         } catch (e) {
-            setError(e.message || 'Could not post update.');
+            setError(e.message || intl.formatMessage({
+                id: 'mw.community.news.postFailed',
+                defaultMessage: 'Could not post update.'
+            }));
         } finally {
             setBusy(false);
         }
@@ -42,7 +47,10 @@ const News = () => {
 
     return (
         <main className={styles.page}>
-            <h1>News and updates</h1>
+            <h1>{intl.formatMessage({
+                id: 'mw.community.news.title',
+                defaultMessage: 'News and updates'
+            })}</h1>
 
             {user && user.isAdmin ? (
                 <form
@@ -51,14 +59,20 @@ const News = () => {
                 >
                     <input
                         className={styles.titleInput}
-                        placeholder="Update title"
+                        placeholder={intl.formatMessage({
+                            id: 'mw.community.news.titlePlaceholder',
+                            defaultMessage: 'Update title'
+                        })}
                         value={title}
                         maxLength={120}
                         onChange={e => setTitle(e.target.value)}
                     />
                     <textarea
                         className={styles.bodyInput}
-                        placeholder="What changed?"
+                        placeholder={intl.formatMessage({
+                            id: 'mw.community.news.bodyPlaceholder',
+                            defaultMessage: 'What changed?'
+                        })}
                         value={body}
                         maxLength={5000}
                         onChange={e => setBody(e.target.value)}
@@ -68,17 +82,29 @@ const News = () => {
                         className={styles.submit}
                         type="submit"
                         disabled={busy || !title.trim() || !body.trim()}
-                    >Post update</button>
+                    >{intl.formatMessage({
+                        id: 'mw.community.news.postUpdate',
+                        defaultMessage: 'Post update'
+                    })}</button>
                 </form>
             ) : null}
 
             {loadFailed ? (
                 <p className={styles.status}>
-                    Couldn&apos;t load.{' '}
-                    <Button onClick={load}>Try again</Button>
+                    {intl.formatMessage({
+                        id: 'mw.community.news.couldNotLoad',
+                        defaultMessage: 'Couldn\'t load.'
+                    })}{' '}
+                    <Button onClick={load}>{intl.formatMessage({
+                        id: 'mw.community.news.tryAgain',
+                        defaultMessage: 'Try again'
+                    })}</Button>
                 </p>
             ) : items === null ? (
-                <p className={styles.status}>Loading…</p>
+                <p className={styles.status}>{intl.formatMessage({
+                    id: 'mw.community.news.loading',
+                    defaultMessage: 'Loading…'
+                })}</p>
             ) : items.length ? (
                 <div className={styles.list}>
                     {items.map(item => (
@@ -90,7 +116,10 @@ const News = () => {
                     ))}
                 </div>
             ) : (
-                <p className={styles.status}>No updates posted yet.</p>
+                <p className={styles.status}>{intl.formatMessage({
+                    id: 'mw.community.news.noUpdates',
+                    defaultMessage: 'No updates posted yet.'
+                })}</p>
             )}
         </main>
     );

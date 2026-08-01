@@ -95,22 +95,22 @@ const registerDebuggerBlocks = (vm, handlers) => {
 
     addBlock(vm, BREAKPOINT, {
         args: [],
-        displayName: 'breakpoint',
+        displayName: msg('debugger/block-breakpoint', 'breakpoint'),
         callback: (_, thread) => onBreakpoint(thread)
     });
     addBlock(vm, LOG, {
         args: ['content'],
-        displayName: 'log %s',
+        displayName: msg('debugger/block-log', 'log %s'),
         callback: ({content}, thread) => onLog(content, thread, 'log')
     });
     addBlock(vm, WARN, {
         args: ['content'],
-        displayName: 'warn %s',
+        displayName: msg('debugger/block-warn', 'warn %s'),
         callback: ({content}, thread) => onLog(content, thread, 'warn')
     });
     addBlock(vm, ERROR, {
         args: ['content'],
-        displayName: 'error %s',
+        displayName: msg('debugger/block-error', 'error %s'),
         callback: ({content}, thread) => onLog(content, thread, 'error')
     });
 

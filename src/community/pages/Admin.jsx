@@ -1,5 +1,6 @@
 import React, {useEffect, useState, useCallback} from 'react';
 import {Link} from 'react-router-dom';
+import {useIntl} from '../../lib/tw-use-intl.jsx';
 import {Flag, User, FolderOpen, Ban, ShieldCheck, BarChart3, AlertTriangle, Puzzle} from 'lucide-react';
 import api, {projectUrl, embedUrl} from '../api';
 import {useUser} from '../UserContext.jsx';
@@ -11,13 +12,13 @@ import styles from './Admin.module.css';
 const STANDING_LEVELS = ['good', 'warning', 'suspended', 'banned'];
 
 const SECTIONS = [
-    {key: 'overview', label: 'Overview', icon: BarChart3},
-    {key: 'reports', label: 'Reports', icon: Flag},
-    {key: 'users', label: 'Users', icon: User},
-    {key: 'projects', label: 'Projects', icon: FolderOpen},
-    {key: 'extensions', label: 'Extensions', icon: Puzzle},
-    {key: 'bans', label: 'Bans', icon: Ban},
-    {key: 'admins', label: 'Admins', icon: ShieldCheck}
+    {key: 'overview', labelKey: 'mw.community.admin.section.overview', labelDefault: 'Overview', icon: BarChart3},
+    {key: 'reports', labelKey: 'mw.community.admin.section.reports', labelDefault: 'Reports', icon: Flag},
+    {key: 'users', labelKey: 'mw.community.admin.section.users', labelDefault: 'Users', icon: User},
+    {key: 'projects', labelKey: 'mw.community.admin.section.projects', labelDefault: 'Projects', icon: FolderOpen},
+    {key: 'extensions', labelKey: 'mw.community.admin.section.extensions', labelDefault: 'Extensions', icon: Puzzle},
+    {key: 'bans', labelKey: 'mw.community.admin.section.bans', labelDefault: 'Bans', icon: Ban},
+    {key: 'admins', labelKey: 'mw.community.admin.section.admins', labelDefault: 'Admins', icon: ShieldCheck}
 ];
 
 const dayLabel = dayNumber => {
@@ -65,11 +66,13 @@ const MiniChart = ({title, series}) => {
 };
 
 const QuotaTile = ({quota}) => {
+    const intl = useIntl();
+    const t = (id, defaultMessage, values) => intl.formatMessage({id, defaultMessage}, values);
     const pct = (quota.used / quota.limit) * 100;
     return (
         <div className={styles.statTile}>
             <span className={styles.statValue}>{formatBytes(quota.used)}</span>
-            <span className={styles.statLabel}>of {formatBytes(quota.limit)} used</span>
+            <span className={styles.statLabel}>{t('mw.community.admin.ofUsed', 'of {limit} used', {limit: formatBytes(quota.limit)})}</span>
             <div className={styles.quotaBarBg}>
                 <div
                     className={styles.quotaBarFill}
@@ -77,7 +80,7 @@ const QuotaTile = ({quota}) => {
                 />
             </div>
             <span className={pct >= 80 ? styles.quotaWarnText : styles.quotaPctText}>
-                {pct >= 80 ? <AlertTriangle size={14} /> : null}{Math.round(pct)}% full
+                {pct >= 80 ? <AlertTriangle size={14} /> : null}{t('mw.community.admin.percentFull', '{percent}% full', {percent: Math.round(pct)})}
             </span>
         </div>
     );
@@ -86,6 +89,8 @@ const QuotaTile = ({quota}) => {
 const num = v => Number(v || 0).toLocaleString();
 
 const StatsOverview = () => {
+    const intl = useIntl();
+    const t = (id, defaultMessage, values) => intl.formatMessage({id, defaultMessage}, values);
     const [stats, setStats] = useState(null);
     const [quota, setQuota] = useState(null);
     const [error, setError] = useState('');
@@ -95,11 +100,11 @@ const StatsOverview = () => {
     useEffect(() => {
         api.admin.stats()
             .then(setStats)
-            .catch(e => setError(e.message || 'Could not load stats.'));
+            .catch(e => setError(e.message || t('mw.community.admin.couldNotLoadStats', 'Could not load stats.')));
         api.quota()
             .then(setQuota)
             .catch(() => {});
-    }, []);
+    }, [t]);
 
     const retryPayouts = async () => {
         if (payoutBusy) return;
@@ -107,106 +112,82 @@ const StatsOverview = () => {
         setPayoutNote('');
         try {
             const result = await api.admin.retryPayouts();
-            setPayoutNote(`Paid ${result.paid}, ${result.remaining} still pending.`);
+            setPayoutNote(t('mw.community.admin.paidNote', 'Paid {paid}, {remaining} still pending.', {
+                paid: result.paid,
+                remaining: result.remaining
+            }));
             const fresh = await api.admin.stats();
             setStats(fresh);
         } catch (e) {
-            setPayoutNote(e.message || 'Could not retry payouts.');
+            setPayoutNote(e.message || t('mw.community.admin.couldNotRetry', 'Could not retry payouts.'));
         } finally {
             setPayoutBusy(false);
         }
     };
 
     if (error) {
-        return <div><h2>Overview</h2><p className={styles.error}>{error}</p></div>;
+        return <div><h2>{t('mw.community.admin.overview', 'Overview')}</h2><p className={styles.error}>{error}</p></div>;
     }
     if (!stats) {
-        return <div><h2>Overview</h2><p className={styles.status}>Loading…</p></div>;
+        return <div><h2>{t('mw.community.admin.overview', 'Overview')}</h2><p className={styles.status}>{t('mw.community.admin.loading', 'Loading…')}</p></div>;
     }
     return (
         <div>
-            <h2>Overview</h2>
+            <h2>{t('mw.community.admin.overview', 'Overview')}</h2>
 
             {stats.pendingPayouts > 0 ? (
                 <div className={styles.quotaWarning}>
-                    <AlertTriangle size={14} /> {stats.pendingPayouts} creator payout
-                    {stats.pendingPayouts === 1 ? '' : 's'} failed and{' '}
-                    {stats.pendingPayouts === 1 ? 'is' : 'are'} owed
-                    ({Math.round((stats.pendingPayoutAmount || 0) * 100) / 100} credits total).{' '}
+                    <AlertTriangle size={14} /> {t('mw.community.admin.pendingPayouts',
+                        '{count} creator payouts failed and are owed ({amount} credits total).', {
+                            count: stats.pendingPayouts,
+                            amount: Math.round((stats.pendingPayoutAmount || 0) * 100) / 100
+                        })}{' '}
                     <button
                         className={styles.secondary}
                         onClick={retryPayouts}
                         disabled={payoutBusy}
-                    >{payoutBusy ? 'Retrying…' : 'Retry now'}</button>
+                    >{payoutBusy ?
+                        t('mw.community.admin.retrying', 'Retrying…') :
+                        t('mw.community.admin.retryNow', 'Retry now')}</button>
                     {payoutNote ? <span>{` ${payoutNote}`}</span> : null}
                 </div>
             ) : null}
 
             {quota && (quota.used / quota.limit) * 100 >= 80 ? (
                 <p className={styles.quotaWarning}>
-                    <AlertTriangle size={14} /> You&apos;ve used {formatBytes(quota.used)} of
-                    your {formatBytes(quota.limit)} upload quota
-                    ({Math.round((quota.used / quota.limit) * 100)}%).{' '}
+                    <AlertTriangle size={14} /> {t('mw.community.admin.quotaWarning',
+                        'You\'ve used {used} of your {limit} upload quota ({percent}%).', {
+                            used: formatBytes(quota.used),
+                            limit: formatBytes(quota.limit),
+                            percent: Math.round((quota.used / quota.limit) * 100)
+                        })}{' '}
                     {quota.used >= quota.limit ?
-                        'You cannot upload new projects until usage drops.' :
-                        'Consider managing your projects to free up space.'}
+                        t('mw.community.admin.quotaWarningFull', 'You cannot upload new projects until usage drops.') :
+                        t('mw.community.admin.quotaWarningManage', 'Consider managing your projects to free up space.')}
                 </p>
             ) : null}
 
             <div className={styles.statGrid}>
-                <StatTile
-                    label="Projects"
-                    value={num(stats.totalProjects)}
-                />
-                <StatTile
-                    label="Shared"
-                    value={num(stats.sharedProjects)}
-                />
-                <StatTile
-                    label="Unshared"
-                    value={num(stats.unsharedProjects)}
-                />
-                <StatTile
-                    label="Users"
-                    value={num(stats.totalUsers)}
-                />
-                <StatTile
-                    label="Storage used"
-                    value={formatBytes(stats.totalBytes)}
-                />
-                <StatTile
-                    label="Total views"
-                    value={num(stats.totalViews)}
-                />
-                <StatTile
-                    label="Total loves"
-                    value={num(stats.totalLoves)}
-                />
-                <StatTile
-                    label="Active sessions"
-                    value={num(stats.activeSessions)}
-                />
-                <StatTile
-                    label="Open reports"
-                    value={num(stats.openReports)}
-                />
-                <StatTile
-                    label="Banned users"
-                    value={num(stats.bannedUsers)}
-                />
-                <StatTile
-                    label="News posts"
-                    value={num(stats.newsPosts)}
-                />
+                <StatTile label={t('mw.community.admin.projects', 'Projects')} value={num(stats.totalProjects)} />
+                <StatTile label={t('mw.community.admin.shared', 'Shared')} value={num(stats.sharedProjects)} />
+                <StatTile label={t('mw.community.admin.unshared', 'Unshared')} value={num(stats.unsharedProjects)} />
+                <StatTile label={t('mw.community.admin.users', 'Users')} value={num(stats.totalUsers)} />
+                <StatTile label={t('mw.community.admin.storageUsed', 'Storage used')} value={formatBytes(stats.totalBytes)} />
+                <StatTile label={t('mw.community.admin.totalViews', 'Total views')} value={num(stats.totalViews)} />
+                <StatTile label={t('mw.community.admin.totalLoves', 'Total loves')} value={num(stats.totalLoves)} />
+                <StatTile label={t('mw.community.admin.activeSessions', 'Active sessions')} value={num(stats.activeSessions)} />
+                <StatTile label={t('mw.community.admin.openReports', 'Open reports')} value={num(stats.openReports)} />
+                <StatTile label={t('mw.community.admin.bannedUsers', 'Banned users')} value={num(stats.bannedUsers)} />
+                <StatTile label={t('mw.community.admin.newsPosts', 'News posts')} value={num(stats.newsPosts)} />
                 {quota ? <QuotaTile quota={quota} /> : null}
             </div>
             <div className={styles.charts}>
                 <MiniChart
-                    title="Projects uploaded (14 days)"
+                    title={t('mw.community.admin.projectsChart', 'Projects uploaded (14 days)')}
                     series={buildSeries(stats.projectsByDay, 14)}
                 />
                 <MiniChart
-                    title="Logins (7 days)"
+                    title={t('mw.community.admin.loginsChart', 'Logins (7 days)')}
                     series={buildSeries(stats.loginsByDay, 7)}
                 />
             </div>
@@ -215,6 +196,8 @@ const StatsOverview = () => {
 };
 
 const ProjectManager = () => {
+    const intl = useIntl();
+    const t = (id, defaultMessage, values) => intl.formatMessage({id, defaultMessage}, values);
     const [query, setQuery] = useState('');
     const [projects, setProjects] = useState(null);
     const [error, setError] = useState('');
@@ -227,9 +210,9 @@ const ProjectManager = () => {
             const data = await api.admin.searchProjects(q || '');
             setProjects(data.projects || []);
         } catch (e) {
-            setError(e.message || 'Could not load projects.');
+            setError(e.message || t('mw.community.admin.couldNotLoadProjects', 'Could not load projects.'));
         }
-    }, []);
+    }, [t]);
 
     useEffect(() => {
         search('');
@@ -239,32 +222,32 @@ const ProjectManager = () => {
         try {
             setError('');
             await api.unpublish(id);
-            setNote('Project unshared.');
+            setNote(t('mw.community.admin.projectUnshared', 'Project unshared.'));
             search(query);
         } catch (e) {
-            setError(e.message || 'Could not unshare that project.');
+            setError(e.message || t('mw.community.admin.couldNotUnshare', 'Could not unshare that project.'));
         }
     };
 
     const remove = async id => {
-        if (!window.confirm('Delete this project? This cannot be undone.')) return;
+        if (!window.confirm(t('mw.community.admin.deleteConfirm', 'Delete this project? This cannot be undone.'))) return;
         try {
             setError('');
             await api.deleteProject(id);
-            setNote('Project deleted.');
+            setNote(t('mw.community.admin.projectDeleted', 'Project deleted.'));
             search(query);
         } catch (e) {
-            setError(e.message || 'Could not delete that project.');
+            setError(e.message || t('mw.community.admin.couldNotDelete', 'Could not delete that project.'));
         }
     };
 
     return (
         <div>
-            <h2>Projects</h2>
+            <h2>{t('mw.community.admin.projects', 'Projects')}</h2>
             <div className={styles.addAdmin}>
                 <input
                     className={styles.input}
-                    placeholder="Search title, owner, or id"
+                    placeholder={t('mw.community.admin.searchProjectsPlaceholder', 'Search title, owner, or id')}
                     value={query}
                     onChange={e => setQuery(e.target.value)}
                     onKeyDown={e => {
@@ -274,12 +257,12 @@ const ProjectManager = () => {
                 <button
                     className={styles.secondary}
                     onClick={() => search(query)}
-                >Search</button>
+                >{t('mw.community.admin.search', 'Search')}</button>
             </div>
             {error ? <p className={styles.error}>{error}</p> : null}
             {note ? <p className={styles.status}>{note}</p> : null}
             {projects === null ? (
-                <p className={styles.status}>Loading…</p>
+                <p className={styles.status}>{t('mw.community.admin.loading', 'Loading…')}</p>
             ) : projects.length ? (
                 <div className={styles.list}>
                     {projects.map(project => (
@@ -292,7 +275,12 @@ const ProjectManager = () => {
                                     <Link to={projectUrl(project.id)}>{project.title || project.id}</Link>
                                 </span>
                                 <span className={styles.rowMeta}>
-                                    {`by @${project.owner} · ${project.shared ? 'Shared' : 'Unshared'}`}
+                                    {t('mw.community.admin.byOwnerShared', 'by @{owner} · {shared}', {
+                                        owner: project.owner,
+                                        shared: project.shared ?
+                                            t('mw.community.admin.shared', 'Shared') :
+                                            t('mw.community.admin.unshared', 'Unshared')
+                                    })}
                                 </span>
                             </div>
                             <div className={styles.rowActions}>
@@ -300,24 +288,26 @@ const ProjectManager = () => {
                                     <button
                                         className={styles.secondary}
                                         onClick={() => unshare(project.id)}
-                                    >Unshare</button>
+                                    >{t('mw.community.admin.unshare', 'Unshare')}</button>
                                 ) : null}
                                 <button
                                     className={styles.danger}
                                     onClick={() => remove(project.id)}
-                                >Delete</button>
+                                >{t('mw.community.admin.delete', 'Delete')}</button>
                             </div>
                         </div>
                     ))}
                 </div>
             ) : (
-                <p className={styles.status}>No projects found.</p>
+                <p className={styles.status}>{t('mw.community.admin.noProjectsFound', 'No projects found.')}</p>
             )}
         </div>
     );
 };
 
 const UserDetailCard = ({username, onBack}) => {
+    const intl = useIntl();
+    const t = (id, defaultMessage, values) => intl.formatMessage({id, defaultMessage}, values);
     const [data, setData] = useState(null);
     const [error, setError] = useState('');
     const [note, setNote] = useState('');
@@ -338,9 +328,9 @@ const UserDetailCard = ({username, onBack}) => {
             })
             .catch(e => {
                 setData(null);
-                setError(e.message || 'Could not load that user.');
+                setError(e.message || t('mw.community.admin.couldNotLoadUser', 'Could not load that user.'));
             });
-    }, [username]);
+    }, [username, t]);
 
     const refresh = () => {
         if (!data) return;
@@ -353,10 +343,10 @@ const UserDetailCard = ({username, onBack}) => {
         setNote('');
         try {
             await api.admin.setStanding(data.username, level, reasonText.trim());
-            setNote('Standing updated.');
+            setNote(t('mw.community.admin.standingUpdated', 'Standing updated.'));
             refresh();
         } catch (e) {
-            setError(e.message || 'Action failed.');
+            setError(e.message || t('mw.community.admin.actionFailed', 'Action failed.'));
         }
     };
 
@@ -366,10 +356,10 @@ const UserDetailCard = ({username, onBack}) => {
         setNote('');
         try {
             await api.admin.messageUser(data.username, message.trim());
-            setNote('Message sent.');
+            setNote(t('mw.community.admin.messageSent', 'Message sent.'));
             setMessage('');
         } catch (e) {
-            setError(e.message || 'Action failed.');
+            setError(e.message || t('mw.community.admin.actionFailed', 'Action failed.'));
         }
     };
 
@@ -381,28 +371,28 @@ const UserDetailCard = ({username, onBack}) => {
             await api.admin.updateUserProfile(data.username, {commentsOff: !data.commentsOff});
             refresh();
         } catch (e) {
-            setError(e.message || 'Action failed.');
+            setError(e.message || t('mw.community.admin.actionFailed', 'Action failed.'));
         }
     };
 
     const unshareProject = async pid => {
         try {
             await api.unpublish(pid);
-            setNote('Project unshared.');
+            setNote(t('mw.community.admin.projectUnshared', 'Project unshared.'));
             refresh();
         } catch (e) {
-            setError(e.message || 'Could not unshare.');
+            setError(e.message || t('mw.community.admin.couldNotUnshare', 'Could not unshare.'));
         }
     };
 
     const deleteProject = async pid => {
-        if (!window.confirm('Delete this project? This cannot be undone.')) return;
+        if (!window.confirm(t('mw.community.admin.deleteConfirm', 'Delete this project? This cannot be undone.'))) return;
         try {
             await api.deleteProject(pid);
-            setNote('Project deleted.');
+            setNote(t('mw.community.admin.projectDeleted', 'Project deleted.'));
             refresh();
         } catch (e) {
-            setError(e.message || 'Could not delete.');
+            setError(e.message || t('mw.community.admin.couldNotDelete', 'Could not delete.'));
         }
     };
 
@@ -410,31 +400,34 @@ const UserDetailCard = ({username, onBack}) => {
         return (
             <div>
                 <p className={styles.error}>{error}</p>
-                <button className={styles.secondary} onClick={onBack}>Back to list</button>
+                <button className={styles.secondary} onClick={onBack}>{t('mw.community.admin.backToList', 'Back to list')}</button>
             </div>
         );
     }
-    if (!data) return <p className={styles.status}>Loading user details…</p>;
+    if (!data) return <p className={styles.status}>{t('mw.community.admin.loadingUser', 'Loading user details…')}</p>;
 
     return (
         <div>
-            <button className={styles.secondary} onClick={onBack} style={{marginBottom: 10}}>← Back to list</button>
+            <button className={styles.secondary} onClick={onBack} style={{marginBottom: 10}}>{t('mw.community.admin.backToList', '← Back to list')}</button>
             <div className={styles.userCard}>
                 <div className={styles.userHead}>
                     <Avatar username={data.username} size={44} />
                     <div className={styles.rowInfo}>
                         <span className={styles.rowTitle}>
                             <Link to={`/users/${data.username}`}>{`@${data.username}`}</Link>
-                            {data.admin ? <span className={styles.badge}>admin</span> : null}
+                            {data.admin ? <span className={styles.badge}>{t('mw.community.admin.adminBadge', 'admin')}</span> : null}
                             <span className={styles.badge}>{(data.standing && data.standing.level) || 'good'}</span>
                         </span>
                         <span className={styles.rowMeta}>
-                            {`${data.followerCount || 0} followers · ${data.followingCount || 0} following`}
+                            {t('mw.community.admin.followersFollowing', '{followers} followers · {following} following', {
+                                followers: data.followerCount || 0,
+                                following: data.followingCount || 0
+                            })}
                         </span>
                     </div>
                 </div>
 
-                <label className={styles.fieldLabel}>Account standing</label>
+                <label className={styles.fieldLabel}>{t('mw.community.admin.accountStanding', 'Account standing')}</label>
                 <div className={styles.field}>
                     <select className={styles.select} value={level} onChange={e => setLevel(e.target.value)}>
                         {STANDING_LEVELS.map(l => (
@@ -443,31 +436,33 @@ const UserDetailCard = ({username, onBack}) => {
                     </select>
                     <input
                         className={styles.input}
-                        placeholder="Reason (shown to the user)"
+                        placeholder={t('mw.community.admin.reasonPlaceholder', 'Reason (shown to the user)')}
                         value={reasonText}
                         onChange={e => setReasonText(e.target.value)}
                     />
-                    <button className={styles.secondary} onClick={applyStanding}>Apply</button>
+                    <button className={styles.secondary} onClick={applyStanding}>{t('mw.community.admin.apply', 'Apply')}</button>
                 </div>
 
-                <label className={styles.fieldLabel}>Send a message to their notifications</label>
+                <label className={styles.fieldLabel}>{t('mw.community.admin.sendMessageLabel', 'Send a message to their notifications')}</label>
                 <div className={styles.field}>
                     <input
                         className={styles.input}
-                        placeholder="Message"
+                        placeholder={t('mw.community.admin.messagePlaceholder', 'Message')}
                         value={message}
                         onChange={e => setMessage(e.target.value)}
                     />
-                    <button className={styles.secondary} disabled={!message.trim()} onClick={sendMessage}>Send</button>
+                    <button className={styles.secondary} disabled={!message.trim()} onClick={sendMessage}>{t('mw.community.admin.send', 'Send')}</button>
                 </div>
 
                 <button className={styles.secondary} onClick={toggleComments}>
-                    {data.commentsOff ? 'Enable profile comments' : 'Disable profile comments'}
+                    {data.commentsOff ?
+                        t('mw.community.admin.enableProfileComments', 'Enable profile comments') :
+                        t('mw.community.admin.disableProfileComments', 'Disable profile comments')}
                 </button>
 
                 {data.quota ? (
                     <div className={styles.quota}>
-                        <span className={styles.fieldLabel}>Upload quota</span>
+                        <span className={styles.fieldLabel}>{t('mw.community.admin.uploadQuota', 'Upload quota')}</span>
                         <span className={styles.quotaBar}>
                             <span className={styles.quotaFillBg}>
                                 <span
@@ -476,7 +471,10 @@ const UserDetailCard = ({username, onBack}) => {
                                 />
                             </span>
                             <span className={styles.quotaText}>
-                                {`${formatBytes(data.quota.used)} of ${formatBytes(data.quota.limit)}`}
+                                {t('mw.community.admin.quotaText', '{used} of {limit}', {
+                                    used: formatBytes(data.quota.used),
+                                    limit: formatBytes(data.quota.limit)
+                                })}
                             </span>
                         </span>
                     </div>
@@ -491,7 +489,9 @@ const UserDetailCard = ({username, onBack}) => {
                                         <Link to={projectUrl(project.id)}>{project.title || project.id}</Link>
                                     </span>
                                     <span className={styles.rowMeta}>
-                                        {project.shared ? 'Shared' : 'Not shared'}
+                                        {project.shared ?
+                                            t('mw.community.admin.shared', 'Shared') :
+                                            t('mw.community.admin.notShared', 'Not shared')}
                                     </span>
                                 </div>
                                 <div className={styles.rowActions}>
@@ -499,12 +499,12 @@ const UserDetailCard = ({username, onBack}) => {
                                         <button
                                             className={styles.secondary}
                                             onClick={() => unshareProject(project.id)}
-                                        >Unshare</button>
+                                        >{t('mw.community.admin.unshare', 'Unshare')}</button>
                                     ) : null}
                                     <button
                                         className={styles.danger}
                                         onClick={() => deleteProject(project.id)}
-                                    >Delete</button>
+                                    >{t('mw.community.admin.delete', 'Delete')}</button>
                                 </div>
                             </div>
                         ))}
@@ -518,6 +518,8 @@ const UserDetailCard = ({username, onBack}) => {
 };
 
 const UserManager = () => {
+    const intl = useIntl();
+    const t = (id, defaultMessage, values) => intl.formatMessage({id, defaultMessage}, values);
     const [query, setQuery] = useState('');
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -533,10 +535,10 @@ const UserManager = () => {
                 setLoading(false);
             })
             .catch(e => {
-                setError(e.message || 'Could not load users.');
+                setError(e.message || t('mw.community.admin.couldNotLoadUsers', 'Could not load users.'));
                 setLoading(false);
             });
-    }, []);
+    }, [t]);
 
     const filtered = query.trim() ?
         users.filter(u => u.username.toLowerCase().includes(query.toLowerCase())) :
@@ -545,7 +547,7 @@ const UserManager = () => {
     if (selected) {
         return (
             <div>
-                <h2>Users</h2>
+                <h2>{t('mw.community.admin.users', 'Users')}</h2>
                 <UserDetailCard username={selected} onBack={() => setSelected(null)} />
             </div>
         );
@@ -553,21 +555,21 @@ const UserManager = () => {
 
     return (
         <div>
-            <h2>Users</h2>
+            <h2>{t('mw.community.admin.users', 'Users')}</h2>
             <div className={styles.addAdmin}>
                 <input
                     className={styles.input}
-                    placeholder="Filter by username…"
+                    placeholder={t('mw.community.admin.filterPlaceholder', 'Filter by username…')}
                     value={query}
                     onChange={e => setQuery(e.target.value)}
                 />
                 <span className={styles.status} style={{fontSize: 13, alignSelf: 'center'}}>
-                    {users.length} total
+                    {t('mw.community.admin.totalCount', '{count} total', {count: users.length})}
                 </span>
             </div>
             {error ? <p className={styles.error}>{error}</p> : null}
             {loading ? (
-                <p className={styles.status}>Loading users…</p>
+                <p className={styles.status}>{t('mw.community.admin.loadingUsers', 'Loading users…')}</p>
             ) : filtered.length ? (
                 <div className={styles.list}>
                     {filtered.map(user => {
@@ -592,11 +594,14 @@ const UserManager = () => {
                                             <span
                                                 className={styles.badge}
                                                 style={{borderColor: '#e25555', color: '#e25555'}}
-                                            >banned</span>
+                                            >{t('mw.community.admin.banned', 'banned')}</span>
                                         ) : null}
                                     </span>
                                     <span className={styles.rowMeta}>
-                                        {`${user.followerCount} followers · ${user.projectCount} projects`}
+                                        {t('mw.community.admin.followersProjects', '{followers} followers · {projects} projects', {
+                                            followers: user.followerCount,
+                                            projects: user.projectCount
+                                        })}
                                     </span>
                                 </div>
                                 <div className={styles.resetInfo}>
@@ -617,27 +622,29 @@ const UserManager = () => {
                     })}
                 </div>
             ) : (
-                <p className={styles.status}>No users match that filter.</p>
+                <p className={styles.status}>{t('mw.community.admin.noMatch', 'No users match that filter.')}</p>
             )}
         </div>
     );
 };
 
 const EvidenceDetails = ({data}) => {
+    const intl = useIntl();
+    const t = (id, defaultMessage, values) => intl.formatMessage({id, defaultMessage}, values);
     const config = data.config || {};
     const buyers = config.buyers || [];
     const visibility = config.visibility || (config.shared ? 'public' : 'private');
     return (
         <div className={styles.evidenceBody}>
             <ul className={styles.evidenceMeta}>
-                <li><strong>Title:</strong> {` ${config.title || ''}`}</li>
-                <li><strong>Owner:</strong> {` @${config.owner || ''}`}</li>
-                <li><strong>Price:</strong> {` ${config.price || 0} credits`}</li>
-                <li><strong>Visibility:</strong> {` ${visibility}`}</li>
-                {config.revenue ? <li><strong>Revenue:</strong> {` ${config.revenue} credits`}</li> : null}
-                {buyers.length ? <li><strong>Buyers:</strong> {` ${buyers.length}`}</li> : null}
+                <li><strong>{t('mw.community.admin.evidenceTitle', 'Title')}:</strong> {` ${config.title || ''}`}</li>
+                <li><strong>{t('mw.community.admin.evidenceOwner', 'Owner')}:</strong> {` @${config.owner || ''}`}</li>
+                <li><strong>{t('mw.community.admin.evidencePrice', 'Price')}:</strong> {` ${config.price || 0} ${t('mw.community.admin.credits', 'credits')}`}</li>
+                <li><strong>{t('mw.community.admin.evidenceVisibility', 'Visibility')}:</strong> {` ${visibility}`}</li>
+                {config.revenue ? <li><strong>{t('mw.community.admin.evidenceRevenue', 'Revenue')}:</strong> {` ${config.revenue} ${t('mw.community.admin.credits', 'credits')}`}</li> : null}
+                {buyers.length ? <li><strong>{t('mw.community.admin.evidenceBuyers', 'Buyers')}:</strong> {` ${buyers.length}`}</li> : null}
                 {config.snapshotAt ? (
-                    <li><strong>Captured:</strong> {` ${new Date(config.snapshotAt).toLocaleString()}`}</li>
+                    <li><strong>{t('mw.community.admin.evidenceCaptured', 'Captured')}:</strong> {` ${new Date(config.snapshotAt).toLocaleString()}`}</li>
                 ) : null}
             </ul>
             {config.description ? <p className={styles.evidenceText}>{config.description}</p> : null}
@@ -653,6 +660,8 @@ const EvidenceDetails = ({data}) => {
 };
 
 const EvidencePanel = ({target}) => {
+    const intl = useIntl();
+    const t = (id, defaultMessage, values) => intl.formatMessage({id, defaultMessage}, values);
     const [open, setOpen] = useState(false);
     const [state, setState] = useState({status: 'idle', data: null});
     const toggle = async () => {
@@ -671,12 +680,14 @@ const EvidencePanel = ({target}) => {
             <button
                 className={styles.secondary}
                 onClick={toggle}
-            >{open ? 'Hide reported copy' : 'View reported copy'}</button>
+            >{open ?
+                t('mw.community.admin.hideCopy', 'Hide reported copy') :
+                t('mw.community.admin.viewCopy', 'View reported copy')}</button>
             {open && state.status === 'loading' ? (
-                <p className={styles.status}>Loading…</p>
+                <p className={styles.status}>{t('mw.community.admin.loading', 'Loading…')}</p>
             ) : null}
             {open && state.status === 'none' ? (
-                <p className={styles.status}>No preserved copy for this report.</p>
+                <p className={styles.status}>{t('mw.community.admin.noCopy', 'No preserved copy for this report.')}</p>
             ) : null}
             {open && state.status === 'ready' ? (
                 <EvidenceDetails data={state.data} />
@@ -686,6 +697,8 @@ const EvidencePanel = ({target}) => {
 };
 
 const ExtensionManager = () => {
+    const intl = useIntl();
+    const t = (id, defaultMessage, values) => intl.formatMessage({id, defaultMessage}, values);
     const [data, setData] = useState(null);
     const [tab, setTab] = useState('untrusted');
     const [error, setError] = useState('');
@@ -698,22 +711,22 @@ const ExtensionManager = () => {
         setError('');
         return api.admin.extensions()
             .then(setData)
-            .catch(e => setError(e.message || 'Could not load extensions.'));
-    }, []);
+            .catch(e => setError(e.message || t('mw.community.admin.couldNotLoadExtensions', 'Could not load extensions.')));
+    }, [t]);
 
     useEffect(() => {
         load();
     }, [load]);
 
     const setPolicy = async (hash, status) => {
-        if (status === 'blocked' && !window.confirm('Block this extension and unshare every project using it?')) {
+        if (status === 'blocked' && !window.confirm(t('mw.community.admin.blockConfirm', 'Block this extension and unshare every project using it?'))) {
             return;
         }
         try {
             const result = await api.admin.setExtensionPolicy(hash, status);
             setNote(result.affected ?
-                `Made ${result.affected} affected projects private and notified their owners.` :
-                'Extension policy updated.');
+                t('mw.community.admin.affectedNote', 'Made {count} affected projects private and notified their owners.', {count: result.affected}) :
+                t('mw.community.admin.policyUpdated', 'Extension policy updated.'));
             setSource(null);
             setData(current => ({
                 ...current,
@@ -723,17 +736,17 @@ const ExtensionManager = () => {
                 })
             }));
         } catch (e) {
-            setError(e.message || 'Could not update extension policy.');
+            setError(e.message || t('mw.community.admin.couldNotUpdatePolicy', 'Could not update extension policy.'));
         }
     };
 
     const setUrlPolicy = async (url, blocked) => {
-        if (blocked && !window.confirm('Block this URL and unshare every project using it?')) return;
+        if (blocked && !window.confirm(t('mw.community.admin.blockUrlConfirm', 'Block this URL and unshare every project using it?'))) return;
         try {
             const result = await api.admin.setExtensionUrlPolicy(url, blocked);
             setNote(result.affected ?
-                `Made ${result.affected} affected projects private and notified their owners.` :
-                'URL policy updated.');
+                t('mw.community.admin.affectedNote', 'Made {count} affected projects private and notified their owners.', {count: result.affected}) :
+                t('mw.community.admin.urlUpdated', 'URL policy updated.'));
             setBlockedUrl('');
             setData(current => ({
                 ...current,
@@ -742,26 +755,26 @@ const ExtensionManager = () => {
                     (current.blockedUrls || []).filter(blockedEntry => blockedEntry !== url)
             }));
         } catch (e) {
-            setError(e.message || 'Could not update URL policy.');
+            setError(e.message || t('mw.community.admin.couldNotUpdateUrl', 'Could not update URL policy.'));
         }
     };
 
     const viewSource = async hash => {
         try {
             setError('');
-            setSource({hash, text: 'Loading…'});
+            setSource({hash, text: t('mw.community.admin.loading', 'Loading…')});
             setSource({hash, text: await api.admin.extensionSource(hash)});
         } catch (e) {
             setSource(null);
-            setError(e.message || 'Could not load extension source.');
+            setError(e.message || t('mw.community.admin.couldNotLoadSource', 'Could not load extension source.'));
         }
     };
 
     if (!data) {
         return (
             <div>
-                <h2>Extensions</h2>
-                <p className={error ? styles.error : styles.status}>{error || 'Loading…'}</p>
+                <h2>{t('mw.community.admin.extensions', 'Extensions')}</h2>
+                <p className={error ? styles.error : styles.status}>{error || t('mw.community.admin.loading', 'Loading…')}</p>
             </div>
         );
     }
@@ -783,20 +796,20 @@ const ExtensionManager = () => {
         ].some(value => typeof value === 'string' && value.toLowerCase().includes(search));
     });
     const tabs = [
-        {status: 'untrusted', label: 'To be verified'},
-        {status: 'ignored', label: 'Ignored'},
-        {status: 'trusted', label: 'Trusted'},
-        {status: 'blocked', label: 'Blocked'}
+        {status: 'untrusted', label: t('mw.community.admin.tab.untrusted', 'To be verified')},
+        {status: 'ignored', label: t('mw.community.admin.tab.ignored', 'Ignored')},
+        {status: 'trusted', label: t('mw.community.admin.tab.trusted', 'Trusted')},
+        {status: 'blocked', label: t('mw.community.admin.tab.blocked', 'Blocked')}
     ];
 
     return (
         <div>
-            <h2>Extensions</h2>
+            <h2>{t('mw.community.admin.extensions', 'Extensions')}</h2>
             <input
                 type="search"
                 className={`${styles.input} ${styles.extensionSearch}`}
-                placeholder="Search extensions"
-                aria-label="Search extensions"
+                placeholder={t('mw.community.admin.searchExtensions', 'Search extensions')}
+                aria-label={t('mw.community.admin.searchExtensions', 'Search extensions')}
                 value={query}
                 onChange={e => setQuery(e.target.value)}
             />
@@ -816,14 +829,14 @@ const ExtensionManager = () => {
             <div className={styles.addAdmin}>
                 <input
                     className={styles.input}
-                    placeholder="Block an extension URL"
+                    placeholder={t('mw.community.admin.blockUrlPlaceholder', 'Block an extension URL')}
                     value={blockedUrl}
                     onChange={e => setBlockedUrl(e.target.value)}
                 />
                 <button
                     className={styles.danger}
                     onClick={() => blockedUrl.trim() && setUrlPolicy(blockedUrl.trim(), true)}
-                >Block URL</button>
+                >{t('mw.community.admin.blockUrl', 'Block URL')}</button>
             </div>
             {error ? <p className={styles.error}>{error}</p> : null}
             {note ? <p className={styles.status}>{note}</p> : null}
@@ -840,24 +853,22 @@ const ExtensionManager = () => {
                                         <span className={styles.rowTitle}>{extension.metadata.name}</span>
                                     ) : null}
                                     {extension.metadata && extension.metadata.id ? (
-                                        <span className={styles.rowMeta}>{`ID: ${extension.metadata.id}`}</span>
+                                        <span className={styles.rowMeta}>{t('mw.community.admin.extensionId', 'ID: {id}', {id: extension.metadata.id})}</span>
                                     ) : null}
                                     {extension.metadata && extension.metadata.description ? (
                                         <span className={styles.rowMeta}>{extension.metadata.description}</span>
                                     ) : null}
                                     {extension.metadata && extension.metadata.author ? (
-                                        <span className={styles.rowMeta}>{`By: ${extension.metadata.author}`}</span>
+                                        <span className={styles.rowMeta}>{t('mw.community.admin.extensionBy', 'By: {author}', {author: extension.metadata.author})}</span>
                                     ) : null}
                                     {extension.metadata && extension.metadata.license ? (
                                         <span className={styles.rowMeta}>
-                                            {`License: ${extension.metadata.license}`}
+                                            {t('mw.community.admin.extensionLicense', 'License: {license}', {license: extension.metadata.license})}
                                         </span>
                                     ) : null}
                                     <span className={styles.extensionHash}>{extension.hash}</span>
                                     <span className={styles.rowMeta}>
-                                        {`Used in ${extension.projectCount} ${
-                                            extension.projectCount === 1 ? 'project' : 'projects'
-                                        }`}
+                                        {t('mw.community.admin.usedIn', 'Used in {count} projects', {count: extension.projectCount})}
                                     </span>
                                     {extension.urls.map(url => (
                                         <span
@@ -869,7 +880,7 @@ const ExtensionManager = () => {
                                                 <button
                                                     className={styles.linkButton}
                                                     onClick={() => setUrlPolicy(url, true)}
-                                                >Block URL</button>
+                                                >{t('mw.community.admin.blockUrl', 'Block URL')}</button>
                                             ) : null}
                                         </span>
                                     ))}
@@ -879,40 +890,40 @@ const ExtensionManager = () => {
                                         <button
                                             className={styles.secondary}
                                             onClick={() => viewSource(extension.hash)}
-                                        >View source</button>
+                                        >{t('mw.community.admin.viewSource', 'View source')}</button>
                                     ) : null}
                                     {!extension.gallery && tab !== 'trusted' ? (
                                         <button
                                             className={styles.secondary}
                                             onClick={() => setPolicy(extension.hash, 'trusted')}
-                                        >Trust</button>
+                                        >{t('mw.community.admin.trust', 'Trust')}</button>
                                     ) : !extension.gallery ? (
                                         <button
                                             className={styles.secondary}
                                             onClick={() => setPolicy(extension.hash, 'untrusted')}
-                                        >Untrust</button>
+                                        >{t('mw.community.admin.untrust', 'Untrust')}</button>
                                     ) : null}
                                     {tab === 'untrusted' ? (
                                         <button
                                             className={styles.secondary}
                                             onClick={() => setPolicy(extension.hash, 'ignored')}
-                                        >Ignore</button>
+                                        >{t('mw.community.admin.ignore', 'Ignore')}</button>
                                     ) : tab === 'ignored' ? (
                                         <button
                                             className={styles.secondary}
                                             onClick={() => setPolicy(extension.hash, 'untrusted')}
-                                        >Review again</button>
+                                        >{t('mw.community.admin.reviewAgain', 'Review again')}</button>
                                     ) : null}
                                     {!extension.gallery && tab !== 'blocked' ? (
                                         <button
                                             className={styles.danger}
                                             onClick={() => setPolicy(extension.hash, 'blocked')}
-                                        >Block hash</button>
+                                        >{t('mw.community.admin.blockHash', 'Block hash')}</button>
                                     ) : !extension.gallery ? (
                                         <button
                                             className={styles.secondary}
                                             onClick={() => setPolicy(extension.hash, 'untrusted')}
-                                        >Unblock</button>
+                                        >{t('mw.community.admin.unblock', 'Unblock')}</button>
                                     ) : null}
                                 </div>
                             </div>
@@ -925,8 +936,10 @@ const ExtensionManager = () => {
             ) : (
                 <p className={styles.status}>
                     {search ?
-                        'No matching extensions.' :
-                        (tab === 'untrusted' ? 'No extensions to verify.' : `No ${tab} extension hashes.`)}
+                        t('mw.community.admin.noMatching', 'No matching extensions.') :
+                        (tab === 'untrusted' ?
+                            t('mw.community.admin.noToVerify', 'No extensions to verify.') :
+                            t('mw.community.admin.noTabHashes', 'No {tab} extension hashes.', {tab}))}
                 </p>
             )}
             {tab === 'blocked' && data.blockedUrls && data.blockedUrls.length ? (
@@ -940,7 +953,7 @@ const ExtensionManager = () => {
                             <button
                                 className={styles.secondary}
                                 onClick={() => setUrlPolicy(url, false)}
-                            >Unblock URL</button>
+                            >{t('mw.community.admin.unblockUrl', 'Unblock URL')}</button>
                         </div>
                     ))}
                 </div>
@@ -950,6 +963,8 @@ const ExtensionManager = () => {
 };
 
 const Admin = () => {
+    const intl = useIntl();
+    const t = (id, defaultMessage, values) => intl.formatMessage({id, defaultMessage}, values);
     const {user, loading} = useUser();
     const [reports, setReports] = useState(null);
     const [bans, setBans] = useState([]);
@@ -963,14 +978,14 @@ const Admin = () => {
         const fresh = beginLoad();
         api.admin.reports()
             .then(fresh(data => setReports((data.reports || []).filter(report => !report.resolved))))
-            .catch(fresh(e => setError(e.message || 'Could not load reports.')));
+            .catch(fresh(e => setError(e.message || t('mw.community.admin.couldNotLoadReports', 'Could not load reports.'))));
         api.admin.bans()
             .then(fresh(data => setBans(data.bans || [])))
             .catch(() => {});
         api.admin.admins()
             .then(fresh(data => setAdmins(data.admins || [])))
             .catch(() => {});
-    }, [beginLoad]);
+    }, [beginLoad, t]);
 
     useEffect(() => {
         if (user && user.isAdmin) load();
@@ -983,32 +998,34 @@ const Admin = () => {
             window.dispatchEvent(new Event('mw:reports-updated'));
             load();
         } catch (e) {
-            setError(e.message || 'Action failed.');
+            setError(e.message || t('mw.community.admin.actionFailed', 'Action failed.'));
         }
     };
 
     const warnFromReport = report => {
-        const reason = window.prompt('Reason for the warning (shown to the user):');
+        const reason = window.prompt(t('mw.community.admin.warnPrompt', 'Reason for the warning (shown to the user):'));
         if (reason === null) return; // cancelled
         act(report.id, 'warn_user', reason.trim());
     };
 
     const banFromReport = report => {
-        const who = report.type === 'project' ? 'the owner of this project' : `@${report.target}`;
-        if (!window.confirm(`Ban ${who}? They will be locked out of Bilup until unbanned.`)) return;
+        const who = report.type === 'project' ?
+            t('mw.community.admin.ownerOfProject', 'the owner of this project') :
+            `@${report.target}`;
+        if (!window.confirm(t('mw.community.admin.banWhoConfirm', 'Ban {who}? They will be locked out of Bilup until unbanned.', {who}))) return;
         act(report.id, 'ban_user');
     };
 
     const banByName = async () => {
-        const username = window.prompt('Ban which user?');
+        const username = window.prompt(t('mw.community.admin.banWhichUser', 'Ban which user?'));
         if (!username) return;
-        const reason = window.prompt('Reason for the ban?') || '';
+        const reason = window.prompt(t('mw.community.admin.banReason', 'Reason for the ban?')) || '';
         try {
             setError('');
             await api.admin.ban(username.trim(), reason.trim());
             load();
         } catch (e) {
-            setError(e.message || 'Could not ban that user.');
+            setError(e.message || t('mw.community.admin.couldNotBan', 'Could not ban that user.'));
         }
     };
 
@@ -1018,7 +1035,7 @@ const Admin = () => {
             await api.admin.unban(username);
             load();
         } catch (e) {
-            setError(e.message || 'Could not unban that user.');
+            setError(e.message || t('mw.community.admin.couldNotUnban', 'Could not unban that user.'));
         }
     };
 
@@ -1031,7 +1048,7 @@ const Admin = () => {
             setNewAdmin('');
             load();
         } catch (e) {
-            setError(e.message || 'Could not add that admin.');
+            setError(e.message || t('mw.community.admin.couldNotAddAdmin', 'Could not add that admin.'));
         }
     };
 
@@ -1041,30 +1058,34 @@ const Admin = () => {
             await api.admin.removeAdmin(username);
             load();
         } catch (e) {
-            setError(e.message || 'Could not remove that admin.');
+            setError(e.message || t('mw.community.admin.couldNotRemoveAdmin', 'Could not remove that admin.'));
         }
     };
 
     if (loading) {
-        return <main className={styles.page}><p className={styles.status}>Loading…</p></main>;
+        return <main className={styles.page}><p className={styles.status}>{t('mw.community.admin.loading', 'Loading…')}</p></main>;
     }
     if (!user || !user.isAdmin) {
-        return <main className={styles.page}><p className={styles.status}>This page is for admins.</p></main>;
+        return <main className={styles.page}><p className={styles.status}>{t('mw.community.admin.adminsOnly', 'This page is for admins.')}</p></main>;
     }
 
     const openCount = reports ? reports.length : 0;
+    const sections = SECTIONS.map(section => ({
+        ...section,
+        label: t(section.labelKey, section.labelDefault)
+    }));
 
     return (
         <main className={styles.page}>
-            <h1>Admin</h1>
+            <h1>{t('mw.community.admin.admin', 'Admin')}</h1>
             {error ? <p className={styles.error}>{error}</p> : null}
 
             <div className={styles.layout}>
                 <nav
                     className={styles.sidebar}
-                    aria-label="Admin sections"
+                    aria-label={t('mw.community.admin.ariaLabel', 'Admin sections')}
                 >
-                    {SECTIONS.map(section => {
+                    {sections.map(section => {
                         const Icon = section.icon;
                         const count = section.key === 'reports' ? openCount : 0;
                         return (
@@ -1093,9 +1114,9 @@ const Admin = () => {
 
                     {active === 'reports' ? (
                         <section className={styles.card}>
-                            <h2>Open reports</h2>
+                            <h2>{t('mw.community.admin.openReports', 'Open reports')}</h2>
                             {reports === null ? (
-                                <p className={styles.status}>Loading…</p>
+                                <p className={styles.status}>{t('mw.community.admin.loading', 'Loading…')}</p>
                             ) : reports.length ? (
                                 <div className={styles.list}>
                                     {reports.map(report => (
@@ -1108,7 +1129,7 @@ const Admin = () => {
                                                     {report.type === 'project' ? (
                                                         <Link
                                                             to={projectUrl(report.target)}
-                                                        >{`Project ${report.target}`}</Link>
+                                                        >{t('mw.community.admin.reportProject', 'Project {id}', {id: report.target})}</Link>
                                                     ) : report.type === 'user' ? (
                                                         <Link
                                                             to={`/users/${report.target}`}
@@ -1122,7 +1143,7 @@ const Admin = () => {
                                                                 return (
                                                                     <Link
                                                                         to={`${projectUrl(pid)}#comment-id-${target}`}
-                                                                    >{`Comment ${target}`}</Link>
+                                                                    >{t('mw.community.admin.reportComment', 'Comment {id}', {id: target})}</Link>
                                                                 );
                                                             }
                                                             if (ctx.startsWith('profile ')) {
@@ -1130,18 +1151,21 @@ const Admin = () => {
                                                                 return (
                                                                     <Link
                                                                         to={`/users/${uname}#comment-id-${target}`}
-                                                                    >{`Comment ${target}`}</Link>
+                                                                    >{t('mw.community.admin.reportComment', 'Comment {id}', {id: target})}</Link>
                                                                 );
                                                             }
-                                                            return `Comment ${target}`;
+                                                            return t('mw.community.admin.reportComment', 'Comment {id}', {id: target});
                                                         })()
                                                     ) : (
-                                                        `Comment ${report.target}`
+                                                        t('mw.community.admin.reportComment', 'Comment {id}', {id: report.target})
                                                     )}
                                                 </span>
                                                 <span className={styles.rowMeta}>
-                                                    {`Reported by @${report.reporter} · ${timeAgo(report.created)} ago`}
-                                                    {report.context ? ` · in ${report.context}` : ''}
+                                                    {t('mw.community.admin.reportedBy', 'Reported by @{reporter} · {time} ago', {
+                                                        reporter: report.reporter,
+                                                        time: timeAgo(report.created)
+                                                    })}
+                                                    {report.context ? ` · ${t('mw.community.admin.inContext', 'in {context}', {context: report.context})}` : ''}
                                                 </span>
                                                 <span className={styles.reason}>{report.reason}</span>
                                                 {report.type === 'project' ? (
@@ -1153,26 +1177,30 @@ const Admin = () => {
                                                     <button
                                                         className={styles.secondary}
                                                         onClick={() => act(report.id, 'unshare_project')}
-                                                    >Unshare</button>
+                                                    >{t('mw.community.admin.unshare', 'Unshare')}</button>
                                                 ) : null}
                                                 <button
                                                     className={styles.secondary}
                                                     onClick={() => warnFromReport(report)}
-                                                >{report.type === 'project' ? 'Warn owner' : 'Warn user'}</button>
+                                                >{report.type === 'project' ?
+                                                    t('mw.community.admin.warnOwner', 'Warn owner') :
+                                                    t('mw.community.admin.warnUser', 'Warn user')}</button>
                                                 <button
                                                     className={styles.danger}
                                                     onClick={() => banFromReport(report)}
-                                                >{report.type === 'project' ? 'Ban owner' : 'Ban user'}</button>
+                                                >{report.type === 'project' ?
+                                                    t('mw.community.admin.banOwner', 'Ban owner') :
+                                                    t('mw.community.admin.banUser', 'Ban user')}</button>
                                                 <button
                                                     className={styles.secondary}
                                                     onClick={() => act(report.id, 'dismiss')}
-                                                >Dismiss</button>
+                                                >{t('mw.community.admin.dismiss', 'Dismiss')}</button>
                                             </div>
                                         </div>
                                     ))}
                                 </div>
                             ) : (
-                                <p className={styles.status}>No open reports.</p>
+                                <p className={styles.status}>{t('mw.community.admin.noOpenReports', 'No open reports.')}</p>
                             )}
                         </section>
                     ) : null}
@@ -1197,11 +1225,11 @@ const Admin = () => {
 
                     {active === 'bans' ? (
                         <section className={styles.card}>
-                            <h2>Bans</h2>
+                            <h2>{t('mw.community.admin.bans', 'Bans')}</h2>
                             <button
                                 className={styles.secondary}
                                 onClick={banByName}
-                            >Ban a user…</button>
+                            >{t('mw.community.admin.banAUser', 'Ban a user…')}</button>
                             {bans.length ? (
                                 <div className={styles.list}>
                                     {bans.map(ban => (
@@ -1216,7 +1244,10 @@ const Admin = () => {
                                             <div className={styles.rowInfo}>
                                                 <span className={styles.rowTitle}>{`@${ban.username}`}</span>
                                                 <span className={styles.rowMeta}>
-                                                    {`Banned by @${ban.by} · ${timeAgo(ban.created)} ago`}
+                                                    {t('mw.community.admin.bannedBy', 'Banned by @{by} · {time} ago', {
+                                                        by: ban.by,
+                                                        time: timeAgo(ban.created)
+                                                    })}
                                                     {ban.reason ? ` · ${ban.reason}` : ''}
                                                 </span>
                                             </div>
@@ -1224,31 +1255,31 @@ const Admin = () => {
                                                 <button
                                                     className={styles.secondary}
                                                     onClick={() => unban(ban.username)}
-                                                >Unban</button>
+                                                >{t('mw.community.admin.unban', 'Unban')}</button>
                                             </div>
                                         </div>
                                     ))}
                                 </div>
                             ) : (
-                                <p className={styles.status}>Nobody is banned.</p>
+                                <p className={styles.status}>{t('mw.community.admin.nobodyBanned', 'Nobody is banned.')}</p>
                             )}
                         </section>
                     ) : null}
 
                     {active === 'admins' ? (
                         <section className={styles.card}>
-                            <h2>Admins</h2>
+                            <h2>{t('mw.community.admin.admins', 'Admins')}</h2>
                             <div className={styles.addAdmin}>
                                 <input
                                     className={styles.input}
-                                    placeholder="username"
+                                    placeholder={t('mw.community.admin.usernamePlaceholder', 'username')}
                                     value={newAdmin}
                                     onChange={e => setNewAdmin(e.target.value)}
                                 />
                                 <button
                                     className={styles.secondary}
                                     onClick={addAdmin}
-                                >Add admin</button>
+                                >{t('mw.community.admin.addAdmin', 'Add admin')}</button>
                             </div>
                             <div className={styles.list}>
                                 {admins.map(admin => (
@@ -1263,7 +1294,9 @@ const Admin = () => {
                                         <div className={styles.rowInfo}>
                                             <span className={styles.rowTitle}>{`@${admin.username}`}</span>
                                             <span className={styles.rowMeta}>
-                                                {admin.super ? 'Super admin' : 'Admin'}
+                                                {admin.super ?
+                                                    t('mw.community.admin.superAdmin', 'Super admin') :
+                                                    t('mw.community.admin.adminRole', 'Admin')}
                                             </span>
                                         </div>
                                         <div className={styles.rowActions}>
@@ -1271,7 +1304,7 @@ const Admin = () => {
                                                 <button
                                                     className={styles.secondary}
                                                     onClick={() => removeAdmin(admin.username)}
-                                                >Remove</button>
+                                                >{t('mw.community.admin.remove', 'Remove')}</button>
                                             )}
                                         </div>
                                     </div>

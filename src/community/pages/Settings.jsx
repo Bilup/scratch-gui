@@ -1,4 +1,5 @@
 import React, {useState, useEffect} from 'react';
+import {useIntl} from '../../lib/tw-use-intl.jsx';
 import {Menu, Palette, Radio, Store, SwatchBook, User, Brush} from 'lucide-react';
 import {applyTheme, detectTheme} from '../../lib/themes/themePersistance.js';
 import {ThemeAccentPanel} from '../../components/tw-settings-modal/theme-accent-panel.jsx';
@@ -21,17 +22,12 @@ import {getRoturSettings, updateRoturSettings} from '../../lib/rotur/settings.js
 import {presenceSupported} from '../../lib/rotur/client.js';
 import styles from './Settings.module.css';
 
-const PRESENCE_LABELS = {
-    presenceEnabled: 'Share editor presence',
-    includeEditDuration: 'Include edit duration'
-};
-
 const PROJECT_THEME_MODE_KEY = 'mw:project-theme-mode';
 const PROJECT_THEME_MODES = [
-    {value: 'all', label: 'All projects'},
-    {value: 'followed', label: 'Only creators I follow'},
-    {value: 'hearted', label: 'Only projects I have hearted'},
-    {value: 'none', label: 'Never'}
+    {value: 'all', labelKey: 'mw.community.settings.all', labelDefault: 'All projects'},
+    {value: 'followed', labelKey: 'mw.community.settings.followed', labelDefault: 'Only creators I follow'},
+    {value: 'hearted', labelKey: 'mw.community.settings.hearted', labelDefault: 'Only projects I have hearted'},
+    {value: 'none', labelKey: 'mw.community.settings.none', labelDefault: 'Never'}
 ];
 const getProjectThemeMode = () => {
     try {
@@ -42,16 +38,24 @@ const getProjectThemeMode = () => {
 };
 
 const SECTIONS = [
-    {key: 'theme', label: 'Theme', icon: Palette},
-    {key: 'project-themes', label: 'Project themes', icon: Brush},
-    {key: 'custom-themes', label: 'Custom themes', icon: SwatchBook},
-    {key: 'warptheme', label: 'WarpTheme', icon: Store},
-    {key: 'menu-bar', label: 'Menu bar', icon: Menu},
-    {key: 'presence', label: 'Presence', icon: Radio},
-    {key: 'identity', label: 'Identity', icon: User}
+    {key: 'theme', labelKey: 'mw.community.settings.section.theme', labelDefault: 'Theme', icon: Palette},
+    {key: 'project-themes', labelKey: 'mw.community.settings.section.project-themes', labelDefault: 'Project themes', icon: Brush},
+    {key: 'custom-themes', labelKey: 'mw.community.settings.section.custom-themes', labelDefault: 'Custom themes', icon: SwatchBook},
+    {key: 'warptheme', labelKey: 'mw.community.settings.section.warptheme', labelDefault: 'WarpTheme', icon: Store},
+    {key: 'menu-bar', labelKey: 'mw.community.settings.section.menu-bar', labelDefault: 'Menu bar', icon: Menu},
+    {key: 'presence', labelKey: 'mw.community.settings.section.presence', labelDefault: 'Presence', icon: Radio},
+    {key: 'identity', labelKey: 'mw.community.settings.section.identity', labelDefault: 'Identity', icon: User}
 ];
 
+const MENU_BAR_TEXT_LABEL_KEYS = {
+    auto: 'mw.community.settings.menuBarText.auto',
+    light: 'mw.community.settings.menuBarText.light',
+    dark: 'mw.community.settings.menuBarText.dark'
+};
+
 const Settings = () => {
+    const intl = useIntl();
+    const t = (id, defaultMessage, values) => intl.formatMessage({id, defaultMessage}, values);
     const {user, login, logout} = useUser();
     const [theme, setTheme] = useState(detectTheme());
     const [username, setUsername] = useState(getUsernameOverride() || '');
@@ -125,19 +129,34 @@ const Settings = () => {
         updateRoturSettings({[key]: enabled});
         setPresence(current => ({...current, [key]: enabled}));
     };
+
+    const sections = SECTIONS.map(section => ({
+        ...section,
+        label: t(section.labelKey, section.labelDefault)
+    }));
+    const presenceLabels = {
+        presenceEnabled: t('mw.community.settings.presenceEnabled', 'Share editor presence'),
+        includeEditDuration: t('mw.community.settings.includeEditDuration', 'Include edit duration')
+    };
+    const menuBarTextLabel = option => t(
+        MENU_BAR_TEXT_LABEL_KEYS[option] || 'mw.community.settings.menuBarText.auto',
+        option[0].toUpperCase() + option.slice(1)
+    );
+
     return (
         <main className={styles.page}>
-            <h1>Settings</h1>
+            <h1>{t('mw.community.settings.title', 'Settings')}</h1>
             <p className={styles.lead}>
-                These settings apply across all of Bilup, including the editor and site.
+                {t('mw.community.settings.lead',
+                    'These settings apply across all of Bilup, including the editor and site.')}
             </p>
 
             <div className={styles.layout}>
                 <Sidebar
-                    sections={SECTIONS}
+                    sections={sections}
                     active={activeSection}
                     onChange={setActiveSection}
-                    ariaLabel="Settings sections"
+                    ariaLabel={t('mw.community.settings.ariaLabel', 'Settings sections')}
                 />
 
                 <div className={styles.content}>
@@ -152,7 +171,7 @@ const Settings = () => {
 
                     {activeSection === 'custom-themes' ? (
                         <section className={styles.card}>
-                            <h2>Custom themes</h2>
+                            <h2>{t('mw.community.settings.customThemes', 'Custom themes')}</h2>
                             <CustomThemesPage
                                 theme={theme}
                                 onChangeTheme={applyAndPersist}
@@ -163,7 +182,7 @@ const Settings = () => {
 
                     {activeSection === 'warptheme' ? (
                         <section className={styles.card}>
-                            <h2>WarpTheme marketplace</h2>
+                            <h2>{t('mw.community.settings.warptheme', 'WarpTheme marketplace')}</h2>
                             <WarpThemePanel
                                 theme={theme}
                                 onThemeChange={applyAndPersist}
@@ -173,10 +192,10 @@ const Settings = () => {
 
                     {activeSection === 'menu-bar' ? (
                         <section className={styles.card}>
-                            <h2>Menu bar</h2>
+                            <h2>{t('mw.community.settings.menuBar', 'Menu bar')}</h2>
                             <div className={styles.settingRows}>
                                 <label className={styles.settingRow}>
-                                    <span>Accent-colored menu bar</span>
+                                    <span>{t('mw.community.settings.accentMenuBar', 'Accent-colored menu bar')}</span>
                                     <input
                                         className={styles.checkbox}
                                         type="checkbox"
@@ -185,7 +204,7 @@ const Settings = () => {
                                     />
                                 </label>
                                 <label className={styles.settingRow}>
-                                    <span>Menu bar text</span>
+                                    <span>{t('mw.community.settings.menuBarText', 'Menu bar text')}</span>
                                     <select
                                         className={styles.select}
                                         value={menuBarText}
@@ -196,7 +215,7 @@ const Settings = () => {
                                                 key={option}
                                                 value={option}
                                             >
-                                                {option[0].toUpperCase() + option.slice(1)}
+                                                {menuBarTextLabel(option)}
                                             </option>
                                         ))}
                                     </select>
@@ -207,20 +226,21 @@ const Settings = () => {
 
                     {activeSection === 'presence' ? (
                         <section className={styles.card}>
-                            <h2>Presence</h2>
+                            <h2>{t('mw.community.settings.presence', 'Presence')}</h2>
                             {user && !presenceOk ? (
                                 <div className={styles.risk}>
-                                    {'Your current Rotur login is missing the '}
+                                    {t('mw.community.settings.presenceMissingPermission1',
+                                        'Your current Rotur login is missing the ')}
                                     <strong>{'account:profile'}</strong>
-                                    {' permission, so your editor activity cannot be shared. '}
-                                    {'Log in again to grant it.'}
+                                    {t('mw.community.settings.presenceMissingPermission2',
+                                        ' permission, so your editor activity cannot be shared. Log in again to grant it.')}
                                     <div>
                                         <button
                                             className={styles.riskAction}
                                             type="button"
                                             onClick={reloginForPresence}
                                         >
-                                            {'Log in again'}
+                                            {t('mw.community.settings.loginAgain', 'Log in again')}
                                         </button>
                                     </div>
                                 </div>
@@ -231,7 +251,7 @@ const Settings = () => {
                                         key={key}
                                         className={styles.settingRow}
                                     >
-                                        <span>{PRESENCE_LABELS[key] || key}</span>
+                                        <span>{presenceLabels[key] || key}</span>
                                         <input
                                             className={styles.checkbox}
                                             type="checkbox"
@@ -246,13 +266,13 @@ const Settings = () => {
 
                     {activeSection === 'project-themes' ? (
                         <section className={styles.card}>
-                            <h2>Project themes</h2>
+                            <h2>{t('mw.community.settings.projectThemes', 'Project themes')}</h2>
                             <p className={styles.lead}>
-                                Some projects come with their own Bilup theme. Choose when the player should
-                                switch to a project&apos;s theme automatically.
+                                {t('mw.community.settings.projectThemesLead',
+                                    'Some projects come with their own Bilup theme. Choose when the player should switch to a project\'s theme automatically.')}
                             </p>
                             <label className={styles.field}>
-                                <span>Apply project themes for</span>
+                                <span>{t('mw.community.settings.applyProjectThemesFor', 'Apply project themes for')}</span>
                                 <select
                                     className={styles.input}
                                     value={projectThemeMode}
@@ -262,7 +282,7 @@ const Settings = () => {
                                         <option
                                             key={mode.value}
                                             value={mode.value}
-                                        >{mode.label}</option>
+                                        >{t(mode.labelKey, mode.labelDefault)}</option>
                                     ))}
                                 </select>
                             </label>
@@ -271,19 +291,19 @@ const Settings = () => {
 
                     {activeSection === 'identity' ? (
                         <section className={styles.card}>
-                            <h2>Identity</h2>
+                            <h2>{t('mw.community.settings.identity', 'Identity')}</h2>
                             <label
                                 className={styles.field}
                                 htmlFor="username-override"
                             >
-                                <span>Username override</span>
+                                <span>{t('mw.community.settings.usernameOverride', 'Username override')}</span>
                                 <input
                                     id="username-override"
                                     className={styles.input}
                                     type="text"
                                     value={username}
                                     onChange={event => changeUsername(event.target.value)}
-                                    placeholder="Use account username"
+                                    placeholder={t('mw.community.settings.usernamePlaceholder', 'Use account username')}
                                 />
                             </label>
                         </section>
@@ -291,7 +311,8 @@ const Settings = () => {
 
                     {!user ? (
                         <p className={styles.note}>
-                            Sign in to sync your settings across devices through your Rotur account.
+                            {t('mw.community.settings.signInNote',
+                                'Sign in to sync your settings across devices through your Rotur account.')}
                         </p>
                     ) : null}
                 </div>

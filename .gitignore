@@ -31,3 +31,4 @@ bun.lock
 .secrets
 /.workbuddy
 .env
+/temp

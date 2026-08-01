@@ -1,5 +1,7 @@
 import React, {useEffect, useState, useCallback, useMemo} from 'react';
 import {useParams, Link} from 'react-router-dom';
+import {FormattedMessage} from 'react-intl';
+import {useIntl} from '../../lib/tw-use-intl.jsx';
 import {
     UserPlus, UserCheck, Calendar, MessageSquare, MessageSquareOff, ChevronRight, Pencil, Flag, Coins, X
 } from 'lucide-react';
@@ -31,6 +33,9 @@ const joinYear = ms => {
 
 const Profile = () => {
     const {name} = useParams();
+    const intl = useIntl();
+    const t = useCallback((id, defaultMessage, values) =>
+        intl.formatMessage({id, defaultMessage}, values), [intl]);
     const {user} = useUser();
     const [profile, setProfile] = useState(null);
     const [mwUser, setMwUser] = useState(null);
@@ -50,7 +55,8 @@ const Profile = () => {
         const fresh = beginLoad();
         rotur.profile(name, {includePosts: false})
             .then(fresh(setProfile))
-            .catch(fresh(() => setError('This user does not exist on Rotur.')));
+            .catch(fresh(() => setError(t('mw.community.profile.notFound',
+                'This user does not exist on Rotur.'))));
         api.getUser(name)
             .then(fresh(setMwUser))
             .catch(fresh(() => setMwUser(null)));
@@ -137,7 +143,7 @@ const Profile = () => {
                 setFollowers(fs => [me, ...fs.filter(f => f.toLowerCase() !== me.toLowerCase())]);
             }
         } catch (e) {
-            setActionError(e.message || 'Could not update follow.');
+            setActionError(e.message || t('mw.community.profile.followFailed', 'Could not update follow.'));
         } finally {
             setFollowBusy(false);
         }
@@ -154,7 +160,7 @@ const Profile = () => {
             await api.updateProfile({commentsOff: !commentsOff});
             load();
         } catch (e) {
-            setActionError(e.message || 'Could not update comments.');
+            setActionError(e.message || t('mw.community.profile.commentsFailed', 'Could not update comments.'));
         } finally {
             setCommentsBusy(false);
         }
@@ -171,7 +177,7 @@ const Profile = () => {
         return <main className={styles.page}><p className={styles.status}>{error}</p></main>;
     }
     if (!profile) {
-        return <main className={styles.page}><p className={styles.status}>Loading…</p></main>;
+        return <main className={styles.page}><p className={styles.status}>{t('mw.community.profile.loading', 'Loading…')}</p></main>;
     }
 
     const projects = (mwUser && mwUser.projects) || [];
@@ -213,28 +219,30 @@ const Profile = () => {
                     <div className={styles.identity}>
                         <h1>{profile.username || name}</h1>
                         {profile.pronouns ? <span className={styles.pronouns}>{profile.pronouns}</span> : null}
-                        <p className={styles.bio}>{profile.bio ? <RichText text={profile.bio} /> : 'No bio yet.'}</p>
+                        <p className={styles.bio}>{profile.bio ? <RichText text={profile.bio} /> : t('mw.community.profile.noBio', 'No bio yet.')}</p>
                         {presence ? (
                             <span className={styles.userStatus}>
                                 <span className={statusDotClass} />
-                                <RichText text={statusText || (isOnline ? 'Online' : 'Offline')} />
+                                <RichText text={statusText || (isOnline ?
+                                    t('mw.community.profile.online', 'Online') :
+                                    t('mw.community.profile.offline', 'Offline'))} />
                             </span>
                         ) : null}
                         <div className={styles.meta}>
                             <span className={styles.stat}>
-                                <strong>{profile.followers || 0}</strong> followers
+                                <strong>{profile.followers || 0}</strong> {t('mw.community.profile.followers', 'followers')}
                             </span>
                             <span className={styles.stat}>
-                                <strong>{profile.following || 0}</strong> following
+                                <strong>{profile.following || 0}</strong> {t('mw.community.profile.followingCount', 'following')}
                             </span>
                             {year ? (
                                 <span className={styles.metaItem}>
                                     <Calendar size={14} />
-                                    Joined {year}
+                                    {t('mw.community.profile.joined', 'Joined {year}', {year})}
                                 </span>
                             ) : null}
                             {typeof profile.index === 'number' ? (
-                                <span className={styles.metaItem}>Account #{profile.index}</span>
+                                <span className={styles.metaItem}>{t('mw.community.profile.accountNumber', 'Account #{index}', {index: profile.index})}</span>
                             ) : null}
                         </div>
                     </div>
@@ -245,27 +253,31 @@ const Profile = () => {
                             onClick={toggleFollow}
                         >
                             {profile.followed ? <UserCheck size={16} /> : <UserPlus size={16} />}
-                            {profile.followed ? 'Following' : 'Follow'}
+                            {profile.followed ?
+                                t('mw.community.profile.following', 'Following') :
+                                t('mw.community.profile.follow', 'Follow')}
                         </button>
                     ) : null}
                     {user && !isSelf ? (
                         <button
                             className={styles.followButton}
-                            title={`Send credits to ${profile.username || name}`}
+                            title={t('mw.community.profile.sendCreditsTo', 'Send credits to {name}', {
+                                name: profile.username || name
+                            })}
                             onClick={() => setDonating(true)}
                         >
                             <Coins size={15} />
-                            Donate
+                            {t('mw.community.profile.donate', 'Donate')}
                         </button>
                     ) : null}
                     {user && !isSelf ? (
                         <button
                             className={styles.followingButton}
-                            title="Report this user"
+                            title={t('mw.community.profile.reportUser', 'Report this user')}
                             onClick={() => setReporting(true)}
                         >
                             <Flag size={15} />
-                            Report
+                            {t('mw.community.profile.report', 'Report')}
                         </button>
                     ) : null}
                     {isSelf ? (
@@ -276,7 +288,7 @@ const Profile = () => {
                             rel="noreferrer"
                         >
                             <Pencil size={15} />
-                            Edit profile
+                            {t('mw.community.profile.editProfile', 'Edit profile')}
                         </a>
                     ) : null}
                 </header>
@@ -286,13 +298,16 @@ const Profile = () => {
 
             {!onMistWarp ? (
                 <div className={styles.notOnMistwarp}>
-                    Not on Bilup yet. This is {profile.username || name}&apos;s Rotur profile.
+                    {t('mw.community.profile.notOnBilup',
+                        'Not on Bilup yet. This is {name}\'s Rotur profile.', {
+                            name: profile.username || name
+                        })}
                 </div>
             ) : null}
 
             {featuredProject ? (
                 <section className={styles.section}>
-                    <h2 className={styles.sectionTitle}>Featured project</h2>
+                    <h2 className={styles.sectionTitle}>{t('mw.community.profile.featuredProject', 'Featured project')}</h2>
                     <div className={styles.grid}>
                         <ProjectCard project={featuredProject} />
                     </div>
@@ -301,7 +316,7 @@ const Profile = () => {
 
             {otherProjects.length ? (
                 <section className={styles.section}>
-                    <h2 className={styles.sectionTitle}>Projects</h2>
+                    <h2 className={styles.sectionTitle}>{t('mw.community.profile.projects', 'Projects')}</h2>
                     <div className={styles.grid}>
                         {otherProjects.map(project => (
                             <ProjectCard
@@ -315,7 +330,7 @@ const Profile = () => {
 
             {user && user.isAdmin && unsharedProjects.length ? (
                 <section className={styles.section}>
-                    <h2 className={styles.sectionTitle}>Unshared projects (admin only)</h2>
+                    <h2 className={styles.sectionTitle}>{t('mw.community.profile.unsharedAdmin', 'Unshared projects (admin only)')}</h2>
                     <div className={styles.grid}>
                         {unsharedProjects.map(project => (
                             <ProjectCard
@@ -330,14 +345,16 @@ const Profile = () => {
             <section className={styles.section}>
                 <div className={styles.sectionHead}>
                     <h2 className={styles.sectionTitle}>
-                        Followers - {profile.followers || followers.length}
+                        {t('mw.community.profile.followersHeading', 'Followers - {count}', {
+                            count: profile.followers || followers.length
+                        })}
                     </h2>
                     {followers.length ? (
                         <Link
                             to={`/users/${name}/followers`}
                             className={styles.seeAll}
                         >
-                            See all
+                            {t('mw.community.profile.seeAll', 'See all')}
                             <ChevronRight size={14} />
                         </Link>
                     ) : null}
@@ -359,14 +376,14 @@ const Profile = () => {
                         ))}
                     </div>
                 ) : (
-                    <p className={styles.sectionEmpty}>No followers yet.</p>
+                    <p className={styles.sectionEmpty}>{t('mw.community.profile.noFollowers', 'No followers yet.')}</p>
                 )}
             </section>
 
             {onMistWarp ? (
                 <section className={styles.section}>
                     <div className={styles.sectionHead}>
-                        <h2 className={styles.sectionTitle}>Comments</h2>
+                        <h2 className={styles.sectionTitle}>{t('mw.community.profile.comments', 'Comments')}</h2>
                         {isSelf ? (
                             <button
                                 className={styles.commentsToggle}
@@ -374,7 +391,9 @@ const Profile = () => {
                                 disabled={commentsBusy}
                             >
                                 {commentsOff ? <MessageSquare size={14} /> : <MessageSquareOff size={14} />}
-                                {commentsOff ? 'Turn on comments' : 'Turn off comments'}
+                                {commentsOff ?
+                                    t('mw.community.profile.turnOnComments', 'Turn on comments') :
+                                    t('mw.community.profile.turnOffComments', 'Turn off comments')}
                             </button>
                         ) : null}
                     </div>
@@ -393,6 +412,7 @@ const Profile = () => {
 };
 
 const DonateModal = ({recipient, onClose}) => {
+    const intl = useIntl();
     const [amount, setAmount] = useState('');
     const [busy, setBusy] = useState(false);
     const [status, setStatus] = useState(null);
@@ -402,21 +422,33 @@ const DonateModal = ({recipient, onClose}) => {
     const send = async () => {
         const value = Math.round((Number(amount) || 0) * 100) / 100;
         if (!value || value <= 0) {
-            setStatus('Enter an amount greater than 0.');
+            setStatus(intl.formatMessage({
+                id: 'mw.community.profile.enterAmount',
+                defaultMessage: 'Enter an amount greater than 0.'
+            }));
             return;
         }
         setBusy(true);
         setStatus(null);
         try {
-            await payUser(recipient, value, `Bilup donation to ${recipient}`);
+            await payUser(recipient, value, intl.formatMessage({
+                id: 'mw.community.profile.donationMemo',
+                defaultMessage: 'Bilup donation to {recipient}'
+            }, {recipient}));
             setSent(value);
         } catch (e) {
             if (isInsufficientFunds(e)) {
                 window.location.assign(KO_FI_SHOP_URL);
             } else {
                 setStatus(e.needsReauth ?
-                    'Your current login cannot send credits. Log out and back in, then try again.' :
-                    (e.message || 'Could not send credits.'));
+                    intl.formatMessage({
+                        id: 'mw.community.profile.reauthNeeded',
+                        defaultMessage: 'Your current login cannot send credits. Log out and back in, then try again.'
+                    }) :
+                    (e.message || intl.formatMessage({
+                        id: 'mw.community.profile.sendFailed',
+                        defaultMessage: 'Could not send credits.'
+                    })));
             }
         } finally {
             setBusy(false);
@@ -437,12 +469,18 @@ const DonateModal = ({recipient, onClose}) => {
                 <div className={styles.donateHead}>
                     <span className={styles.donateHeadTitle}>
                         <Coins size={17} />
-                        {`Donate to ${recipient}`}
+                        {intl.formatMessage({
+                            id: 'mw.community.profile.donateTo',
+                            defaultMessage: 'Donate to {recipient}'
+                        }, {recipient})}
                     </span>
                     <button
                         className={styles.donateClose}
                         onClick={onClose}
-                        aria-label="Close"
+                        aria-label={intl.formatMessage({
+                            id: 'mw.community.profile.close',
+                            defaultMessage: 'Close'
+                        })}
                     >
                         <X size={18} />
                     </button>
@@ -450,23 +488,35 @@ const DonateModal = ({recipient, onClose}) => {
                 {sent ? (
                     <div className={styles.donateDone}>
                         <span className={styles.donateDoneIcon}><Coins size={28} /></span>
-                        <p>{`Sent ${sent} credits to ${recipient}.`}</p>
+                        <p>{intl.formatMessage({
+                            id: 'mw.community.profile.sentCredits',
+                            defaultMessage: 'Sent {amount} credits to {recipient}.'
+                        }, {amount: sent, recipient})}</p>
                         <button
                             className={styles.donateSend}
                             onClick={onClose}
-                        >Done</button>
+                        >{intl.formatMessage({
+                            id: 'mw.community.profile.done',
+                            defaultMessage: 'Done'
+                        })}</button>
                     </div>
                 ) : (
                     <div className={styles.donateBody}>
                         <p className={styles.donateText}>
-                            {`Send Rotur credits straight to ${recipient}. This transfers directly from your account.`}
+                            {intl.formatMessage({
+                                id: 'mw.community.profile.donateText',
+                                defaultMessage: 'Send Rotur credits straight to {recipient}. This transfers directly from your account.'
+                            }, {recipient})}
                         </p>
                         <input
                             className={styles.donateInput}
                             type="number"
                             min="1"
                             step="1"
-                            placeholder="Amount in credits"
+                            placeholder={intl.formatMessage({
+                                id: 'mw.community.profile.amountPlaceholder',
+                                defaultMessage: 'Amount in credits'
+                            })}
                             value={amount}
                             onChange={event => setAmount(event.target.value)}
                         />
@@ -477,7 +527,9 @@ const DonateModal = ({recipient, onClose}) => {
                             disabled={busy}
                         >
                             <Coins size={16} />
-                            {busy ? 'Sending…' : 'Send credits'}
+                            {busy ?
+                                intl.formatMessage({id: 'mw.community.profile.sending', defaultMessage: 'Sending…'}) :
+                                intl.formatMessage({id: 'mw.community.profile.sendCredits', defaultMessage: 'Send credits'})}
                         </button>
                     </div>
                 )}

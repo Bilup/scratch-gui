@@ -173,7 +173,7 @@ import {
     FilePlusCorner, Upload, RefreshCcw, ClockPlus, Package, FileInput,
     Save, ArchiveRestore, UserPen, Cloud, PackagePlus, Puzzle,
     Bookmark, GitBranch, FileCog, Bug, Database, Undo, Redo, Handshake, Wrench, Send,
-    Download, AppWindow, Computer, Shield, Code, Code2, MessageCircle, TerminalSquare, ChartColumn, ListTodo,
+    Download, AppWindow, Computer, Shield, Code, Code2, TerminalSquare, ChartColumn, ListTodo,
     Blocks as BlocksIcon, Menu as MenuIcon, Globe, ExternalLink, Pause, Play, HelpCircle
 } from 'lucide-react';
 
@@ -2136,16 +2136,6 @@ class MenuBar extends React.Component {
                                             id="mw.menuBar.help"
                                         />
                                     </MenuItem>
-                                </MenuSection>
-                                <MenuSection>
-                                    <MenuItemLink href="https://originchats.mistium.com?server=chats.mistium.com">
-                                        <MessageCircle />
-                                        <FormattedMessage
-                                            defaultMessage="originChats"
-                                            description="Menu bar item to join originChats"
-                                            id="tw.menuBar.joinDiscord"
-                                        />
-                                    </MenuItemLink>
                                 </MenuSection>
                             </MenuBarMenu>
                         </MenuLabel>

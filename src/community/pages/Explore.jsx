@@ -1,5 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {useSearchParams, Link} from 'react-router-dom';
+import {FormattedMessage} from 'react-intl';
+import {useIntl} from '../../lib/tw-use-intl.jsx';
 import api from '../api';
 import useLatest from '../use-latest.js';
 import ProjectCard from '../components/ProjectCard.jsx';
@@ -7,13 +9,14 @@ import Avatar from '../components/Avatar.jsx';
 import Button from '../components/ui/Button.jsx';
 import styles from './Explore.module.css';
 
-const SORTS = [
-    {key: 'trending', label: 'Trending'},
-    {key: 'recent', label: 'Recent'},
-    {key: 'loved', label: 'Most loved'}
+const SORT_KEYS = [
+    {key: 'trending', id: 'mw.community.explore.trending', default: 'Trending'},
+    {key: 'recent', id: 'mw.community.explore.recent', default: 'Recent'},
+    {key: 'loved', id: 'mw.community.explore.mostLoved', default: 'Most loved'}
 ];
 
 const Explore = () => {
+    const intl = useIntl();
     const [params, setParams] = useSearchParams();
     const sort = params.get('sort') || 'trending';
     const q = params.get('q') || '';
@@ -48,12 +51,27 @@ const Explore = () => {
         setParams(next);
     };
 
+    const sorts = SORT_KEYS.map(option => ({
+        key: option.key,
+        label: intl.formatMessage({id: option.id, defaultMessage: option.default})
+    }));
+
     return (
         <main className={styles.page}>
             <div className={styles.head}>
-                <h1>{q ? `Results for "${q}"` : 'Explore'}</h1>
+                <h1>
+                    {q ?
+                        intl.formatMessage({
+                            id: 'mw.community.explore.resultsFor',
+                            defaultMessage: 'Results for "{q}"'
+                        }, {q}) :
+                        intl.formatMessage({
+                            id: 'mw.community.explore.title',
+                            defaultMessage: 'Explore'
+                        })}
+                </h1>
                 <div className={styles.tabs}>
-                    {SORTS.map(option => (
+                    {sorts.map(option => (
                         <button
                             key={option.key}
                             className={option.key === sort ? styles.tabActive : styles.tab}
@@ -77,9 +95,19 @@ const Explore = () => {
                             <div className={styles.personInfo}>
                                 <span className={styles.personName}>{person.username}</span>
                                 <span className={styles.personMeta}>
-                                    {person.followers ?? 0} {person.followers === 1 ? 'follower' : 'followers'}
+                                    <FormattedMessage
+                                        defaultMessage="{count} followers"
+                                        description="User follower count on the explore page"
+                                        id="mw.community.explore.followers"
+                                        values={{count: person.followers ?? 0}}
+                                    />
                                     <br />
-                                    {person.projects} {person.projects === 1 ? 'project' : 'projects'}
+                                    <FormattedMessage
+                                        defaultMessage="{count} projects"
+                                        description="User project count on the explore page"
+                                        id="mw.community.explore.projects"
+                                        values={{count: person.projects}}
+                                    />
                                 </span>
                             </div>
                         </Link>
@@ -87,11 +115,27 @@ const Explore = () => {
                 </div>
             ) : null}
             {loading ? (
-                <p className={styles.status}>Loading…</p>
+                <p className={styles.status}>
+                    <FormattedMessage
+                        defaultMessage="Loading…"
+                        description="Explore page loading state"
+                        id="mw.community.explore.loading"
+                    />
+                </p>
             ) : failed ? (
                 <p className={styles.status}>
-                    Couldn&apos;t load.{' '}
-                    <Button onClick={() => setAttempt(a => a + 1)}>Try again</Button>
+                    <FormattedMessage
+                        defaultMessage="Couldn't load."
+                        description="Explore page load failure"
+                        id="mw.community.explore.failed"
+                    />{' '}
+                    <Button onClick={() => setAttempt(a => a + 1)}>
+                        <FormattedMessage
+                            defaultMessage="Try again"
+                            description="Retry button on the explore page"
+                            id="mw.community.explore.tryAgain"
+                        />
+                    </Button>
                 </p>
             ) : projects.length ? (
                 <div className={styles.grid}>
@@ -103,7 +147,13 @@ const Explore = () => {
                     ))}
                 </div>
             ) : (
-                <p className={styles.status}>No projects found.</p>
+                <p className={styles.status}>
+                    <FormattedMessage
+                        defaultMessage="No projects found."
+                        description="Explore page empty state"
+                        id="mw.community.explore.noProjects"
+                    />
+                </p>
             )}
         </main>
     );

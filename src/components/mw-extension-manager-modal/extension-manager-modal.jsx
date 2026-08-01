@@ -123,18 +123,12 @@ const ExtensionManagerModal = props => {
         const vm = props.vm;
         if (!vm) return;
 
-        const onAdded = extensionObject => {
-            const id = extensionObject && extensionObject.id;
-            if (!id) return;
-
-            setExtensionIds(old => (old.includes(id) ? old : [...old, id]));
+        const onAdded = () => {
+            updateExtensionIds();
         };
-        const onRemoved = extensionObject => {
-            const id = extensionObject && extensionObject.id;
-            if (!id) return;
-
-            setExtensionIds(old => old.filter(i => i !== id));
-            setSelected(old => old.filter(i => i !== id));
+        const onRemoved = () => {
+            updateExtensionIds();
+            setSelected([]);
         };
         const onReordered = info => {
             if (info && Array.isArray(info.ids)) {

@@ -1,14 +1,19 @@
 import React from 'react';
+import {useIntl} from '../../lib/tw-use-intl.jsx';
 import {ShieldCheck} from 'lucide-react';
-import {describePermission, categoryLabel} from '../../lib/rotur/permission-descriptions.js';
+import {
+    describePermission as defaultDescribePermission,
+    categoryLabel as defaultCategoryLabel,
+    categoryOf
+} from '../../lib/rotur/permission-descriptions.js';
 import Modal from './ui/Modal.jsx';
 import Button from './ui/Button.jsx';
 import styles from './RoturConsentModal.module.css';
 
-const groupScopes = scopes => {
+const groupScopes = (scopes, categoryLabelFn) => {
     const groups = {};
     for (const scope of scopes || []) {
-        const label = categoryLabel(scope);
+        const label = categoryLabelFn(scope);
         (groups[label] = groups[label] || []).push(scope);
     }
     return groups;
@@ -18,63 +23,83 @@ const groupScopes = scopes => {
 // of the project iframe). The sandboxed project cannot read or dismiss this, so
 // it can request an action but never approve one on the user's behalf.
 const RoturConsentModal = ({type, data, onAllow, onDeny, onShareThis, onShareAll, onShareNo}) => {
+    const intl = useIntl();
+    const t = (id, defaultMessage, values) => intl.formatMessage({id, defaultMessage}, values);
+    const describePermission = scope => t(
+        `mw.roturPermission.${scope}`,
+        defaultDescribePermission(scope)
+    );
+    const categoryLabel = scope => t(
+        `mw.roturCategory.${categoryOf(scope)}`,
+        defaultCategoryLabel(scope)
+    );
     if (type === 'share') {
         return (
             <Modal
                 icon={ShieldCheck}
-                title="Show activity on your profile?"
+                title={t('mw.roturConsent.shareTitle', 'Show activity on your profile?')}
                 onDismiss={onShareNo}
                 actions={
                     <React.Fragment>
-                        <Button onClick={onShareNo}>Not now</Button>
-                        <Button onClick={onShareAll}>Allow all</Button>
+                        <Button onClick={onShareNo}>{t('mw.roturConsent.notNow', 'Not now')}</Button>
+                        <Button onClick={onShareAll}>{t('mw.roturConsent.allowAll', 'Allow all')}</Button>
                         <Button
                             variant="primary"
                             onClick={onShareThis}
-                        >Just this project</Button>
+                        >{t('mw.roturConsent.justThis', 'Just this project')}</Button>
                     </React.Fragment>
                 }
             >
                 <p className={styles.lead}>
-                    {`"${data.name || 'This project'}" wants to show it on your Rotur profile`}
-                    {data.username ? ` (@${data.username}).` : '.'}
+                    {t('mw.roturConsent.shareBody', '"{name}" wants to show it on your Rotur profile', {
+                        name: data.name || t('mw.roturConsent.thisProject', 'This project')
+                    })}
+                    {data.username ? ` (@${data.username}).` : t('mw.roturConsent.period', '.')}
                 </p>
             </Modal>
         );
     }
-    const groups = groupScopes(data.scopes);
+    const groups = groupScopes(data.scopes, categoryLabel);
     return (
         <Modal
             icon={ShieldCheck}
-            title={type === 'confirm' ? 'Confirm Rotur action' : 'Connect to Rotur'}
+            title={type === 'confirm' ?
+                t('mw.roturConsent.confirmTitle', 'Confirm Rotur action') :
+                t('mw.roturConsent.connectTitle', 'Connect to Rotur')}
             onDismiss={onDeny}
             actions={
                 <React.Fragment>
                     <Button onClick={onDeny}>
-                        {type === 'confirm' ? 'Cancel' : 'Not now'}
+                        {type === 'confirm' ?
+                            t('mw.roturConsent.cancel', 'Cancel') :
+                            t('mw.roturConsent.notNow', 'Not now')}
                     </Button>
                     <Button
                         variant="primary"
                         onClick={onAllow}
                     >
-                        {type === 'confirm' ? 'Allow' : 'Connect'}
+                        {type === 'confirm' ?
+                            t('mw.roturConsent.allow', 'Allow') :
+                            t('mw.roturConsent.connect', 'Connect')}
                     </Button>
                 </React.Fragment>
             }
         >
             {type === 'confirm' ? (
                 <p className={styles.lead}>
-                    {'This project wants to '}
+                    {t('mw.roturConsent.confirmBody', 'This project wants to ')}
                     <b>{data.label}</b>
-                    {data.username ? ` as @${data.username}.` : '.'}
-                    {' Only allow it if you trust this project.'}
+                    {data.username ? ` as @${data.username}.` : t('mw.roturConsent.period', '.')}
+                    {' '}{t('mw.roturConsent.confirmTrust', 'Only allow it if you trust this project.')}
                 </p>
             ) : (
                 <React.Fragment>
                     <p className={styles.lead}>
-                        {`"${data.name || 'This project'}" wants to use your Rotur account`}
+                        {t('mw.roturConsent.connectBody', '"{name}" wants to use your Rotur account', {
+                            name: data.name || t('mw.roturConsent.thisProject', 'This project')
+                        })}
                         {data.username ? ` (@${data.username})` : ''}
-                        {' to:'}
+                        {t('mw.roturConsent.connectTo', ' to:')}
                     </p>
                     {Object.keys(groups).map(label => (
                         <div
@@ -90,7 +115,7 @@ const RoturConsentModal = ({type, data, onAllow, onDeny, onShareThis, onShareAll
                         </div>
                     ))}
                     {(data.scopes || []).length === 0 ? (
-                        <p className={styles.lead}>{'This only reads your public Rotur info.'}</p>
+                        <p className={styles.lead}>{t('mw.roturConsent.noScopes', 'This only reads your public Rotur info.')}</p>
                     ) : null}
                 </React.Fragment>
             )}

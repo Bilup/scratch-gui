@@ -346,6 +346,18 @@ class ExtensionLibrary extends React.PureComponent {
             this.setState({ gallery: newGallery });
         });
         
+        // Keep the "loaded" indicator in sync while this modal is open:
+        // loading or removing an extension changes isExtensionLoaded() results,
+        // so re-render whenever the VM emits a relevant event. This component is
+        // a PureComponent, so a no-op setState would be skipped by its shallow
+        // shouldComponentUpdate; forceUpdate bypasses that check.
+        this.handleExtensionChange = () => this.forceUpdate();
+        const vm = this.props.vm;
+        if (vm && typeof vm.on === 'function') {
+            vm.on('EXTENSION_ADDED', this.handleExtensionChange);
+            vm.on('EXTENSION_REMOVED', this.handleExtensionChange);
+        }
+        
         if (!this.state.gallery) {
             const timeout = setTimeout(() => {
                 this.setState({
@@ -373,6 +385,11 @@ class ExtensionLibrary extends React.PureComponent {
     componentWillUnmount() {
         if (this.unsubscribeGalleryUpdate) {
             this.unsubscribeGalleryUpdate();
+        }
+        const vm = this.props.vm;
+        if (vm && typeof vm.off === 'function') {
+            vm.off('EXTENSION_ADDED', this.handleExtensionChange);
+            vm.off('EXTENSION_REMOVED', this.handleExtensionChange);
         }
     }
     handleItemSelect(item) {
@@ -459,6 +476,14 @@ class ExtensionLibrary extends React.PureComponent {
             }
         }
 
+        const vm = this.props.vm;
+        const isLoaded = item => {
+            if (!vm || !vm.extensionManager || !item || !item.extensionId) {
+                return false;
+            }
+            return vm.extensionManager.isExtensionLoaded(item.extensionId);
+        };
+
         return (
             <LibraryComponent
                 data={library}
@@ -470,6 +495,7 @@ class ExtensionLibrary extends React.PureComponent {
                 visible={this.props.visible}
                 onItemSelected={this.handleItemSelect}
                 onRequestClose={this.props.onRequestClose}
+                isLoaded={isLoaded}
             />
         );
     }

@@ -1,7 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import {IntlProvider} from 'react-intl';
+import {Provider} from 'react-redux';
 
 import ShareWindow from '../../components/mw-share-modal/share-window.jsx';
+import IntlBridge from '../../lib/tw-use-intl.jsx';
 import WindowManager from '../../addons/window-system/window-manager';
 import {openProjectMetadataModal} from '../../reducers/modals';
 
@@ -48,27 +51,38 @@ const openMistWarpShareWindow = ({vm, initialTitle, initialError, action = 'save
 
     shareWindow.setContent(container);
 
-    ReactDOM.render(
-        React.createElement(ShareWindow, {
-            vm,
-            initialTitle,
-            initialError,
-            action,
-            onClose: cleanup,
-            onReviewStorage: () => {
-                cleanup();
-                if (window.ReduxStore) {
-                    window.ReduxStore.dispatch(openProjectMetadataModal('optimiser'));
-                }
-            },
-            onPublished: result => {
-                if (typeof onPublished === 'function') {
-                    onPublished(result);
-                }
+    const store = window.ReduxStore;
+    const shareWindowProps = {
+        vm,
+        initialTitle,
+        initialError,
+        action,
+        onClose: cleanup,
+        onReviewStorage: () => {
+            cleanup();
+            if (window.ReduxStore) {
+                window.ReduxStore.dispatch(openProjectMetadataModal('optimiser'));
             }
-        }),
-        container
-    );
+        },
+        onPublished: result => {
+            if (typeof onPublished === 'function') {
+                onPublished(result);
+            }
+        }
+    };
+    let element;
+    if (store && store.getState().locales) {
+        element = React.createElement(Provider, {store},
+            React.createElement(IntlProvider, {
+                locale: store.getState().locales.locale,
+                messages: store.getState().locales.messages
+            }, React.createElement(IntlBridge, {},
+                React.createElement(ShareWindow, shareWindowProps)))
+        );
+    } else {
+        element = React.createElement(ShareWindow, shareWindowProps);
+    }
+    ReactDOM.render(element, container);
 
     shareWindow.center();
     shareWindow.show();

@@ -1,5 +1,6 @@
 import React, {useEffect, useState, useCallback, useRef} from 'react';
 import {Link} from 'react-router-dom';
+import {useIntl} from '../../lib/tw-use-intl.jsx';
 import {
     Plus, Trash2, Heart, ThumbsDown, Play, Upload, Star, MoreHorizontal, Pencil, ExternalLink, HardDrive,
     SlidersHorizontal, Coins, Eye, TrendingUp, Wallet, HeartHandshake, FolderOpen, Bookmark, LayoutDashboard,
@@ -20,14 +21,16 @@ import styles from './MyStuff.module.css';
 const fmt = value => (Number(value) || 0).toLocaleString();
 const fmtCredits = value => Math.round((Number(value) || 0) * 100) / 100;
 
-const visibilityLabel = project => {
+const visibilityLabel = (project, intl) => {
     const v = project.visibility || (project.shared ? 'public' : 'private');
-    if (v === 'public') return 'Shared';
-    if (v === 'unlisted') return 'Unlisted';
-    return 'Draft';
+    if (v === 'public') return intl.formatMessage({id: 'mw.community.myStuff.shared', defaultMessage: 'Shared'});
+    if (v === 'unlisted') return intl.formatMessage({id: 'mw.community.myStuff.unlisted', defaultMessage: 'Unlisted'});
+    return intl.formatMessage({id: 'mw.community.myStuff.draft', defaultMessage: 'Draft'});
 };
 
 const Overview = ({stats, account, quota}) => {
+    const intl = useIntl();
+    const t = (id, defaultMessage, values) => intl.formatMessage({id, defaultMessage}, values);
     const weekViews = historyRows(stats.viewHistory, 7).reduce((sum, row) => sum + row.value, 0);
     const pct = quota ? (quota.used / quota.limit) * 100 : 0;
     return (
@@ -36,30 +39,30 @@ const Overview = ({stats, account, quota}) => {
                 <div className={`${styles.dashTile} ${styles.tileMonth}`}>
                     <span className={styles.dashIcon}><TrendingUp size={18} /></span>
                     <span className={styles.dashNumber}>{fmt(weekViews)}</span>
-                    <span className={styles.dashLabel}>Views this week</span>
+                    <span className={styles.dashLabel}>{t('mw.community.myStuff.viewsThisWeek', 'Views this week')}</span>
                 </div>
                 <div className={`${styles.dashTile} ${styles.tileViews}`}>
                     <span className={styles.dashIcon}><Eye size={18} /></span>
                     <span className={styles.dashNumber}>{fmt(stats.totalViews)}</span>
-                    <span className={styles.dashLabel}>Total views</span>
+                    <span className={styles.dashLabel}>{t('mw.community.myStuff.totalViews', 'Total views')}</span>
                 </div>
                 <div className={`${styles.dashTile} ${styles.tileHearts}`}>
                     <span className={styles.dashIcon}><Heart size={18} /></span>
                     <span className={styles.dashNumber}>{fmt(stats.totalHearts)}</span>
-                    <span className={styles.dashLabel}>Hearts</span>
+                    <span className={styles.dashLabel}>{t('mw.community.myStuff.hearts', 'Hearts')}</span>
                 </div>
                 {stats.totalRevenue > 0 ? (
                     <div className={`${styles.dashTile} ${styles.tileEarned}`}>
                         <span className={styles.dashIcon}><Coins size={18} /></span>
                         <span className={styles.dashNumber}>{fmtCredits(stats.totalRevenue)}</span>
-                        <span className={styles.dashLabel}>Credits earned</span>
+                        <span className={styles.dashLabel}>{t('mw.community.myStuff.creditsEarned', 'Credits earned')}</span>
                     </div>
                 ) : null}
                 {quota ? (
                     <div className={`${styles.dashTile} ${styles.tileQuota}`}>
                         <span className={styles.dashIcon}><HardDrive size={18} /></span>
                         <span className={styles.dashNumber}>{formatBytes(quota.used)}</span>
-                        <span className={styles.dashLabel}>of {formatBytes(quota.limit)} used</span>
+                        <span className={styles.dashLabel}>{t('mw.community.myStuff.ofUsed', 'of {limit} used', {limit: formatBytes(quota.limit)})}</span>
                         <div className={styles.quotaBarBg}>
                             <div
                                 className={styles.quotaBarFill}
@@ -67,7 +70,7 @@ const Overview = ({stats, account, quota}) => {
                             />
                         </div>
                         <span className={pct >= 80 ? styles.quotaWarn : styles.quotaPct}>
-                            {pct >= 80 ? <AlertTriangle size={14} /> : null}{Math.round(pct)}% full
+                            {pct >= 80 ? <AlertTriangle size={14} /> : null}{t('mw.community.myStuff.percentFull', '{percent}% full', {percent: Math.round(pct)})}
                         </span>
                     </div>
                 ) : null}
@@ -75,32 +78,34 @@ const Overview = ({stats, account, quota}) => {
                     <div className={`${styles.dashTile} ${styles.tileBalance}`}>
                         <span className={styles.dashIcon}><Wallet size={18} /></span>
                         <span className={styles.dashNumber}>{fmtCredits(account.balance)}</span>
-                        <span className={styles.dashLabel}>Balance</span>
+                        <span className={styles.dashLabel}>{t('mw.community.myStuff.balance', 'Balance')}</span>
                         <a
                             className={styles.dashBuy}
                             href={KO_FI_SHOP_URL}
-                        >Buy credits</a>
+                        >{t('mw.community.myStuff.buyCredits', 'Buy credits')}</a>
                     </div>
                 ) : null}
                 {account && account.donationsReceived > 0 ? (
                     <div className={`${styles.dashTile} ${styles.tileDonations}`}>
                         <span className={styles.dashIcon}><HeartHandshake size={18} /></span>
                         <span className={styles.dashNumber}>{fmtCredits(account.donationsReceived)}</span>
-                        <span className={styles.dashLabel}>Donations received</span>
+                        <span className={styles.dashLabel}>{t('mw.community.myStuff.donationsReceived', 'Donations received')}</span>
                     </div>
                 ) : null}
             </div>
             <StatChart
-                title="Views over the last 2 weeks"
+                title={t('mw.community.myStuff.viewsChart', 'Views over the last 2 weeks')}
                 rows={historyRows(stats.viewHistory, 14)}
                 accent="#4C97FF"
-                emptyText="No views yet. Share a project to get started."
+                emptyText={t('mw.community.myStuff.noViewsYet', 'No views yet. Share a project to get started.')}
             />
         </section>
     );
 };
 
 const UploadUsage = ({quota, onRefresh}) => {
+    const intl = useIntl();
+    const t = (id, defaultMessage, values) => intl.formatMessage({id, defaultMessage}, values);
     const [showConfirm, setShowConfirm] = useState(false);
     const [amount, setAmount] = useState(20);
     const [resetting, setResetting] = useState(false);
@@ -133,8 +138,8 @@ const UploadUsage = ({quota, onRefresh}) => {
             setPayTo(data.payTo);
             setAmount(data.amount);
             setShowConfirm(true);
-        }, 'Could not start reset');
-    }, [runReset]);
+        }, t('mw.community.myStuff.couldNotStartReset', 'Could not start reset'));
+    }, [runReset, t]);
 
     const confirmReset = useCallback(() => {
         runReset(async () => {
@@ -142,8 +147,8 @@ const UploadUsage = ({quota, onRefresh}) => {
             setShowConfirm(false);
             setResetDone(true);
             onRefresh();
-        }, 'Reset failed');
-    }, [runReset, resetKey, onRefresh]);
+        }, t('mw.community.myStuff.resetFailed', 'Reset failed'));
+    }, [runReset, resetKey, onRefresh, t]);
 
     const dismiss = useCallback(() => {
         setShowConfirm(false);
@@ -157,14 +162,14 @@ const UploadUsage = ({quota, onRefresh}) => {
         null;
 
     if (!quota) {
-        return <p className={styles.status}>Loading upload info…</p>;
+        return <p className={styles.status}>{t('mw.community.myStuff.loadingUploadInfo', 'Loading upload info…')}</p>;
     }
 
     const summaryStats = [
-        {value: formatBytes(quota.used), label: 'Used'},
-        {value: formatBytes(quota.limit), label: 'Limit'},
-        ...(oldestDate ? [{value: oldestDate, label: 'Oldest upload'}] : []),
-        {value: quota.eventCount || 0, label: 'Uploads this week'}
+        {value: formatBytes(quota.used), label: t('mw.community.myStuff.used', 'Used')},
+        {value: formatBytes(quota.limit), label: t('mw.community.myStuff.limit', 'Limit')},
+        ...(oldestDate ? [{value: oldestDate, label: t('mw.community.myStuff.oldestUpload', 'Oldest upload')}] : []),
+        {value: quota.eventCount || 0, label: t('mw.community.myStuff.uploadsThisWeek', 'Uploads this week')}
     ];
 
     return (
@@ -180,9 +185,9 @@ const UploadUsage = ({quota, onRefresh}) => {
 
             <div className={styles.uploadBarSection}>
                 <div className={styles.uploadBarLabel}>
-                    {Math.round(pct)}% full
+                    {t('mw.community.myStuff.percentFull', '{percent}% full', {percent: Math.round(pct)})}
                     {pct >= 80 ? (
-                        <span className={styles.uploadWarn}> <AlertTriangle size={14} /> Nearly full</span>
+                        <span className={styles.uploadWarn}> <AlertTriangle size={14} /> {t('mw.community.myStuff.nearlyFull', 'Nearly full')}</span>
                     ) : null}
                 </div>
                 <div className={styles.uploadBarBg}>
@@ -194,23 +199,24 @@ const UploadUsage = ({quota, onRefresh}) => {
             </div>
 
             <StatChart
-                title="Daily upload volume"
+                title={t('mw.community.myStuff.dailyVolume', 'Daily upload volume')}
                 rows={historyRows(dailyMap, 14)}
                 format={formatBytes}
                 accent="#4C97FF"
-                emptyText="No uploads in the current window."
+                emptyText={t('mw.community.myStuff.noUploads', 'No uploads in the current window.')}
             />
 
             <div className={styles.uploadReset}>
-                <h3 className={styles.uploadChartTitle}>Reset upload quota</h3>
+                <h3 className={styles.uploadChartTitle}>{t('mw.community.myStuff.resetQuota', 'Reset upload quota')}</h3>
                 <p className={styles.uploadResetDesc}>
-                    Reset your weekly upload usage back to zero. This costs{' '}
-                    <strong>{amount || 20} credits</strong>.
+                    {t('mw.community.myStuff.resetDesc',
+                        'Reset your weekly upload usage back to zero. This costs ')}{' '}
+                    <strong>{t('mw.community.myStuff.credits', '{amount} credits', {amount: amount || 20})}</strong>.
                 </p>
 
                 {resetDone ? (
                     <div className={styles.uploadResetDone}>
-                        <p><CheckCircle size={16} /> Quota reset successfully! Your upload usage is now 0.</p>
+                        <p><CheckCircle size={16} /> {t('mw.community.myStuff.resetDoneMsg', 'Quota reset successfully! Your upload usage is now 0.')}</p>
                     </div>
                 ) : resetError ? (
                     <div className={styles.uploadResetError}>
@@ -218,7 +224,7 @@ const UploadUsage = ({quota, onRefresh}) => {
                         <button
                             className={styles.secondary}
                             onClick={() => setResetError('')}
-                        >Dismiss</button>
+                        >{t('mw.community.myStuff.dismiss', 'Dismiss')}</button>
                     </div>
                 ) : (
                     <button
@@ -227,7 +233,9 @@ const UploadUsage = ({quota, onRefresh}) => {
                         disabled={resetting}
                     >
                         <RefreshCw size={16} />
-                        {resetting ? 'Starting…' : 'Reset quota'}
+                        {resetting ?
+                            t('mw.community.myStuff.starting', 'Starting…') :
+                            t('mw.community.myStuff.resetQuotaBtn', 'Reset quota')}
                     </button>
                 )}
             </div>
@@ -240,11 +248,13 @@ const UploadUsage = ({quota, onRefresh}) => {
                         role="dialog"
                         aria-modal="true"
                     >
-                        <h3 className={styles.confirmTitle}>Reset upload quota?</h3>
+                        <h3 className={styles.confirmTitle}>{t('mw.community.myStuff.confirmResetTitle', 'Reset upload quota?')}</h3>
                         <p className={styles.confirmText}>
-                            This will cost <strong>{amount} credits</strong>
-                            {payTo ? <> sent to <code>{payTo}</code></> : ''}.
-                            Your upload usage will be reset to zero. Continue?
+                            {t('mw.community.myStuff.confirmResetCost', 'This will cost {credits}', {
+                                credits: t('mw.community.myStuff.credits', '{amount} credits', {amount})
+                            })}
+                            {payTo ? <>{t('mw.community.myStuff.confirmResetPayTo', ' sent to {payTo}', {payTo})}</> : ''}
+                            {t('mw.community.myStuff.confirmResetEnd', '. Your upload usage will be reset to zero. Continue?')}
                         </p>
                         <div className={styles.confirmActions}>
                             <button
@@ -252,13 +262,15 @@ const UploadUsage = ({quota, onRefresh}) => {
                                 onClick={confirmReset}
                                 disabled={resetting}
                             >
-                                {resetting ? 'Resetting…' : `Spend ${amount} credits`}
+                                {resetting ?
+                                    t('mw.community.myStuff.resetting', 'Resetting…') :
+                                    t('mw.community.myStuff.spendCredits', 'Spend {amount} credits', {amount})}
                             </button>
                             <button
                                 className={styles.secondary}
                                 onClick={dismiss}
                                 disabled={resetting}
-                            >Cancel</button>
+                            >{t('mw.community.myStuff.cancel', 'Cancel')}</button>
                         </div>
                     </div>
                 </div>
@@ -268,6 +280,8 @@ const UploadUsage = ({quota, onRefresh}) => {
 };
 
 const AgreementTab = () => {
+    const intl = useIntl();
+    const t = (id, defaultMessage, values) => intl.formatMessage({id, defaultMessage}, values);
     const [agreement, setAgreement] = useState(null);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
@@ -294,20 +308,20 @@ const AgreementTab = () => {
                 // already accepted, just update the local state
             }
         } catch (e) {
-            setError(e.message || 'Could not accept agreement.');
+            setError(e.message || t('mw.community.myStuff.couldNotAccept', 'Could not accept agreement.'));
         } finally {
             setBusy(false);
         }
     };
 
     if (!agreement) {
-        return <p className={styles.status}>Loading agreement…</p>;
+        return <p className={styles.status}>{t('mw.community.myStuff.loadingAgreement', 'Loading agreement…')}</p>;
     }
 
     if (!agreement.text && agreement.version === 0) {
         return (
             <section>
-                <p className={styles.status}>No agreement has been set yet.</p>
+                <p className={styles.status}>{t('mw.community.myStuff.noAgreement', 'No agreement has been set yet.')}</p>
             </section>
         );
     }
@@ -322,13 +336,17 @@ const AgreementTab = () => {
             <div className={styles.agreementFooter}>
                 {alreadyAccepted ? (
                     <p className={styles.agreementAccepted}>
-                        <CheckCircle size={16} /> You have accepted version {agreement.version} (updated{' '}
-                        {new Date(agreement.updatedAt).toLocaleDateString()}).
+                        <CheckCircle size={16} /> {t('mw.community.myStuff.acceptedVersion',
+                            'You have accepted version {version} (updated {date}).', {
+                                version: agreement.version,
+                                date: new Date(agreement.updatedAt).toLocaleDateString()
+                            })}
                     </p>
                 ) : (
                     <>
                         <p className={styles.agreementPrompt}>
-                            To continue using the platform, please accept this agreement.
+                            {t('mw.community.myStuff.acceptPrompt',
+                                'To continue using the platform, please accept this agreement.')}
                         </p>
                         {error ? <p className={styles.error}>{error}</p> : null}
                         <button
@@ -336,7 +354,9 @@ const AgreementTab = () => {
                             onClick={handleAccept}
                             disabled={busy}
                         >
-                            {busy ? 'Accepting…' : `Accept v${agreement.version}`}
+                            {busy ?
+                                t('mw.community.myStuff.accepting', 'Accepting…') :
+                                t('mw.community.myStuff.acceptV', 'Accept v{version}', {version: agreement.version})}
                         </button>
                     </>
                 )}
@@ -346,15 +366,17 @@ const AgreementTab = () => {
 };
 
 const SECTIONS = [
-    {key: 'overview', label: 'Overview', icon: LayoutDashboard},
-    {key: 'projects', label: 'My Projects', icon: FolderOpen},
-    {key: 'uploads', label: 'Uploads', icon: HardDrive},
-    {key: 'agreement', label: 'Agreement', icon: HeartHandshake},
-    {key: 'library', label: 'My Library', icon: Bookmark},
-    {key: 'loves', label: 'My Loved', icon: Heart}
+    {key: 'overview', labelKey: 'mw.community.myStuff.section.overview', labelDefault: 'Overview', icon: LayoutDashboard},
+    {key: 'projects', labelKey: 'mw.community.myStuff.section.projects', labelDefault: 'My Projects', icon: FolderOpen},
+    {key: 'uploads', labelKey: 'mw.community.myStuff.section.uploads', labelDefault: 'Uploads', icon: HardDrive},
+    {key: 'agreement', labelKey: 'mw.community.myStuff.section.agreement', labelDefault: 'Agreement', icon: HeartHandshake},
+    {key: 'library', labelKey: 'mw.community.myStuff.section.library', labelDefault: 'My Library', icon: Bookmark},
+    {key: 'loves', labelKey: 'mw.community.myStuff.section.loves', labelDefault: 'My Loved', icon: Heart}
 ];
 
 const MyStuff = () => {
+    const intl = useIntl();
+    const t = (id, defaultMessage, values) => intl.formatMessage({id, defaultMessage}, values);
     const {user, loading} = useUser();
     const [tab, setTab] = useState('overview');
     const [projects, setProjects] = useState(null);
@@ -492,7 +514,7 @@ const MyStuff = () => {
 
     const deleteProject = async id => {
         setOpenMenu('');
-        if (!window.confirm('Delete this project forever? This cannot be undone.')) {
+        if (!window.confirm(t('mw.community.myStuff.deleteConfirm', 'Delete this project forever? This cannot be undone.'))) {
             return;
         }
         try {
@@ -537,11 +559,11 @@ const MyStuff = () => {
         event.target.value = '';
         if (!file) return;
         if (!file.name.toLowerCase().endsWith('.sb3')) {
-            setActionError('Choose a Scratch .sb3 project file.');
+            setActionError(t('mw.community.myStuff.chooseSb3', 'Choose a Scratch .sb3 project file.'));
             return;
         }
         if (quota && quota.used >= quota.limit) {
-            setActionError('Your weekly upload quota is full. Free up space or reset it before uploading.');
+            setActionError(t('mw.community.myStuff.quotaFull', 'Your weekly upload quota is full. Free up space or reset it before uploading.'));
             return;
         }
 
@@ -567,7 +589,7 @@ const MyStuff = () => {
             setTab('projects');
             load();
         } catch (e) {
-            setActionError(e.message || 'Could not upload that project.');
+            setActionError(e.message || t('mw.community.myStuff.uploadFailed', 'Could not upload that project.'));
         } finally {
             setUploading(false);
         }
@@ -590,7 +612,7 @@ const MyStuff = () => {
             setTab('projects');
             load();
         } catch (e) {
-            setAgreeError(e.message || 'Could not accept agreement.');
+            setAgreeError(e.message || t('mw.community.myStuff.couldNotAccept', 'Could not accept agreement.'));
         } finally {
             setAgreeBusy(false);
             setUploading(false);
@@ -606,16 +628,21 @@ const MyStuff = () => {
     useEscape(showAgreeModal ? cancelAgreeModal : null);
 
     if (loading) {
-        return <main className={styles.page}><p className={styles.status}>Loading…</p></main>;
+        return <main className={styles.page}><p className={styles.status}>{t('mw.community.myStuff.loading', 'Loading…')}</p></main>;
     }
     if (!user) {
-        return <main className={styles.page}><p className={styles.status}>Sign in to see your projects.</p></main>;
+        return <main className={styles.page}><p className={styles.status}>{t('mw.community.myStuff.signIn', 'Sign in to see your projects.')}</p></main>;
     }
+
+    const sections = SECTIONS.map(section => ({
+        ...section,
+        label: t(section.labelKey, section.labelDefault)
+    }));
 
     return (
         <main className={styles.page}>
             <div className={styles.head}>
-                <h1>My stuff</h1>
+                <h1>{t('mw.community.myStuff.title', 'My stuff')}</h1>
                 <div className={styles.headActions}>
                     <input
                         ref={uploadInput}
@@ -630,14 +657,16 @@ const MyStuff = () => {
                         onClick={() => uploadInput.current.click()}
                     >
                         <Upload size={16} />
-                        {uploading ? 'Uploading…' : 'Upload .sb3'}
+                        {uploading ?
+                            t('mw.community.myStuff.uploading', 'Uploading…') :
+                            t('mw.community.myStuff.uploadSb3', 'Upload .sb3')}
                     </button>
                     <a
                         className={styles.newButton}
                         href={editorUrl()}
                     >
                         <Plus size={16} />
-                        New project
+                        {t('mw.community.myStuff.newProject', 'New project')}
                     </a>
                 </div>
             </div>
@@ -646,12 +675,15 @@ const MyStuff = () => {
 
             {quota && (quota.used / quota.limit) * 100 >= 80 ? (
                 <p className={styles.quotaWarning}>
-                    <AlertTriangle size={14} /> You&apos;ve used {formatBytes(quota.used)} of
-                    your {formatBytes(quota.limit)} upload quota
-                    ({Math.round((quota.used / quota.limit) * 100)}%).{' '}
+                    <AlertTriangle size={14} /> {t('mw.community.myStuff.quotaWarning',
+                        'You\'ve used {used} of your {limit} upload quota ({percent}%).', {
+                            used: formatBytes(quota.used),
+                            limit: formatBytes(quota.limit),
+                            percent: Math.round((quota.used / quota.limit) * 100)
+                        })}{' '}
                     {quota.used >= quota.limit ?
-                        'You cannot upload new projects until usage drops.' :
-                        'Consider managing your projects to free up space.'}
+                        t('mw.community.myStuff.quotaWarningFull', 'You cannot upload new projects until usage drops.') :
+                        t('mw.community.myStuff.quotaWarningManage', 'Consider managing your projects to free up space.')}
                 </p>
             ) : null}
 
@@ -664,7 +696,9 @@ const MyStuff = () => {
                         aria-modal="true"
                     >
                         <h2 className={styles.confirmTitle}>
-                            Upload agreement v{agreeData.version}
+                            {t('mw.community.myStuff.uploadAgreement', 'Upload agreement v{version}', {
+                                version: agreeData.version
+                            })}
                         </h2>
                         <div className={styles.agreeModalBody}>
                             <pre className={styles.agreementText}>{agreeData.text}</pre>
@@ -673,7 +707,7 @@ const MyStuff = () => {
                             <p className={styles.error}>{agreeError}</p>
                         ) : null}
                         <p className={styles.agreementPrompt}>
-                            You must accept this agreement before you can upload projects.
+                            {t('mw.community.myStuff.mustAccept', 'You must accept this agreement before you can upload projects.')}
                         </p>
                         <div className={styles.confirmActions}>
                             <button
@@ -681,13 +715,17 @@ const MyStuff = () => {
                                 onClick={confirmAgreeAndUpload}
                                 disabled={agreeBusy}
                             >
-                                {agreeBusy ? 'Accepting…' : `Accept v${agreeData.version} & upload`}
+                                {agreeBusy ?
+                                    t('mw.community.myStuff.accepting', 'Accepting…') :
+                                    t('mw.community.myStuff.acceptAndUpload', 'Accept v{version} & upload', {
+                                        version: agreeData.version
+                                    })}
                             </button>
                             <button
                                 className={styles.secondary}
                                 onClick={cancelAgreeModal}
                                 disabled={agreeBusy}
-                            >Cancel</button>
+                            >{t('mw.community.myStuff.cancel', 'Cancel')}</button>
                         </div>
                     </div>
                 </div>
@@ -695,10 +733,10 @@ const MyStuff = () => {
 
             <div className={styles.layout}>
                 <Sidebar
-                    sections={SECTIONS}
+                    sections={sections}
                     active={tab}
                     onChange={setTab}
-                    ariaLabel="My stuff sections"
+                    ariaLabel={t('mw.community.myStuff.ariaLabel', 'My stuff sections')}
                 />
                 <div className={styles.content}>
                     {tab === 'overview' ? (
@@ -709,7 +747,7 @@ const MyStuff = () => {
                                 quota={quota}
                             />
                         ) : (
-                            <p className={styles.status}>Loading…</p>
+                            <p className={styles.status}>{t('mw.community.myStuff.loading', 'Loading…')}</p>
                         )
                     ) : tab === 'uploads' ? (
                         <UploadUsage
@@ -720,14 +758,14 @@ const MyStuff = () => {
                         <AgreementTab />
                     ) : failed ? (
                         <p className={styles.status}>
-                            Couldn&apos;t load.{' '}
+                            {t('mw.community.myStuff.couldNotLoad', 'Couldn\'t load.')}{' '}
                             <button
                                 className={styles.secondary}
                                 onClick={load}
-                            >Try again</button>
+                            >{t('mw.community.myStuff.tryAgain', 'Try again')}</button>
                         </p>
                     ) : projects === null ? (
-                        <p className={styles.status}>Loading…</p>
+                        <p className={styles.status}>{t('mw.community.myStuff.loading', 'Loading…')}</p>
                     ) : tab !== 'projects' ? (
                         projects.length ? (
                             <div className={styles.grid}>
@@ -741,8 +779,8 @@ const MyStuff = () => {
                         ) : (
                             <p className={styles.status}>
                                 {tab === 'library' ?
-                                    'Projects you buy or save to your library show up here.' :
-                                    'Projects you heart show up here.'}
+                                    t('mw.community.myStuff.libraryEmpty', 'Projects you buy or save to your library show up here.') :
+                                    t('mw.community.myStuff.lovesEmpty', 'Projects you heart show up here.')}
                             </p>
                         )
                     ) : projects.length ? (
@@ -770,7 +808,7 @@ const MyStuff = () => {
                                                 className={styles.title}
                                             >{project.title}</Link>
                                             <span className={project.shared ? styles.shared : styles.draft}>
-                                                {visibilityLabel(project)}
+                                                {visibilityLabel(project, intl)}
                                             </span>
                                             <span className={styles.rowStats}>
                                                 <span className={styles.rowStat}>
@@ -793,7 +831,9 @@ const MyStuff = () => {
                                                 ) : null}
                                                 {project.revenue ? (
                                                     <span className={styles.rowStat}>
-                                                        {`${Math.round(project.revenue * 100) / 100} earned`}
+                                                        {t('mw.community.myStuff.earned', '{count} earned', {
+                                                            count: Math.round(project.revenue * 100) / 100
+                                                        })}
                                                     </span>
                                                 ) : null}
                                                 {project.sizeBytes ? (
@@ -809,12 +849,12 @@ const MyStuff = () => {
                                                 <button
                                                     className={styles.secondary}
                                                     onClick={() => unpublish(project.id)}
-                                                >Unshare</button>
+                                                >{t('mw.community.myStuff.unshare', 'Unshare')}</button>
                                             ) : (
                                                 <button
                                                     className={styles.secondary}
                                                     onClick={() => publish(project.id)}
-                                                >Share</button>
+                                                >{t('mw.community.myStuff.share', 'Share')}</button>
                                             )}
                                             <div
                                                 className={styles.actionMenuWrap}
@@ -822,7 +862,7 @@ const MyStuff = () => {
                                             >
                                                 <button
                                                     className={styles.moreButton}
-                                                    aria-label={`Actions for ${project.title}`}
+                                                    aria-label={t('mw.community.myStuff.actionsFor', 'Actions for {title}', {title: project.title})}
                                                     aria-expanded={isMenuOpen}
                                                     onClick={() => setOpenMenu(isMenuOpen ? '' : project.id)}
                                                 >
@@ -832,15 +872,15 @@ const MyStuff = () => {
                                                     <div className={styles.actionMenu}>
                                                         <a href={editorUrl({platformProject: project.id})}>
                                                             <Pencil size={14} />
-                                                            Open in editor
+                                                            {t('mw.community.myStuff.openInEditor', 'Open in editor')}
                                                         </a>
                                                         <Link to={`/mystuff/project/${project.id}`}>
                                                             <SlidersHorizontal size={14} />
-                                                            Manage &amp; analytics
+                                                            {t('mw.community.myStuff.manageAnalytics', 'Manage & analytics')}
                                                         </Link>
                                                         <Link to={projectUrl(project.id)}>
                                                             <ExternalLink size={14} />
-                                                            Project page
+                                                            {t('mw.community.myStuff.projectPage', 'Project page')}
                                                         </Link>
                                                         {project.shared ? (
                                                             <button onClick={() => toggleFeatured(project.id)}>
@@ -849,7 +889,8 @@ const MyStuff = () => {
                                                                     fill={featured ? 'currentColor' : 'none'}
                                                                 />
                                                                 {featured ?
-                                                                    'Remove profile feature' : 'Feature on profile'}
+                                                                    t('mw.community.myStuff.removeFeature', 'Remove profile feature') :
+                                                                    t('mw.community.myStuff.featureOnProfile', 'Feature on profile')}
                                                             </button>
                                                         ) : null}
                                                         <button
@@ -857,7 +898,7 @@ const MyStuff = () => {
                                                             onClick={() => deleteProject(project.id)}
                                                         >
                                                             <Trash2 size={14} />
-                                                            Delete
+                                                            {t('mw.community.myStuff.delete', 'Delete')}
                                                         </button>
                                                     </div>
                                                 ) : null}
@@ -868,7 +909,7 @@ const MyStuff = () => {
                             })}
                         </div>
                     ) : (
-                        <p className={styles.status}>You have not created any projects yet.</p>
+                        <p className={styles.status}>{t('mw.community.myStuff.noProjects', 'You have not created any projects yet.')}</p>
                     )}
                 </div>
             </div>

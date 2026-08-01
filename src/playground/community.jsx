@@ -7,6 +7,7 @@ import {BrowserRouter} from 'react-router-dom';
 import editorMessages from '@bilup/scratch-l10n/locales/editor-msgs';
 import addAdditionalTranslations from '../lib/tw-translations/index.js';
 import communityTranslations from '../community/translations/zh-cn.json';
+import IntlBridge from '../lib/tw-use-intl.jsx';
 import {detectLocale} from '../lib/utils/detect-locale.js';
 
 import App from '../community/App.jsx';
@@ -43,9 +44,11 @@ if (embedMatch) {
             locale={locale}
             messages={editorMessages[locale]}
         >
-            <BrowserRouter>
-                <App />
-            </BrowserRouter>
+            <IntlBridge>
+                <BrowserRouter>
+                    <App />
+                </BrowserRouter>
+            </IntlBridge>
         </IntlProvider>
     );
 }

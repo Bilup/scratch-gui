@@ -86,7 +86,15 @@ const AssetsModal = props => {
                     </div>
 
                     <div className={styles.total}>
-                        {`${props.assets.length} files - ${formatBytes(totalSize)}`}
+                        <FormattedMessage
+                            defaultMessage="{count} files - {size}"
+                            description="Total file count and size of custom assets"
+                            id="mw.assets.total"
+                            values={{
+                                count: props.assets.length,
+                                size: formatBytes(totalSize)
+                            }}
+                        />
                     </div>
                 </div>
 

@@ -1,15 +1,18 @@
 import React from 'react';
 import {Link} from 'react-router-dom';
+import {useIntl} from '../../lib/tw-use-intl.jsx';
 import {ShieldAlert} from 'lucide-react';
 import {useUser} from '../UserContext.jsx';
 import styles from './StandingBanner.module.css';
 
-const MESSAGES = {
-    warning: 'Your account has a warning. Please review the community guidelines.',
-    suspended: 'Your account is suspended. You cannot share projects or comment right now.'
+const MESSAGE_KEYS = {
+    warning: 'mw.community.standing.warning',
+    suspended: 'mw.community.standing.suspended'
 };
 
 const StandingBanner = () => {
+    const intl = useIntl();
+    const t = (id, defaultMessage, values) => intl.formatMessage({id, defaultMessage}, values);
     const {user, banMessage, dismissBan} = useUser();
     if (banMessage) {
         return (
@@ -23,17 +26,21 @@ const StandingBanner = () => {
                     type="button"
                     className={styles.link}
                     onClick={dismissBan}
-                >Dismiss</button>
+                >{t('mw.community.standing.dismiss', 'Dismiss')}</button>
             </div>
         );
     }
     if (!user || !user.standing || user.standing === 'good') {
         return null;
     }
-    const message = MESSAGES[user.standing];
-    if (!message) {
+    const messageKey = MESSAGE_KEYS[user.standing];
+    if (!messageKey) {
         return null;
     }
+    const message = t(messageKey,
+        user.standing === 'suspended' ?
+            'Your account is suspended. You cannot share projects or comment right now.' :
+            'Your account has a warning. Please review the community guidelines.');
     return (
         <div className={styles.banner}>
             <ShieldAlert
@@ -44,7 +51,7 @@ const StandingBanner = () => {
             <Link
                 to="/notifications"
                 className={styles.link}
-            >See details</Link>
+            >{t('mw.community.standing.seeDetails', 'See details')}</Link>
         </div>
     );
 };

@@ -1,5 +1,6 @@
 import React, {useEffect, useState, useCallback, useMemo} from 'react';
 import {Link} from 'react-router-dom';
+import {useIntl} from '../../lib/tw-use-intl.jsx';
 import {Trash2, Reply, Flag} from 'lucide-react';
 import {useUser} from '../UserContext.jsx';
 import Avatar from './Avatar.jsx';
@@ -10,97 +11,109 @@ import {timeAgo, sameUser} from '../format';
 import useLatest from '../use-latest.js';
 import styles from './CommentThread.module.css';
 
-const CommentRow = ({comment, onReply, onDelete, onReact, onReport, canReply, canDelete, canReport, isReply, id}) => (
-    <div id={id} className={isReply ? styles.replyRow : styles.row}>
-        <Link to={`/users/${comment.author}`}>
-            <Avatar
-                username={comment.author}
-                size={isReply ? 28 : 36}
-            />
-        </Link>
-        <div className={styles.bubble}>
-            <div className={styles.bubbleHead}>
-                <Link
-                    to={`/users/${comment.author}`}
-                    className={styles.author}
-                >{comment.author}</Link>
-                {comment.created ? (
-                    <span className={styles.time}>{timeAgo(comment.created)}</span>
-                ) : null}
-                <span className={styles.headSpacer} />
-                {canReply ? (
-                    <button
-                        className={styles.iconAction}
-                        title="Reply"
-                        onClick={onReply}
-                    >
-                        <Reply size={14} />
-                    </button>
-                ) : null}
-                {canReport ? (
-                    <button
-                        className={styles.iconAction}
-                        title="Report comment"
-                        onClick={onReport}
-                    >
-                        <Flag size={13} />
-                    </button>
-                ) : null}
-                {canDelete ? (
-                    <button
-                        className={styles.iconAction}
-                        title="Delete comment"
-                        onClick={onDelete}
-                    >
-                        <Trash2 size={13} />
-                    </button>
-                ) : null}
-            </div>
-            <p className={styles.text}><RichText text={comment.content} /></p>
-            <div className={styles.reactions}>
-                <ReactionButtons
-                    small
-                    reactions={comment.reactions}
-                    onReact={onReact}
+const CommentRow = ({comment, onReply, onDelete, onReact, onReport, canReply, canDelete, canReport, isReply, id}) => {
+    const intl = useIntl();
+    const t = (id, defaultMessage, values) => intl.formatMessage({id, defaultMessage}, values);
+    return (
+        <div id={id} className={isReply ? styles.replyRow : styles.row}>
+            <Link to={`/users/${comment.author}`}>
+                <Avatar
+                    username={comment.author}
+                    size={isReply ? 28 : 36}
                 />
+            </Link>
+            <div className={styles.bubble}>
+                <div className={styles.bubbleHead}>
+                    <Link
+                        to={`/users/${comment.author}`}
+                        className={styles.author}
+                    >{comment.author}</Link>
+                    {comment.created ? (
+                        <span className={styles.time}>{timeAgo(comment.created)}</span>
+                    ) : null}
+                    <span className={styles.headSpacer} />
+                    {canReply ? (
+                        <button
+                            className={styles.iconAction}
+                            title={t('mw.community.comments.reply', 'Reply')}
+                            onClick={onReply}
+                        >
+                            <Reply size={14} />
+                        </button>
+                    ) : null}
+                    {canReport ? (
+                        <button
+                            className={styles.iconAction}
+                            title={t('mw.community.comments.reportComment', 'Report comment')}
+                            onClick={onReport}
+                        >
+                            <Flag size={13} />
+                        </button>
+                    ) : null}
+                    {canDelete ? (
+                        <button
+                            className={styles.iconAction}
+                            title={t('mw.community.comments.deleteComment', 'Delete comment')}
+                            onClick={onDelete}
+                        >
+                            <Trash2 size={13} />
+                        </button>
+                    ) : null}
+                </div>
+                <p className={styles.text}><RichText text={comment.content} /></p>
+                <div className={styles.reactions}>
+                    <ReactionButtons
+                        small
+                        reactions={comment.reactions}
+                        onReact={onReact}
+                    />
+                </div>
             </div>
         </div>
-    </div>
-);
+    );
+};
 
-const InlineComposer = ({user, value, onChange, onSubmit, onCancel, placeholder, busy, error, small}) => (
-    <div className={small ? styles.inlineComposerSmall : styles.inlineComposer}>
-        <Avatar
-            username={user.username}
-            size={small ? 28 : 36}
-        />
-        <div className={styles.composerBody}>
-            <textarea
-                className={styles.input}
-                placeholder={placeholder}
-                value={value}
-                maxLength={500}
-                onChange={e => onChange(e.target.value)}
+const InlineComposer = ({user, value, onChange, onSubmit, onCancel, placeholder, busy, error, small}) => {
+    const intl = useIntl();
+    const t = (id, defaultMessage, values) => intl.formatMessage({id, defaultMessage}, values);
+    return (
+        <div className={small ? styles.inlineComposerSmall : styles.inlineComposer}>
+            <Avatar
+                username={user.username}
+                size={small ? 28 : 36}
             />
-            {error ? <div className={styles.error}>{error}</div> : null}
-            <div className={styles.composerButtons}>
-                <button
-                    className={styles.post}
-                    disabled={busy || !value.trim()}
-                    onClick={onSubmit}
-                >{small ? 'Reply' : 'Post'}</button>
-                {onCancel ? (
+            <div className={styles.composerBody}>
+                <textarea
+                    className={styles.input}
+                    placeholder={placeholder}
+                    value={value}
+                    maxLength={500}
+                    onChange={e => onChange(e.target.value)}
+                />
+                {error ? <div className={styles.error}>{error}</div> : null}
+                <div className={styles.composerButtons}>
                     <button
-                        className={styles.cancel}
-                        onClick={onCancel}
-                    >Cancel</button>
-                ) : null}
+                        className={styles.post}
+                        disabled={busy || !value.trim()}
+                        onClick={onSubmit}
+                    >{small ?
+                        t('mw.community.comments.reply', 'Reply') :
+                        t('mw.community.comments.post', 'Post')}</button>
+                    {onCancel ? (
+                        <button
+                            className={styles.cancel}
+                            onClick={onCancel}
+                        >{t('mw.community.comments.cancel', 'Cancel')}</button>
+                    ) : null}
+                </div>
             </div>
         </div>
-    </div>
-);
+    );
+};
 
 const CommentThread = ({source, canModerate, disabled, disabledReason, reportContext}) => {
+    const intl = useIntl();
+    const t = (id, defaultMessage, values) => intl.formatMessage({id, defaultMessage}, values);
     const {user} = useUser();
     const [comments, setComments] = useState([]);
     const [content, setContent] = useState('');
@@ -172,19 +185,19 @@ const CommentThread = ({source, canModerate, disabled, disabledReason, reportCon
             setReplyTo(null);
             load();
         } catch (e) {
-            setError(e.message || 'Could not post comment.');
+            setError(e.message || t('mw.community.comments.postFailed', 'Could not post comment.'));
         } finally {
             setBusy(false);
         }
     };
 
     const remove = async commentId => {
-        if (!window.confirm('Delete this comment?')) return;
+        if (!window.confirm(t('mw.community.comments.deleteConfirm', 'Delete this comment?'))) return;
         try {
             await source.remove(commentId);
             setComments(cs => cs.filter(c => c.id !== commentId && c.parent !== commentId));
         } catch (e) {
-            setError(e.message || 'Could not delete comment.');
+            setError(e.message || t('mw.community.comments.deleteFailed', 'Could not delete comment.'));
         }
     };
 
@@ -206,7 +219,7 @@ const CommentThread = ({source, canModerate, disabled, disabledReason, reportCon
                 {...c, reactions: toggleReaction(c.reactions || {}, type, user.username)} :
                 c)));
         } catch (e) {
-            setError(e.message || 'Could not react.');
+            setError(e.message || t('mw.community.comments.reactFailed', 'Could not react.'));
         }
     };
 
@@ -238,19 +251,19 @@ const CommentThread = ({source, canModerate, disabled, disabledReason, reportCon
     return (
         <div className={styles.thread}>
             {disabled ? (
-                <p className={styles.signedOut}>{disabledReason || 'Comments are turned off.'}</p>
+                <p className={styles.signedOut}>{disabledReason || t('mw.community.comments.off', 'Comments are turned off.')}</p>
             ) : user ? (
                 <InlineComposer
                     user={user}
                     value={content}
                     onChange={setContent}
                     onSubmit={() => submit(content, null)}
-                    placeholder="Add a comment"
+                    placeholder={t('mw.community.comments.placeholder', 'Add a comment')}
                     busy={busy}
                     error={replyTo === null ? error : null}
                 />
             ) : (
-                <p className={styles.signedOut}>Sign in to comment.</p>
+                <p className={styles.signedOut}>{t('mw.community.comments.signIn', 'Sign in to comment.')}</p>
             )}
 
             {roots.length ? roots.map(comment => (
@@ -298,14 +311,16 @@ const CommentThread = ({source, canModerate, disabled, disabledReason, reportCon
                                             className={styles.showMore}
                                             onClick={() => showMoreReplies(comment.id)}
                                         >
-                                            Show {hidden} more {hidden === 1 ? 'reply' : 'replies'}
+                                            {t('mw.community.comments.showMore', 'Show {count} more {count, plural, one {reply} other {replies}}', {
+                                                count: hidden
+                                            })}
                                         </button>
                                     ) : all.length > INITIAL_LIMIT ? (
                                         <button
                                             className={styles.showMore}
                                             onClick={() => hideReplies(comment.id)}
                                         >
-                                            Hide replies
+                                            {t('mw.community.comments.hideReplies', 'Hide replies')}
                                         </button>
                                     ) : null}
                                 </>
@@ -319,7 +334,9 @@ const CommentThread = ({source, canModerate, disabled, disabledReason, reportCon
                                 onChange={setReplyText}
                                 onSubmit={() => submit(replyText, comment.id)}
                                 onCancel={() => setReplyTo(null)}
-                                placeholder={`Reply to ${comment.author}`}
+                                placeholder={t('mw.community.comments.replyTo', 'Reply to {author}', {
+                                    author: comment.author
+                                })}
                                 busy={busy}
                                 error={error}
                             />
@@ -328,7 +345,9 @@ const CommentThread = ({source, canModerate, disabled, disabledReason, reportCon
                 </div>
             )) : (
                 <p className={styles.empty}>
-                    {loadFailed ? 'Comments could not be loaded right now.' : 'No comments yet.'}
+                    {loadFailed ?
+                        t('mw.community.comments.loadFailed', 'Comments could not be loaded right now.') :
+                        t('mw.community.comments.none', 'No comments yet.')}
                 </p>
             )}
             {reportId ? (

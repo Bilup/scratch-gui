@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {useParams, Link} from 'react-router-dom';
+import {useIntl} from '../../lib/tw-use-intl.jsx';
 import {ArrowLeft} from 'lucide-react';
 import rotur from '../rotur';
 import Avatar from '../components/Avatar.jsx';
@@ -9,12 +10,20 @@ import styles from './Followers.module.css';
 
 const Followers = () => {
     const {name} = useParams();
+    const intl = useIntl();
     const [followers, setFollowers] = useState(null);
     const beginLoad = useLatest();
 
     useEffect(() => {
-        setPageMeta({title: `${name}'s followers`, image: rotur.avatar(name, 256), card: 'summary'});
-    }, [name]);
+        setPageMeta({
+            title: intl.formatMessage({
+                id: 'mw.community.followers.title',
+                defaultMessage: '{name}\'s followers'
+            }, {name}),
+            image: rotur.avatar(name, 256),
+            card: 'summary'
+        });
+    }, [name, intl]);
 
     useEffect(() => {
         const fresh = beginLoad();
@@ -33,9 +42,15 @@ const Followers = () => {
                 <ArrowLeft size={14} />
                 {name}
             </Link>
-            <h1>{name}&apos;s followers</h1>
+            <h1>{intl.formatMessage({
+                id: 'mw.community.followers.title',
+                defaultMessage: '{name}\'s followers'
+            }, {name})}</h1>
             {followers === null ? (
-                <p className={styles.status}>Loading…</p>
+                <p className={styles.status}>{intl.formatMessage({
+                    id: 'mw.community.followers.loading',
+                    defaultMessage: 'Loading…'
+                })}</p>
             ) : followers.length ? (
                 <div className={styles.grid}>
                     {followers.map(follower => (
@@ -53,7 +68,10 @@ const Followers = () => {
                     ))}
                 </div>
             ) : (
-                <p className={styles.status}>No followers yet.</p>
+                <p className={styles.status}>{intl.formatMessage({
+                    id: 'mw.community.followers.empty',
+                    defaultMessage: 'No followers yet.'
+                })}</p>
             )}
         </main>
     );

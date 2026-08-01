@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import {FormattedMessage, injectIntl, intlShape} from 'react-intl';
+import {useIntl} from '../../lib/tw-use-intl.jsx';
 import {connect} from 'react-redux';
 import classNames from 'classnames';
 
@@ -63,54 +64,63 @@ FontSection.propTypes = {
 };
 
 // New: Selected Font Display
-const SelectedFontDisplay = ({selectedFont, onReset, onRemove}) => (
-    <div className={styles.fontSection}>
-        <div className={styles.fontSectionTitle}>
-            <div className={styles.fontSectionTitleLeft}>
-                <Check className={styles.icon} />
-                <FormattedMessage
-                    defaultMessage="Selected font"
-                    id="tw.fonts.selectedFont"
-                />
-            </div>
-            <button
-                className={styles.resetButton}
-                onClick={onReset}
-                title="Reset to default font"
-            >
-                <RotateCcw
-                    size={14}
-                    className={styles.inlineIcon}
-                />
-                <FormattedMessage
-                    defaultMessage="Reset"
-                    id="tw.fonts.reset"
-                />
-            </button>
-        </div>
-        <div className={styles.selectedFontsList}>
-            {selectedFont ? (
-                <div className={styles.selectedFont}>
-                    <span style={{fontFamily: selectedFont}}>{selectedFont}</span>
-                    <button
-                        className={styles.removeButton}
-                        onClick={onRemove}
-                        title="Remove font"
-                    >
-                        {'×'}
-                    </button>
-                </div>
-            ) : (
-                <div className={styles.fontHint}>
+const SelectedFontDisplay = ({selectedFont, onReset, onRemove}) => {
+    const intl = useIntl();
+    return (
+        <div className={styles.fontSection}>
+            <div className={styles.fontSectionTitle}>
+                <div className={styles.fontSectionTitleLeft}>
+                    <Check className={styles.icon} />
                     <FormattedMessage
-                        defaultMessage="Default"
-                        id="tw.fonts.default"
+                        defaultMessage="Selected font"
+                        id="tw.fonts.selectedFont"
                     />
                 </div>
-            )}
+                <button
+                    className={styles.resetButton}
+                    onClick={onReset}
+                    title={intl.formatMessage({
+                        defaultMessage: 'Reset to default font',
+                        id: 'mw.fonts.resetToDefault'
+                    })}
+                >
+                    <RotateCcw
+                        size={14}
+                        className={styles.inlineIcon}
+                    />
+                    <FormattedMessage
+                        defaultMessage="Reset"
+                        id="tw.fonts.reset"
+                    />
+                </button>
+            </div>
+            <div className={styles.selectedFontsList}>
+                {selectedFont ? (
+                    <div className={styles.selectedFont}>
+                        <span style={{fontFamily: selectedFont}}>{selectedFont}</span>
+                        <button
+                            className={styles.removeButton}
+                            onClick={onRemove}
+                            title={intl.formatMessage({
+                                defaultMessage: 'Remove font',
+                                id: 'mw.fonts.removeFont'
+                            })}
+                        >
+                            {'×'}
+                        </button>
+                    </div>
+                ) : (
+                    <div className={styles.fontHint}>
+                        <FormattedMessage
+                            defaultMessage="Default"
+                            id="tw.fonts.default"
+                        />
+                    </div>
+                )}
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 SelectedFontDisplay.propTypes = {
     selectedFont: PropTypes.string,
