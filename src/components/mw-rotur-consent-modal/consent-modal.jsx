@@ -47,7 +47,7 @@ const RoturConsentModal = props => {
             <Modal
                 className={styles.modalContent}
                 onRequestClose={props.onShareNo}
-                contentLabel="Rotur"
+                contentLabel="Bilup Accounts"
                 id="roturconsentmodal"
             >
                 <Box className={styles.body}>
@@ -60,7 +60,7 @@ const RoturConsentModal = props => {
                     <p>
                         {intl.formatMessage({
                             id: 'mw.roturConsent.shareBody',
-                            defaultMessage: '"{name}" wants to show that you\'re using it on your Rotur profile'
+                            defaultMessage: '"{name}" wants to show that you\'re using it on your Bilup Accounts profile'
                         }, {
                             name: data.name || intl.formatMessage({
                                 id: 'mw.roturConsent.thisProject',
@@ -107,7 +107,7 @@ const RoturConsentModal = props => {
         <Modal
             className={styles.modalContent}
             onRequestClose={props.onDenied}
-            contentLabel="Rotur"
+            contentLabel="Bilup Accounts"
             id="roturconsentmodal"
         >
             <Box className={styles.body}>
@@ -116,7 +116,7 @@ const RoturConsentModal = props => {
                         <h2>
                             {intl.formatMessage({
                                 id: 'mw.roturConsent.confirmTitle',
-                                defaultMessage: 'Confirm Rotur action'
+                                defaultMessage: 'Confirm Bilup Accounts action'
                             })}
                         </h2>
                         <p>
@@ -143,13 +143,13 @@ const RoturConsentModal = props => {
                         <h2>
                             {intl.formatMessage({
                                 id: 'mw.roturConsent.connectTitle',
-                                defaultMessage: 'Connect to Rotur'
+                                defaultMessage: 'Connect to Bilup Accounts'
                             })}
                         </h2>
                         <p>
                             {intl.formatMessage({
                                 id: 'mw.roturConsent.connectBody',
-                                defaultMessage: '"{name}" wants to use your Rotur account'
+                                defaultMessage: '"{name}" wants to use your Bilup Accounts account'
                             }, {
                                 name: data.name || intl.formatMessage({
                                     id: 'mw.roturConsent.thisProject',
@@ -176,7 +176,7 @@ const RoturConsentModal = props => {
                             <p>
                                 {intl.formatMessage({
                                     id: 'mw.roturConsent.noScopes',
-                                    defaultMessage: 'This just lets the project read your public Rotur info.'
+                                    defaultMessage: 'This just lets the project read your public Bilup Accounts info.'
                                 })}
                             </p>
                         ) : null}

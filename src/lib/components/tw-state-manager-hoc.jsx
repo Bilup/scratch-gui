@@ -480,7 +480,7 @@ const TWStateManager = function (WrappedComponent) {
                 }
             }
 
-            // Signed-in users are known online by their Rotur handle, which never changes mid-session,
+            // Signed-in users are known online by their Bilup Accounts handle, which never changes mid-session,
             // so only a guest's custom name gets pushed to the room.
             if (
                 !this.props.roturUsername &&

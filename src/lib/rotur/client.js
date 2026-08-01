@@ -19,9 +19,9 @@ const REQUIRED_PERMISSIONS = [
 ];
 const PRESENCE_PERMISSION = 'account:profile';
 const LOGIN_PERMISSIONS = [...REQUIRED_PERMISSIONS, PRESENCE_PERMISSION];
-const ACTIVITY_ID = 'MistWarp';
+const ACTIVITY_ID = 'Bilup';
 const APP_URL = 'https://warp.mistium.com';
-const APP_IMAGE = 'https://raw.githubusercontent.com/MistWarp/desktop/master/art/icon.png';
+const APP_IMAGE = 'https://raw.githubusercontent.com/Bilup/desktop/master/art/icon.png';
 
 /** @type {Rotur|null} */
 let client = null;
@@ -59,7 +59,7 @@ const storeToken = token => {
  * @returns {string} Avatar URL
  */
 const getAvatarUrl = username => (
-    `https://avatars.rotur.dev/${encodeURIComponent(String(username).toLowerCase())}`
+    `https://avatars.accounts.bilup.org/${encodeURIComponent(String(username).toLowerCase())}`
 );
 
 /**
@@ -106,7 +106,7 @@ const fetchCurrentUser = async () => {
         sawNetworkError = true;
     }
     if (sawNetworkError) {
-        const error = new Error('Could not reach Rotur');
+        const error = new Error('Could not reach Bilup Accounts');
         error.transient = true;
         throw error;
     }
@@ -205,25 +205,25 @@ const restoreSession = async () => {
 
 const buildAuthUrl = (returnTo = (typeof window === 'undefined' ? '' : window.location.href)) => {
     const params = new URLSearchParams({
-        system: 'rotur',
+        system: 'web',
         return_to: returnTo,
         requires: LOGIN_PERMISSIONS.join(',')
     });
-    return `https://rotur.dev/auth?${params.toString()}`;
+    return `https://accounts.bilup.org/auth?${params.toString()}`;
 };
 
-/** Open the Rotur login flow (popup, with iframe fallback for Electron). */
+/** Open the Bilup Accounts login flow (popup, with iframe fallback for Electron). */
 const login = async () => {
     const rotur = getClient();
     await rotur.login({
-        system: 'rotur',
+        system: 'web',
         timeout: 120000,
         requires: LOGIN_PERMISSIONS
     });
     storeToken(rotur.token);
     const user = await fetchCurrentUser();
     if (!user) {
-        throw new Error('Logged in but could not load Rotur profile');
+        throw new Error('Logged in but could not load Bilup Accounts profile');
     }
     writeRestoreCache(rotur.token, user);
     return user;
@@ -272,7 +272,7 @@ const ensureSocket = async () => {
 };
 
 /**
- * Publish MistWarp editing presence.
+ * Publish Bilup editing presence.
  * Title/status are fixed strings; edit duration uses start_time only.
  * @param {object|string} projectTitleOrCtx - Project title or activity context.
  * @param {object} [extra] - Extra activity fields.
@@ -346,7 +346,7 @@ const getRotur = () => getClient();
 
 // Ensure the current session token can exercise every scope in `scopes`. If the
 // token is already sufficient (or is a full-access main token) this is a no-op;
-// otherwise it re-runs the Rotur login popup requesting the union of the existing
+// otherwise it re-runs the Bilup Accounts login popup requesting the union of the existing
 // login scopes plus the requested ones, broadening the same session in place. No
 // separate per-project sub-token is minted.
 const ensureScopes = async scopes => {
@@ -393,7 +393,7 @@ const isPaymentPermissionError = error => {
         message.includes('token');
 };
 
-// Read the current Rotur credit balance, or null if the token can't see it.
+// Read the current Bilup Accounts credit balance, or null if the token can't see it.
 const getBalance = async () => {
     const rotur = getClient();
     if (!rotur.loggedIn) {
@@ -443,7 +443,7 @@ const getAccountSummary = async () => {
     }
 };
 
-// Transfer credits to another Rotur user. Throws an Error; if the failure is a
+// Transfer credits to another Bilup Accounts user. Throws an Error; if the failure is a
 // missing-permission on the current (sub-)token, the error carries needsReauth.
 const payUser = async (to, amount, note) => {
     const rotur = getClient();

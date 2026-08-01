@@ -80,7 +80,7 @@ const Footer = () => (
                             id="mw.community.footer.news"
                         />
                     </Link>
-                    <a href="mailto:support@bilup.com">
+                    <a href="mailto:support@bilup.org">
                         <FormattedMessage
                             defaultMessage="Report a bug"
                             description="Footer link to report a bug"
@@ -106,10 +106,10 @@ const Footer = () => (
                         GitHub
                     </a>
                     <a
-                        href="https://rotur.dev"
+                        href="https://accounts.bilup.org"
                         target="_blank"
                         rel="noreferrer"
-                    >Rotur</a>
+                    >Bilup Accounts</a>
                     <a href="/credits">
                         <FormattedMessage
                             defaultMessage="Credits"

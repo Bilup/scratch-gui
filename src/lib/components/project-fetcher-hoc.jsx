@@ -55,7 +55,7 @@ const clearProjectSourceFromUrl = () => {
             changed = true;
         }
     }
-    const hasMwHash = /^#mw-/.test(location.hash);
+    const hasMwHash = /^#bl-/.test(location.hash);
     if (!changed && !hasMwHash) return;
     const query = params.toString();
     const hash = hasMwHash ? '' : location.hash;
@@ -188,7 +188,7 @@ const ProjectFetcherHOC = function (WrappedComponent) {
             clearProjectSourceOnForeignLoads(props.vm);
             if (typeof location !== 'undefined' && typeof URLSearchParams !== 'undefined') {
                 const initialPlatformId = new URLSearchParams(location.search).get('platform_project') ||
-                    (location.hash.match(/^#mw-([\w-]+)/) || [])[1];
+                    (location.hash.match(/^#bl-([\w-]+)/) || [])[1];
                 rememberPlatformProject(initialPlatformId ? {id: initialPlatformId} : null);
             }
             // props.projectId might be unset, in which case we use our default;
@@ -244,7 +244,7 @@ const ProjectFetcherHOC = function (WrappedComponent) {
             const platformProject = searchParams && searchParams.get('platform_project');
             const hashMatch = typeof location === 'undefined' ?
                 null :
-                location.hash.match(/^#mw-([\w-]+)/);
+                location.hash.match(/^#bl-([\w-]+)/);
             const hashProjectId = hashMatch && hashMatch[1];
             rememberPlatformProject(platformProject ? {id: platformProject} : null);
             const mistwarpAssets = searchParams && searchParams.get('mw_assets');

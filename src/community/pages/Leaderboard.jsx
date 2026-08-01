@@ -53,7 +53,7 @@ const BOARDS = [
         titleKey: 'mw.community.leaderboard.title.followers',
         titleDefault: 'Most followed users',
         leadKey: 'mw.community.leaderboard.lead.followers',
-        leadDefault: 'The most followed public Rotur accounts.'
+        leadDefault: 'The most followed public Bilup Accounts accounts.'
     },
     {
         key: 'loves',

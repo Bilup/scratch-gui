@@ -39,7 +39,7 @@ const RoturAccount = props => {
             >
                 <FormattedMessage
                     defaultMessage="Login"
-                    description="Menu bar item to open Rotur login when signed out"
+                    description="Menu bar item to open Bilup Accounts login when signed out"
                     id="mw.rotur.menuBar.login"
                 />
             </div>
@@ -93,7 +93,7 @@ const RoturAccount = props => {
                         <Trophy />
                         <FormattedMessage
                             defaultMessage="Leaderboard"
-                            description="Text to link to the leaderboard, in the Rotur account navigation menu"
+                            description="Text to link to the leaderboard, in the Bilup Accounts account navigation menu"
                             id="mw.rotur.accountMenu.leaderboard"
                         />
                     </MenuItemContainer>
@@ -102,7 +102,7 @@ const RoturAccount = props => {
                     <Settings />
                     <FormattedMessage
                         defaultMessage="Settings"
-                        description="Text to link to settings, in the Rotur account navigation menu"
+                        description="Text to link to settings, in the Bilup Accounts account navigation menu"
                         id="mw.rotur.accountMenu.settings"
                     />
                 </MenuItemContainer>
@@ -118,7 +118,7 @@ const RoturAccount = props => {
                         <Users />
                         <FormattedMessage
                             defaultMessage="Switch account"
-                            description="Account menu item that signs out and opens the Rotur auth page"
+                            description="Account menu item that signs out and opens the Bilup Accounts auth page"
                             id="mw.rotur.accountMenu.switchAccount"
                         />
                     </MenuItemContainer>

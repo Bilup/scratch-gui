@@ -230,7 +230,7 @@ const Settings = () => {
                             {user && !presenceOk ? (
                                 <div className={styles.risk}>
                                     {t('mw.community.settings.presenceMissingPermission1',
-                                        'Your current Rotur login is missing the ')}
+                                        'Your current Bilup Accounts login is missing the ')}
                                     <strong>{'account:profile'}</strong>
                                     {t('mw.community.settings.presenceMissingPermission2',
                                         ' permission, so your editor activity cannot be shared. Log in again to grant it.')}
@@ -312,7 +312,7 @@ const Settings = () => {
                     {!user ? (
                         <p className={styles.note}>
                             {t('mw.community.settings.signInNote',
-                                'Sign in to sync your settings across devices through your Rotur account.')}
+                                'Sign in to sync your settings across devices through your Bilup Accounts account.')}
                         </p>
                     ) : null}
                 </div>

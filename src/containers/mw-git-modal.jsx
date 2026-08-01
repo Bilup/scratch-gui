@@ -131,7 +131,7 @@ class TWGitModal extends React.Component {
             // Settings
             defaultBranch: readLocal(DEFAULT_BRANCH_KEY, 'main'),
             autoCommit: readLocal(AUTO_COMMIT_KEY, 'false') === 'true',
-            // Rotur Git
+            // Bilup Git
             roturRepos: [],
             roturReposLoaded: false,
             roturReposLoading: false,
@@ -965,7 +965,7 @@ class TWGitModal extends React.Component {
     async handleRoturLogin () {
         const api = getRoturSessionApi();
         if (!api || typeof api.login !== 'function') {
-            this.setState({error: 'Rotur session is not ready yet. Try again in a moment.'});
+            this.setState({error: 'Bilup Accounts session is not ready yet. Try again in a moment.'});
             return;
         }
         try {
@@ -1111,7 +1111,7 @@ class TWGitModal extends React.Component {
     async handleRoturCloneOther () {
         const parsed = parseRoturRepoUrl(this.state.roturCloneOther.trim());
         if (!parsed) {
-            this.setState({error: 'Enter a repo as owner/name or a git.rotur.dev URL'});
+            this.setState({error: 'Enter a repo as owner/name or a git.bilup.org URL'});
             return;
         }
         await this.handleRoturClone({

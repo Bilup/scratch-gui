@@ -1,7 +1,7 @@
 /* global HTMLRewriter */
 
 const API_BASE = 'https://mwapi.mistium.com/api';
-const AVATARS = 'https://avatars.rotur.dev';
+const AVATARS = 'https://avatars.accounts.bilup.org';
 const FETCH_TIMEOUT_MS = 3000;
 
 class AttrSetter {

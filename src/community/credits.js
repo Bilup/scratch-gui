@@ -1,4 +1,4 @@
-// Ko-fi credit top-up tiers (shared with the Rotur wallet). Buying sends the
+// Ko-fi credit top-up tiers (shared with the Bilup Accounts wallet). Buying sends the
 // credits to the account instantly once the Ko-fi order is processed.
 const PURCHASE_TIERS = [
     {credits: 50, price: 1.99, link: 'https://ko-fi.com/s/eebeb7269f'},
@@ -8,7 +8,7 @@ const PURCHASE_TIERS = [
 
 const KO_FI_SHOP_URL = 'https://ko-fi.com/mistium/shop';
 
-// Detect an "insufficient funds" failure from a Rotur transfer error.
+// Detect an "insufficient funds" failure from a Bilup Accounts transfer error.
 const isInsufficientFunds = error => {
     const message = String((error && error.message) || error || '').toLowerCase();
     return message.includes('insufficient') || message.includes('not enough') || message.includes('balance');

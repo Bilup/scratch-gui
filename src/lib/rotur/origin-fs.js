@@ -1,5 +1,5 @@
 /**
- * Lightweight OriginFS client for Rotur cloud files.
+ * Lightweight OriginFS client for Bilup Accounts cloud files.
  * Paths: /application data/mistwarp@mistium/...
  * Stored under: origin/(c) users/{username}/...
  */

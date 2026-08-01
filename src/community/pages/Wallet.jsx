@@ -138,7 +138,7 @@ const Wallet = () => {
             <section className={styles.section}>
                 <h2 className={styles.sectionTitle}>{intl.formatMessage({id: 'mw.community.wallet.buyCredits', defaultMessage: 'Buy credits'})}</h2>
                 <p className={styles.sectionLead}>
-                    {intl.formatMessage({id: 'mw.community.wallet.buyCreditsLead', defaultMessage: 'Top up through Ko-fi. Credits are added to your Rotur account after checkout.'})}
+                    {intl.formatMessage({id: 'mw.community.wallet.buyCreditsLead', defaultMessage: 'Top up through Ko-fi. Credits are added to your Bilup Accounts account after checkout.'})}
                 </p>
                 <div className={styles.tiers}>
                     {PURCHASE_TIERS.map(tier => (

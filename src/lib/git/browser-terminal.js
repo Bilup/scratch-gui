@@ -97,7 +97,7 @@ const stagePaths = async args => {
     return count;
 };
 
-const SHELL_HELP = `MistWarp Fractch shell
+const SHELL_HELP = `Bilup Fractch shell
 
   files      cat cp file find head ln ls mkdir mv rm rmdir stat tail touch tree wc
   text       awk column comm cut diff expand fold grep join nl od paste rev rg sed sort

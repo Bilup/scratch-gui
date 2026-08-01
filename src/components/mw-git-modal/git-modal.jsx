@@ -79,8 +79,8 @@ const messages = defineMessages({
         id: 'mw.git.nav.readme'
     },
     rotur: {
-        defaultMessage: 'Rotur Git',
-        description: 'Rotur Git sidebar item',
+        defaultMessage: 'Bilup Git',
+        description: 'Bilup Git sidebar item',
         id: 'mw.git.nav.rotur'
     }
 });
@@ -983,7 +983,7 @@ class GitModalComponent extends React.Component {
                         <span className={styles.cloneConfirm}>
                             <FormattedMessage
                                 // eslint-disable-next-line max-len
-                                defaultMessage="This permanently deletes the repository on Rotur Git. Click delete again to confirm."
+                                defaultMessage="This permanently deletes the repository on Bilup Git. Click delete again to confirm."
                                 description="Confirm deleting rotur repo"
                                 id="mw.git.rotur.deleteConfirm"
                             />
@@ -1020,7 +1020,7 @@ class GitModalComponent extends React.Component {
                     rel="noopener noreferrer"
                     target="_blank"
                     title={this.props.intl.formatMessage({
-                        defaultMessage: 'Open on git.rotur.dev',
+                        defaultMessage: 'Open on git.bilup.org',
                         description: 'Open rotur repo in browser tooltip',
                         id: 'mw.git.rotur.openRepo'
                     })}
@@ -1053,8 +1053,8 @@ class GitModalComponent extends React.Component {
                     <p>
                         <FormattedMessage
                             // eslint-disable-next-line max-len
-                            defaultMessage="Sign in with Rotur to create repos on git.rotur.dev and push your project straight from Bilup."
-                            description="Shown on the Rotur Git tab when signed out"
+                            defaultMessage="Sign in with Bilup Accounts to create repos on git.bilup.org and push your project straight from Bilup."
+                            description="Shown on the Bilup Git tab when signed out"
                             id="mw.git.rotur.signedOut"
                         />
                     </p>
@@ -1064,8 +1064,8 @@ class GitModalComponent extends React.Component {
                         onClick={this.props.onRoturLogin}
                     >
                         <FormattedMessage
-                            defaultMessage="Sign in with Rotur"
-                            description="Sign in button on the Rotur Git tab"
+                            defaultMessage="Sign in with Bilup Accounts"
+                            description="Sign in button on the Bilup Git tab"
                             id="mw.git.rotur.signIn"
                         />
                     </button>
@@ -1080,14 +1080,14 @@ class GitModalComponent extends React.Component {
                     <Globe className={styles.buttonIcon} />
                     <FormattedMessage
                         defaultMessage="Your repositories"
-                        description="Rotur Git section heading"
+                        description="Bilup Git section heading"
                         id="mw.git.rotur.heading"
                     />
                 </h2>
                 <p className={styles.muted}>
                     <FormattedMessage
                         defaultMessage="Signed in as {username}. Repos live on {link}."
-                        description="Rotur Git signed-in note"
+                        description="Bilup Git signed-in note"
                         id="mw.git.rotur.signedInAs"
                         values={{
                             username: roturUsername,
@@ -1096,7 +1096,7 @@ class GitModalComponent extends React.Component {
                                     href={GIT_HOST}
                                     rel="noopener noreferrer"
                                     target="_blank"
-                                >{'git.rotur.dev'}</a>
+                                >{'git.bilup.org'}</a>
                             )
                         }}
                     />
@@ -1142,7 +1142,7 @@ class GitModalComponent extends React.Component {
                                 rel="noopener noreferrer"
                                 target="_blank"
                                 title={this.props.intl.formatMessage({
-                                    defaultMessage: 'Open on git.rotur.dev',
+                                    defaultMessage: 'Open on git.bilup.org',
                                     description: 'Open rotur repo in browser tooltip',
                                     id: 'mw.git.rotur.openRepo'
                                 })}
@@ -1217,7 +1217,7 @@ class GitModalComponent extends React.Component {
                         <label className={styles.fieldLabel}>
                             <FormattedMessage
                                 defaultMessage="Repositories"
-                                description="Rotur repo list label"
+                                description="Bilup repo list label"
                                 id="mw.git.rotur.repoList"
                             />
                         </label>
@@ -1227,7 +1227,7 @@ class GitModalComponent extends React.Component {
                             onClick={this.props.onLoadRoturRepos}
                             title={this.props.intl.formatMessage({
                                 defaultMessage: 'Reload repositories',
-                                description: 'Reload rotur repos tooltip',
+                                description: 'Reload Bilup repos tooltip',
                                 id: 'mw.git.rotur.reload'
                             })}
                         >
@@ -1238,7 +1238,7 @@ class GitModalComponent extends React.Component {
                         <p className={styles.muted}>
                             <FormattedMessage
                                 defaultMessage="Loading repositories…"
-                                description="Rotur repos loading message"
+                                description="Bilup repos loading message"
                                 id="mw.git.rotur.loading"
                             />
                         </p>
@@ -1260,7 +1260,7 @@ class GitModalComponent extends React.Component {
                         <FormattedMessage
                             // eslint-disable-next-line max-len
                             defaultMessage="Push sends your committed history. Pushing an uninitialized project creates the repo locally and makes an initial commit first."
-                            description="Rotur push help text"
+                            description="Bilup push help text"
                             id="mw.git.rotur.pushHelp"
                         />
                     </p>
@@ -1268,7 +1268,7 @@ class GitModalComponent extends React.Component {
                 <Box className={styles.field}>
                     <label className={styles.fieldLabel}>
                         <FormattedMessage
-                            defaultMessage="Clone any Rotur repo"
+                            defaultMessage="Clone any Bilup Accounts repo"
                             description="Clone other rotur repo label"
                             id="mw.git.rotur.cloneOther"
                         />

@@ -113,8 +113,8 @@ export default [
     {
         name: (
             <FormattedMessage
-                defaultMessage="Rotur Account"
-                description="Name of the Rotur Account extension"
+                defaultMessage="Bilup Accounts"
+                description="Name of the Bilup Accounts extension"
                 id="tw.extension.rotur.name"
             />
         ),
@@ -122,8 +122,8 @@ export default [
         iconURL: roturAccountIcon,
         description: (
             <FormattedMessage
-                defaultMessage="Log in with Rotur and read who the player is."
-                description="Description of the Rotur Account extension"
+                defaultMessage="Log in with Bilup Accounts and read who the player is."
+                description="Description of the Bilup Accounts extension"
                 id="tw.extension.rotur.description"
             />
         ),
@@ -134,8 +134,8 @@ export default [
     {
         name: (
             <FormattedMessage
-                defaultMessage="Rotur Economy"
-                description="Name of the Rotur Economy extension"
+                defaultMessage="Bilup Accounts Economy"
+                description="Name of the Bilup Accounts Economy extension"
                 id="tw.extension.roturEconomy.name"
             />
         ),
@@ -144,7 +144,7 @@ export default [
         description: (
             <FormattedMessage
                 defaultMessage="Credits, transfers, and daily rewards."
-                description="Description of the Rotur Economy extension"
+                description="Description of the Bilup Accounts Economy extension"
                 id="tw.extension.roturEconomy.description"
             />
         ),
@@ -155,8 +155,8 @@ export default [
     {
         name: (
             <FormattedMessage
-                defaultMessage="Rotur Keys"
-                description="Name of the Rotur Keys extension"
+                defaultMessage="Bilup Accounts Keys"
+                description="Name of the Bilup Accounts Keys extension"
                 id="tw.extension.roturKeys.name"
             />
         ),
@@ -164,8 +164,8 @@ export default [
         iconURL: roturKeysIcon,
         description: (
             <FormattedMessage
-                defaultMessage="Buy, sell, and check Rotur keys."
-                description="Description of the Rotur Keys extension"
+                defaultMessage="Buy, sell, and check Bilup Accounts keys."
+                description="Description of the Bilup Accounts Keys extension"
                 id="tw.extension.roturKeys.description"
             />
         ),
@@ -176,8 +176,8 @@ export default [
     {
         name: (
             <FormattedMessage
-                defaultMessage="Rotur Status"
-                description="Name of the Rotur Status extension"
+                defaultMessage="Bilup Accounts Status"
+                description="Name of the Bilup Accounts Status extension"
                 id="tw.extension.roturStatus.name"
             />
         ),
@@ -185,8 +185,8 @@ export default [
         iconURL: roturStatusIcon,
         description: (
             <FormattedMessage
-                defaultMessage="Read and set Rotur status and presence."
-                description="Description of the Rotur Status extension"
+                defaultMessage="Read and set Bilup Accounts status and presence."
+                description="Description of the Bilup Accounts Status extension"
                 id="tw.extension.roturStatus.description"
             />
         ),
@@ -197,8 +197,8 @@ export default [
     {
         name: (
             <FormattedMessage
-                defaultMessage="Rotur Social"
-                description="Name of the Rotur Social extension"
+                defaultMessage="Bilup Accounts Social"
+                description="Name of the Bilup Accounts Social extension"
                 id="tw.extension.roturSocial.name"
             />
         ),
@@ -206,8 +206,8 @@ export default [
         iconURL: roturSocialIcon,
         description: (
             <FormattedMessage
-                defaultMessage="Posts, follows, and friends on Rotur."
-                description="Description of the Rotur Social extension"
+                defaultMessage="Posts, follows, and friends on Bilup Accounts."
+                description="Description of the Bilup Accounts Social extension"
                 id="tw.extension.roturSocial.description"
             />
         ),
@@ -218,8 +218,8 @@ export default [
     {
         name: (
             <FormattedMessage
-                defaultMessage="Rotur Shop"
-                description="Name of the Rotur Shop extension"
+                defaultMessage="Bilup Accounts Shop"
+                description="Name of the Bilup Accounts Shop extension"
                 id="tw.extension.roturShop.name"
             />
         ),
@@ -228,7 +228,7 @@ export default [
         description: (
             <FormattedMessage
                 defaultMessage="Items and cosmetics marketplace."
-                description="Description of the Rotur Shop extension"
+                description="Description of the Bilup Accounts Shop extension"
                 id="tw.extension.roturShop.description"
             />
         ),
@@ -239,8 +239,8 @@ export default [
     {
         name: (
             <FormattedMessage
-                defaultMessage="Rotur Groups"
-                description="Name of the Rotur Groups extension"
+                defaultMessage="Bilup Accounts Groups"
+                description="Name of the Bilup Accounts Groups extension"
                 id="tw.extension.roturGroups.name"
             />
         ),
@@ -249,7 +249,7 @@ export default [
         description: (
             <FormattedMessage
                 defaultMessage="Communities, roles, and group economy."
-                description="Description of the Rotur Groups extension"
+                description="Description of the Bilup Accounts Groups extension"
                 id="tw.extension.roturGroups.description"
             />
         ),
@@ -260,8 +260,8 @@ export default [
     {
         name: (
             <FormattedMessage
-                defaultMessage="Rotur Files"
-                description="Name of the Rotur Files extension"
+                defaultMessage="Bilup Accounts Files"
+                description="Name of the Bilup Accounts Files extension"
                 id="tw.extension.roturFiles.name"
             />
         ),
@@ -269,8 +269,8 @@ export default [
         iconURL: roturFilesIcon,
         description: (
             <FormattedMessage
-                defaultMessage="Read and manage your Rotur file storage."
-                description="Description of the Rotur Files extension"
+                defaultMessage="Read and manage your Bilup Accounts file storage."
+                description="Description of the Bilup Accounts Files extension"
                 id="tw.extension.roturFiles.description"
             />
         ),
@@ -668,12 +668,12 @@ export const galleryMore = {
     description: (
         <FormattedMessage
             // eslint-disable-next-line max-len
-            defaultMessage="Including extensions from TurboWarp, Mistium, SharkPool, Bilup, and AstraEditor."
+            defaultMessage="Including extensions from TurboWarp, Mistium, Bilup Accounts, SharkPool, Bilup, and AstraEditor."
             description="Appears after the extension list from the gallery was loaded successfully"
             id="tw.extensionGallery.more"
         />
     ),
-    tags: ['tw', 'bilup', 'sharkpool', 'mistium', 'ae'],
+    tags: ['tw', 'bilup', 'sharkpool', 'mistium', 'ae', 'rotur'],
     featured: true
 };
 

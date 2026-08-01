@@ -388,8 +388,8 @@ const Project = () => {
         projectImage: (project && project.thumbUrl) || ''
     }), [user, project, id]);
 
-    // Rotur bridge for the embedded player. The project iframe cannot hold the
-    // token or render trusted UI, so its Rotur blocks post requests up here; this
+    // Bilup Accounts bridge for the embedded player. The project iframe cannot hold the
+    // token or render trusted UI, so its Bilup Accounts blocks post requests up here; this
     // page holds the token (via lib/rotur/client) and renders consent/confirm UI
     // that the sandboxed project cannot read or approve on its own.
     useEffect(() => {
@@ -504,7 +504,7 @@ const Project = () => {
                         },
                         onDeny: () => {
                             setRoturModal(null);
-                            reply({id: data.id, ok: false, error: 'You cancelled this Rotur action'});
+                            reply({id: data.id, ok: false, error: 'You cancelled this Bilup Accounts action'});
                         }
                     });
                 } else {

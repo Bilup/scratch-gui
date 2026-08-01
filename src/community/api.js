@@ -11,7 +11,7 @@ import {
 
 const editorUrl = ({clone, platformProject, projectJson, assets} = {}) => {
     if (platformProject) {
-        return `/editor#mw-${platformProject}`;
+        return `/editor#bl-${platformProject}`;
     }
     const params = new URLSearchParams();
     if (clone) params.set('clone', clone);

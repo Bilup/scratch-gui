@@ -34,7 +34,7 @@ const BetaBanner = () => {
             />
             <span className={styles.text}>
                 The new Bilup is a beta. Expect bugs, and please report them via{' '}
-                <a href="mailto:support@bilup.com">support@bilup.com</a>.
+                <a href="mailto:support@bilup.org">support@bilup.org</a>.
             </span>
             <button
                 className={styles.dismiss}

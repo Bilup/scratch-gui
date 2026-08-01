@@ -15,7 +15,7 @@ try {
     // .env is optional
 }
 
-const ENABLE_COMMUNITY = process.env.MW_COMMUNITY !== 'false';
+const ENABLE_COMMUNITY = true;
 
 // Plugins
 const CopyWebpackPlugin = require('copy-webpack-plugin');
@@ -52,7 +52,7 @@ const base = {
         disableHostCheck: true,
         compress: true,
         headers: {'Access-Control-Allow-Origin': '*'},
-        port: process.env.PORT || 8601,
+        port: process.env.PORT || 8061,
         // allows ROUTING_STYLE=wildcard to work properly
         historyApiFallback: {
             rewrites: [

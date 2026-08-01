@@ -38,7 +38,7 @@ const TitledHOC = function (WrappedComponent) {
             // if project is a new default project, and has loaded,
             if (this.props.isShowingWithoutId && prevProps.isAnyCreatingNewState) {
                 const defaultProjectTitle = this.props.intl.formatMessage(messages.defaultProjectTitle);
-                // #mw- platform loads still go through the default-project id path
+                // #bl- platform loads still go through the default-project id path
                 // (hash parser only understands numeric scratch ids), but the fetcher
                 // already set the real title from the API. Don't clobber that.
                 if (this.props.reduxProjectTitle &&

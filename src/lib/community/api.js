@@ -92,12 +92,12 @@ const parseResponse = async response => {
 
 const exchangeValidator = async (roturToken, appKey = 'mistwarp') => {
     const validatorResponse = await fetch(
-        `https://api.rotur.dev/generate_validator?key=${encodeURIComponent(appKey)}&auth=${encodeURIComponent(roturToken)}`
+        `https://api.accounts.bilup.org/generate_validator?key=${encodeURIComponent(appKey)}&auth=${encodeURIComponent(roturToken)}`
     );
     const validatorData = await validatorResponse.json().catch(() => ({}));
     const validator = validatorData.validator;
     if (!validator) {
-        const error = new Error(validatorData.error || 'Could not validate Rotur login');
+        const error = new Error(validatorData.error || 'Could not validate Bilup Accounts login');
         if (validatorData.error || validatorResponse.status === 403) {
             error.code = 'VALIDATOR_GENERATION_FAILED';
         }

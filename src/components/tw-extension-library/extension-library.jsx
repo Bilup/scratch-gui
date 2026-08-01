@@ -33,7 +33,7 @@ const sources = [
     ['scratch', 'Scratch'],
     ['tw', 'TurboWarp'],
     ['mistium', 'Mistium'],
-    ['rotur', 'Rotur']
+    ['rotur', 'Bilup Accounts']
 ];
 
 const labelOf = (tag, intl) => (

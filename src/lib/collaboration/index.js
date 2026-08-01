@@ -55,7 +55,7 @@ class CollabService extends Emitter {
      * @param {string} username Display name.
      * @param {boolean} isHost Create (true) or join (false).
      * @param {string} [privacy] 'public' | 'private' (host only).
-     * @param {string} [handle] Rotur handle, for avatars.
+     * @param {string} [handle] Bilup Accounts handle, for avatars.
      * @returns {Promise<string>} Our peer id.
      */
     async connectToRoom (roomId, username, isHost = false, privacy = 'public', handle = null) {

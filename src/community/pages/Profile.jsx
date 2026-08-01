@@ -56,7 +56,7 @@ const Profile = () => {
         rotur.profile(name, {includePosts: false})
             .then(fresh(setProfile))
             .catch(fresh(() => setError(t('mw.community.profile.notFound',
-                'This user does not exist on Rotur.'))));
+                'This user does not exist on Bilup Accounts.'))));
         api.getUser(name)
             .then(fresh(setMwUser))
             .catch(fresh(() => setMwUser(null)));
@@ -283,7 +283,7 @@ const Profile = () => {
                     {isSelf ? (
                         <a
                             className={styles.followButton}
-                            href="https://rotur.dev/me"
+                            href="https://accounts.bilup.org/me"
                             target="_blank"
                             rel="noreferrer"
                         >
@@ -299,7 +299,7 @@ const Profile = () => {
             {!onMistWarp ? (
                 <div className={styles.notOnMistwarp}>
                     {t('mw.community.profile.notOnBilup',
-                        'Not on Bilup yet. This is {name}\'s Rotur profile.', {
+                        'Not on Bilup yet. This is {name}\'s Bilup Accounts profile.', {
                             name: profile.username || name
                         })}
                 </div>
@@ -505,7 +505,7 @@ const DonateModal = ({recipient, onClose}) => {
                         <p className={styles.donateText}>
                             {intl.formatMessage({
                                 id: 'mw.community.profile.donateText',
-                                defaultMessage: 'Send Rotur credits straight to {recipient}. This transfers directly from your account.'
+                                defaultMessage: 'Send Bilup Accounts credits straight to {recipient}. This transfers directly from your account.'
                             }, {recipient})}
                         </p>
                         <input

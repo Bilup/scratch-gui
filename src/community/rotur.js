@@ -1,7 +1,7 @@
 import {getRoturToken} from '../lib/rotur/identity.js';
 
-const ROTUR_API = 'https://api.rotur.dev';
-const AVATARS = 'https://avatars.rotur.dev';
+const ROTUR_API = 'https://api.accounts.bilup.org';
+const AVATARS = 'https://avatars.accounts.bilup.org';
 
 const roturToken = () => getRoturToken();
 
@@ -23,7 +23,7 @@ const get = async (path, params = {}) => {
         data = null;
     }
     if (!response.ok || (data && data.error)) {
-        const error = new Error((data && data.error) || `Rotur request failed (${response.status})`);
+        const error = new Error((data && data.error) || `Bilup Accounts request failed (${response.status})`);
         error.status = response.status;
         throw error;
     }

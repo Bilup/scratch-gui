@@ -51,7 +51,7 @@ const RoturConsentModal = ({type, data, onAllow, onDeny, onShareThis, onShareAll
                 }
             >
                 <p className={styles.lead}>
-                    {t('mw.roturConsent.shareBody', '"{name}" wants to show it on your Rotur profile', {
+                    {t('mw.roturConsent.shareBody', '"{name}" wants to show it on your Bilup Accounts profile', {
                         name: data.name || t('mw.roturConsent.thisProject', 'This project')
                     })}
                     {data.username ? ` (@${data.username}).` : t('mw.roturConsent.period', '.')}
@@ -64,8 +64,8 @@ const RoturConsentModal = ({type, data, onAllow, onDeny, onShareThis, onShareAll
         <Modal
             icon={ShieldCheck}
             title={type === 'confirm' ?
-                t('mw.roturConsent.confirmTitle', 'Confirm Rotur action') :
-                t('mw.roturConsent.connectTitle', 'Connect to Rotur')}
+                t('mw.roturConsent.confirmTitle', 'Confirm Bilup Accounts action') :
+                t('mw.roturConsent.connectTitle', 'Connect to Bilup Accounts')}
             onDismiss={onDeny}
             actions={
                 <React.Fragment>
@@ -95,7 +95,7 @@ const RoturConsentModal = ({type, data, onAllow, onDeny, onShareThis, onShareAll
             ) : (
                 <React.Fragment>
                     <p className={styles.lead}>
-                        {t('mw.roturConsent.connectBody', '"{name}" wants to use your Rotur account', {
+                        {t('mw.roturConsent.connectBody', '"{name}" wants to use your Bilup Accounts account', {
                             name: data.name || t('mw.roturConsent.thisProject', 'This project')
                         })}
                         {data.username ? ` (@${data.username})` : ''}
@@ -115,7 +115,7 @@ const RoturConsentModal = ({type, data, onAllow, onDeny, onShareThis, onShareAll
                         </div>
                     ))}
                     {(data.scopes || []).length === 0 ? (
-                        <p className={styles.lead}>{t('mw.roturConsent.noScopes', 'This only reads your public Rotur info.')}</p>
+                        <p className={styles.lead}>{t('mw.roturConsent.noScopes', 'This only reads your public Bilup Accounts info.')}</p>
                     ) : null}
                 </React.Fragment>
             )}

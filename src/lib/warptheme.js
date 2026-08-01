@@ -2,7 +2,7 @@ import {getRotur} from './rotur/client.js';
 
 const API = 'https://warptheme.mistium.com/api';
 const TOKEN_KEY = 'mw:warptheme-token';
-const TOKEN_MANAGER = 'https://rotur.dev/token-manager';
+const TOKEN_MANAGER = 'https://accounts.bilup.org/token-manager';
 
 const needsValidatorPermission = (status, data = {}) => (
     status === 401 ||
@@ -55,7 +55,7 @@ const openSession = async expectedUsername => {
     }
 
     const roturToken = getRotur().token;
-    if (!roturToken) throw new Error('Sign in with Rotur first.');
+    if (!roturToken) throw new Error('Sign in with Bilup Accounts first.');
     const validatorResponse = await fetch(
         `https://social.rotur.dev/generate_validator?key=warptheme&auth=${encodeURIComponent(roturToken)}`
     );
@@ -63,13 +63,13 @@ const openSession = async expectedUsername => {
     if (!validatorResponse.ok || !validatorData.validator) {
         const message = String(validatorData.error || validatorData.message || '');
         const permissionError = new Error(
-            'Your Rotur token needs the validators:generate permission before it can access WarpTheme.'
+            'Your Bilup Accounts token needs the validators:generate permission before it can access WarpTheme.'
         );
         if (needsValidatorPermission(validatorResponse.status, validatorData)) {
             permissionError.code = 'validator-permission';
             throw permissionError;
         }
-        throw new Error(message || 'Rotur could not authorize WarpTheme.');
+        throw new Error(message || 'Bilup Accounts could not authorize WarpTheme.');
     }
 
     const auth = await request(`/auth?v=${encodeURIComponent(validatorData.validator)}`, null, {method: 'POST'});

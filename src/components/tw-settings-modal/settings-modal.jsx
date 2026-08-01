@@ -654,7 +654,7 @@ DisableCompiler.propTypes = {
 
 const STYLE_OPTIONS = {
     'tab-style': [
-        {value: 'bilup', labelId: 'mw.settingsModal.tabStyle.bilup', label: 'Bilup'},
+        {value: 'mistwarp', labelId: 'mw.settingsModal.tabStyle.mistwarp', label: 'MistWarp'},
         {value: 'turbowarp', labelId: 'mw.settingsModal.tabStyle.turbowarp', label: 'TurboWarp'},
         {value: 'scratchbox', labelId: 'mw.settingsModal.tabStyle.scratchbox', label: 'ScratchBox'}
     ],
@@ -664,7 +664,7 @@ const STYLE_OPTIONS = {
         {value: 'text-only', labelId: 'mw.settingsModal.tabLooks.textOnly', label: 'Text Only'}
     ],
     'window-style': [
-        {value: 'bilup', labelId: 'mw.settingsModal.windowStyle.bilup', label: 'Bilup'},
+        {value: 'mistwarp', labelId: 'mw.settingsModal.windowStyle.mistwarp', label: 'MistWarp'},
         {value: 'macos', labelId: 'mw.settingsModal.windowStyle.macos', label: 'macOS'},
         {value: 'windows10', labelId: 'mw.settingsModal.windowStyle.windows10', label: 'Windows 10'}
     ]
@@ -1646,13 +1646,13 @@ class UnwrappedRoturPage extends React.Component {
                 <p className={styles.detail}>
                     {loggedIn ? (
                         <FormattedMessage
-                            defaultMessage="Signed in as {username}. These options control how Bilup appears on your Rotur profile."
+                            defaultMessage="Signed in as {username}. These options control how Bilup appears on your Bilup Accounts profile."
                             id="mw.settings.rotur.signedInAs"
                             values={{username}}
                         />
                     ) : (
                         <FormattedMessage
-                            defaultMessage="Log in with Rotur from the top-right of the menu bar to publish presence."
+                            defaultMessage="Log in with Bilup Accounts from the top-right of the menu bar to publish presence."
                             id="mw.settings.rotur.notSignedIn"
                         />
                     )}
@@ -1662,11 +1662,11 @@ class UnwrappedRoturPage extends React.Component {
                     value={presenceEnabled}
                     onChange={this.handlePresenceChange}
                     label={<FormattedMessage
-                        defaultMessage="Show Bilup activity on Rotur"
+                        defaultMessage="Show Bilup activity on Bilup Accounts"
                         id="mw.settings.rotur.presenceEnabled"
                     />}
                     help={<FormattedMessage
-                        defaultMessage="When signed in, friends on Rotur can see that you are editing in Bilup."
+                        defaultMessage="When signed in, friends on Bilup Accounts can see that you are editing in Bilup."
                         id="mw.settings.rotur.presenceEnabledHelp"
                     />}
                 />
@@ -1678,7 +1678,7 @@ class UnwrappedRoturPage extends React.Component {
                         id="mw.settings.rotur.includeEditDuration"
                     />}
                     help={<FormattedMessage
-                        defaultMessage="Uses Rotur's elapsed timer. Not added to the title or status text."
+                        defaultMessage="Uses Bilup Accounts's elapsed timer. Not added to the title or status text."
                         id="mw.settings.rotur.includeEditDurationHelp"
                     />}
                 />
@@ -1721,7 +1721,7 @@ class UnwrappedRoturPage extends React.Component {
 
                 <p className={styles.detail}>
                     <FormattedMessage
-                        defaultMessage="Themes and settings sync to your Rotur account when signed in."
+                        defaultMessage="Themes and settings sync to your Bilup Accounts account when signed in."
                         id="mw.settings.rotur.cloudSyncNote"
                     />
                 </p>
@@ -2185,7 +2185,7 @@ class SettingsModalComponent extends React.Component {
                     },
                     {
                         id: 'rotur',
-                        label: intl.formatMessage({id: 'mw.settings.rotur', defaultMessage: 'Rotur'}),
+                        label: intl.formatMessage({id: 'mw.settings.rotur', defaultMessage: 'Bilup Accounts'}),
                         icon: Radio
                     }
                 ]

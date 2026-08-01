@@ -166,7 +166,7 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
 
     const fetchSelectedExport = async () => {
         const response = await fetch(
-            `${API}/theme/export?uuid=${encodeURIComponent(selected.uuid)}&platform=mistwarp`,
+            `${API}/theme/export?uuid=${encodeURIComponent(selected.uuid)}&platform=bilup`,
             {headers: {Authorization: `Bearer ${token}`}}
         );
         if (!response.ok) throw new Error('Failed to export this theme.');
@@ -222,7 +222,7 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
         const items = sourceThemes.map((item, index) => ({
             name: (index === 0 && uploadName.trim()) || item.name || t('mw.community.warptheme.themeN', 'Theme {n}', {n: index + 1}),
             description: (index === 0 && uploadDescription.trim()) || item.description || '',
-            platform: source.platform || 'mistwarp',
+            platform: source.platform || 'bilup',
             themeJson: Array.isArray(source.themes) ? {...source, themes: [item]} : source
         }));
         await request('/theme', token, {method: 'POST', body: JSON.stringify({themes: items})});
@@ -285,13 +285,13 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
             <div className={styles.gate}>
                 <User size={26} />
                 <h3>{t('mw.community.warptheme.signInTitle', 'Sign in to WarpTheme')}</h3>
-                <p>{t('mw.community.warptheme.signInBody', 'The theme marketplace uses your Rotur account for uploads, reports, and ownership.')}</p>
+                <p>{t('mw.community.warptheme.signInBody', 'The theme marketplace uses your Bilup Accounts account for uploads, reports, and ownership.')}</p>
                 <button
                     className={styles.primaryButton}
                     onClick={login}
                     type="button"
                 >
-                    <LogIn size={15} /> {t('mw.community.warptheme.signInWithRotur', 'Sign in with Rotur')}
+                    <LogIn size={15} /> {t('mw.community.warptheme.signInWithRotur', 'Sign in with Bilup Accounts')}
                 </button>
             </div>
         );
@@ -303,7 +303,7 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
                 <Shield size={26} />
                 <h3>{t('mw.community.warptheme.permissionTitle', 'WarpTheme needs one more permission')}</h3>
                 <p>
-                    {t('mw.community.warptheme.permissionBody1', 'Edit your current token in Rotur Token Manager and enable')}
+                    {t('mw.community.warptheme.permissionBody1', 'Edit your current token in Bilup Accounts Token Manager and enable')}
                     {' '}<strong>validators:generate</strong>. {t('mw.community.warptheme.permissionBody2', 'Then return here and retry.')}
                 </p>
                 <div className={styles.gateActions}>
@@ -508,8 +508,7 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
                     onChange={e => setPlatform(e.target.value)}
                 >
                     <option value="all">{t('mw.community.warptheme.allPlatforms', 'All platforms')}</option>
-                    <option value="mistwarp">Bilup</option>
-                    <option value="nitrobolt">NitroBolt</option>
+                    <option value="bilup">Bilup</option>
                 </select>
             </div>
             {visibleThemes.length === 0 ? (

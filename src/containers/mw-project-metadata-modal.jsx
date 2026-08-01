@@ -80,7 +80,7 @@ const messages = defineMessages({
     format: {id: 'mw.projectMeta.format', defaultMessage: 'Format'},
     untitled: {id: 'mw.projectMeta.untitled', defaultMessage: 'Untitled'},
     saveToAddAuthor: {id: 'mw.projectMeta.saveToAddAuthor', defaultMessage: 'Save this project to add @{roturUsername} as its author.'},
-    signInToAddAuthor: {id: 'mw.projectMeta.signInToAddAuthor', defaultMessage: 'Sign in to Rotur and save this project to add authorship.'},
+    signInToAddAuthor: {id: 'mw.projectMeta.signInToAddAuthor', defaultMessage: 'Sign in to Bilup Accounts and save this project to add authorship.'},
     authorId: {id: 'mw.projectMeta.authorId', defaultMessage: 'Author ID'},
     platform: {id: 'mw.projectMeta.platform', defaultMessage: 'Platform'},
     version: {id: 'mw.projectMeta.version', defaultMessage: 'Version'},

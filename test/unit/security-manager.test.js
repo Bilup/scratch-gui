@@ -25,7 +25,7 @@ test('only official or explicitly trusted extensions run unsandboxed', () => {
 });
 
 test('only the verified owner gets the bypass option', () => {
-    window.history.replaceState(null, '', '/editor#mw-project-1');
+    window.history.replaceState(null, '', '/editor#bl-project-1');
     rememberPlatformProject({id: 'project-1', isOwner: false});
     expect(isOwnedPlatformProject()).toBe(false);
     rememberPlatformProject({id: 'project-1', isOwner: true});

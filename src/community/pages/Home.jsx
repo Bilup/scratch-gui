@@ -174,7 +174,7 @@ const ActivitySection = ({user, login}) => {
                     onClick={login}
                 >
                     <FormattedMessage
-                        defaultMessage="Sign in with Rotur"
+                        defaultMessage="Sign in with Bilup Accounts"
                         id="mw.community.home.signInRotur"
                     />
                 </button>
@@ -452,7 +452,7 @@ const Home = () => {
                                 onClick={login}
                             >
                                 <FormattedMessage
-                                    defaultMessage="Sign in with Rotur"
+                                    defaultMessage="Sign in with Bilup Accounts"
                                     id="mw.community.home.signInRotur"
                                 />
                             </button>

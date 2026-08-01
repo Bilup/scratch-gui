@@ -22,7 +22,7 @@ import {login} from '../../src/lib/rotur/identity.js';
 import {exchangeValidator} from '../../src/lib/community/api.js';
 import {logout as roturLogout} from '../../src/lib/rotur/client.js';
 
-test('switching Rotur accounts exchanges a fresh MistWarp session', async () => {
+test('switching Bilup Accounts accounts exchanges a fresh Bilup session', async () => {
     localStorage.setItem('mw:mistwarp-session', 'old-account-session');
 
     await expect(login()).resolves.toEqual({username: 'new-user'});
@@ -31,7 +31,7 @@ test('switching Rotur accounts exchanges a fresh MistWarp session', async () => 
     expect(localStorage.getItem('mw:mistwarp-session')).toBeNull();
 });
 
-test('a rejected validator invalidates the Rotur login', async () => {
+test('a rejected validator invalidates the Bilup Accounts login', async () => {
     const error = Object.assign(new Error('permission denied'), {code: 'VALIDATOR_GENERATION_FAILED'});
     exchangeValidator.mockRejectedValueOnce(error);
 

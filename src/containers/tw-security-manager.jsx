@@ -24,7 +24,7 @@ const manuallyTrustExtension = url => {
 const isPlatformProjectLoad = () => {
     try {
         const params = new URLSearchParams(location.search);
-        return params.has('mw_assets') || params.has('platform_project') || /^#mw-/.test(location.hash);
+        return params.has('mw_assets') || params.has('platform_project') || /^#bl-/.test(location.hash);
     } catch (e) {
         return false;
     }

@@ -263,7 +263,7 @@ const setUsernameOverride = value => {
     notifyLocalChange();
 };
 
-// Keep cloud in sync when Rotur presence settings change (avoids circular require)
+// Keep cloud in sync when Bilup Accounts presence settings change (avoids circular require)
 subscribeRoturSettings(() => {
     notifyLocalChange();
 });

@@ -5,7 +5,7 @@ import {
 } from '../../../src/lib/mw-project-metadata';
 
 describe('project metadata', () => {
-    test('keeps Scratch metadata and carries MistWarp metadata across saves', async () => {
+    test('keeps Scratch metadata and carries Bilup metadata across saves', async () => {
         let source = {
             meta: {
                 semver: '3.0.0',
