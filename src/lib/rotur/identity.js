@@ -183,7 +183,7 @@ onBanned(message => {
     } catch (_) {
         // ignore
     }
-    setState({status: 'idle', user: null, banMessage: message || 'This account is banned from MistWarp.'});
+    setState({status: 'idle', user: null, banMessage: message || 'This account is banned from Bilup.'});
 });
 
 if (typeof window !== 'undefined') {

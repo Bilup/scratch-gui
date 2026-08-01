@@ -100,7 +100,7 @@ const exportCurrentTheme = theme => {
     if (exported && exported.accent && Array.isArray(exported.accent.colors)) return exported;
     return {
         ...exported,
-        name: (exported && exported.name) || (theme && theme.name) || 'My MistWarp Theme',
+        name: (exported && exported.name) || (theme && theme.name) || 'My Bilup Theme',
         description: (exported && exported.description) || '',
         accent: {
             colors: [

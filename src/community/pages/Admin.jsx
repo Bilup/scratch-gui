@@ -995,7 +995,7 @@ const Admin = () => {
 
     const banFromReport = report => {
         const who = report.type === 'project' ? 'the owner of this project' : `@${report.target}`;
-        if (!window.confirm(`Ban ${who}? They will be locked out of MistWarp until unbanned.`)) return;
+        if (!window.confirm(`Ban ${who}? They will be locked out of Bilup until unbanned.`)) return;
         act(report.id, 'ban_user');
     };
 

@@ -222,7 +222,7 @@ const currentUser = () => shellUser.rotur || shellUser.local || 'player';
 const gitHelp = `Supported git commands:
   status, add, rm, commit, log, branch, checkout, diff --name-only,
   config, remote, rev-parse
-Use MistWarp's Version Control window for clone, pull, push, and merges.\n`;
+Use Bilup's Version Control window for clone, pull, push, and merges.\n`;
 
 const createGitCommand = state => defineCommand('git', async args => {
     const fs = getFs();

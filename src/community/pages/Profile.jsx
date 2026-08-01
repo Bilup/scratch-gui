@@ -286,7 +286,7 @@ const Profile = () => {
 
             {!onMistWarp ? (
                 <div className={styles.notOnMistwarp}>
-                    Not on MistWarp yet. This is {profile.username || name}&apos;s Rotur profile.
+                    Not on Bilup yet. This is {profile.username || name}&apos;s Rotur profile.
                 </div>
             ) : null}
 
@@ -408,7 +408,7 @@ const DonateModal = ({recipient, onClose}) => {
         setBusy(true);
         setStatus(null);
         try {
-            await payUser(recipient, value, `MistWarp donation to ${recipient}`);
+            await payUser(recipient, value, `Bilup donation to ${recipient}`);
             setSent(value);
         } catch (e) {
             if (isInsufficientFunds(e)) {

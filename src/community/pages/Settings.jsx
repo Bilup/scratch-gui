@@ -129,7 +129,7 @@ const Settings = () => {
         <main className={styles.page}>
             <h1>Settings</h1>
             <p className={styles.lead}>
-                These settings apply across all of MistWarp, including the editor and site.
+                These settings apply across all of Bilup, including the editor and site.
             </p>
 
             <div className={styles.layout}>
@@ -248,7 +248,7 @@ const Settings = () => {
                         <section className={styles.card}>
                             <h2>Project themes</h2>
                             <p className={styles.lead}>
-                                Some projects come with their own MistWarp theme. Choose when the player should
+                                Some projects come with their own Bilup theme. Choose when the player should
                                 switch to a project&apos;s theme automatically.
                             </p>
                             <label className={styles.field}>

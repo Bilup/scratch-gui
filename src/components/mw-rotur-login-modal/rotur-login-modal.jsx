@@ -16,7 +16,7 @@ const messages = defineMessages({
         id: 'mw.roturLogin.title'
     },
     infoTitle: {
-        defaultMessage: 'Rotur in MistWarp',
+        defaultMessage: 'Rotur in Bilup',
         description: 'Title of Rotur info modal when signed in',
         id: 'mw.roturLogin.infoTitle'
     }
@@ -34,7 +34,7 @@ const FEATURES = [
         ),
         description: (
             <FormattedMessage
-                defaultMessage="Share MistWarp activity on your Rotur profile."
+                defaultMessage="Share Bilup activity on your Rotur profile."
                 description="Rotur login feature description"
                 id="mw.roturLogin.feature.activity.desc"
             />
@@ -88,7 +88,7 @@ const COMING_SOON = [
         ),
         description: (
             <FormattedMessage
-                defaultMessage="See online friends on MistWarp and invite them to collab."
+                defaultMessage="See online friends on Bilup and invite them to collab."
                 description="Upcoming Rotur feature description"
                 id="mw.roturLogin.coming.friends.desc"
             />
@@ -173,13 +173,13 @@ class RoturLoginModal extends React.Component {
                             <h2 className={styles.title}>
                                 {loggedIn ? (
                                     <FormattedMessage
-                                        defaultMessage="Rotur in MistWarp"
+                                        defaultMessage="Rotur in Bilup"
                                         description="Headline in Rotur info modal when signed in"
                                         id="mw.roturLogin.infoHeadline"
                                     />
                                 ) : (
                                     <FormattedMessage
-                                        defaultMessage="Connect MistWarp to Rotur"
+                                        defaultMessage="Connect Bilup to Rotur"
                                         description="Headline in Rotur login modal"
                                         id="mw.roturLogin.headline"
                                     />

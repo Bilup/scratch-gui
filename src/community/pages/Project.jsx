@@ -296,7 +296,7 @@ const Project = () => {
         // eslint-disable-next-line no-alert
         const ok = window.confirm(
             'This project uses custom extensions.\n\n' +
-            'Running it without the sandbox gives it full access to your MistWarp account. ' +
+            'Running it without the sandbox gives it full access to your Bilup account. ' +
             'It could read your login session, act as you, or change your data. ' +
             'Only continue if you trust the person who made this project.'
         );

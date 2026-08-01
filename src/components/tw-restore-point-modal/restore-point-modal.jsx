@@ -28,6 +28,10 @@ const messages = defineMessages({
     refresh: {
         defaultMessage: 'Refresh',
         id: 'tw.restorePoints.refresh'
+    },
+    everyMs: {
+        defaultMessage: 'Every {n}ms',
+        id: 'tw.restorePoints.everyMs'
     }
 });
 
@@ -65,7 +69,7 @@ const IntervalSelector = props => (
         ))}
         {!INTERVAL_OPTIONS.includes(props.value) && (
             <option value={props.value}>
-                {`Every ${props.value}ms`}
+                {props.intl.formatMessage(messages.everyMs, {n: props.value})}
             </option>
         )}
     </select>

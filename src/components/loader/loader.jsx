@@ -107,7 +107,7 @@ const QUOTE_INTERVAL = 5000;
 // Array of random loading messages
 const randomMessages = [
   "Also try TurboWarp!",
-  "Also try MistWarp!",
+  "Also try Bilup!",
   "Also try 02Engine!",
   "Also try AstraEditor!"
 ];

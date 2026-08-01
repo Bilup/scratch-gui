@@ -5,7 +5,7 @@
  */
 
 const STORAGE_KEY = 'mw:rotur-settings';
-const APP_NAME = 'MistWarp';
+const APP_NAME = 'Bilup';
 
 const DEFAULTS = {
     presenceEnabled: true,

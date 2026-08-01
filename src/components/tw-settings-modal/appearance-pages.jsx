@@ -124,8 +124,8 @@ const UnconnectedThemePage = ({theme, onChangeTheme}) => (
         </PageHeader>
         <div className={styles.setting}>
             <FormattedMessage
-                defaultMessage="Theme and accent colors apply across all of MistWarp and live in your MistWarp settings."
-                description="Explains that global theming moved to the MistWarp site settings"
+                defaultMessage="Theme and accent colors apply across all of Bilup and live in your Bilup settings."
+                description="Explains that global theming moved to the Bilup site settings"
                 id="mw.settings.themeMoved"
             />
         </div>
@@ -136,7 +136,7 @@ const UnconnectedThemePage = ({theme, onChangeTheme}) => (
                 onClick={() => window.open('/settings', '_blank')}
             >
                 <FormattedMessage
-                    defaultMessage="Edit my MistWarp settings"
+                    defaultMessage="Edit my Bilup settings"
                     id="mw.settings.editCommunitySettings"
                 />
                 {' '}

@@ -1984,7 +1984,7 @@ class DesktopPage extends React.Component {
                             id="mw.settingsModal.desktop.richPresence"
                         />}
                         help={<FormattedMessage
-                            defaultMessage="Shows that you are using MistWarp on your Discord profile while the app is open."
+                            defaultMessage="Shows that you are using Bilup on your Discord profile while the app is open."
                             id="mw.settingsModal.desktop.richPresenceHelp"
                         />}
                     />

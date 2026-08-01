@@ -4,6 +4,11 @@ import React from 'react';
 import {IntlProvider} from 'react-intl';
 import {BrowserRouter} from 'react-router-dom';
 
+import editorMessages from '@bilup/scratch-l10n/locales/editor-msgs';
+import addAdditionalTranslations from '../lib/tw-translations/index.js';
+import communityTranslations from '../community/translations/zh-cn.json';
+import {detectLocale} from '../lib/utils/detect-locale.js';
+
 import App from '../community/App.jsx';
 import {applyThemeVisuals, detectTheme, onSystemPreferenceChange} from '../lib/themes/themePersistance.js';
 import render from './app-target.js';
@@ -22,8 +27,22 @@ if (embedMatch) {
     applyThemeVisuals(detectTheme());
     onSystemPreferenceChange(() => applyThemeVisuals(detectTheme()));
 
+    // Merge TW/Bilup extra translations and community site translations.
+    addAdditionalTranslations(editorMessages);
+    for (const locale of Object.keys(editorMessages)) {
+        const toMixIn = communityTranslations[locale.toLowerCase()];
+        if (toMixIn) {
+            Object.assign(editorMessages[locale], toMixIn);
+        }
+    }
+    const supportedLocales = Object.keys(editorMessages);
+    const locale = detectLocale(supportedLocales);
+
     render(
-        <IntlProvider locale="en">
+        <IntlProvider
+            locale={locale}
+            messages={editorMessages[locale]}
+        >
             <BrowserRouter>
                 <App />
             </BrowserRouter>

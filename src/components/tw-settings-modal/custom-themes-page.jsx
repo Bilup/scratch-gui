@@ -713,7 +713,7 @@ class CustomThemesPage extends React.Component {
                         </h3>
                         <p className={styles.detail}>
                             <FormattedMessage
-                                defaultMessage="Load themes from a MistWarp or NitroBolt JSON file."
+                                defaultMessage="Load themes from a Bilup or NitroBolt JSON file."
                                 id="mw.customThemes.import.hint"
                             />
                         </p>

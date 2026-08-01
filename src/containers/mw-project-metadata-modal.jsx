@@ -579,11 +579,6 @@ const ProjectMetadataModal = ({initialView, intl, onRequestClose, projectTitle, 
                 />
             </React.Fragment>
         );
-                    label="User agent"
-                    value={meta.agent}
-                />
-            </React.Fragment>
-        );
         break;
     default:
         page = (
@@ -682,4 +677,4 @@ export default injectIntl(connect(
     dispatch => ({
         onRequestClose: () => dispatch(closeProjectMetadataModal())
     })
-)(ProjectMetadataModal);
+)(ProjectMetadataModal));

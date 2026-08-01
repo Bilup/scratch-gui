@@ -1,4 +1,5 @@
 import React, {useEffect, useState} from 'react';
+import {FormattedMessage} from 'react-intl';
 import {Link} from 'react-router-dom';
 import {Sparkles, Clock, Users, Heart, Star, Globe, GitFork, Megaphone, Github} from 'lucide-react';
 import api, {editorUrl, projectUrl} from '../api';
@@ -21,11 +22,40 @@ const ACTIVITY_ICONS = {
 
 const describeActivity = item => {
     switch (item.type) {
-    case 'love': return <span>loved <strong>{item.projectTitle}</strong></span>;
-    case 'favorite': return <span>favorited <strong>{item.projectTitle}</strong></span>;
-    case 'share': return <span>shared <strong>{item.projectTitle}</strong></span>;
-    case 'remix': return <span>remixed <strong>{item.parentTitle || item.projectTitle}</strong></span>;
-    default: return <span>did something</span>;
+    case 'love': return (
+        <FormattedMessage
+            defaultMessage="loved {title}"
+            id="mw.community.home.activity.loved"
+            values={{title: <strong>{item.projectTitle}</strong>}}
+        />
+    );
+    case 'favorite': return (
+        <FormattedMessage
+            defaultMessage="favorited {title}"
+            id="mw.community.home.activity.favorited"
+            values={{title: <strong>{item.projectTitle}</strong>}}
+        />
+    );
+    case 'share': return (
+        <FormattedMessage
+            defaultMessage="shared {title}"
+            id="mw.community.home.activity.shared"
+            values={{title: <strong>{item.projectTitle}</strong>}}
+        />
+    );
+    case 'remix': return (
+        <FormattedMessage
+            defaultMessage="remixed {title}"
+            id="mw.community.home.activity.remixed"
+            values={{title: <strong>{item.parentTitle || item.projectTitle}</strong>}}
+        />
+    );
+    default: return (
+        <FormattedMessage
+            defaultMessage="did something"
+            id="mw.community.home.activity.other"
+        />
+    );
     }
 };
 
@@ -45,8 +75,16 @@ const Row = ({title, icon, action, projects, loading, failed, onRetry}) => {
     } else if (failed) {
         body = (
             <div className={styles.empty}>
-                Couldn&apos;t load projects.{' '}
-                <Button onClick={onRetry}>Try again</Button>
+                <FormattedMessage
+                    defaultMessage="Couldn't load projects."
+                    id="mw.community.home.couldNotLoadProjects"
+                />{' '}
+                <Button onClick={onRetry}>
+                    <FormattedMessage
+                        defaultMessage="Try again"
+                        id="mw.community.home.tryAgain"
+                    />
+                </Button>
             </div>
         );
     } else if (projects.length) {
@@ -61,7 +99,14 @@ const Row = ({title, icon, action, projects, loading, failed, onRetry}) => {
             </div>
         );
     } else {
-        body = <div className={styles.empty}>Nothing here yet. Be the first to share a project.</div>;
+        body = (
+            <div className={styles.empty}>
+                <FormattedMessage
+                    defaultMessage="Nothing here yet. Be the first to share a project."
+                    id="mw.community.home.nothingHere"
+                />
+            </div>
+        );
     }
     return (
         <section className={styles.row}>
@@ -118,24 +163,56 @@ const ActivitySection = ({user, login}) => {
     if (!user) {
         body = (
             <div className={styles.feedMessage}>
-                <span>Log in to see your friends&apos; activity.</span>
+                <span>
+                    <FormattedMessage
+                        defaultMessage="Log in to see your friends' activity."
+                        id="mw.community.home.feedLogIn"
+                    />
+                </span>
                 <button
                     className={styles.feedSignIn}
                     onClick={login}
-                >Sign in with Rotur</button>
+                >
+                    <FormattedMessage
+                        defaultMessage="Sign in with Rotur"
+                        id="mw.community.home.signInRotur"
+                    />
+                </button>
             </div>
         );
     } else if (!loaded) {
-        body = <div className={styles.feedMessage}>Loading…</div>;
+        body = (
+            <div className={styles.feedMessage}>
+                <FormattedMessage
+                    defaultMessage="Loading…"
+                    id="mw.community.home.loading"
+                />
+            </div>
+        );
     } else if (failed) {
         body = (
             <div className={styles.feedMessage}>
-                Couldn&apos;t load.{' '}
-                <Button onClick={() => setAttempt(a => a + 1)}>Try again</Button>
+                <FormattedMessage
+                    defaultMessage="Couldn't load."
+                    id="mw.community.home.couldNotLoad"
+                />{' '}
+                <Button onClick={() => setAttempt(a => a + 1)}>
+                    <FormattedMessage
+                        defaultMessage="Try again"
+                        id="mw.community.home.tryAgain"
+                    />
+                </Button>
             </div>
         );
     } else if (!items.length) {
-        body = <div className={styles.feedMessage}>No recent activity from people you follow yet.</div>;
+        body = (
+            <div className={styles.feedMessage}>
+                <FormattedMessage
+                    defaultMessage="No recent activity from people you follow yet."
+                    id="mw.community.home.noRecentActivity"
+                />
+            </div>
+        );
     } else {
         body = (
             <div className={`${styles.activityList} ${styles.feedScroll}`}>
@@ -179,7 +256,10 @@ const ActivitySection = ({user, login}) => {
                         size={19}
                         className={styles.rowIcon}
                     />
-                    From people you follow
+                    <FormattedMessage
+                        defaultMessage="From people you follow"
+                        id="mw.community.home.feedFromFollowed"
+                    />
                 </h2>
             </div>
             {body}
@@ -222,10 +302,18 @@ const NewsSection = () => {
                             size={19}
                             className={styles.rowIcon}
                         />
-                        News
+                        <FormattedMessage
+                            defaultMessage="News"
+                            id="mw.community.home.news"
+                        />
                     </h2>
                 </div>
-                <div className={styles.feedMessage}>Couldn&apos;t load news.</div>
+                <div className={styles.feedMessage}>
+                    <FormattedMessage
+                        defaultMessage="Couldn't load news."
+                        id="mw.community.home.couldNotLoadNews"
+                    />
+                </div>
             </section>
         );
     }
@@ -238,10 +326,18 @@ const NewsSection = () => {
                             size={19}
                             className={styles.rowIcon}
                         />
-                        News
+                        <FormattedMessage
+                            defaultMessage="News"
+                            id="mw.community.home.news"
+                        />
                     </h2>
                 </div>
-                <div className={styles.feedMessage}>Loading…</div>
+                <div className={styles.feedMessage}>
+                    <FormattedMessage
+                        defaultMessage="Loading…"
+                        id="mw.community.home.loading"
+                    />
+                </div>
             </section>
         );
     }
@@ -256,13 +352,21 @@ const NewsSection = () => {
                     <Megaphone
                         size={19}
                         className={styles.rowIcon}
-                    />
-                    News
-                </h2>
+                        />
+                        <FormattedMessage
+                            defaultMessage="News"
+                            id="mw.community.home.news"
+                        />
+                    </h2>
                 <Link
                     to="/news"
                     className={styles.seeAll}
-                >All updates</Link>
+                >
+                    <FormattedMessage
+                        defaultMessage="All updates"
+                        id="mw.community.home.allUpdates"
+                    />
+                </Link>
             </div>
             <div className={`${styles.newsList} ${styles.feedScroll}`}>
                 {items.map(item => (
@@ -310,26 +414,48 @@ const Home = () => {
         <main className={styles.page}>
             <section className={styles.hero}>
                 <div className={styles.heroText}>
-                    <h1>Build, share, and remix projects together.</h1>
+                    <h1>
+                        <FormattedMessage
+                            defaultMessage="Build, share, and remix projects together."
+                            id="mw.community.home.heroTitle"
+                        />
+                    </h1>
                     <p>
-                        A visual coding community on the Bilup editor, with version control,
-                        forking, and pull requests behind every project.
+                        <FormattedMessage
+                            defaultMessage="A visual coding community on the Bilup editor, with version control, forking, and pull requests behind every project."
+                            id="mw.community.home.heroDescription"
+                        />
                     </p>
                     <div className={styles.heroActions}>
                         <a
                             className={styles.primaryButton}
                             href={editorUrl()}
-                        >Start creating</a>
+                        >
+                            <FormattedMessage
+                                defaultMessage="Start creating"
+                                id="mw.community.home.startCreating"
+                            />
+                        </a>
                         {user ? (
                             <Link
                                 className={styles.secondaryButton}
                                 to="/explore"
-                            >Explore projects</Link>
+                            >
+                                <FormattedMessage
+                                    defaultMessage="Explore projects"
+                                    id="mw.community.home.exploreProjects"
+                                />
+                            </Link>
                         ) : (
                             <button
                                 className={styles.secondaryButton}
                                 onClick={login}
-                            >Sign in with Rotur</button>
+                            >
+                                <FormattedMessage
+                                    defaultMessage="Sign in with Rotur"
+                                    id="mw.community.home.signInRotur"
+                                />
+                            </button>
                         )}
                         <a
                             className={styles.secondaryButton}
@@ -338,7 +464,10 @@ const Home = () => {
                             rel="noreferrer"
                         >
                             <Github size={16} />
-                            Follow on GitHub
+                            <FormattedMessage
+                                defaultMessage="Follow on GitHub"
+                                id="mw.community.home.followGitHub"
+                            />
                         </a>
                     </div>
                 </div>
@@ -360,7 +489,10 @@ const Home = () => {
             </div>
 
             <Row
-                title="Trending"
+                title={<FormattedMessage
+                    defaultMessage="Trending"
+                    id="mw.community.home.trending"
+                />}
                 icon={<Sparkles
                     size={19}
                     className={styles.rowIcon}
@@ -372,10 +504,18 @@ const Home = () => {
                 action={<Link
                     to="/explore?sort=trending"
                     className={styles.seeAll}
-                >See all</Link>}
+                >
+                    <FormattedMessage
+                        defaultMessage="See all"
+                        id="mw.community.home.seeAll"
+                    />
+                </Link>}
             />
             <Row
-                title="Freshly shared"
+                title={<FormattedMessage
+                    defaultMessage="Freshly shared"
+                    id="mw.community.home.freshlyShared"
+                />}
                 icon={<Clock
                     size={19}
                     className={styles.rowIcon}
@@ -387,7 +527,12 @@ const Home = () => {
                 action={<Link
                     to="/explore?sort=recent"
                     className={styles.seeAll}
-                >See all</Link>}
+                >
+                    <FormattedMessage
+                        defaultMessage="See all"
+                        id="mw.community.home.seeAll"
+                    />
+                </Link>}
             />
         </main>
     );

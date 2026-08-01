@@ -529,8 +529,8 @@ const ConnectedInterface = injectIntl(connect(
 )(Interface));
 
 const WrappedInterface = compose(
-    LocalizationHOC,
     AppStateHOC,
+    LocalizationHOC,
     ErrorBoundaryHOC('TW Interface'),
     TWProjectMetaFetcherHOC,
     TWStateManagerHOC,

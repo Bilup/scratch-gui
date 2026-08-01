@@ -500,7 +500,7 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
                     onChange={e => setPlatform(e.target.value)}
                 >
                     <option value="all">All platforms</option>
-                    <option value="mistwarp">MistWarp</option>
+                    <option value="mistwarp">Bilup</option>
                     <option value="nitrobolt">NitroBolt</option>
                 </select>
             </div>

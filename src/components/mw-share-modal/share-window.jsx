@@ -171,7 +171,7 @@ class ShareWindow extends React.Component {
                         <p className={styles.doneMessage}>
                             {this.state.done.shared ?
                                 'Your project is saved and shared.' :
-                                'Your project is saved to MistWarp. ' +
+                                'Your project is saved to Bilup. ' +
                                 'It stays private until you share it from its project page.'}
                         </p>
                     </div>
@@ -197,7 +197,7 @@ class ShareWindow extends React.Component {
                 <div className={styles.root}>
                     <div className={styles.body}>
                         <p className={styles.doneMessage}>
-                            {'Upload the current version of this project to MistWarp. ' +
+                            {'Upload the current version of this project to Bilup. ' +
                             'The title and thumbnail stay as they are; edit those on the project page.'}
                         </p>
                         {this.renderError()}

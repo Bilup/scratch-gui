@@ -1053,7 +1053,7 @@ class GitModalComponent extends React.Component {
                     <p>
                         <FormattedMessage
                             // eslint-disable-next-line max-len
-                            defaultMessage="Sign in with Rotur to create repos on git.rotur.dev and push your project straight from MistWarp."
+                            defaultMessage="Sign in with Rotur to create repos on git.rotur.dev and push your project straight from Bilup."
                             description="Shown on the Rotur Git tab when signed out"
                             id="mw.git.rotur.signedOut"
                         />
