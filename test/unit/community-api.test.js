@@ -49,7 +49,7 @@ test('editor project loads use the permission checked endpoint', async () => {
     }));
 
     await expect(getEditorProject('project-1')).resolves.toMatchObject({project: {id: 'project-1'}});
-    expect(window.fetch.mock.calls[0][0]).toBe('https://mwapi.mistium.com/api/projects/project-1/editor');
+    expect(window.fetch.mock.calls[0][0]).toBe('https://api.bilup.org/api/projects/project-1/editor');
 });
 
 test('Bilup project identity keeps ownership and sharing state', () => {

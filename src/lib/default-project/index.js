@@ -2,7 +2,7 @@ import projectData from './project-data';
 
 /* eslint-disable import/no-unresolved */
 import overrideDefaultProject from '!arraybuffer-loader!./override-default-project.sb3';
-import backdrop from '!raw-loader!./223d25c297317463755043f276178aef.svg';
+import backdrop from '!raw-loader!./ce8dae5f384bea489a445f4e960c02f5.svg';
 /* eslint-enable import/no-unresolved */
 import { TextEncoder } from '../tw-text-encoder';
 
@@ -31,7 +31,7 @@ const defaultProject = translator => {
         dataFormat: 'JSON',
         data: JSON.stringify(projectJson)
     }, {
-        id: '223d25c297317463755043f276178aef',
+        id: 'ce8dae5f384bea489a445f4e960c02f5',
         assetType: 'ImageVector',
         dataFormat: 'SVG',
         data: encoder.encode(backdrop)

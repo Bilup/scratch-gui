@@ -52,7 +52,7 @@ const base = {
         disableHostCheck: true,
         compress: true,
         headers: {'Access-Control-Allow-Origin': '*'},
-        port: process.env.PORT || 8061,
+        port: process.env.PORT || 8601,
         // allows ROUTING_STYLE=wildcard to work properly
         historyApiFallback: {
             rewrites: [

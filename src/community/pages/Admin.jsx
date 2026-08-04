@@ -104,7 +104,8 @@ const StatsOverview = () => {
         api.quota()
             .then(setQuota)
             .catch(() => {});
-    }, [t]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const retryPayouts = async () => {
         if (payoutBusy) return;
@@ -212,7 +213,8 @@ const ProjectManager = () => {
         } catch (e) {
             setError(e.message || t('mw.community.admin.couldNotLoadProjects', 'Could not load projects.'));
         }
-    }, [t]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     useEffect(() => {
         search('');
@@ -330,7 +332,8 @@ const UserDetailCard = ({username, onBack}) => {
                 setData(null);
                 setError(e.message || t('mw.community.admin.couldNotLoadUser', 'Could not load that user.'));
             });
-    }, [username, t]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [username]);
 
     const refresh = () => {
         if (!data) return;
@@ -538,7 +541,8 @@ const UserManager = () => {
                 setError(e.message || t('mw.community.admin.couldNotLoadUsers', 'Could not load users.'));
                 setLoading(false);
             });
-    }, [t]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const filtered = query.trim() ?
         users.filter(u => u.username.toLowerCase().includes(query.toLowerCase())) :
@@ -712,7 +716,8 @@ const ExtensionManager = () => {
         return api.admin.extensions()
             .then(setData)
             .catch(e => setError(e.message || t('mw.community.admin.couldNotLoadExtensions', 'Could not load extensions.')));
-    }, [t]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     useEffect(() => {
         load();
@@ -985,7 +990,8 @@ const Admin = () => {
         api.admin.admins()
             .then(fresh(data => setAdmins(data.admins || [])))
             .catch(() => {});
-    }, [beginLoad, t]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [beginLoad]);
 
     useEffect(() => {
         if (user && user.isAdmin) load();

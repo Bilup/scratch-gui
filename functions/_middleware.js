@@ -1,6 +1,6 @@
 /* global HTMLRewriter */
 
-const API_BASE = 'https://mwapi.mistium.com/api';
+const API_BASE = 'https://api.bilup.org/api';
 const AVATARS = 'https://avatars.accounts.bilup.org';
 const FETCH_TIMEOUT_MS = 3000;
 
