@@ -1,16 +1,12 @@
-name: CI
+name: CI(sync-mw)
 
 on:
   push:
-    branches-ignore:
+    branches:
       - sync-mw
-      - web
-      - sync-mw-web
   pull_request:
-    branches-ignore:
+    branches:
       - sync-mw
-      - web
-      - sync-mw-web
 
 permissions:
   contents: write
@@ -86,7 +82,7 @@ jobs:
 
     if: >
       github.event_name == 'push' &&
-      github.ref == 'refs/heads/develop'
+      github.ref == 'refs/heads/sync-mw'
 
     steps:
     - name: Checkout repo (with push access)
@@ -101,50 +97,7 @@ jobs:
         name: dist
         path: .
 
-    - name: Deploy to develop-builds
-      run: |
-        git config --global user.name "github-actions[bot]"
-        git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-        # Backup downloaded directories
-        rm -rf /tmp/static /tmp/src /tmp/build
-        mkdir -p /tmp/static /tmp/src /tmp/build
-        cp -r static/microbit /tmp/static/
-        cp -r src/generated /tmp/src/
-        cp -r build /tmp/
-
-        # Fetch all branches
-        git fetch origin
-
-        # Checkout or create develop-builds based on develop
-        if git show-ref --verify --quiet refs/remotes/origin/develop-builds; then
-          git checkout develop-builds
-          git pull origin develop-builds
-        else
-          git checkout -b develop-builds origin/develop
-        fi
-
-        # Sync code with develop
-        git merge origin/develop --no-edit
-
-        # Replace directories
-        rm -rf static/microbit src/generated build
-        mkdir -p static/microbit src/generated build
-        cp -r /tmp/static/microbit/* static/microbit/
-
-        cp -r /tmp/src/generated/* src/generated/
-        cp -r /tmp/build/* build/
-
-        # Force add directories (ignore .gitignore)
-        git add -f static/microbit src/generated build
-
-        # Commit if changed
-        git commit -m "chore: update build artifacts from develop" || echo "No changes"
-
-        # Push
-        git push origin develop-builds
-
-    - name: Deploy to web branch
+    - name: Deploy to sync-mw-web branch
       run: |
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
@@ -154,17 +107,17 @@ jobs:
         mkdir -p /tmp/web-build
         cp -r /tmp/build/* /tmp/web-build/
 
-        # Fetch web branch if exists
-        git fetch origin web 2>/dev/null || true
+        # Fetch sync-mw-web branch if exists
+        git fetch origin sync-mw-web 2>/dev/null || true
 
-        # Create orphan web branch if not exists, otherwise checkout
-        if git show-ref --verify --quiet refs/remotes/origin/web; then
-          git checkout web
+        # Create orphan sync-mw-web branch if not exists, otherwise checkout
+        if git show-ref --verify --quiet refs/remotes/origin/sync-mw-web; then
+          git checkout sync-mw-web
         else
-          git checkout --orphan web
+          git checkout --orphan sync-mw-web
         fi
 
-        # Clean web branch (keep .git directory)
+        # Clean sync-mw-web branch (keep .git directory)
         find . -mindepth 1 -maxdepth 1 -not -name '.git' -exec rm -rf {} +
 
         # Copy build contents directly to root
@@ -174,7 +127,7 @@ jobs:
         git add -A
 
         # Commit if changed
-        git commit -m "chore: deploy web build from develop" || echo "No changes"
+        git commit -m "chore: deploy web build from sync-mw" || echo "No changes"
 
-        # Push to web branch
-        git push origin web --force
+        # Push to sync-mw-web branch
+        git push origin sync-mw-web --force
