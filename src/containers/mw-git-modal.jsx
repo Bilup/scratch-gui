@@ -1050,11 +1050,11 @@ class TWGitModal extends React.Component {
             if (matching) {
                 remoteName = matching.name;
             } else {
-                remoteName = 'rotur';
-                if (remotes.some(r => r.name === 'rotur')) {
-                    await removeRemote({vm: this.props.vm, name: 'rotur'});
+                remoteName = 'bilup';
+                if (remotes.some(r => r.name === 'bilup')) {
+                    await removeRemote({vm: this.props.vm, name: 'bilup'});
                 }
-                await addRemote({vm: this.props.vm, name: 'rotur', url});
+                await addRemote({vm: this.props.vm, name: 'bilup', url});
             }
 
             await push({
