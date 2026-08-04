@@ -105,7 +105,7 @@ jobs:
         # Backup build folder
         rm -rf /tmp/web-build
         mkdir -p /tmp/web-build
-        cp -r /tmp/build/* /tmp/web-build/
+        cp -r build/* /tmp/web-build/
 
         # Fetch sync-mw-web branch if exists
         git fetch origin sync-mw-web 2>/dev/null || true
