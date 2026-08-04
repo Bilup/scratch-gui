@@ -4,7 +4,7 @@ import {Menu, Palette, Radio, Store, SwatchBook, User, Brush} from 'lucide-react
 import {applyTheme, detectTheme} from '../../lib/themes/themePersistance.js';
 import {ThemeAccentPanel} from '../../components/tw-settings-modal/theme-accent-panel.jsx';
 import CustomThemesPage from '../../components/tw-settings-modal/custom-themes-page.jsx';
-import WarpThemePanel from '../components/WarpThemePanel.jsx';
+import BilupThemePanel from '../components/WarpThemePanel.jsx';
 import Sidebar from '../components/Sidebar.jsx';
 import {useUser} from '../UserContext.jsx';
 import {
@@ -41,7 +41,7 @@ const SECTIONS = [
     {key: 'theme', labelKey: 'mw.community.settings.section.theme', labelDefault: 'Theme', icon: Palette},
     {key: 'project-themes', labelKey: 'mw.community.settings.section.project-themes', labelDefault: 'Project themes', icon: Brush},
     {key: 'custom-themes', labelKey: 'mw.community.settings.section.custom-themes', labelDefault: 'Custom themes', icon: SwatchBook},
-    {key: 'warptheme', labelKey: 'mw.community.settings.section.warptheme', labelDefault: 'WarpTheme', icon: Store},
+    {key: 'biluptheme', labelKey: 'mw.community.settings.section.biluptheme', labelDefault: 'BilupTheme', icon: Store},
     {key: 'menu-bar', labelKey: 'mw.community.settings.section.menu-bar', labelDefault: 'Menu bar', icon: Menu},
     {key: 'presence', labelKey: 'mw.community.settings.section.presence', labelDefault: 'Presence', icon: Radio},
     {key: 'identity', labelKey: 'mw.community.settings.section.identity', labelDefault: 'Identity', icon: User}
@@ -175,15 +175,15 @@ const Settings = () => {
                             <CustomThemesPage
                                 theme={theme}
                                 onChangeTheme={applyAndPersist}
-                                onOpenWarpThemeMarketplace={() => setActiveSection('warptheme')}
+                                onOpenWarpThemeMarketplace={() => setActiveSection('biluptheme')}
                             />
                         </section>
                     ) : null}
 
-                    {activeSection === 'warptheme' ? (
+                    {activeSection === 'biluptheme' ? (
                         <section className={styles.card}>
-                            <h2>{t('mw.community.settings.warptheme', 'WarpTheme marketplace')}</h2>
-                            <WarpThemePanel
+                            <h2>{t('mw.community.settings.biluptheme', 'BilupTheme marketplace')}</h2>
+                            <BilupThemePanel
                                 theme={theme}
                                 onThemeChange={applyAndPersist}
                             />

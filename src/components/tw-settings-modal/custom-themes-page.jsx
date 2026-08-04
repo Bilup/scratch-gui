@@ -416,7 +416,7 @@ class CustomThemesPage extends React.Component {
                     </h3>
                     <p className={styles.detail}>
                         <FormattedMessage
-                            defaultMessage="Create one from your current look, build a gradient, or browse WarpTheme."
+                            defaultMessage="Create one from your current look, build a gradient, or browse BilupTheme."
                             id="mw.customThemes.empty.hint"
                         />
                     </p>
@@ -766,8 +766,8 @@ class CustomThemesPage extends React.Component {
                     <div className={styles.ctActionBody}>
                         <h3>
                             <FormattedMessage
-                                defaultMessage="WarpTheme Marketplace"
-                                id="mw.menu.warptheme"
+                                defaultMessage="BilupTheme Marketplace"
+                                id="mw.menu.biluptheme"
                             />
                         </h3>
                         <p className={styles.detail}>

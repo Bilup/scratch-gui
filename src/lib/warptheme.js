@@ -1,6 +1,6 @@
-import {getRotur} from './rotur/client.js';
+import {getRotur, ensureScopes} from './rotur/client.js';
 
-const API = 'https://warptheme.mistium.com/api';
+const API = 'https://theme.billup.org/api';
 const TOKEN_KEY = 'mw:warptheme-token';
 const TOKEN_MANAGER = 'https://accounts.bilup.org/token-manager';
 
@@ -38,7 +38,7 @@ const request = async (path, token, options = {}) => {
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok || data.ok === false) {
-        throw new Error(data.error || `WarpTheme request failed (${response.status})`);
+        throw new Error(data.error || `BilupTheme request failed (${response.status})`);
     }
     return data;
 };
@@ -54,25 +54,54 @@ const openSession = async expectedUsername => {
         }
     }
 
-    const roturToken = getRotur().token;
-    if (!roturToken) throw new Error('Sign in with Bilup Accounts first.');
-    const validatorResponse = await fetch(
-        `https://social.rotur.dev/generate_validator?key=warptheme&auth=${encodeURIComponent(roturToken)}`
-    );
-    const validatorData = await validatorResponse.json().catch(() => ({}));
-    if (!validatorResponse.ok || !validatorData.validator) {
-        const message = String(validatorData.error || validatorData.message || '');
-        const permissionError = new Error(
-            'Your Bilup Accounts token needs the validators:generate permission before it can access WarpTheme.'
+    const rotur = getRotur();
+    if (!rotur.loggedIn || !rotur.token) throw new Error('Sign in with Bilup Accounts first.');
+
+    // Try to generate a validator. If the current token lacks the permission,
+    // re-run the Bilup Accounts login flow to refresh the token with the scope
+    // (the user may have just enabled it in the Token Manager), then retry once.
+    let validator;
+    const generateValidator = async () => {
+        const result = await rotur.validators.generate('biluptheme');
+        validator = result && result.validator;
+    };
+    try {
+        await generateValidator();
+    } catch (error) {
+        const status = error && error.status;
+        const data = error && error.data;
+        const message = String(
+            (data && (typeof data === 'object' ? (data.error || data.message) : data)) ||
+            (error && error.message) ||
+            ''
         );
-        if (needsValidatorPermission(validatorResponse.status, validatorData)) {
+        if (!needsValidatorPermission(status, data)) {
+            throw new Error(message || 'Bilup Accounts could not authorize BilupTheme.');
+        }
+        try {
+            await ensureScopes(['validators:generate']);
+        } catch (refreshError) {
+            const permissionError = new Error(
+                'Your Bilup Accounts token needs the validators:generate permission before it can access BilupTheme.'
+            );
             permissionError.code = 'validator-permission';
             throw permissionError;
         }
-        throw new Error(message || 'Bilup Accounts could not authorize WarpTheme.');
+        try {
+            await generateValidator();
+        } catch (retryError) {
+            const permissionError = new Error(
+                'Your Bilup Accounts token needs the validators:generate permission before it can access BilupTheme.'
+            );
+            permissionError.code = 'validator-permission';
+            throw permissionError;
+        }
+    }
+    if (!validator) {
+        throw new Error('Bilup Accounts could not authorize BilupTheme.');
     }
 
-    const auth = await request(`/auth?v=${encodeURIComponent(validatorData.validator)}`, null, {method: 'POST'});
+    const auth = await request(`/auth?v=${encodeURIComponent(validator)}`, null, {method: 'POST'});
     token = auth.token;
     storeToken(token);
     const account = await request('/user', token);

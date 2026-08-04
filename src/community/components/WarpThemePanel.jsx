@@ -179,7 +179,7 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
             throw new Error('Invalid theme data format');
         }
         onThemeChange(CustomTheme.import(data.themes[0]));
-        setNotice(t('mw.community.warptheme.applied', 'Applied "{name}".', {name: selected.name}));
+        setNotice(t('mw.community.biluptheme.applied', 'Applied "{name}".', {name: selected.name}));
     });
 
     const saveSelectedToLibrary = () => run(async () => {
@@ -188,10 +188,10 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
         const saved = customThemeManager.addFromExportData(data, {
             name: selected.name,
             description: selected.description || '',
-            author: selected.authorName || selected.author || 'WarpTheme'
+            author: selected.authorName || selected.author || 'BilupTheme'
         });
         setSavedIds(prev => new Set(prev).add(selected.uuid));
-        setNotice(t('mw.community.warptheme.addedToLibrary', '"{name}" added to your custom theme library.', {name: saved.name}));
+        setNotice(t('mw.community.biluptheme.addedToLibrary', '"{name}" added to your custom theme library.', {name: saved.name}));
     });
 
     const parseThemeFile = async file => {
@@ -209,18 +209,18 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
             }
         } catch (_) {
             setUploadFile(null);
-            setError(t('mw.community.warptheme.invalidJson', 'That file is not valid theme JSON.'));
+            setError(t('mw.community.biluptheme.invalidJson', 'That file is not valid theme JSON.'));
         }
     };
 
     const uploadTheme = () => run(async () => {
         if (uploadSource === 'file' && !uploadFile) {
-            throw new Error(t('mw.community.warptheme.chooseFile', 'Choose a theme JSON file, or switch to your current theme.'));
+            throw new Error(t('mw.community.biluptheme.chooseFile', 'Choose a theme JSON file, or switch to your current theme.'));
         }
         const source = uploadSource === 'file' ? uploadFile : currentExport;
         const sourceThemes = Array.isArray(source.themes) ? source.themes : [source];
         const items = sourceThemes.map((item, index) => ({
-            name: (index === 0 && uploadName.trim()) || item.name || t('mw.community.warptheme.themeN', 'Theme {n}', {n: index + 1}),
+            name: (index === 0 && uploadName.trim()) || item.name || t('mw.community.biluptheme.themeN', 'Theme {n}', {n: index + 1}),
             description: (index === 0 && uploadDescription.trim()) || item.description || '',
             platform: source.platform || 'bilup',
             themeJson: Array.isArray(source.themes) ? {...source, themes: [item]} : source
@@ -245,7 +245,7 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
     });
 
     const deleteTheme = item => {
-        if (!window.confirm(t('mw.community.warptheme.deleteConfirm', 'Delete "{name}"? This cannot be undone.', {name: item.name}))) return;
+        if (!window.confirm(t('mw.community.biluptheme.deleteConfirm', 'Delete "{name}"? This cannot be undone.', {name: item.name}))) return;
         run(async () => {
             await request(`/theme?uuid=${encodeURIComponent(item.uuid)}`, token, {method: 'DELETE'});
             setSelected(null);
@@ -260,7 +260,7 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
         });
         setReporting(null);
         setReportReason('');
-        setNotice(t('mw.community.warptheme.reportSent', 'Report sent. Thanks for helping keep WarpTheme safe.'));
+        setNotice(t('mw.community.biluptheme.reportSent', 'Report sent. Thanks for helping keep BilupTheme safe.'));
     });
 
     const resolveReport = (report, action) => run(async () => {
@@ -284,14 +284,14 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
         return (
             <div className={styles.gate}>
                 <User size={26} />
-                <h3>{t('mw.community.warptheme.signInTitle', 'Sign in to WarpTheme')}</h3>
-                <p>{t('mw.community.warptheme.signInBody', 'The theme marketplace uses your Bilup Accounts account for uploads, reports, and ownership.')}</p>
+                <h3>{t('mw.community.biluptheme.signInTitle', 'Sign in to BilupTheme')}</h3>
+                <p>{t('mw.community.biluptheme.signInBody', 'The theme marketplace uses your Bilup Accounts account for uploads, reports, and ownership.')}</p>
                 <button
                     className={styles.primaryButton}
                     onClick={login}
                     type="button"
                 >
-                    <LogIn size={15} /> {t('mw.community.warptheme.signInWithRotur', 'Sign in with Bilup Accounts')}
+                    <LogIn size={15} /> {t('mw.community.biluptheme.signInWithRotur', 'Sign in with Bilup Accounts')}
                 </button>
             </div>
         );
@@ -301,10 +301,10 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
         return (
             <div className={styles.gate}>
                 <Shield size={26} />
-                <h3>{t('mw.community.warptheme.permissionTitle', 'WarpTheme needs one more permission')}</h3>
+                <h3>{t('mw.community.biluptheme.permissionTitle', 'BilupTheme needs one more permission')}</h3>
                 <p>
-                    {t('mw.community.warptheme.permissionBody1', 'Edit your current token in Bilup Accounts Token Manager and enable')}
-                    {' '}<strong>validators:generate</strong>. {t('mw.community.warptheme.permissionBody2', 'Then return here and retry.')}
+                    {t('mw.community.biluptheme.permissionBody1', 'Edit your current token in Bilup Accounts Token Manager and enable')}
+                    {' '}<strong>validators:generate</strong>. {t('mw.community.biluptheme.permissionBody2', 'Then return here and retry.')}
                 </p>
                 <div className={styles.gateActions}>
                     <a
@@ -312,12 +312,12 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
                         href={TOKEN_MANAGER}
                         target="_blank"
                         rel="noreferrer"
-                    >{t('mw.community.warptheme.openTokenManager', 'Open Token Manager')}</a>
+                    >{t('mw.community.biluptheme.openTokenManager', 'Open Token Manager')}</a>
                     <button
                         className={styles.secondaryButton}
                         onClick={() => setSessionAttempt(value => value + 1)}
                         type="button"
-                    >{t('mw.community.warptheme.retry', 'Retry')}</button>
+                    >{t('mw.community.biluptheme.retry', 'Retry')}</button>
                 </div>
             </div>
         );
@@ -327,24 +327,24 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
         return (
             <div className={styles.gate}>
                 {busy ? (
-                    <p>{t('mw.community.warptheme.connecting', 'Connecting to WarpTheme…')}</p>
+                    <p>{t('mw.community.biluptheme.connecting', 'Connecting to BilupTheme…')}</p>
                 ) : (
                     <React.Fragment>
                         <X size={26} />
-                        <h3>{t('mw.community.warptheme.couldNotConnect', 'Could not connect to WarpTheme')}</h3>
+                        <h3>{t('mw.community.biluptheme.couldNotConnect', 'Could not connect to BilupTheme')}</h3>
                         <p>{error}</p>
                         <button
                             className={styles.primaryButton}
                             onClick={() => setSessionAttempt(value => value + 1)}
                             type="button"
-                        >{t('mw.community.warptheme.retry', 'Retry')}</button>
+                        >{t('mw.community.biluptheme.retry', 'Retry')}</button>
                     </React.Fragment>
                 )}
             </div>
         );
     }
 
-    const tabLabel = (key, fallback) => t(`mw.community.warptheme.tab.${key}`, fallback);
+    const tabLabel = (key, fallback) => t(`mw.community.biluptheme.tab.${key}`, fallback);
     const tabs = (account.isAdmin ? [...TABS, {key: 'admin', label: 'Reports', icon: Shield}] : TABS)
         .map(item => ({...item, label: tabLabel(item.key, item.label)}));
 
@@ -359,19 +359,19 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
                     setNotice('');
                 }}
                 type="button"
-            ><ArrowLeft size={15} /> {t('mw.community.warptheme.back', 'Back')}</button>
+            ><ArrowLeft size={15} /> {t('mw.community.biluptheme.back', 'Back')}</button>
             <div
                 className={styles.detailBanner}
                 style={gradientStyle(selected)}
             />
             <h3>{selected.name}</h3>
             <p className={styles.byline}>
-                {t('mw.community.warptheme.by', 'by {author} · {platform}', {
+                {t('mw.community.biluptheme.by', 'by {author} · {platform}', {
                     author: selected.authorName || selected.author,
                     platform: selected.platform
                 })}
             </p>
-            <p>{selected.description || t('mw.community.warptheme.noDescription', 'No description provided.')}</p>
+            <p>{selected.description || t('mw.community.biluptheme.noDescription', 'No description provided.')}</p>
             <div className={styles.detailStats}>
                 <span><Heart size={14} /> {selected.likes || 0}</span>
                 <span><Download size={14} /> {selected.downloads || 0}</span>
@@ -382,7 +382,7 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
                     disabled={busy}
                     onClick={applySelected}
                     type="button"
-                ><Palette size={14} /> {t('mw.community.warptheme.applyTheme', 'Apply theme')}</button>
+                ><Palette size={14} /> {t('mw.community.biluptheme.applyTheme', 'Apply theme')}</button>
                 <button
                     className={styles.secondaryButton}
                     disabled={busy || savedIds.has(selected.uuid)}
@@ -390,29 +390,29 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
                     type="button"
                 >
                     {savedIds.has(selected.uuid) ? (
-                        <React.Fragment><Check size={14} /> {t('mw.community.warptheme.inLibrary', 'In library')}</React.Fragment>
+                        <React.Fragment><Check size={14} /> {t('mw.community.biluptheme.inLibrary', 'In library')}</React.Fragment>
                     ) : (
-                        <React.Fragment><BookmarkPlus size={14} /> {t('mw.community.warptheme.addToLibrary', 'Add to library')}</React.Fragment>
+                        <React.Fragment><BookmarkPlus size={14} /> {t('mw.community.biluptheme.addToLibrary', 'Add to library')}</React.Fragment>
                     )}
                 </button>
                 <button
                     className={styles.secondaryButton}
                     onClick={() => setReporting(selected)}
                     type="button"
-                ><Flag size={14} /> {t('mw.community.warptheme.report', 'Report')}</button>
+                ><Flag size={14} /> {t('mw.community.biluptheme.report', 'Report')}</button>
                 {selected.author === account.userId && (
                     <button
                         className={styles.secondaryButton}
                         onClick={() => setEditing({...selected})}
                         type="button"
-                    ><Edit3 size={14} /> {t('mw.community.warptheme.edit', 'Edit')}</button>
+                    ><Edit3 size={14} /> {t('mw.community.biluptheme.edit', 'Edit')}</button>
                 )}
                 {(selected.author === account.userId || account.isAdmin) && (
                     <button
                         className={styles.dangerButton}
                         onClick={() => deleteTheme(selected)}
                         type="button"
-                    ><Trash2 size={14} /> {t('mw.community.warptheme.delete', 'Delete')}</button>
+                    ><Trash2 size={14} /> {t('mw.community.biluptheme.delete', 'Delete')}</button>
                 )}
             </div>
 
@@ -424,13 +424,13 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
                         saveEdit();
                     }}
                 >
-                    <label>{t('mw.community.warptheme.name', 'Name')}<input
+                    <label>{t('mw.community.biluptheme.name', 'Name')}<input
                         required
                         maxLength="100"
                         value={editing.name}
                         onChange={e => setEditing({...editing, name: e.target.value})}
                     /></label>
-                    <label>{t('mw.community.warptheme.description', 'Description')}<textarea
+                    <label>{t('mw.community.biluptheme.description', 'Description')}<textarea
                         maxLength="500"
                         value={editing.description}
                         onChange={e => setEditing({...editing, description: e.target.value})}
@@ -440,12 +440,12 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
                             type="button"
                             className={styles.secondaryButton}
                             onClick={() => setEditing(null)}
-                        >{t('mw.community.warptheme.cancel', 'Cancel')}</button>
+                        >{t('mw.community.biluptheme.cancel', 'Cancel')}</button>
                         <button
                             className={styles.primaryButton}
                             disabled={busy}
                             type="submit"
-                        ><Check size={14} /> {t('mw.community.warptheme.save', 'Save')}</button>
+                        ><Check size={14} /> {t('mw.community.biluptheme.save', 'Save')}</button>
                     </div>
                 </form>
             )}
@@ -458,7 +458,7 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
                         submitReport();
                     }}
                 >
-                    <label>{t('mw.community.warptheme.whatWrong', 'What is wrong with this theme?')}<textarea
+                    <label>{t('mw.community.biluptheme.whatWrong', 'What is wrong with this theme?')}<textarea
                         required
                         maxLength="500"
                         value={reportReason}
@@ -469,12 +469,12 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
                             type="button"
                             className={styles.secondaryButton}
                             onClick={() => setReporting(null)}
-                        >{t('mw.community.warptheme.cancel', 'Cancel')}</button>
+                        >{t('mw.community.biluptheme.cancel', 'Cancel')}</button>
                         <button
                             className={styles.dangerButton}
                             disabled={busy || !reportReason.trim()}
                             type="submit"
-                        ><Flag size={14} /> {t('mw.community.warptheme.sendReport', 'Send report')}</button>
+                        ><Flag size={14} /> {t('mw.community.biluptheme.sendReport', 'Send report')}</button>
                     </div>
                 </form>
             )}
@@ -487,27 +487,27 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
                 <div className={styles.searchBox}>
                     <Search size={15} />
                     <input
-                        aria-label={t('mw.community.warptheme.searchThemes', 'Search themes')}
-                        placeholder={t('mw.community.warptheme.searchThemes', 'Search themes or creators')}
+                        aria-label={t('mw.community.biluptheme.searchThemes', 'Search themes')}
+                        placeholder={t('mw.community.biluptheme.searchThemes', 'Search themes or creators')}
                         value={search}
                         onChange={e => setSearch(e.target.value)}
                     />
                 </div>
                 <select
-                    aria-label={t('mw.community.warptheme.sortThemes', 'Sort themes')}
+                    aria-label={t('mw.community.biluptheme.sortThemes', 'Sort themes')}
                     value={sort}
                     onChange={e => setSort(e.target.value)}
                 >
-                    <option value="newest">{t('mw.community.warptheme.sortNewest', 'Newest')}</option>
-                    <option value="likes">{t('mw.community.warptheme.sortLikes', 'Most liked')}</option>
-                    <option value="name">{t('mw.community.warptheme.sortName', 'Name')}</option>
+                    <option value="newest">{t('mw.community.biluptheme.sortNewest', 'Newest')}</option>
+                    <option value="likes">{t('mw.community.biluptheme.sortLikes', 'Most liked')}</option>
+                    <option value="name">{t('mw.community.biluptheme.sortName', 'Name')}</option>
                 </select>
                 <select
-                    aria-label={t('mw.community.warptheme.filterPlatform', 'Filter platform')}
+                    aria-label={t('mw.community.biluptheme.filterPlatform', 'Filter platform')}
                     value={platform}
                     onChange={e => setPlatform(e.target.value)}
                 >
-                    <option value="all">{t('mw.community.warptheme.allPlatforms', 'All platforms')}</option>
+                    <option value="all">{t('mw.community.biluptheme.allPlatforms', 'All platforms')}</option>
                     <option value="bilup">Bilup</option>
                 </select>
             </div>
@@ -515,8 +515,8 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
                 <div className={styles.empty}>
                     <Search size={24} />
                     <p>{tab === 'mine' ?
-                        t('mw.community.warptheme.uploadToStart', 'Upload your current theme to get started.') :
-                        t('mw.community.warptheme.noThemes', 'No themes found.')}</p>
+                        t('mw.community.biluptheme.uploadToStart', 'Upload your current theme to get started.') :
+                        t('mw.community.biluptheme.noThemes', 'No themes found.')}</p>
                 </div>
             ) : (
                 <div className={styles.grid}>
@@ -552,8 +552,8 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
                 >
                     <Palette size={17} />
                     <span>
-                        <strong>{t('mw.community.warptheme.currentTheme', 'Current theme')}</strong>
-                        <em>{t('mw.community.warptheme.currentThemeHint', 'Share what you have applied right now')}</em>
+                        <strong>{t('mw.community.biluptheme.currentTheme', 'Current theme')}</strong>
+                        <em>{t('mw.community.biluptheme.currentThemeHint', 'Share what you have applied right now')}</em>
                     </span>
                 </button>
                 <button
@@ -563,8 +563,8 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
                 >
                     <FileJson size={17} />
                     <span>
-                        <strong>{t('mw.community.warptheme.jsonFile', 'JSON file')}</strong>
-                        <em>{t('mw.community.warptheme.jsonFileHint', 'Upload an exported theme file')}</em>
+                        <strong>{t('mw.community.biluptheme.jsonFile', 'JSON file')}</strong>
+                        <em>{t('mw.community.biluptheme.jsonFileHint', 'Upload an exported theme file')}</em>
                     </span>
                 </button>
             </div>
@@ -574,25 +574,25 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
                 style={gradientStyle(uploadPreviewSource)}
             >
                 <strong>
-                    {uploadName.trim() || (uploadPreviewSource && uploadPreviewSource.name) || t('mw.community.warptheme.untitledTheme', 'Untitled theme')}
+                    {uploadName.trim() || (uploadPreviewSource && uploadPreviewSource.name) || t('mw.community.biluptheme.untitledTheme', 'Untitled theme')}
                 </strong>
             </div>
 
-            <label className={styles.field}>{t('mw.community.warptheme.name', 'Name')}<input
+            <label className={styles.field}>{t('mw.community.biluptheme.name', 'Name')}<input
                 maxLength="100"
-                placeholder={(currentExport && currentExport.name) || t('mw.community.warptheme.themeName', 'Theme name')}
+                placeholder={(currentExport && currentExport.name) || t('mw.community.biluptheme.themeName', 'Theme name')}
                 value={uploadName}
                 onChange={e => setUploadName(e.target.value)}
             /></label>
-            <label className={styles.field}>{t('mw.community.warptheme.description', 'Description')}<textarea
+            <label className={styles.field}>{t('mw.community.biluptheme.description', 'Description')}<textarea
                 maxLength="500"
-                placeholder={t('mw.community.warptheme.descriptionPlaceholder', 'What makes this theme special?')}
+                placeholder={t('mw.community.biluptheme.descriptionPlaceholder', 'What makes this theme special?')}
                 value={uploadDescription}
                 onChange={e => setUploadDescription(e.target.value)}
             /></label>
 
             {uploadSource === 'file' && (
-                <label className={styles.field}>{t('mw.community.warptheme.themeJsonFile', 'Theme JSON file')}<input
+                <label className={styles.field}>{t('mw.community.biluptheme.themeJsonFile', 'Theme JSON file')}<input
                     accept="application/json,.json"
                     type="file"
                     onChange={e => parseThemeFile(e.target.files[0])}
@@ -607,8 +607,8 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
                 >
                     <Upload size={14} />
                     {uploadSource === 'file' ?
-                        t('mw.community.warptheme.uploadJson', 'Upload JSON') :
-                        t('mw.community.warptheme.uploadCurrent', 'Upload current theme')}
+                        t('mw.community.biluptheme.uploadJson', 'Upload JSON') :
+                        t('mw.community.biluptheme.uploadCurrent', 'Upload current theme')}
                 </button>
             </div>
         </form>
@@ -619,7 +619,7 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
             {reports.length === 0 ? (
                 <div className={styles.empty}>
                     <Shield size={24} />
-                    <p>{t('mw.community.warptheme.noReports', 'No open reports.')}</p>
+                    <p>{t('mw.community.biluptheme.noReports', 'No open reports.')}</p>
                 </div>
             ) : reports.map(report => (
                 <article
@@ -629,19 +629,19 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
                     <div>
                         <strong>{report.themeName}</strong>
                         <p>{report.reason}</p>
-                        <small>{t('mw.community.warptheme.reportedBy', 'Reported by {name}', {name: report.reporterName})}</small>
+                        <small>{t('mw.community.biluptheme.reportedBy', 'Reported by {name}', {name: report.reporterName})}</small>
                     </div>
                     <div className={styles.formActions}>
                         <button
                             className={styles.secondaryButton}
                             onClick={() => resolveReport(report, 'dismiss')}
                             type="button"
-                        ><Check size={14} /> {t('mw.community.warptheme.dismiss', 'Dismiss')}</button>
+                        ><Check size={14} /> {t('mw.community.biluptheme.dismiss', 'Dismiss')}</button>
                         <button
                             className={styles.dangerButton}
                             onClick={() => resolveReport(report, 'delete-theme')}
                             type="button"
-                        ><Trash2 size={14} /> {t('mw.community.warptheme.deleteTheme', 'Delete theme')}</button>
+                        ><Trash2 size={14} /> {t('mw.community.biluptheme.deleteTheme', 'Delete theme')}</button>
                     </div>
                 </article>
             ))}
@@ -681,7 +681,7 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
                             <button
                                 onClick={() => setError('')}
                                 type="button"
-                                aria-label={t('mw.community.warptheme.dismissError', 'Dismiss error')}
+                                aria-label={t('mw.community.biluptheme.dismissError', 'Dismiss error')}
                             ><X size={14} /></button>
                         </div>
                     )}

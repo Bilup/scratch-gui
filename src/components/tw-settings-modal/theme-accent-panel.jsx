@@ -56,7 +56,9 @@ const ThemeAccentPanel = ({theme, onChangeTheme}) => (
                     <div className={styles.themeCardPreview}>
                         <GuiThemeIcon id={themeId} />
                     </div>
-                    <span className={styles.styleOptionLabel}>{t.name || t.gui}</span>
+                    <span className={styles.styleOptionLabel}>
+                        {t.name && t.name.id ? <FormattedMessage {...t.name} /> : t.gui}
+                    </span>
                 </button>
             ))}
         </div>

@@ -1,10 +1,11 @@
 import './import-first';
 
 import React from 'react';
-import {IntlProvider} from 'react-intl';
+import {IntlProvider, addLocaleData} from 'react-intl';
 import {BrowserRouter} from 'react-router-dom';
 
 import editorMessages from '@bilup/scratch-l10n/locales/editor-msgs';
+import {localeData} from '@bilup/scratch-l10n';
 import addAdditionalTranslations from '../lib/tw-translations/index.js';
 import communityTranslations from '../community/translations/zh-cn.json';
 import IntlBridge from '../lib/tw-use-intl.jsx';
@@ -27,6 +28,9 @@ if (embedMatch) {
 } else {
     applyThemeVisuals(detectTheme());
     onSystemPreferenceChange(() => applyThemeVisuals(detectTheme()));
+
+    // Register locale data (required for react-intl to format numbers/dates in zh-cn).
+    addLocaleData(localeData);
 
     // Merge TW/Bilup extra translations and community site translations.
     addAdditionalTranslations(editorMessages);

@@ -1,4 +1,4 @@
-import {Rotur, resolvePermissions} from 'rotur-sdk';
+import {Rotur, resolvePermissions} from 'accounts-sdk';
 import {
     getRoturSettings,
     formatActivityTitle,

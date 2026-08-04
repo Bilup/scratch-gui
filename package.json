@@ -114,8 +114,10 @@
     "redux-throttle": "0.1.1",
     "remark-gfm": "^2.0.0",
     "rotur-sdk": "^1.3.4",
+    "accounts-sdk": "github:bilup/accounts-sdk",
     "scratch-audio": "github:Bilup/scratch-audio#develop-builds",
     "scratch-blocks": "github:Bilup/new-scratch-blocks#develop-builds",
+    "scratch-parser": "github:Bilup/scratch-parser#main",
     "scratch-paint": "github:Bilup/scratch-paint#develop",
     "scratch-render": "github:Bilup/scratch-render#develop-builds",
     "scratch-vm": "github:Bilup/scratch-vm#develop-builds",
@@ -206,7 +208,7 @@
       ]
     },
     "transformIgnorePatterns": [
-      "/node_modules/(?!(scratch-audio|fractch|pify|isomorphic-git|rotur-sdk|@vernier/godirect|@chenglou/pretext)/)"
+      "/node_modules/(?!(scratch-audio|scratch-parser|fractch|pify|isomorphic-git|rotur-sdk|accounts-sdk|@vernier/godirect|@chenglou/pretext)/)"
     ],
     "transform": {
       "^.+\\.(js|jsx|mjs|cjs)$": [

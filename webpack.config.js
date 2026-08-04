@@ -88,7 +88,8 @@ const base = {
             'just-bash$': path.resolve(__dirname, 'node_modules/just-bash/dist/bundle/browser.js'),
             'node:zlib$': path.resolve(__dirname, 'src/lib/just-bash-zlib.js'),
             'scratch-render-fonts$': path.resolve(__dirname, 'src/lib/tw-scratch-render-fonts'),
-            'exports-loader': require.resolve('exports-loader')
+            'exports-loader': require.resolve('exports-loader'),
+            'scratch-parser': path.resolve(__dirname, 'node_modules/scratch-parser')
         }
     },
     module: {
@@ -126,6 +127,7 @@ const base = {
             include: [
                 path.resolve(__dirname, 'src'),
                 /node_modules[\\/]scratch-[^\\/]+[\\/]src/,
+                /node_modules[\\/]scratch-parser[\\/]/,
                 /node_modules[\\/]pify/,
                 /node_modules[\\/]@vernier[\\/]godirect/,
                 /node_modules[\\/]@chenglou[\\/]pretext/,
@@ -135,6 +137,7 @@ const base = {
                 /node_modules[\\/]just-bash/,
                 /node_modules[\\/]monaco-editor/,
                 /node_modules[\\/]rotur-sdk/,
+                /node_modules[\\/]accounts-sdk/,
                 /node_modules[\\/]fake-indexeddb/
             ],
             options: {
@@ -254,9 +257,7 @@ module.exports = [
             'fullscreen': './src/playground/fullscreen.jsx',
             'embed': './src/playground/embed.jsx',
             'addon-settings': './src/playground/addon-settings.jsx',
-            'credits': './src/playground/credits/credits.jsx',
-            'donate': './src/playground/donate/donate.jsx',
-            'about': './src/playground/about/about.jsx'
+            'credits': './src/playground/credits/credits.jsx'
         },
         output: {
             path: path.resolve(__dirname, 'build')
@@ -346,20 +347,6 @@ module.exports = [
                 template: 'src/playground/simple.ejs',
                 filename: 'credits.html',
                 title: `${APP_NAME} Credits`,
-                ...htmlWebpackPluginCommon
-            }),
-            new HtmlWebpackPlugin({
-                chunks: ['donate'],
-                template: 'src/playground/simple.ejs',
-                filename: 'donate.html',
-                title: `${APP_NAME} Donate`,
-                ...htmlWebpackPluginCommon
-            }),
-            new HtmlWebpackPlugin({
-                chunks: ['about'],
-                template: 'src/playground/simple.ejs',
-                filename: 'about.html',
-                title: `${APP_NAME} About`,
                 ...htmlWebpackPluginCommon
             }),
             new CopyWebpackPlugin({
