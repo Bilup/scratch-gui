@@ -1,6 +1,8 @@
 import React, {useState} from 'react';
+import {FormattedMessage} from 'react-intl';
 import {Link} from 'react-router-dom';
 import {FlaskConical, X} from 'lucide-react';
+import {useIntl} from '../../lib/tw-use-intl.jsx';
 import styles from './BetaBanner.module.css';
 
 const DISMISS_KEY = 'mw:beta-banner-dismissed';
@@ -14,6 +16,7 @@ const wasDismissed = () => {
 };
 
 const BetaBanner = () => {
+    const intl = useIntl();
     const [dismissed, setDismissed] = useState(wasDismissed);
     if (dismissed) {
         return null;
@@ -33,12 +36,17 @@ const BetaBanner = () => {
                 className={styles.icon}
             />
             <span className={styles.text}>
-                The new Bilup is a beta. Expect bugs, and please report them via{' '}
-                <a href="mailto:support@bilup.org">support@bilup.org</a>.
+                <FormattedMessage
+                    defaultMessage="The new Bilup is a beta. Expect bugs, and please report them via {mailto}."
+                    id="mw.community.betaBanner.text"
+                    values={{
+                        mailto: <a href="mailto:support@bilup.org">support@bilup.org</a>
+                    }}
+                />
             </span>
             <button
                 className={styles.dismiss}
-                aria-label="Dismiss"
+                aria-label={intl.formatMessage({id: 'mw.community.betaBanner.dismiss', defaultMessage: 'Dismiss'})}
                 onClick={dismiss}
             >
                 <X size={15} />

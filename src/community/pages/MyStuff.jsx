@@ -543,7 +543,7 @@ const MyStuff = () => {
     const createFromSb3 = useCallback(async file => {
         let created;
         try {
-            created = await api.createProject({title: file.name.replace(/\.sb3$/i, '') || 'Untitled'});
+            created = await api.createProject({title: file.name.replace(/\.sb3$/i, '') || t('mw.community.myStuff.untitled', 'Untitled')});
             await api.uploadProject(created.id, file);
             return created;
         } catch (e) {
@@ -552,7 +552,7 @@ const MyStuff = () => {
             }
             throw e;
         }
-    }, []);
+    }, [t]);
 
     const uploadSb3 = async event => {
         const file = event.target.files[0];
