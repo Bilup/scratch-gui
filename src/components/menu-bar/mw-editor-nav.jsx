@@ -8,10 +8,11 @@ import menuBarStyles from './menu-bar.css';
 import MwNotifications from './mw-notifications.jsx';
 import MyStuffPage from '../../community/pages/MyStuff.jsx';
 import openMistWarpCommunityWindow from '../../lib/mw/open-mw-community-window.jsx';
+import {useIntl} from '../../lib/tw-use-intl.jsx';
 
-const openMyStuff = () => openMistWarpCommunityWindow({
+const openMyStuff = title => openMistWarpCommunityWindow({
     id: 'mw-mystuff-window',
-    title: 'My Stuff',
+    title,
     initialPath: '/mystuff',
     element: <MyStuffPage />
 });
@@ -45,15 +46,20 @@ NavItem.propTypes = {
 };
 
 const MwEditorNav = ({username}) => {
+    const intl = useIntl();
     if (!username) {
         return null;
     }
+    const myStuffTitle = intl.formatMessage({
+        id: 'mw.menuBar.myStuff',
+        defaultMessage: 'My Stuff'
+    });
     return (
         <React.Fragment>
             <NavItem
-                title="My Stuff"
+                title={myStuffTitle}
                 icon={FolderOpen}
-                onClick={openMyStuff}
+                onClick={() => openMyStuff(myStuffTitle)}
             />
             <MwNotifications />
         </React.Fragment>

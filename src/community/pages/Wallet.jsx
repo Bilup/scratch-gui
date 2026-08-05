@@ -4,7 +4,6 @@ import {useIntl} from '../../lib/tw-use-intl.jsx';
 import {Coins, Wallet as WalletIcon, HeartHandshake, Send, ExternalLink, CalendarCheck} from 'lucide-react';
 import api, {projectUrl} from '../api';
 import {getAccountSummary, claimDaily} from '../../lib/rotur/client.js';
-import {PURCHASE_TIERS} from '../credits';
 import {useUser} from '../UserContext.jsx';
 import styles from './Wallet.module.css';
 
@@ -134,30 +133,6 @@ const Wallet = () => {
                     ) : null}
                 </div>
             ) : null}
-
-            <section className={styles.section}>
-                <h2 className={styles.sectionTitle}>{intl.formatMessage({id: 'mw.community.wallet.buyCredits', defaultMessage: 'Buy credits'})}</h2>
-                <p className={styles.sectionLead}>
-                    {intl.formatMessage({id: 'mw.community.wallet.buyCreditsLead', defaultMessage: 'Top up through Ko-fi. Credits are added to your Bilup Accounts account after checkout.'})}
-                </p>
-                <div className={styles.tiers}>
-                    {PURCHASE_TIERS.map(tier => (
-                        <a
-                            key={tier.credits}
-                            className={styles.tier}
-                            href={tier.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                        >
-                            <span className={styles.tierCredits}>
-                                {tier.credits.toLocaleString()}
-                                <span>{intl.formatMessage({id: 'mw.community.wallet.credits', defaultMessage: 'credits'})}</span>
-                            </span>
-                            <span className={styles.tierPrice}>${tier.price.toFixed(2)}</span>
-                        </a>
-                    ))}
-                </div>
-            </section>
 
             <section className={styles.section}>
                 <h2 className={styles.sectionTitle}>{intl.formatMessage({id: 'mw.community.wallet.purchaseHistory', defaultMessage: 'Purchase history'})}</h2>

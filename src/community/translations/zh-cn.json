@@ -247,8 +247,6 @@
         "mw.community.wallet.claimDaily": "领取每日积分",
         "mw.community.wallet.donationsReceived": "{count} 收到的捐赠",
         "mw.community.wallet.donationsGiven": "{count} 给出的捐赠",
-        "mw.community.wallet.buyCredits": "购买积分",
-        "mw.community.wallet.buyCreditsLead": "通过 Ko-fi 充值。结账后积分会添加到您的 Bilup Accounts 账户。",
         "mw.community.wallet.purchaseHistory": "购买记录",
         "mw.community.wallet.noPurchases": "您还没有购买任何作品。",
         "mw.community.wallet.exploreProjects": "浏览作品",

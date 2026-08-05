@@ -12,7 +12,7 @@
   "main": "./dist/scratch-gui.js",
   "scripts": {
     "postinstall": "patch-package || echo 'skipping patch-package (not installed)'",
-    "build": "npm run prepublish && npm run clean && webpack --colors --bail",
+    "build": "npm run prepublish && npm run clean && cross-env NODE_ENV=production webpack --colors --bail",
     "clean": "rimraf ./build && mkdirp build && rimraf ./dist && mkdirp dist",
     "setup": "npm install",
     "reinstall": "rm -rf node_modules package-lock.json && npm i && npm run link",
@@ -153,6 +153,7 @@
     "eslint-plugin-import": "2.29.1",
     "eslint-plugin-jest": "22.17.0",
     "eslint-plugin-react": "7.33.2",
+    "cross-env": "^7.0.3",
     "exports-loader": "0.7.0",
     "file-loader": "6.2.0",
     "gh-pages": "3.2.3",
@@ -246,7 +247,7 @@
       "scratch-vm"
     ],
     "overrides": {
-      "webpack@4.47.0>terser-webpack-plugin": "^4.2.3",
+      "webpack@4.47.0>terser-webpack-plugin": "^1.4.1",
       "cheerio": "1.0.0-rc.12",
       "brace-expansion": "1.1.11"
     }

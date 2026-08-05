@@ -9,10 +9,11 @@ import styles from './mw-notifications.css';
 import openMistWarpCommunityWindow from '../../lib/mw/open-mw-community-window.jsx';
 import NotificationsPage from '../../community/pages/Notifications.jsx';
 import api from '../../community/api.js';
+import {useIntl} from '../../lib/tw-use-intl.jsx';
 
-const openNotifications = () => openMistWarpCommunityWindow({
+const openNotifications = title => openMistWarpCommunityWindow({
     id: 'mw-notifications-window',
-    title: 'Notifications',
+    title,
     initialPath: '/notifications',
     element: <NotificationsPage hideHeading />,
     width: 460,
@@ -20,6 +21,7 @@ const openNotifications = () => openMistWarpCommunityWindow({
 });
 
 const MwNotifications = ({username}) => {
+    const intl = useIntl();
     const [unread, setUnread] = React.useState(0);
 
     React.useEffect(() => {
@@ -47,21 +49,29 @@ const MwNotifications = ({username}) => {
         return null;
     }
 
+    const notificationsTitle = intl.formatMessage({
+        id: 'mw.menuBar.notifications',
+        defaultMessage: 'Notifications'
+    });
+    const notificationsUnread = intl.formatMessage({
+        id: 'mw.menuBar.notificationsUnread',
+        defaultMessage: 'Notifications ({count} unread)'
+    }, {count: unread});
     const handleKeyDown = e => {
         if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            openNotifications();
+            openNotifications(notificationsTitle);
         }
     };
 
     return (
         <div
             className={classNames(menuBarStyles.menuBarItem, menuBarStyles.hoverable)}
-            title="Notifications"
-            aria-label={unread > 0 ? `Notifications (${unread} unread)` : 'Notifications'}
+            title={notificationsTitle}
+            aria-label={unread > 0 ? notificationsUnread : notificationsTitle}
             role="button"
             tabIndex={0}
-            onClick={openNotifications}
+            onClick={() => openNotifications(notificationsTitle)}
             onKeyDown={handleKeyDown}
         >
             <span className={styles.bellWrap}>
