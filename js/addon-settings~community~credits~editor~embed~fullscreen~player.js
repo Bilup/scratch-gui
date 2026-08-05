@@ -243,7 +243,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getCustomExtensionUrls", function() { return getCustomExtensionUrls; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "hashExtensionUrl", function() { return hashExtensionUrl; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "extensionSourceUrl", function() { return extensionSourceUrl; });
-/* harmony import */ var _turbowarp_jszip__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @turbowarp/jszip */ "./node_modules/@turbowarp/jszip/dist/jszip.min.js");
+/* harmony import */ var _turbowarp_jszip__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @turbowarp/jszip */ "./node_modules/.pnpm/@turbowarp+jszip@3.12.0/node_modules/@turbowarp/jszip/dist/jszip.min.js");
 /* harmony import */ var _turbowarp_jszip__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_turbowarp_jszip__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _cached_fetch_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./cached-fetch.js */ "./src/lib/community/cached-fetch.js");
 /* harmony import */ var _trusted_extension_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../trusted-extension.js */ "./src/lib/trusted-extension.js");
@@ -2071,13 +2071,18 @@ const ACCENT_GROUPS = [{
 }];
 const ACCENT_MAP = {};
 for (const accent of ACCENTS) {
-  ACCENT_MAP[accent.name.toLowerCase()] = _objectSpread(_objectSpread({}, accent.accent), {}, {
+  // Use the id short name (e.g. "pale-blue", "eggplant-purple") as the key so
+  // it matches ACCENT_GROUPS, the settings panel and persisted theme values.
+  // Previously the display name was used ("Pale Blue" -> "pale blue",
+  // "Eggplant" -> "eggplant"), which hid those accents from the picker.
+  const accentId = accent.id.split('.').pop();
+  ACCENT_MAP[accentId] = _objectSpread(_objectSpread({}, accent.accent), {}, {
     defaultMessage: accent.name,
     description: accent.description,
     id: accent.id
   });
 }
-const ACCENT_DEFAULT = ACCENTS[5].name.toLowerCase();
+const ACCENT_DEFAULT = ACCENTS[5].id.split('.').pop();
 
 
 /***/ }),
@@ -3012,7 +3017,7 @@ class CustomTheme extends _index_js__WEBPACK_IMPORTED_MODULE_0__["Theme"] {
   getGuiColors() {
     if (this.customAccent) {
       // Use dynamic imports to avoid circular dependency issues
-      const defaultsDeep = __webpack_require__(/*! lodash.defaultsdeep */ "./node_modules/lodash.defaultsdeep/index.js");
+      const defaultsDeep = __webpack_require__(/*! lodash.defaultsdeep */ "./node_modules/.pnpm/lodash.defaultsdeep@4.6.1/node_modules/lodash.defaultsdeep/index.js");
 
       // Get the base GUI colors directly without importing from index.js
       let baseGuiColors = {};
@@ -3054,7 +3059,7 @@ class CustomTheme extends _index_js__WEBPACK_IMPORTED_MODULE_0__["Theme"] {
   getBlockColors() {
     if (this.customAccent) {
       // Use dynamic imports to avoid circular dependency issues
-      const defaultsDeep = __webpack_require__(/*! lodash.defaultsdeep */ "./node_modules/lodash.defaultsdeep/index.js");
+      const defaultsDeep = __webpack_require__(/*! lodash.defaultsdeep */ "./node_modules/.pnpm/lodash.defaultsdeep@4.6.1/node_modules/lodash.defaultsdeep/index.js");
 
       // Get base block colors directly without importing from index.js
       let baseGuiColors = {};
@@ -5066,7 +5071,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "BLOCKS_HIGH_CONTRAST", function() { return BLOCKS_HIGH_CONTRAST; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "BLOCKS_CUSTOM", function() { return BLOCKS_CUSTOM; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "BLOCKS_MAP", function() { return BLOCKS_MAP; });
-/* harmony import */ var lodash_defaultsdeep__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! lodash.defaultsdeep */ "./node_modules/lodash.defaultsdeep/index.js");
+/* harmony import */ var lodash_defaultsdeep__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! lodash.defaultsdeep */ "./node_modules/.pnpm/lodash.defaultsdeep@4.6.1/node_modules/lodash.defaultsdeep/index.js");
 /* harmony import */ var lodash_defaultsdeep__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(lodash_defaultsdeep__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _blocks_three__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./blocks/three */ "./src/lib/themes/blocks/three.js");
 /* harmony import */ var _blocks_high_contrast__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./blocks/high-contrast */ "./src/lib/themes/blocks/high-contrast.js");
@@ -5795,7 +5800,7 @@ const hsv2hex = hsv => rgb2hex(hsv2rgb(hsv));
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react-dom */ "./node_modules/.pnpm/react-dom@16.14.0_react@16.14.0/node_modules/react-dom/index.js");
 /* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react_dom__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var react_modal__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react-modal */ "./node_modules/react-modal/lib/index.js");
+/* harmony import */ var react_modal__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react-modal */ "./node_modules/.pnpm/react-modal@3.9.1_react-dom@16.14.0_react@16.14.0__react@16.14.0/node_modules/react-modal/lib/index.js");
 /* harmony import */ var react_modal__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react_modal__WEBPACK_IMPORTED_MODULE_1__);
 
 

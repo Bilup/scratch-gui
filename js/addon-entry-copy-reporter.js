@@ -67,7 +67,7 @@ const resources = {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var scratch_blocks__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! scratch-blocks */ "./node_modules/scratch-blocks/shim/vertical.js");
+/* harmony import */ var scratch_blocks__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! scratch-blocks */ "./node_modules/.pnpm/scratch-blocks@https+++codeload.github.com+Bilup+new-scratch-blocks+tar.gz+5c5c08db93c663e7f5_zccfkld2x2gqjtjw2bdmqmhq7i/node_modules/scratch-blocks/shim/vertical.js");
 /* harmony import */ var scratch_blocks__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(scratch_blocks__WEBPACK_IMPORTED_MODULE_0__);
 
 

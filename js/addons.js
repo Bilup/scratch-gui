@@ -490,7 +490,7 @@ const setup = vm => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* WEBPACK VAR INJECTION */(function(global) {/* harmony import */ var intl_messageformat__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! intl-messageformat */ "./node_modules/intl-messageformat/index.js");
+/* WEBPACK VAR INJECTION */(function(global) {/* harmony import */ var intl_messageformat__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! intl-messageformat */ "./node_modules/.pnpm/intl-messageformat@2.2.0/node_modules/intl-messageformat/index.js");
 /* harmony import */ var intl_messageformat__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(intl_messageformat__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _settings_store_singleton__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./settings-store-singleton */ "./src/addons/settings-store-singleton.js");
 /* harmony import */ var _lib_utils_data_uri_to_blob__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../lib/utils/data-uri-to-blob */ "./src/lib/utils/data-uri-to-blob.js");

@@ -81,81 +81,15 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./node_modules/.pnpm/babel-loader@8.3.0_@babel+core@7.14.8_webpack@4.47.0/node_modules/babel-loader/lib/index.js?!./node_modules/scratch-vm/src/extension-support/tw-iframe-extension-worker-entry.js");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./node_modules/.pnpm/babel-loader@8.3.0_@babel+core@7.14.8_webpack@4.47.0/node_modules/babel-loader/lib/index.js?!./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/tw-iframe-extension-worker-entry.js");
 /******/ })
 /************************************************************************/
 /******/ ({
 
-/***/ "./node_modules/.pnpm/babel-loader@8.3.0_@babel+core@7.14.8_webpack@4.47.0/node_modules/babel-loader/lib/index.js?!./node_modules/scratch-vm/src/extension-support/tw-iframe-extension-worker-entry.js":
-/*!***********************************************************************************************************************************************************************************************************!*\
-  !*** ./node_modules/.pnpm/babel-loader@8.3.0_@babel+core@7.14.8_webpack@4.47.0/node_modules/babel-loader/lib??ref--5!./node_modules/scratch-vm/src/extension-support/tw-iframe-extension-worker-entry.js ***!
-  \***********************************************************************************************************************************************************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-/* WEBPACK VAR INJECTION */(function(global) {const context = __webpack_require__(/*! ./tw-extension-worker-context */ "./node_modules/scratch-vm/src/extension-support/tw-extension-worker-context.js");
-const jQuery = __webpack_require__(/*! ./tw-jquery-shim */ "./node_modules/scratch-vm/src/extension-support/tw-jquery-shim.js");
-global.$ = jQuery;
-global.jQuery = jQuery;
-const id = window.__WRAPPED_IFRAME_ID__;
-context.isWorker = false;
-context.centralDispatchService = {
-  postMessage(message, transfer) {
-    const data = {
-      vmIframeId: id,
-      message
-    };
-    if (transfer) {
-      window.parent.postMessage(data, '*', transfer);
-    } else {
-      window.parent.postMessage(data, '*');
-    }
-  }
-};
-__webpack_require__(/*! ./extension-worker */ "./node_modules/scratch-vm/src/extension-support/extension-worker.js");
-window.parent.postMessage({
-  vmIframeId: id,
-  ready: true
-}, '*');
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../../../.pnpm/webpack@4.47.0_webpack-cli@3.3.12/node_modules/webpack/buildin/global.js */ "./node_modules/.pnpm/webpack@4.47.0_webpack-cli@3.3.12/node_modules/webpack/buildin/global.js")))
-
-/***/ }),
-
-/***/ "./node_modules/.pnpm/webpack@4.47.0_webpack-cli@3.3.12/node_modules/webpack/buildin/global.js":
-/*!***********************************!*\
-  !*** (webpack)/buildin/global.js ***!
-  \***********************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-var g;
-
-// This works in non-strict mode
-g = (function() {
-	return this;
-})();
-
-try {
-	// This works if eval is allowed (see CSP)
-	g = g || new Function("return this")();
-} catch (e) {
-	// This works if the window reference is available
-	if (typeof window === "object") g = window;
-}
-
-// g can still be undefined, but nothing to do about it...
-// We return undefined, instead of nothing here, so it's
-// easier to handle this case. if(!global) { ...}
-
-module.exports = g;
-
-
-/***/ }),
-
-/***/ "./node_modules/@turbowarp/nanolog/index.js":
-/*!**************************************************!*\
-  !*** ./node_modules/@turbowarp/nanolog/index.js ***!
-  \**************************************************/
+/***/ "./node_modules/.pnpm/@turbowarp+nanolog@0.2.0/node_modules/@turbowarp/nanolog/index.js":
+/*!**********************************************************************************************!*\
+  !*** ./node_modules/.pnpm/@turbowarp+nanolog@0.2.0/node_modules/@turbowarp/nanolog/index.js ***!
+  \**********************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports) {
 
@@ -197,10 +131,45 @@ module.exports = createLog;
 
 /***/ }),
 
-/***/ "./node_modules/format-message-formats/index.js":
-/*!******************************************************!*\
-  !*** ./node_modules/format-message-formats/index.js ***!
-  \******************************************************/
+/***/ "./node_modules/.pnpm/babel-loader@8.3.0_@babel+core@7.14.8_webpack@4.47.0/node_modules/babel-loader/lib/index.js?!./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/tw-iframe-extension-worker-entry.js":
+/*!*******************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/.pnpm/babel-loader@8.3.0_@babel+core@7.14.8_webpack@4.47.0/node_modules/babel-loader/lib??ref--5!./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/tw-iframe-extension-worker-entry.js ***!
+  \*******************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(global) {const context = __webpack_require__(/*! ./tw-extension-worker-context */ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/tw-extension-worker-context.js");
+const jQuery = __webpack_require__(/*! ./tw-jquery-shim */ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/tw-jquery-shim.js");
+global.$ = jQuery;
+global.jQuery = jQuery;
+const id = window.__WRAPPED_IFRAME_ID__;
+context.isWorker = false;
+context.centralDispatchService = {
+  postMessage(message, transfer) {
+    const data = {
+      vmIframeId: id,
+      message
+    };
+    if (transfer) {
+      window.parent.postMessage(data, '*', transfer);
+    } else {
+      window.parent.postMessage(data, '*');
+    }
+  }
+};
+__webpack_require__(/*! ./extension-worker */ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/extension-worker.js");
+window.parent.postMessage({
+  vmIframeId: id,
+  ready: true
+}, '*');
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../../../../../webpack@4.47.0_webpack-cli@3.3.12/node_modules/webpack/buildin/global.js */ "./node_modules/.pnpm/webpack@4.47.0_webpack-cli@3.3.12/node_modules/webpack/buildin/global.js")))
+
+/***/ }),
+
+/***/ "./node_modules/.pnpm/format-message-formats@6.2.4/node_modules/format-message-formats/index.js":
+/*!******************************************************************************************************!*\
+  !*** ./node_modules/.pnpm/format-message-formats@6.2.4/node_modules/format-message-formats/index.js ***!
+  \******************************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports) {
 
@@ -401,19 +370,19 @@ module.exports = {
 
 /***/ }),
 
-/***/ "./node_modules/format-message-interpret/index.js":
-/*!********************************************************!*\
-  !*** ./node_modules/format-message-interpret/index.js ***!
-  \********************************************************/
+/***/ "./node_modules/.pnpm/format-message-interpret@6.2.4/node_modules/format-message-interpret/index.js":
+/*!**********************************************************************************************************!*\
+  !*** ./node_modules/.pnpm/format-message-interpret@6.2.4/node_modules/format-message-interpret/index.js ***!
+  \**********************************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 // @flow
 
-var formats = __webpack_require__(/*! format-message-formats */ "./node_modules/format-message-formats/index.js")
-var lookupClosestLocale = __webpack_require__(/*! lookup-closest-locale */ "./node_modules/lookup-closest-locale/index.js")
-var plurals = __webpack_require__(/*! ./plurals */ "./node_modules/format-message-interpret/plurals.js")
+var formats = __webpack_require__(/*! format-message-formats */ "./node_modules/.pnpm/format-message-formats@6.2.4/node_modules/format-message-formats/index.js")
+var lookupClosestLocale = __webpack_require__(/*! lookup-closest-locale */ "./node_modules/.pnpm/lookup-closest-locale@6.2.0/node_modules/lookup-closest-locale/index.js")
+var plurals = __webpack_require__(/*! ./plurals */ "./node_modules/.pnpm/format-message-interpret@6.2.4/node_modules/format-message-interpret/plurals.js")
 
 /*::
 import type {
@@ -616,10 +585,10 @@ exports.types = defaults
 
 /***/ }),
 
-/***/ "./node_modules/format-message-interpret/plurals.js":
-/*!**********************************************************!*\
-  !*** ./node_modules/format-message-interpret/plurals.js ***!
-  \**********************************************************/
+/***/ "./node_modules/.pnpm/format-message-interpret@6.2.4/node_modules/format-message-interpret/plurals.js":
+/*!************************************************************************************************************!*\
+  !*** ./node_modules/.pnpm/format-message-interpret@6.2.4/node_modules/format-message-interpret/plurals.js ***!
+  \************************************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -1187,10 +1156,10 @@ module.exports = {
 
 /***/ }),
 
-/***/ "./node_modules/format-message-parse/index.js":
-/*!****************************************************!*\
-  !*** ./node_modules/format-message-parse/index.js ***!
-  \****************************************************/
+/***/ "./node_modules/.pnpm/format-message-parse@6.2.4/node_modules/format-message-parse/index.js":
+/*!**************************************************************************************************!*\
+  !*** ./node_modules/.pnpm/format-message-parse@6.2.4/node_modules/format-message-parse/index.js ***!
+  \**************************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -1643,21 +1612,21 @@ exports.SyntaxError = SyntaxError
 
 /***/ }),
 
-/***/ "./node_modules/format-message/index.js":
-/*!**********************************************!*\
-  !*** ./node_modules/format-message/index.js ***!
-  \**********************************************/
+/***/ "./node_modules/.pnpm/format-message@6.2.1/node_modules/format-message/index.js":
+/*!**************************************************************************************!*\
+  !*** ./node_modules/.pnpm/format-message@6.2.1/node_modules/format-message/index.js ***!
+  \**************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 // @flow
 
-var parse = __webpack_require__(/*! format-message-parse */ "./node_modules/format-message-parse/index.js")
-var interpret = __webpack_require__(/*! format-message-interpret */ "./node_modules/format-message-interpret/index.js")
-var plurals = __webpack_require__(/*! format-message-interpret/plurals */ "./node_modules/format-message-interpret/plurals.js")
-var lookupClosestLocale = __webpack_require__(/*! lookup-closest-locale */ "./node_modules/lookup-closest-locale/index.js")
-var origFormats = __webpack_require__(/*! format-message-formats */ "./node_modules/format-message-formats/index.js")
+var parse = __webpack_require__(/*! format-message-parse */ "./node_modules/.pnpm/format-message-parse@6.2.4/node_modules/format-message-parse/index.js")
+var interpret = __webpack_require__(/*! format-message-interpret */ "./node_modules/.pnpm/format-message-interpret@6.2.4/node_modules/format-message-interpret/index.js")
+var plurals = __webpack_require__(/*! format-message-interpret/plurals */ "./node_modules/.pnpm/format-message-interpret@6.2.4/node_modules/format-message-interpret/plurals.js")
+var lookupClosestLocale = __webpack_require__(/*! lookup-closest-locale */ "./node_modules/.pnpm/lookup-closest-locale@6.2.0/node_modules/lookup-closest-locale/index.js")
+var origFormats = __webpack_require__(/*! format-message-formats */ "./node_modules/.pnpm/format-message-formats@6.2.4/node_modules/format-message-formats/index.js")
 
 /*::
 import type { Types } from 'format-message-interpret'
@@ -1880,10 +1849,10 @@ module.exports = exports = namespace()
 
 /***/ }),
 
-/***/ "./node_modules/lookup-closest-locale/index.js":
-/*!*****************************************************!*\
-  !*** ./node_modules/lookup-closest-locale/index.js ***!
-  \*****************************************************/
+/***/ "./node_modules/.pnpm/lookup-closest-locale@6.2.0/node_modules/lookup-closest-locale/index.js":
+/*!****************************************************************************************************!*\
+  !*** ./node_modules/.pnpm/lookup-closest-locale@6.2.0/node_modules/lookup-closest-locale/index.js ***!
+  \****************************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports) {
 
@@ -1906,10 +1875,10 @@ module.exports = function lookupClosestLocale (locale/*: string | string[] | voi
 
 /***/ }),
 
-/***/ "./node_modules/scratch-vm/src/dispatch/shared-dispatch.js":
-/*!*****************************************************************!*\
-  !*** ./node_modules/scratch-vm/src/dispatch/shared-dispatch.js ***!
-  \*****************************************************************/
+/***/ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/dispatch/shared-dispatch.js":
+/*!*************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/dispatch/shared-dispatch.js ***!
+  \*************************************************************************************************************************************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -1919,7 +1888,7 @@ function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) 
 function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
 function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
 function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
-const log = __webpack_require__(/*! ../util/log */ "./node_modules/scratch-vm/src/util/log.js");
+const log = __webpack_require__(/*! ../util/log */ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/util/log.js");
 
 /**
  * @typedef {object} DispatchCallMessage - a message to the dispatch system representing a service method call
@@ -2192,16 +2161,16 @@ module.exports = SharedDispatch;
 
 /***/ }),
 
-/***/ "./node_modules/scratch-vm/src/dispatch/worker-dispatch.js":
-/*!*****************************************************************!*\
-  !*** ./node_modules/scratch-vm/src/dispatch/worker-dispatch.js ***!
-  \*****************************************************************/
+/***/ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/dispatch/worker-dispatch.js":
+/*!*************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/dispatch/worker-dispatch.js ***!
+  \*************************************************************************************************************************************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-const SharedDispatch = __webpack_require__(/*! ./shared-dispatch */ "./node_modules/scratch-vm/src/dispatch/shared-dispatch.js");
-const log = __webpack_require__(/*! ../util/log */ "./node_modules/scratch-vm/src/util/log.js");
-const _require = __webpack_require__(/*! ../extension-support/tw-extension-worker-context */ "./node_modules/scratch-vm/src/extension-support/tw-extension-worker-context.js"),
+const SharedDispatch = __webpack_require__(/*! ./shared-dispatch */ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/dispatch/shared-dispatch.js");
+const log = __webpack_require__(/*! ../util/log */ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/util/log.js");
+const _require = __webpack_require__(/*! ../extension-support/tw-extension-worker-context */ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/tw-extension-worker-context.js"),
   centralDispatchService = _require.centralDispatchService;
 
 /**
@@ -2311,10 +2280,10 @@ module.exports = new WorkerDispatch();
 
 /***/ }),
 
-/***/ "./node_modules/scratch-vm/src/engine/scratch-blocks-constants.js":
-/*!************************************************************************!*\
-  !*** ./node_modules/scratch-vm/src/engine/scratch-blocks-constants.js ***!
-  \************************************************************************/
+/***/ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/engine/scratch-blocks-constants.js":
+/*!********************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/engine/scratch-blocks-constants.js ***!
+  \********************************************************************************************************************************************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports) {
 
@@ -2345,10 +2314,10 @@ module.exports = ScratchBlocksConstants;
 
 /***/ }),
 
-/***/ "./node_modules/scratch-vm/src/extension-support/argument-type.js":
-/*!************************************************************************!*\
-  !*** ./node_modules/scratch-vm/src/extension-support/argument-type.js ***!
-  \************************************************************************/
+/***/ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/argument-type.js":
+/*!********************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/argument-type.js ***!
+  \********************************************************************************************************************************************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports) {
 
@@ -2402,10 +2371,10 @@ module.exports = ArgumentType;
 
 /***/ }),
 
-/***/ "./node_modules/scratch-vm/src/extension-support/block-type.js":
-/*!*********************************************************************!*\
-  !*** ./node_modules/scratch-vm/src/extension-support/block-type.js ***!
-  \*********************************************************************/
+/***/ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/block-type.js":
+/*!*****************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/block-type.js ***!
+  \*****************************************************************************************************************************************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports) {
 
@@ -2462,10 +2431,10 @@ module.exports = BlockType;
 
 /***/ }),
 
-/***/ "./node_modules/scratch-vm/src/extension-support/extension-worker.js":
-/*!***************************************************************************!*\
-  !*** ./node_modules/scratch-vm/src/extension-support/extension-worker.js ***!
-  \***************************************************************************/
+/***/ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/extension-worker.js":
+/*!***********************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/extension-worker.js ***!
+  \***********************************************************************************************************************************************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -2477,13 +2446,13 @@ function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" !=
 function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 /* eslint-env worker */
 
-const ScratchCommon = __webpack_require__(/*! ./tw-extension-api-common */ "./node_modules/scratch-vm/src/extension-support/tw-extension-api-common.js");
-const createScratchX = __webpack_require__(/*! ./tw-scratchx-compatibility-layer */ "./node_modules/scratch-vm/src/extension-support/tw-scratchx-compatibility-layer.js");
-const dispatch = __webpack_require__(/*! ../dispatch/worker-dispatch */ "./node_modules/scratch-vm/src/dispatch/worker-dispatch.js");
-const log = __webpack_require__(/*! ../util/log */ "./node_modules/scratch-vm/src/util/log.js");
-const _require = __webpack_require__(/*! ./tw-extension-worker-context */ "./node_modules/scratch-vm/src/extension-support/tw-extension-worker-context.js"),
+const ScratchCommon = __webpack_require__(/*! ./tw-extension-api-common */ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/tw-extension-api-common.js");
+const createScratchX = __webpack_require__(/*! ./tw-scratchx-compatibility-layer */ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/tw-scratchx-compatibility-layer.js");
+const dispatch = __webpack_require__(/*! ../dispatch/worker-dispatch */ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/dispatch/worker-dispatch.js");
+const log = __webpack_require__(/*! ../util/log */ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/util/log.js");
+const _require = __webpack_require__(/*! ./tw-extension-worker-context */ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/tw-extension-worker-context.js"),
   isWorker = _require.isWorker;
-const createTranslate = __webpack_require__(/*! ./tw-l10n */ "./node_modules/scratch-vm/src/extension-support/tw-l10n.js");
+const createTranslate = __webpack_require__(/*! ./tw-l10n */ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/tw-l10n.js");
 const translate = createTranslate(null);
 const loadScripts = url => {
   if (isWorker) {
@@ -2574,14 +2543,14 @@ global.Scratch.extensions = {
   register: extensionWorker.register.bind(extensionWorker)
 };
 global.ScratchExtensions = createScratchX(global.Scratch);
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../../../.pnpm/webpack@4.47.0_webpack-cli@3.3.12/node_modules/webpack/buildin/global.js */ "./node_modules/.pnpm/webpack@4.47.0_webpack-cli@3.3.12/node_modules/webpack/buildin/global.js")))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../../../../../webpack@4.47.0_webpack-cli@3.3.12/node_modules/webpack/buildin/global.js */ "./node_modules/.pnpm/webpack@4.47.0_webpack-cli@3.3.12/node_modules/webpack/buildin/global.js")))
 
 /***/ }),
 
-/***/ "./node_modules/scratch-vm/src/extension-support/target-type.js":
-/*!**********************************************************************!*\
-  !*** ./node_modules/scratch-vm/src/extension-support/target-type.js ***!
-  \**********************************************************************/
+/***/ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/target-type.js":
+/*!******************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/target-type.js ***!
+  \******************************************************************************************************************************************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports) {
 
@@ -2603,15 +2572,15 @@ module.exports = TargetType;
 
 /***/ }),
 
-/***/ "./node_modules/scratch-vm/src/extension-support/tw-block-shape.js":
-/*!*************************************************************************!*\
-  !*** ./node_modules/scratch-vm/src/extension-support/tw-block-shape.js ***!
-  \*************************************************************************/
+/***/ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/tw-block-shape.js":
+/*!*********************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/tw-block-shape.js ***!
+  \*********************************************************************************************************************************************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 // Use the constants instead of manually redefining them again
-const ScratchBlocksConstants = __webpack_require__(/*! ../engine/scratch-blocks-constants */ "./node_modules/scratch-vm/src/engine/scratch-blocks-constants.js");
+const ScratchBlocksConstants = __webpack_require__(/*! ../engine/scratch-blocks-constants */ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/engine/scratch-blocks-constants.js");
 
 /**
  * Types of block shapes
@@ -2635,19 +2604,19 @@ module.exports = BlockShape;
 
 /***/ }),
 
-/***/ "./node_modules/scratch-vm/src/extension-support/tw-extension-api-common.js":
-/*!**********************************************************************************!*\
-  !*** ./node_modules/scratch-vm/src/extension-support/tw-extension-api-common.js ***!
-  \**********************************************************************************/
+/***/ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/tw-extension-api-common.js":
+/*!******************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/tw-extension-api-common.js ***!
+  \******************************************************************************************************************************************************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-const ArgumentType = __webpack_require__(/*! ./argument-type */ "./node_modules/scratch-vm/src/extension-support/argument-type.js");
-const BlockType = __webpack_require__(/*! ./block-type */ "./node_modules/scratch-vm/src/extension-support/block-type.js");
-const BlockShape = __webpack_require__(/*! ./tw-block-shape */ "./node_modules/scratch-vm/src/extension-support/tw-block-shape.js");
-const TargetType = __webpack_require__(/*! ./target-type */ "./node_modules/scratch-vm/src/extension-support/target-type.js");
-const Cast = __webpack_require__(/*! ../util/cast */ "./node_modules/scratch-vm/src/util/cast.js");
-const external = __webpack_require__(/*! ./tw-external */ "./node_modules/scratch-vm/src/extension-support/tw-external.js");
+const ArgumentType = __webpack_require__(/*! ./argument-type */ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/argument-type.js");
+const BlockType = __webpack_require__(/*! ./block-type */ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/block-type.js");
+const BlockShape = __webpack_require__(/*! ./tw-block-shape */ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/tw-block-shape.js");
+const TargetType = __webpack_require__(/*! ./target-type */ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/target-type.js");
+const Cast = __webpack_require__(/*! ../util/cast */ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/util/cast.js");
+const external = __webpack_require__(/*! ./tw-external */ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/tw-external.js");
 const Scratch = {
   ArgumentType,
   BlockType,
@@ -2660,10 +2629,10 @@ module.exports = Scratch;
 
 /***/ }),
 
-/***/ "./node_modules/scratch-vm/src/extension-support/tw-extension-worker-context.js":
-/*!**************************************************************************************!*\
-  !*** ./node_modules/scratch-vm/src/extension-support/tw-extension-worker-context.js ***!
-  \**************************************************************************************/
+/***/ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/tw-extension-worker-context.js":
+/*!**********************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/tw-extension-worker-context.js ***!
+  \**********************************************************************************************************************************************************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports) {
 
@@ -2675,10 +2644,10 @@ module.exports = {
 
 /***/ }),
 
-/***/ "./node_modules/scratch-vm/src/extension-support/tw-external.js":
-/*!**********************************************************************!*\
-  !*** ./node_modules/scratch-vm/src/extension-support/tw-external.js ***!
-  \**********************************************************************/
+/***/ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/tw-external.js":
+/*!******************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/tw-external.js ***!
+  \******************************************************************************************************************************************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports) {
 
@@ -2765,10 +2734,10 @@ module.exports = external;
 
 /***/ }),
 
-/***/ "./node_modules/scratch-vm/src/extension-support/tw-jquery-shim.js":
-/*!*************************************************************************!*\
-  !*** ./node_modules/scratch-vm/src/extension-support/tw-jquery-shim.js ***!
-  \*************************************************************************/
+/***/ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/tw-jquery-shim.js":
+/*!*********************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/tw-jquery-shim.js ***!
+  \*********************************************************************************************************************************************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -2780,7 +2749,7 @@ module.exports = external;
  * It's just supposed to be enough to make existing ScratchX extensions work, nothing more.
  */
 
-const log = __webpack_require__(/*! ../util/log */ "./node_modules/scratch-vm/src/util/log.js");
+const log = __webpack_require__(/*! ../util/log */ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/util/log.js");
 const jQuery = () => {
   throw new Error('Not implemented');
 };
@@ -2871,18 +2840,18 @@ jQuery.ajax = async (arg1, arg2) => {
   }
 };
 module.exports = jQuery;
-/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../../../.pnpm/webpack@4.47.0_webpack-cli@3.3.12/node_modules/webpack/buildin/global.js */ "./node_modules/.pnpm/webpack@4.47.0_webpack-cli@3.3.12/node_modules/webpack/buildin/global.js")))
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../../../../../webpack@4.47.0_webpack-cli@3.3.12/node_modules/webpack/buildin/global.js */ "./node_modules/.pnpm/webpack@4.47.0_webpack-cli@3.3.12/node_modules/webpack/buildin/global.js")))
 
 /***/ }),
 
-/***/ "./node_modules/scratch-vm/src/extension-support/tw-l10n.js":
-/*!******************************************************************!*\
-  !*** ./node_modules/scratch-vm/src/extension-support/tw-l10n.js ***!
-  \******************************************************************/
+/***/ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/tw-l10n.js":
+/*!**************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/tw-l10n.js ***!
+  \**************************************************************************************************************************************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-const formatMessage = __webpack_require__(/*! format-message */ "./node_modules/format-message/index.js");
+const formatMessage = __webpack_require__(/*! format-message */ "./node_modules/.pnpm/format-message@6.2.1/node_modules/format-message/index.js");
 
 /**
  * @param {VM|null} vm
@@ -2937,18 +2906,18 @@ module.exports = createTranslate;
 
 /***/ }),
 
-/***/ "./node_modules/scratch-vm/src/extension-support/tw-scratchx-compatibility-layer.js":
-/*!******************************************************************************************!*\
-  !*** ./node_modules/scratch-vm/src/extension-support/tw-scratchx-compatibility-layer.js ***!
-  \******************************************************************************************/
+/***/ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/tw-scratchx-compatibility-layer.js":
+/*!**************************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/tw-scratchx-compatibility-layer.js ***!
+  \**************************************************************************************************************************************************************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 // ScratchX API Documentation: https://github.com/LLK/scratchx/wiki/
 
-const ArgumentType = __webpack_require__(/*! ./argument-type */ "./node_modules/scratch-vm/src/extension-support/argument-type.js");
-const BlockType = __webpack_require__(/*! ./block-type */ "./node_modules/scratch-vm/src/extension-support/block-type.js");
-const _require = __webpack_require__(/*! ./tw-scratchx-utilities */ "./node_modules/scratch-vm/src/extension-support/tw-scratchx-utilities.js"),
+const ArgumentType = __webpack_require__(/*! ./argument-type */ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/argument-type.js");
+const BlockType = __webpack_require__(/*! ./block-type */ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/block-type.js");
+const _require = __webpack_require__(/*! ./tw-scratchx-utilities */ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/tw-scratchx-utilities.js"),
   argumentIndexToId = _require.argumentIndexToId,
   generateExtensionId = _require.generateExtensionId;
 
@@ -3155,10 +3124,10 @@ module.exports = createScratchX;
 
 /***/ }),
 
-/***/ "./node_modules/scratch-vm/src/extension-support/tw-scratchx-utilities.js":
-/*!********************************************************************************!*\
-  !*** ./node_modules/scratch-vm/src/extension-support/tw-scratchx-utilities.js ***!
-  \********************************************************************************/
+/***/ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/tw-scratchx-utilities.js":
+/*!****************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/extension-support/tw-scratchx-utilities.js ***!
+  \****************************************************************************************************************************************************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports) {
 
@@ -3189,14 +3158,14 @@ module.exports = {
 
 /***/ }),
 
-/***/ "./node_modules/scratch-vm/src/util/cast.js":
-/*!**************************************************!*\
-  !*** ./node_modules/scratch-vm/src/util/cast.js ***!
-  \**************************************************/
+/***/ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/util/cast.js":
+/*!**********************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/util/cast.js ***!
+  \**********************************************************************************************************************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-const Color = __webpack_require__(/*! ../util/color */ "./node_modules/scratch-vm/src/util/color.js");
+const Color = __webpack_require__(/*! ../util/color */ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/util/color.js");
 
 /**
  * @fileoverview
@@ -3435,10 +3404,10 @@ module.exports = Cast;
 
 /***/ }),
 
-/***/ "./node_modules/scratch-vm/src/util/color.js":
-/*!***************************************************!*\
-  !*** ./node_modules/scratch-vm/src/util/color.js ***!
-  \***************************************************/
+/***/ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/util/color.js":
+/*!***********************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/util/color.js ***!
+  \***********************************************************************************************************************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports) {
 
@@ -3674,16 +3643,47 @@ module.exports = Color;
 
 /***/ }),
 
-/***/ "./node_modules/scratch-vm/src/util/log.js":
-/*!*************************************************!*\
-  !*** ./node_modules/scratch-vm/src/util/log.js ***!
-  \*************************************************/
+/***/ "./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/util/log.js":
+/*!*********************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/.pnpm/scratch-vm@https+++codeload.github.com+Bilup+scratch-vm+tar.gz+1c420ecb0a6dd2492b1195dbc608c5_5jn6edgmxeg6uoqp3cda4x56ae/node_modules/scratch-vm/src/util/log.js ***!
+  \*********************************************************************************************************************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-const nanolog = __webpack_require__(/*! @turbowarp/nanolog */ "./node_modules/@turbowarp/nanolog/index.js");
+const nanolog = __webpack_require__(/*! @turbowarp/nanolog */ "./node_modules/.pnpm/@turbowarp+nanolog@0.2.0/node_modules/@turbowarp/nanolog/index.js");
 nanolog.enable();
 module.exports = nanolog('vm');
+
+/***/ }),
+
+/***/ "./node_modules/.pnpm/webpack@4.47.0_webpack-cli@3.3.12/node_modules/webpack/buildin/global.js":
+/*!***********************************!*\
+  !*** (webpack)/buildin/global.js ***!
+  \***********************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+var g;
+
+// This works in non-strict mode
+g = (function() {
+	return this;
+})();
+
+try {
+	// This works if eval is allowed (see CSP)
+	g = g || new Function("return this")();
+} catch (e) {
+	// This works if the window reference is available
+	if (typeof window === "object") g = window;
+}
+
+// g can still be undefined, but nothing to do about it...
+// We return undefined, instead of nothing here, so it's
+// easier to handle this case. if(!global) { ...}
+
+module.exports = g;
+
 
 /***/ })
 

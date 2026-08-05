@@ -4295,7 +4295,7 @@ const resources = {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _bilup_scratch_svg_renderer__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @bilup/scratch-svg-renderer */ "./node_modules/@bilup/scratch-svg-renderer/src/index.js");
+/* harmony import */ var _bilup_scratch_svg_renderer__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @bilup/scratch-svg-renderer */ "./node_modules/.pnpm/@bilup+scratch-svg-renderer@https+++codeload.github.com+Bilup+scratch-svg-renderer+tar.gz+cb4_av7ly5dzjlenxa6wjaho5gzk3a/node_modules/@bilup/scratch-svg-renderer/src/index.js");
 /* harmony import */ var _bilup_scratch_svg_renderer__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_bilup_scratch_svg_renderer__WEBPACK_IMPORTED_MODULE_0__);
 function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
