@@ -80,13 +80,21 @@ const base = {
     },
     resolve: {
         extensions: ['.js', '.jsx', '.ts', '.tsx'],
-        symlinks: false,
+        // Must be true so that pnpm symlinks are followed: with symlinks disabled,
+        // htmlparser2@3.10.0 resolves "domhandler" to the hoisted 5.x (ESM object export)
+        // instead of its own 2.x (CommonJS constructor), causing
+        // "TypeError: DomHandler is not a constructor" in scratch-vm.
+        symlinks: true,
         alias: {
             'react': require.resolve('react'),
             'react-dom': require.resolve('react-dom'),
             'text-encoding$': path.resolve(__dirname, 'src/lib/tw-text-encoder'),
             'just-bash$': path.resolve(__dirname, 'node_modules/just-bash/dist/bundle/browser.js'),
             'node:zlib$': path.resolve(__dirname, 'src/lib/just-bash-zlib.js'),
+            // just-bash bundles an ESM-only minimatch@10 that webpack 4 cannot parse.
+            // Pin it to the hoisted CJS minimatch@3 (already used by glob/babel/eslint),
+            // whose API is a superset of what just-bash needs (minimatch()).
+            'minimatch': require.resolve('minimatch'),
             'scratch-render-fonts$': path.resolve(__dirname, 'src/lib/tw-scratch-render-fonts'),
             'exports-loader': require.resolve('exports-loader'),
             'scratch-parser': path.resolve(__dirname, 'node_modules/scratch-parser')

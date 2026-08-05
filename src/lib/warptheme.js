@@ -1,6 +1,6 @@
-import {getRotur, ensureScopes} from './rotur/client.js';
+import {getRotur} from './rotur/client.js';
 
-const API = 'https://theme.billup.org/api';
+const API = 'https://theme.bilup.org/api';
 const TOKEN_KEY = 'mw:warptheme-token';
 const TOKEN_MANAGER = 'https://accounts.bilup.org/token-manager';
 
@@ -57,51 +57,17 @@ const openSession = async expectedUsername => {
     const rotur = getRotur();
     if (!rotur.loggedIn || !rotur.token) throw new Error('Sign in with Bilup Accounts first.');
 
-    // Try to generate a validator. If the current token lacks the permission,
-    // re-run the Bilup Accounts login flow to refresh the token with the scope
-    // (the user may have just enabled it in the Token Manager), then retry once.
-    let validator;
-    const generateValidator = async () => {
-        const result = await rotur.validators.generate('biluptheme');
-        validator = result && result.validator;
-    };
-    try {
-        await generateValidator();
-    } catch (error) {
-        const status = error && error.status;
-        const data = error && error.data;
-        const message = String(
-            (data && (typeof data === 'object' ? (data.error || data.message) : data)) ||
-            (error && error.message) ||
-            ''
-        );
-        if (!needsValidatorPermission(status, data)) {
-            throw new Error(message || 'Bilup Accounts could not authorize BilupTheme.');
-        }
-        try {
-            await ensureScopes(['validators:generate']);
-        } catch (refreshError) {
-            const permissionError = new Error(
-                'Your Bilup Accounts token needs the validators:generate permission before it can access BilupTheme.'
-            );
-            permissionError.code = 'validator-permission';
-            throw permissionError;
-        }
-        try {
-            await generateValidator();
-        } catch (retryError) {
-            const permissionError = new Error(
-                'Your Bilup Accounts token needs the validators:generate permission before it can access BilupTheme.'
-            );
-            permissionError.code = 'validator-permission';
-            throw permissionError;
-        }
+    // The BilupTheme backend (Bilup/BilupTheme) signs you in with a Bilup
+    // Accounts token: it exchanges the token for a validator, verifies it, and
+    // creates a session. The session id is returned and used as a bearer token
+    // for the rest of the API (the backend must return it as `token`).
+    const auth = await request('/auth/login', null, {
+        method: 'POST',
+        body: JSON.stringify({token: rotur.token})
+    });
+    if (!auth || !auth.token) {
+        throw new Error((auth && auth.error) || 'Bilup Accounts could not authorize BilupTheme.');
     }
-    if (!validator) {
-        throw new Error('Bilup Accounts could not authorize BilupTheme.');
-    }
-
-    const auth = await request(`/auth?v=${encodeURIComponent(validator)}`, null, {method: 'POST'});
     token = auth.token;
     storeToken(token);
     const account = await request('/user', token);

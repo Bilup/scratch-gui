@@ -81,14 +81,19 @@ const ACCENT_GROUPS = [
 
 const ACCENT_MAP = {};
 for (const accent of ACCENTS) {
-    ACCENT_MAP[accent.name.toLowerCase()] = {
+    // Use the id short name (e.g. "pale-blue", "eggplant-purple") as the key so
+    // it matches ACCENT_GROUPS, the settings panel and persisted theme values.
+    // Previously the display name was used ("Pale Blue" -> "pale blue",
+    // "Eggplant" -> "eggplant"), which hid those accents from the picker.
+    const accentId = accent.id.split('.').pop();
+    ACCENT_MAP[accentId] = {
         ...accent.accent,
         defaultMessage: accent.name,
         description: accent.description,
         id: accent.id
     };
 }
-const ACCENT_DEFAULT = ACCENTS[5].name.toLowerCase();
+const ACCENT_DEFAULT = ACCENTS[5].id.split('.').pop();
 
 export {
     ACCENTS,
