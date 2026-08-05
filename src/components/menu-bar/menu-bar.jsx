@@ -47,17 +47,6 @@ import CloudVariablesToggler from '../../containers/tw-cloud-toggler.jsx';
 import TWSaveStatus from './tw-save-status.jsx';
 import TWNews from './tw-news.jsx';
 import CollaborationContainer from '../../containers/collaboration-container.jsx';
-import {
-    commitProject,
-    getDefaultAuthor,
-    repoExists,
-    getRemotes,
-    push as gitPush,
-    pull as gitPull,
-    REPO_DIR as GIT_REPO_DIR,
-    getFs as getGitFs
-} from '../../lib/git/browser-git';
-import {buildSb3FromFractchTree} from '../../lib/git/fractch-tree';
 import RestorePointAPI from '../../lib/api/restore-points';
 
 import TWDesktopSettings from './tw-desktop-settings.jsx';
@@ -139,7 +128,10 @@ import {
     onSettingsChanged
 } from '../../lib/menu-bar/settings.js';
 
-import openFractchTerminalWindow from '../../lib/mw/open-fractch-terminal-window.js';
+// The git toolchain (isomorphic-git, lightning-fs, jszip) and the terminal
+// (xterm) are heavy and only needed when the user actually uses those features.
+// They are imported lazily inside the handlers below so they don't slow down
+// the first editor load.
 
 import WorkspaceBookmarksMenu from './workspace-bookmarks-menu.jsx';
 import MediaRecorderButton from './media-recorder.jsx';
@@ -703,6 +695,7 @@ class MenuBar extends React.Component {
         // Keep this cheap (no project re-serialization): existence + remotes only.
         // "Has changes" is derived from the redux projectChanged flag in render.
         try {
+            const {repoExists, getRemotes} = await import('../../lib/git/browser-git');
             if (!(await repoExists())) {
                 this.setState({gitRepoExists: false, gitRemotes: []});
                 return;
@@ -717,13 +710,14 @@ class MenuBar extends React.Component {
         }
     }
 
-    gitAuth () {
+    async gitAuth () {
         let token = '';
         try {
             token = localStorage.getItem('mw:git-token') || '';
         } catch (e) {
             token = '';
         }
+        const {getDefaultAuthor} = await import('../../lib/git/browser-git');
         const username = (getDefaultAuthor().name || '').trim();
         if (!token) return null;
         return () => (username ? {username, password: token} : {username: token, password: token});
@@ -733,11 +727,12 @@ class MenuBar extends React.Component {
         this.props.onRequestCloseFile();
         this.props.onShowGitStatus('gitPushing');
         try {
+            const {push: gitPush} = await import('../../lib/git/browser-git');
             await gitPush({
                 vm: this.props.vm,
                 remote,
                 setUpstream: true,
-                onAuth: this.gitAuth()
+                onAuth: await this.gitAuth()
             });
             this.props.onGitStatusDone('gitPushSuccess');
         } catch (e) {
@@ -764,10 +759,17 @@ class MenuBar extends React.Component {
         this.props.onShowGitStatus('gitPulling');
         try {
             await RestorePointAPI.createSafetyRestorePoint(this.props.vm, this.props.projectTitle);
+            const [
+                {pull: gitPull, getFs: getGitFs, REPO_DIR: GIT_REPO_DIR},
+                {buildSb3FromFractchTree}
+            ] = await Promise.all([
+                import('../../lib/git/browser-git'),
+                import('../../lib/git/fractch-tree')
+            ]);
             await gitPull({
                 vm: this.props.vm,
                 remote,
-                onAuth: this.gitAuth()
+                onAuth: await this.gitAuth()
             });
             // The working tree changed; rebuild the project and reload it.
             const fs = getGitFs();
@@ -803,6 +805,7 @@ class MenuBar extends React.Component {
             }
             this.props.onShowGitStatus('gitCommitting');
             try {
+                const {commitProject, getDefaultAuthor} = await import('../../lib/git/browser-git');
                 await commitProject({
                     vm: this.props.vm,
                     message: message.trim(),
@@ -2219,7 +2222,9 @@ class MenuBar extends React.Component {
                                     </MenuItem>
                                     <MenuItem
                                         onClick={() => {
-                                            openFractchTerminalWindow({vm: this.props.vm});
+                                            import('../../lib/mw/open-fractch-terminal-window.js')
+                                                .then(module => module.default({vm: this.props.vm}))
+                                                .catch(e => console.error(e));
                                             this.props.onRequestCloseTools();
                                         }}
                                     >

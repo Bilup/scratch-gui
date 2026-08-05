@@ -3,7 +3,6 @@ import {getRememberedPlatformProjectState, publishToMistWarp} from '../community
 import {request} from '../community/api.js';
 import communityEnabled from '../community/enabled.js';
 import downloadBlob from '../utils/download-blob';
-import {embedRepoIntoSb3Blob} from '../git/browser-git.js';
 
 const agreementAccepted = async () => {
     try {
@@ -22,6 +21,7 @@ const smartSave = async ({vm, title, onSaved = () => {}}) => {
     const platform = communityEnabled ? getRememberedPlatformProjectState() : null;
 
     if (!platform) {
+        const {embedRepoIntoSb3Blob} = await import('../git/browser-git.js');
         const blob = await embedRepoIntoSb3Blob(await vm.saveProjectSb3());
         downloadBlob(`${title || 'project'}.sb3`, blob);
         return;

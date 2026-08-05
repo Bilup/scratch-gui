@@ -28,8 +28,20 @@ import {openUnknownPlatformModal} from '../../reducers/modals';
 import {setTheme} from '../../reducers/theme';
 import {Theme} from '../themes';
 import {CustomTheme} from '../themes/custom-themes.js';
-import implementGuiAPI from '../api/extension-gui';
 import {BLOCKS_TAB_INDEX} from '../../reducers/editor-tab';
+
+// The unsandboxed extension GUI API pulls in the whole git toolchain
+// (browser-git). It is only needed when an unsandboxed extension runs, so load
+// it lazily instead of blocking the first editor load with it.
+let extensionGuiAPIPromise;
+const implementGuiAPI = Scratch => {
+    if (!extensionGuiAPIPromise) {
+        extensionGuiAPIPromise = import('../api/extension-gui');
+    }
+    extensionGuiAPIPromise
+        .then(module => module.default(Scratch))
+        .catch(e => console.error('Failed to load extension GUI API:', e));
+};
 
 const projectThemeSuppressed = () => {
     try {

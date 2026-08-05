@@ -7,7 +7,6 @@ import log from '../utils/log';
 import sharedMessages from '../constants/shared-messages';
 import {setFileHandle, setProjectError} from '../../reducers/tw';
 import unpackage from '../unpackager';
-import {importRepoFromSb3} from '../git/browser-git';
 import RestorePointAPI from '../api/restore-points';
 
 import {
@@ -243,6 +242,7 @@ const SBFileUploaderHOC = function (WrappedComponent) {
                         // Restore any git history embedded in the .sb3 (fractch tree + .git),
                         // or clear a stale repo if the loaded project has none.
                         try {
+                            const {importRepoFromSb3} = await import('../git/browser-git');
                             await importRepoFromSb3(loadedBytes);
                         } catch (gitError) {
                             log.error('Failed to restore embedded git history:', gitError);

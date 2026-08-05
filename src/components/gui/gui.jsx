@@ -46,7 +46,6 @@ import MWProjectMetadataModal from '../../containers/mw-project-metadata-modal.j
 import TWDebugger from '../../containers/tw-debugger.jsx';
 import TWUnknownPlatformModal from '../../containers/tw-unknown-platform-modal.jsx';
 import TWInvalidProjectModal from '../../containers/tw-invalid-project-modal.jsx';
-import TWGitModal from '../../containers/mw-git-modal.jsx';
 import MWExtensionManagerModal from '../../containers/mw-extension-manager-modal.jsx';
 import MWHelpModal from '../../containers/mw-help-modal.jsx';
 import MWProjectThemeModal from '../../containers/mw-project-theme-modal.jsx';
@@ -74,6 +73,11 @@ import {isRendererSupported, isBrowserSupported} from '../../lib/utils/tw-enviro
 import styles from './gui.css';
 
 const FractchWorkspace = React.lazy(() => import('../mw-fractch-workspace/fractch-workspace.jsx'));
+
+// The git panel imports the whole git toolchain (isomorphic-git, lightning-fs,
+// jszip). Lazy load it so it does not slow down the first editor load; it is
+// only mounted when the user actually opens the git panel.
+const TWGitModal = React.lazy(() => import('../../containers/mw-git-modal.jsx'));
 
 const messages = defineMessages({
     addExtension: {
@@ -812,7 +816,9 @@ const GUIComponent = props => {
             {projectMetadataModalVisible && <MWProjectMetadataModal />}
             {unknownPlatformModalVisible && <TWUnknownPlatformModal />}
             {invalidProjectModalVisible && <TWInvalidProjectModal />}
-            {gitModalVisible && <TWGitModal />}
+            <React.Suspense fallback={null}>
+                {gitModalVisible && <TWGitModal />}
+            </React.Suspense>
             {roturLoginModalVisible && (
                 <RoturLoginModal onRequestClose={onRequestCloseRoturLogin} />
             )}

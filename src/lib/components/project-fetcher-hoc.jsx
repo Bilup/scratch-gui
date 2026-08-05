@@ -27,8 +27,6 @@ import storage from '../persistence/storage.js';
 
 import VM from 'scratch-vm';
 import {fetchProjectMeta} from './tw-project-meta-fetcher-hoc.jsx';
-import {cloneRepo} from '../git/browser-git.js';
-import {buildSb3FromFractchTree} from '../git/fractch-tree.js';
 import {getAuth as getRoturGitAuth} from '../rotur/git-api.js';
 import {rememberPlatformProject} from '../community/publish.js';
 import {getEditorProject as getMistWarpEditorProject} from '../community/api.js';
@@ -36,6 +34,13 @@ import {hasBridge, bridgeFetch} from '../community/embed-bridge.js';
 import {cachedFetchBuffer} from '../community/cached-fetch.js';
 
 const cloneProjectFromRepo = async url => {
+    const [
+        {cloneRepo},
+        {buildSb3FromFractchTree}
+    ] = await Promise.all([
+        import('../git/browser-git.js'),
+        import('../git/fractch-tree.js')
+    ]);
     const {fs, dir} = await cloneRepo({url, onAuth: getRoturGitAuth});
     const sb3 = await buildSb3FromFractchTree({fs, dir});
     return {data: sb3 instanceof ArrayBuffer ? sb3 : await sb3.arrayBuffer()};

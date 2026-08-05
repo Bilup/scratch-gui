@@ -9,7 +9,6 @@ import {showStandardAlert, showAlertWithTimeout} from '../reducers/alerts';
 import {setFileHandle} from '../reducers/tw';
 import {getIsShowingProject} from '../reducers/project-state';
 import log from '../lib/utils/log';
-import {embedRepoIntoSb3Blob, repoExists} from '../lib/git/browser-git';
 
 // from sb-file-uploader-hoc.jsx
 const getProjectTitleFromFilename = fileInputFilename => {
@@ -142,6 +141,7 @@ class SB3Downloader extends React.Component {
 
         // Embedding git history needs the full zip in memory (the streaming path
         // can't inject extra files), so buffer the save when a repo exists.
+        const {repoExists} = await import('../lib/git/browser-git');
         if (await repoExists()) {
             const writable = await handle.createWritable();
             this.startedSaving();
@@ -330,7 +330,10 @@ const mapStateToProps = state => ({
     // Wrap the VM save so the .sb3 also carries the git repo (fractch tree + .git)
     // under GIT_EMBED_DIR while keeping the normal project.json/assets at the top level.
     saveProjectSb3: (...args) =>
-        state.scratchGui.vm.saveProjectSb3(...args).then(content => embedRepoIntoSb3Blob(content)),
+        state.scratchGui.vm.saveProjectSb3(...args).then(async content => {
+            const {embedRepoIntoSb3Blob} = await import('../lib/git/browser-git');
+            return embedRepoIntoSb3Blob(content);
+        }),
     saveProjectSb3Stream: state.scratchGui.vm.saveProjectSb3Stream.bind(state.scratchGui.vm),
     canSaveProject: getIsShowingProject(state.scratchGui.projectState.loadingState),
     projectFilename: getProjectFilename(state.scratchGui.projectTitle, projectTitleInitialState)

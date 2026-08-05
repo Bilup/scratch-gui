@@ -1,5 +1,6 @@
 import React, {useEffect} from 'react';
 import {Routes, Route, useLocation} from 'react-router-dom';
+import {initPrefetch} from './prefetch-editor.js';
 import {UserProvider} from './UserContext.jsx';
 import setPageMeta from './page-meta.js';
 import NavBar from './components/NavBar.jsx';
@@ -43,31 +44,38 @@ const RouteMeta = () => {
     return null;
 };
 
-const App = () => (
-    <UserProvider>
-        <RouteMeta />
-        <NavBar />
-        <BetaBanner />
-        <StandingBanner />
-        <div className="mw-app-content">
-            <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/explore" element={<Explore />} />
-                <Route path="/project/:id" element={<Project />} />
-                <Route path="/users/:name" element={<Profile />} />
-                <Route path="/users/:name/followers" element={<Followers />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/mystuff" element={<MyStuff />} />
-                <Route path="/mystuff/project/:id" element={<ManageProject />} />
-                <Route path="/wallet" element={<Wallet />} />
-                <Route path="/notifications" element={<Notifications />} />
-                <Route path="/news" element={<News />} />
-                <Route path="/leaderboard" element={<Leaderboard />} />
-                <Route path="/admin" element={<Admin />} />
-            </Routes>
-        </div>
-        <Footer />
-    </UserProvider>
-);
+const App = () => {
+    // Warm the browser cache with the editor's JS bundles while the user is on
+    // the community site, so the first editor load is much faster.
+    useEffect(() => {
+        initPrefetch();
+    }, []);
+    return (
+        <UserProvider>
+            <RouteMeta />
+            <NavBar />
+            <BetaBanner />
+            <StandingBanner />
+            <div className="mw-app-content">
+                <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/explore" element={<Explore />} />
+                    <Route path="/project/:id" element={<Project />} />
+                    <Route path="/users/:name" element={<Profile />} />
+                    <Route path="/users/:name/followers" element={<Followers />} />
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="/mystuff" element={<MyStuff />} />
+                    <Route path="/mystuff/project/:id" element={<ManageProject />} />
+                    <Route path="/wallet" element={<Wallet />} />
+                    <Route path="/notifications" element={<Notifications />} />
+                    <Route path="/news" element={<News />} />
+                    <Route path="/leaderboard" element={<Leaderboard />} />
+                    <Route path="/admin" element={<Admin />} />
+                </Routes>
+            </div>
+            <Footer />
+        </UserProvider>
+    );
+};
 
 export default App;
