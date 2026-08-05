@@ -248,9 +248,7 @@
     "overrides": {
       "webpack@4.47.0>terser-webpack-plugin": "^4.2.3",
       "cheerio": "1.0.0-rc.12",
-      "brace-expansion": "1.1.11",
-      "scratch-parser": "github:Bilup/scratch-parser#main",
-      "scratch-vm": "link:../scratch-vm"
+      "brace-expansion": "1.1.11"
     }
   }
 }
