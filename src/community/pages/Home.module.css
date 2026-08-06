@@ -78,7 +78,7 @@
 .heroLogo {
     width: 168px;
     height: 168px;
-    border-radius: 34px;
+    border-radius: 17.5px;
     background: var(--accent);
     padding: 18px;
     box-sizing: border-box;

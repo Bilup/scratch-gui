@@ -860,13 +860,14 @@ const assets = function (isInitialSetup, isStage, targetId, assetName, colors) {
         </value>
         `;
     };
+    const manageAssets = translate('ASSETS_MANAGE', 'Manage assets');
     return `
     <category
         name="%{BKY_CATEGORY_ASSETS}"
         id="assets"
         colour="${colors.primary}"
         secondaryColour="${colors.tertiary}">
-        ${isInitialSetup ? '' : '<button text="Manage assets" callbackKey="OPEN_ASSETS_MODAL"></button>'}
+        ${isInitialSetup ? '' : `<button text="${manageAssets}" callbackKey="OPEN_ASSETS_MODAL"></button>`}
         <block type="assets_load">
             ${asset(assetName)}
         </block>
