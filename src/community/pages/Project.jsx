@@ -11,6 +11,7 @@ import {
 import api, {projectUrl, editorUrl, embedUrl, stashProjectHandoff} from '../api';
 import {cachedFetchBuffer, cachedFetchJson} from '../../lib/community/cached-fetch.js';
 import {buyProject} from '../purchase';
+import {isInsufficientFunds, KO_FI_SHOP_URL} from '../credits';
 import RoturConsentModal from '../components/RoturConsentModal.jsx';
 import {getBalance} from '../../lib/rotur/client.js';
 import {
@@ -600,7 +601,9 @@ const Project = () => {
             setConfirmBuy(false);
         } catch (e) {
             setConfirmBuy(false);
-            if (e.needsReauth) {
+            if (isInsufficientFunds(e)) {
+                window.location.assign(KO_FI_SHOP_URL);
+            } else if (e.needsReauth) {
                 setActionError(t('mw.community.project.reauthNeeded',
                     'Your current login cannot send credits. Log out and back in, then try again.'));
             } else {
@@ -960,16 +963,26 @@ const Project = () => {
                                 className={styles.confirmCancel}
                                 onClick={() => setConfirmBuy(false)}
                             >{t('mw.community.project.cancel', 'Cancel')}</button>
-                            <button
-                                className={styles.confirmButton}
-                                onClick={doBuy}
-                                disabled={buying || (confirmBalance !== null && confirmBalance < price)}
-                            >
-                                <Coins size={15} />
-                                {buying ?
-                                    t('mw.community.project.processing', 'Processing…') :
-                                    t('mw.community.project.payCredits', 'Pay {price} credits', {price})}
-                            </button>
+                            {confirmBalance !== null && confirmBalance < price ? (
+                                <a
+                                    className={styles.confirmButton}
+                                    href={KO_FI_SHOP_URL}
+                                >
+                                    <Coins size={15} />
+                                    {t('mw.community.project.buyCredits', 'Buy credits')}
+                                </a>
+                            ) : (
+                                <button
+                                    className={styles.confirmButton}
+                                    onClick={doBuy}
+                                    disabled={buying}
+                                >
+                                    <Coins size={15} />
+                                    {buying ?
+                                        t('mw.community.project.processing', 'Processing…') :
+                                        t('mw.community.project.payCredits', 'Pay {price} credits', {price})}
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>

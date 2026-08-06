@@ -1,7 +1,6 @@
 import {connect} from 'react-redux';
 import PropTypes from 'prop-types';
 import React, {useCallback} from 'react';
-import {injectIntl, intlShape} from 'react-intl';
 import InlineMessages from '../../containers/inline-messages.jsx';
 import {filterInlineAlerts} from '../../reducers/alerts';
 import {setProjectUnchanged} from '../../reducers/project-changed';
@@ -19,8 +18,7 @@ const TWSaveStatus = ({
     projectTitle,
     roturReady,
     onProjectUnchanged,
-    vm,
-    intl
+    vm
 }) => {
     const platformState = communityEnabled && roturReady ? getRememberedPlatformProjectState() : null;
     const mistwarpAction = communityEnabled && roturReady ?
@@ -38,13 +36,7 @@ const TWSaveStatus = ({
         return null;
     }
     if (!platformState || !mistwarpAction) return null;
-    const mistwarpLabel = intl.formatMessage(mistwarpAction === 'remix' ? {
-        id: 'mw.menuBar.remix',
-        defaultMessage: 'Remix to Bilup'
-    } : {
-        id: 'mw.menuBar.share',
-        defaultMessage: 'Save to Bilup'
-    });
+    const mistwarpLabel = mistwarpAction === 'remix' ? 'Remix to Bilup' : 'Save to Bilup';
     return (
         <div
             className={styles.saveNow}
@@ -68,8 +60,7 @@ TWSaveStatus.propTypes = {
     vm: PropTypes.shape({
         saveProjectSb3: PropTypes.func,
         renderer: PropTypes.object
-    }),
-    intl: intlShape
+    })
 };
 
 const mapStateToProps = state => ({
@@ -85,7 +76,7 @@ const mapDispatchToProps = dispatch => ({
     onProjectUnchanged: () => dispatch(setProjectUnchanged())
 });
 
-export default injectIntl(connect(
+export default connect(
     mapStateToProps,
     mapDispatchToProps
-)(TWSaveStatus));
+)(TWSaveStatus);

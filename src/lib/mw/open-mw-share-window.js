@@ -31,19 +31,10 @@ const openMistWarpShareWindow = ({vm, initialTitle, initialError, action = 'save
         container = null;
     };
 
-    const store = window.ReduxStore;
-    const messages = store && store.getState && store.getState().locales ?
-        store.getState().locales.messages : null;
-    const windowTitleKey = action === 'remix' ? 'mw.share.windowTitle.remix' :
-        action === 'update' ? 'mw.share.windowTitle.update' : 'mw.share.windowTitle.save';
-    const windowTitle = (messages && messages[windowTitleKey]) || (
-        action === 'remix' ? 'Remix to Bilup' :
-            action === 'update' ? 'Update Bilup project' : 'Save to Bilup'
-    );
-
     shareWindow = WindowManager.createWindow({
         id: 'mw-share-window',
-        title: windowTitle,
+        title: action === 'remix' ? 'Remix to Bilup' :
+            action === 'update' ? 'Update Bilup project' : 'Save to Bilup',
         width: 460,
         height: 380,
         minWidth: 360,
@@ -60,6 +51,7 @@ const openMistWarpShareWindow = ({vm, initialTitle, initialError, action = 'save
 
     shareWindow.setContent(container);
 
+    const store = window.ReduxStore;
     const shareWindowProps = {
         vm,
         initialTitle,
