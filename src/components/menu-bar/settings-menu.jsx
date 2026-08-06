@@ -13,7 +13,7 @@ import {Settings} from 'lucide-react';
 
 const SettingsMenu = ({onOpenSettings}) => (
     <div
-        data-mw-item="view"
+        data-mw-item="settings"
         className={classNames(menuBarStyles.menuBarItem, menuBarStyles.hoverable)}
         onClick={onOpenSettings}
     >

@@ -384,7 +384,7 @@ const createInfoCommand = () => defineCommand('info', async () => {
     const host = typeof location === 'undefined' ? 'unknown' : location.host;
 
     const fields = [
-        ['User', `${currentUser()}@mistwarp`],
+        ['User', `${currentUser()}@bilup`],
         ['Host', host],
         ['Uptime', formatUptime()],
         ['Shell', 'just-bash (browser)'],
@@ -404,7 +404,7 @@ const createInfoCommand = () => defineCommand('info', async () => {
     const labelWidth = Math.max(...fields.map(([label]) => label.length));
     const user = currentUser();
     const rows = [
-        `${BOLD}${gradientLine(`${user}@mistwarp`, 0, 1)}`,
+        `${BOLD}${gradientLine(`${user}@bilup`, 0, 1)}`,
         gradientLine('-'.repeat(user.length + 9), 0, 1),
         ...fields.map(([label, value]) => (
             `${gradientAt(0.25)}${label.padEnd(labelWidth)}${RESET}  ${gradientAt(0.75)}|${RESET}  ${value}`

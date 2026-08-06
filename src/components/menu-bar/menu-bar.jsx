@@ -2502,53 +2502,6 @@ class MenuBar extends React.Component {
                             {remixButton}
                         </div>
                     )}
-                    <div
-                        data-mw-item="community"
-                        className={classNames(styles.menuBarItem, styles.communityButtonWrapper)}
-                    >
-                        {this.props.enableCommunity ? (
-                            this.state.mistwarpProject ? (
-                                <CommunityButton
-                                    className={styles.menuBarButton}
-                                    /* eslint-disable-next-line react/jsx-no-bind */
-                                    onClick={this.handleClickSeeMistWarpPage}
-                                />
-                            ) : null
-                        ) : (this.props.showComingSoon ? (
-                            <MenuBarItemTooltip id="community-button">
-                                <CommunityButton className={styles.menuBarButton} />
-                            </MenuBarItemTooltip>
-                        ) : (this.props.enableSeeInside ? (
-                            <SeeInsideButton
-                                className={styles.menuBarButton}
-                                onClick={this.handleClickSeeInside}
-                            />
-                        ) : []))}
-                    </div>
-                    {/* tw: add a feedback button */}
-                    <div
-                        data-mw-item="feedback"
-                        className={styles.menuBarItem}
-                    >
-                        <a
-                            className={styles.feedbackLink}
-                            href={FEEDBACK_URL}
-                            rel="noopener noreferrer"
-                            target="_blank"
-                        >
-                            {/* todo: icon */}
-                            <Button className={styles.feedbackButton}>
-                                <FormattedMessage
-                                    defaultMessage="{APP_NAME} Feedback"
-                                    description="Button to give feedback in the menu bar"
-                                    id="tw.feedbackButton"
-                                    values={{
-                                        APP_NAME
-                                    }}
-                                />
-                            </Button>
-                        </a>
-                    </div>
                 </div>
 
                 <div

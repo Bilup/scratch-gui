@@ -704,7 +704,14 @@ class CollaborationModal extends Component {
                             onClick={this.handleCreateRoom}
                             disabled={this.state.isConnecting}
                         >
-                            {typedRoomId ? `Host room "${typedRoomId}"` : (
+                            {typedRoomId ? (
+                                <FormattedMessage
+                                    defaultMessage='Host room "{roomId}"'
+                                    description="Button to host a collaboration room with a custom room ID"
+                                    id="gui.collaboration.hostRoom"
+                                    values={{roomId: typedRoomId}}
+                                />
+                            ) : (
                                 <FormattedMessage
                                     defaultMessage="Create New Room"
                                     description="Button to create new collaboration room"

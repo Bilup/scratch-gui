@@ -25,20 +25,20 @@ import {onSettingsChanged} from '../../lib/menu-bar/settings.js';
 
 const LABELS = {
     'file': 'mw.menuBar.file',
-    'view': 'mw.menuBar.view',
     'bookmarks': 'mw.menuBar.bookmarks',
     'edit': 'mw.menuBar.edit',
     'tools': 'mw.menuBar.tools',
     'mode': 'mw.menuBar.mode',
     'block-count': 'mw.menuBar.blockCount',
     'media-recorder': 'mw.settings.menuBar.videoRecorder',
+    'nova': 'mw.menuBar.nova',
     'save-status': 'mw.menuBar.saveStatus',
     'addons': 'mw.menuBar.addons',
     'settings': 'mw.menuBar.settings',
     'about': 'mw.menuBar.about',
     'project-title': 'mw.menuBar.projectTitle',
-    'community': 'mw.menuBar.community',
-    'rotur-account': 'mw.menuBar.roturAccount'
+    'rotur-account': 'mw.menuBar.roturAccount',
+    'collab-presence': 'mw.menuBar.collabPresence'
 };
 
 const ALIGN_OPTIONS = [

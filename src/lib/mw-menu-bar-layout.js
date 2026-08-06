@@ -2,9 +2,9 @@ const ZONES = [
     {
         id: 'left',
         items: [
-            '__errors', 'file', 'edit', 'mode', 'tools', 'bookmarks', 'view',
-            '__divider', 'project-title', '__view-counter', 'community', 'media-recorder', 'block-count',
-            'share', 'remix', 'feedback'
+            '__errors', 'file', 'edit', 'mode', 'tools', 'bookmarks', 'settings',
+            '__divider', 'project-title', '__view-counter', 'media-recorder', 'nova', 'block-count',
+            'share', 'remix'
         ],
         extras: []
     },
@@ -15,12 +15,12 @@ const ZONES = [
     }
 ];
 
-const ALWAYS_SHOW = ['save-status', 'rotur-account', 'collab-presence', 'view'];
+const ALWAYS_SHOW = ['save-status', 'rotur-account', 'collab-presence', 'settings'];
 
 const ALL_ITEMS = ZONES.reduce((acc, zone) => acc.concat(zone.items, zone.extras), []);
 
 // Bump when default zone membership/order changes so old custom orders reset
-const ORDER_KEY = 'mw:menu-bar-order-v6';
+const ORDER_KEY = 'mw:menu-bar-order-v8';
 const HIDDEN_KEY = 'mw:menu-bar-hidden';
 const CHANGE_EVENT = 'mw-menu-bar-layout-changed';
 const STYLE_ID = 'mw-menu-bar-layout';
@@ -33,17 +33,6 @@ const readJSON = (key, fallback) => {
         // ignore
     }
     return fallback;
-};
-
-const getLegacyHidden = () => {
-    try {
-        const addons = JSON.parse(localStorage.getItem('tw:addons')) || {};
-        const legacy = addons['tw-interface-customization'];
-        return addons['tw-remove-feedback']?.enabled ||
-            (legacy?.enabled && legacy.removeFeedback) ? ['feedback'] : [];
-    } catch (_) {
-        return [];
-    }
 };
 
 const writeJSON = (key, value) => {
@@ -73,7 +62,7 @@ const normalizeLayout = layout => {
 
 const getMenuBarLayout = () => {
     const orders = readJSON(ORDER_KEY, {});
-    const hidden = readJSON(HIDDEN_KEY, getLegacyHidden());
+    const hidden = readJSON(HIDDEN_KEY, []);
     if (Object.keys(orders).length === 0 && hidden.length === 0) return null;
     return normalizeLayout({orders, hidden});
 };
@@ -95,7 +84,7 @@ const getStoredOrder = zoneId => {
     return stored;
 };
 
-const getHidden = () => readJSON(HIDDEN_KEY, getLegacyHidden())
+const getHidden = () => readJSON(HIDDEN_KEY, [])
     .filter(id => ALL_ITEMS.includes(id) && !ALWAYS_SHOW.includes(id));
 
 const isHidden = id => getHidden().includes(id);

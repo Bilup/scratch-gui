@@ -33,8 +33,18 @@ const openMistWarpShareWindow = ({vm, initialTitle, initialError, action = 'save
 
     shareWindow = WindowManager.createWindow({
         id: 'mw-share-window',
-        title: action === 'remix' ? 'Remix to Bilup' :
-            action === 'update' ? 'Update Bilup project' : 'Save to Bilup',
+        title: (() => {
+            let messages = null;
+            try {
+                messages = window.ReduxStore.getState().locales.messages;
+            } catch (_) {
+                // ignore
+            }
+            const t = (id, def) => (messages && typeof messages[id] === 'string') ? messages[id] : def;
+            return action === 'remix' ? t('mw.share.windowTitleRemix', 'Remix to Bilup') :
+                action === 'update' ? t('mw.share.windowTitleUpdate', 'Update Bilup project') :
+                t('mw.share.windowTitleSave', 'Save to Bilup');
+        })(),
         width: 460,
         height: 380,
         minWidth: 360,

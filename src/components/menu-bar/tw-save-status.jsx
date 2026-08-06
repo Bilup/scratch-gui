@@ -1,6 +1,7 @@
 import {connect} from 'react-redux';
 import PropTypes from 'prop-types';
 import React, {useCallback} from 'react';
+import {injectIntl, defineMessages} from 'react-intl';
 import InlineMessages from '../../containers/inline-messages.jsx';
 import {filterInlineAlerts} from '../../reducers/alerts';
 import {setProjectUnchanged} from '../../reducers/project-changed';
@@ -12,8 +13,22 @@ import {Save} from 'lucide-react';
 
 import styles from './save-status.css';
 
+const messages = defineMessages({
+    remix: {
+        id: 'mw.share.windowTitleRemix',
+        defaultMessage: 'Remix to Bilup',
+        description: 'Tooltip label for saving a remixed project to Bilup'
+    },
+    save: {
+        id: 'mw.share.windowTitleSave',
+        defaultMessage: 'Save to Bilup',
+        description: 'Tooltip label for saving a project to Bilup'
+    }
+});
+
 const TWSaveStatus = ({
     alertsList,
+    intl,
     projectChanged,
     projectTitle,
     roturReady,
@@ -36,7 +51,9 @@ const TWSaveStatus = ({
         return null;
     }
     if (!platformState || !mistwarpAction) return null;
-    const mistwarpLabel = mistwarpAction === 'remix' ? 'Remix to Bilup' : 'Save to Bilup';
+    const mistwarpLabel = mistwarpAction === 'remix' ?
+        intl.formatMessage(messages.remix) :
+        intl.formatMessage(messages.save);
     return (
         <div
             className={styles.saveNow}
@@ -53,6 +70,9 @@ const TWSaveStatus = ({
 
 TWSaveStatus.propTypes = {
     alertsList: PropTypes.arrayOf(PropTypes.object),
+    intl: PropTypes.shape({
+        formatMessage: PropTypes.func.isRequired
+    }).isRequired,
     projectChanged: PropTypes.bool,
     projectTitle: PropTypes.string,
     roturReady: PropTypes.bool,
@@ -76,7 +96,7 @@ const mapDispatchToProps = dispatch => ({
     onProjectUnchanged: () => dispatch(setProjectUnchanged())
 });
 
-export default connect(
+export default injectIntl(connect(
     mapStateToProps,
     mapDispatchToProps
-)(TWSaveStatus);
+)(TWSaveStatus));
