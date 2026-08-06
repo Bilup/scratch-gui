@@ -104,7 +104,6 @@ const base = {
                 {from: /^\/fullscreen\/?$/, to: '/fullscreen.html'},
                 {from: /^\/embed\/?$/, to: '/embed.html'},
                 {from: /^\/addons\/?$/, to: '/addons.html'},
-                {from: /^\/credits\/?$/, to: '/credits.html'},
                 {from: /^\/\d+\/?$/, to: '/player.html'},
                 {from: /^\/\d+\/fullscreen\/?$/, to: '/fullscreen.html'},
                 {from: /^\/\d+\/editor\/?$/, to: '/editor.html'},
@@ -308,8 +307,7 @@ module.exports = [
             'player': './src/playground/player.jsx',
             'fullscreen': './src/playground/fullscreen.jsx',
             'embed': './src/playground/embed.jsx',
-            'addon-settings': './src/playground/addon-settings.jsx',
-            'credits': './src/playground/credits/credits.jsx'
+            'addon-settings': './src/playground/addon-settings.jsx'
         },
         output: {
             path: path.resolve(__dirname, 'build')
@@ -440,13 +438,6 @@ module.exports = [
                 template: 'src/playground/simple.ejs',
                 filename: 'addons.html',
                 title: `Addon Settings - ${APP_NAME}`,
-                ...htmlWebpackPluginCommon
-            }),
-            new HtmlWebpackPlugin({
-                chunks: ['credits'],
-                template: 'src/playground/simple.ejs',
-                filename: 'credits.html',
-                title: `${APP_NAME} Credits`,
                 ...htmlWebpackPluginCommon
             }),
             new CopyWebpackPlugin({

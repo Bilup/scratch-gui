@@ -49,6 +49,11 @@ const contributors = [
         userID: '244335609',
         username: 'AstraEditor'
     },
+    {
+        userUrlType: 'github',
+        userID: '273910431',
+        username: 'DLGrass'
+    },
 ].map(fromHardcoded);
 
 const addonDevelopers = [
@@ -130,14 +135,19 @@ const translators = [
     },
     {
         userUrlType: 'github',
-        userID: '67349469',
-        username: 'TurboWarp'
+        userID: '273910431',
+        username: 'DLGrass'
     },
     {
         userUrlType: 'github',
-        userID: '175630084',
-        username: 'MistWarp'
-    }
+        userID: '67349469',
+        username: 'TurboWarp'
+    },
+    // {
+    //     userUrlType: 'github',
+    //     userID: '175630084',
+    //     username: 'MistWarp'
+    // }
 ].map(fromHardcoded);
 
 export default {

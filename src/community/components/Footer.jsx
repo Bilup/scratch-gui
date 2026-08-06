@@ -110,13 +110,13 @@ const Footer = () => (
                         target="_blank"
                         rel="noreferrer"
                     >Bilup Accounts</a>
-                    <a href="/credits">
+                    <Link to="/credits">
                         <FormattedMessage
                             defaultMessage="Credits"
                             description="Footer link to credits"
                             id="mw.community.footer.credits"
                         />
-                    </a>
+                    </Link>
                 </div>
             </div>
         </div>

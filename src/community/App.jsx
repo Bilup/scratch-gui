@@ -9,6 +9,7 @@ import StandingBanner from './components/StandingBanner.jsx';
 import Footer from './components/Footer.jsx';
 import Home from './pages/Home.jsx';
 import Explore from './pages/Explore.jsx';
+import Credits from './pages/Credits.jsx';
 import Project from './pages/Project.jsx';
 import Profile from './pages/Profile.jsx';
 import Followers from './pages/Followers.jsx';
@@ -60,6 +61,7 @@ const App = () => {
                 <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/explore" element={<Explore />} />
+                    <Route path="/credits" element={<Credits />} />
                     <Route path="/project/:id" element={<Project />} />
                     <Route path="/users/:name" element={<Profile />} />
                     <Route path="/users/:name/followers" element={<Followers />} />
