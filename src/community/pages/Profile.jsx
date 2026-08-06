@@ -8,7 +8,6 @@ import {
 import api from '../api';
 import rotur from '../rotur';
 import {payUser} from '../../lib/rotur/client.js';
-import {isInsufficientFunds, KO_FI_SHOP_URL} from '../credits';
 import {useUser} from '../UserContext.jsx';
 import ProjectCard from '../components/ProjectCard.jsx';
 import CommentThread from '../components/CommentThread.jsx';
@@ -437,19 +436,15 @@ const DonateModal = ({recipient, onClose}) => {
             }, {recipient}));
             setSent(value);
         } catch (e) {
-            if (isInsufficientFunds(e)) {
-                window.location.assign(KO_FI_SHOP_URL);
-            } else {
-                setStatus(e.needsReauth ?
-                    intl.formatMessage({
-                        id: 'mw.community.profile.reauthNeeded',
-                        defaultMessage: 'Your current login cannot send credits. Log out and back in, then try again.'
-                    }) :
-                    (e.message || intl.formatMessage({
-                        id: 'mw.community.profile.sendFailed',
-                        defaultMessage: 'Could not send credits.'
-                    })));
-            }
+            setStatus(e.needsReauth ?
+                intl.formatMessage({
+                    id: 'mw.community.profile.reauthNeeded',
+                    defaultMessage: 'Your current login cannot send credits. Log out and back in, then try again.'
+                }) :
+                (e.message || intl.formatMessage({
+                    id: 'mw.community.profile.sendFailed',
+                    defaultMessage: 'Could not send credits.'
+                })));
         } finally {
             setBusy(false);
         }

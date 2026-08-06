@@ -13,7 +13,6 @@ import {useUser} from '../UserContext.jsx';
 import ProjectCard from '../components/ProjectCard.jsx';
 import ProjectThumbnail from '../components/ProjectThumbnail.jsx';
 import StatChart, {historyRows} from '../components/StatChart.jsx';
-import {KO_FI_SHOP_URL} from '../credits';
 import Sidebar from '../components/Sidebar.jsx';
 import useEscape from '../use-escape.js';
 import styles from './MyStuff.module.css';
@@ -79,10 +78,6 @@ const Overview = ({stats, account, quota}) => {
                         <span className={styles.dashIcon}><Wallet size={18} /></span>
                         <span className={styles.dashNumber}>{fmtCredits(account.balance)}</span>
                         <span className={styles.dashLabel}>{t('mw.community.myStuff.balance', 'Balance')}</span>
-                        <a
-                            className={styles.dashBuy}
-                            href={KO_FI_SHOP_URL}
-                        >{t('mw.community.myStuff.buyCredits', 'Buy credits')}</a>
                     </div>
                 ) : null}
                 {account && account.donationsReceived > 0 ? (
