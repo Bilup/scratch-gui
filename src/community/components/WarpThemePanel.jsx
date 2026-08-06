@@ -31,7 +31,7 @@ const ThemeCard = ({onOpen, theme}) => (
         />
         <span className={styles.themeContent}>
             <strong className={styles.themeName}>{theme.name}</strong>
-            <span className={styles.themeAuthor}>by {theme.authorName || theme.author}</span>
+            <span className={styles.themeAuthor}>by {theme.authorUsername || theme.author}</span>
             <span className={styles.themeStats}>
                 <span><Heart size={12} /> {theme.likes || 0}</span>
                 <span><Download size={12} /> {theme.downloads || 0}</span>
@@ -76,17 +76,34 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
 
     const username = user && user.username;
 
+    // Resolve the BilupTheme account id defensively: the backend returns it at
+    // the top level of /user, but also nests it inside user, so fall back if the
+    // deployed backend omits one of the two shapes.
+    const getUserId = useCallback(account => (
+        (account && (account.userId || (account.user && account.user.userId))) || ''
+    ), []);
+
     const loadThemes = useCallback(async sessionToken => {
         const data = await request('/themes', sessionToken);
         setThemes(data.themes || []);
     }, []);
 
     const loadMyThemes = useCallback(async (sessionToken, userId) => {
-        const data = await request(
-            `/user/themes?username=${encodeURIComponent(userId)}&authType=rotur`,
-            sessionToken
-        );
-        setMyThemes(data.themes || []);
+        if (!userId) {
+            setMyThemes([]);
+            return;
+        }
+        try {
+            const data = await request(
+                `/user/themes?username=${encodeURIComponent(userId)}&authType=rotur`,
+                sessionToken
+            );
+            setMyThemes(data.themes || []);
+        } catch (_) {
+            // A failed "my themes" lookup must not break the rest of the panel
+            // (browse/upload still work); the tab just stays empty.
+            setMyThemes([]);
+        }
     }, []);
 
     const loadReports = useCallback(async sessionToken => {
@@ -112,7 +129,7 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
                 setToken(session.token);
                 await Promise.all([
                     loadThemes(session.token),
-                    loadMyThemes(session.token, session.userId),
+                    loadMyThemes(session.token, getUserId(session)),
                     session.isAdmin ? loadReports(session.token) : Promise.resolve()
                 ]);
             })
@@ -125,13 +142,13 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
         return () => {
             active = false;
         };
-    }, [loadMyThemes, loadReports, loadThemes, username, sessionAttempt]);
+    }, [getUserId, loadMyThemes, loadReports, loadThemes, username, sessionAttempt]);
 
     const refresh = async () => {
         await Promise.all([
             loadThemes(token),
-            loadMyThemes(token, account.userId),
-            account.isAdmin ? loadReports(token) : Promise.resolve()
+            loadMyThemes(token, getUserId(account)),
+            account && account.isAdmin ? loadReports(token) : Promise.resolve()
         ]);
     };
 
@@ -140,7 +157,7 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
         const query = search.trim().toLowerCase();
         return source
             .filter(item => platform === 'all' || item.platform === platform)
-            .filter(item => !query || [item.name, item.description, item.authorName]
+            .filter(item => !query || [item.name, item.description, item.authorUsername]
                 .some(value => String(value || '').toLowerCase()
                     .includes(query)))
             .sort((a, b) => {
@@ -188,7 +205,7 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
         const saved = customThemeManager.addFromExportData(data, {
             name: selected.name,
             description: selected.description || '',
-            author: selected.authorName || selected.author || 'BilupTheme'
+            author: selected.authorUsername || selected.author || 'BilupTheme'
         });
         setSavedIds(prev => new Set(prev).add(selected.uuid));
         setNotice(t('mw.community.biluptheme.addedToLibrary', '"{name}" added to your custom theme library.', {name: saved.name}));
@@ -218,14 +235,23 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
             throw new Error(t('mw.community.biluptheme.chooseFile', 'Choose a theme JSON file, or switch to your current theme.'));
         }
         const source = uploadSource === 'file' ? uploadFile : currentExport;
-        const sourceThemes = Array.isArray(source.themes) ? source.themes : [source];
+        const sourceThemes = Array.isArray(source && source.themes) ? source.themes : [source];
         const items = sourceThemes.map((item, index) => ({
-            name: (index === 0 && uploadName.trim()) || item.name || t('mw.community.biluptheme.themeN', 'Theme {n}', {n: index + 1}),
-            description: (index === 0 && uploadDescription.trim()) || item.description || '',
-            platform: source.platform || 'bilup',
-            themeJson: Array.isArray(source.themes) ? {...source, themes: [item]} : source
+            name: (index === 0 && uploadName.trim()) || (item && item.name) ||
+                t('mw.community.biluptheme.themeN', 'Theme {n}', {n: index + 1}),
+            description: (index === 0 && uploadDescription.trim()) || (item && item.description) || '',
+            platform: (source && source.platform) || 'bilup',
+            // Upload each theme on its own: wrapping the whole file payload
+            // ({...source, themes: [item]}) duplicated every theme into each
+            // item, blowing past the 10KB per-theme limit for multi-theme files.
+            themeJson: item
         }));
-        await request('/theme', token, {method: 'POST', body: JSON.stringify({themes: items})});
+        const result = await request('/theme', token, {method: 'POST', body: JSON.stringify({themes: items})});
+        if (result && result.errors && result.errors.length > 0) {
+            setNotice(t('mw.community.biluptheme.uploadPartial', 'Some themes could not be uploaded: {errors}', {
+                errors: String(result.errors.join('; '))
+            }));
+        }
         setUploadFile(null);
         setUploadName('');
         setUploadDescription('');
@@ -348,6 +374,8 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
     const tabs = (account.isAdmin ? [...TABS, {key: 'admin', label: 'Reports', icon: Shield}] : TABS)
         .map(item => ({...item, label: tabLabel(item.key, item.label)}));
 
+    const myUserId = getUserId(account);
+
     const detail = selected && (
         <div className={styles.detail}>
             <button
@@ -367,7 +395,7 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
             <h3>{selected.name}</h3>
             <p className={styles.byline}>
                 {t('mw.community.biluptheme.by', 'by {author} · {platform}', {
-                    author: selected.authorName || selected.author,
+                    author: selected.authorUsername || selected.author,
                     platform: selected.platform
                 })}
             </p>
@@ -400,14 +428,14 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
                     onClick={() => setReporting(selected)}
                     type="button"
                 ><Flag size={14} /> {t('mw.community.biluptheme.report', 'Report')}</button>
-                {selected.author === account.userId && (
+                {myUserId && selected.author === myUserId && (
                     <button
                         className={styles.secondaryButton}
                         onClick={() => setEditing({...selected})}
                         type="button"
                     ><Edit3 size={14} /> {t('mw.community.biluptheme.edit', 'Edit')}</button>
                 )}
-                {(selected.author === account.userId || account.isAdmin) && (
+                {((myUserId && selected.author === myUserId) || account.isAdmin) && (
                     <button
                         className={styles.dangerButton}
                         onClick={() => deleteTheme(selected)}
