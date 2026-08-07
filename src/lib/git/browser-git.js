@@ -10,12 +10,12 @@ import {
 } from './fractch-tree.js';
 import RestorePointAPI from '../api/restore-points.js';
 
-const FS_NAME = 'mistwarp-git';
+const FS_NAME = 'bilup-git';
 const REPO_DIR = '/repo';
 const SNAPSHOT_FILE = 'project.sb3';
 // Folder used to carry the whole git repo (fractch working tree + .git) inside a
 // saved .sb3 zip, alongside the normal top-level project.json/assets.
-const GIT_EMBED_DIR = '.mistwarp-git';
+const GIT_EMBED_DIR = '.bilup-git';
 
 let fsSingleton = null;
 
@@ -556,7 +556,9 @@ const getRemotes = async vm => {
 };
 
 const DEFAULT_CORS_PROXY = 'https://cors.isomorphic-git.org';
-const DIRECT_CORS_HOSTS = [];
+const DIRECT_CORS_HOSTS = [
+    'git.bilup.org'
+];
 
 const corsProxyForUrl = url => {
     try {

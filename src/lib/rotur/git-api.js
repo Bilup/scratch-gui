@@ -126,7 +126,7 @@ const deleteRepo = (owner, name) => apiFetch(
 
 const getAuth = () => {
     const token = requireAuth();
-    return () => ({username: null, password: token});
+    return () => ({username: token, password: token});
 };
 
 const getGitUsername = async () => {
