@@ -115,7 +115,12 @@ const IN_PAGE_WINDOW_IDS = new Set([
 ]);
 
 const canUseNativeWindows = () =>
-    typeof window !== 'undefined' && typeof window.EditorPreload !== 'undefined';
+    typeof window !== 'undefined' &&
+    typeof window.EditorPreload !== 'undefined' &&
+    // In the desktop app (Electron), window.open() is intercepted and denied
+    // by the main process, so native popup windows can never be shown.
+    // Render windows inside the editor window instead of spawning new ones.
+    !navigator.userAgent.includes('Electron');
 
 window.addEventListener('pagehide', () => {
     for (const win of activeWindows.values()) {
