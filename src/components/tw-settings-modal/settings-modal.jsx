@@ -688,6 +688,7 @@ const StyleOption = ({groupId, option, selected, onSelect, intl}) => (
                 type={groupId === 'window-style' ? 'window' : 'tabs'}
                 variant={option.value}
                 css={getOptionCss(groupId, option.value)}
+                intl={intl}
             />
         </div>
         <span className={styles.styleOptionLabel}>

@@ -1,6 +1,6 @@
 import addSmallStageClass from "../../libraries/common/cs/small-stage.js";
 
-export default async function ({ addon, console }) {
+export default async function ({ addon, console, msg }) {
   // 创建 FPS 显示容器
   const fpsContainerContainer = document.createElement("div");
   addon.tab.displayNoneWhileDisabled(fpsContainerContainer, { display: "flex" });

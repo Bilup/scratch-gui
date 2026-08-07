@@ -19,7 +19,8 @@ const showAlert = (intl, message, options = {}) => new Promise(resolve => {
         closable: true,
         modal: true,
         alwaysOnTop: true,
-        className: 'mw-alert-window'
+        className: 'mw-alert-window',
+        msg: key => intl.formatMessage({id: key, defaultMessage: key})
     });
 
     let windowGrabbedHandler = null;
@@ -62,7 +63,7 @@ const showAlert = (intl, message, options = {}) => new Promise(resolve => {
     controls.style.cssText = 'display:flex;justify-content:flex-end;gap:8px;margin-top:6px;';
 
     const okBtn = document.createElement('button');
-    okBtn.innerText = options.okLabel || 'OK';
+    okBtn.innerText = options.okLabel || intl.formatMessage({id: 'tw.alertOk', defaultMessage: 'OK'});
     okBtn.className = 'mw-alert-ok-btn';
     okBtn.style.cssText = 'padding:8px 14px;border-radius:8px;border:none;' +
         'background:var(--ui-primary, #4C97FF);color:white;cursor:pointer;font-weight:600;';

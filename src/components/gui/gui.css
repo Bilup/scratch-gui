@@ -250,6 +250,7 @@
 
     /* this will only ever be as wide as the stage */
     flex-basis: 0;
+    transition: width 0.3s ease, flex-basis 0.3s ease;
 }
 
 .stage-and-target-wrapper.stage-hidden {

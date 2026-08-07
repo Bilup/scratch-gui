@@ -266,6 +266,8 @@ class UsernameModal extends React.Component {
 handleWindowAnimationChange (e) {
         const enabled = e.target.checked;
         this.setState({windowAnimation: enabled});
+        WindowManager.setAnimationsEnabled(enabled);
+        window.dispatchEvent(new CustomEvent('mw:window-animation-change', {detail: {enabled}}));
         try {
             localStorage.setItem('mw:window-animation', enabled);
         } catch (err) {

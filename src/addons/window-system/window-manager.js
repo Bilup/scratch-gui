@@ -115,7 +115,12 @@ const IN_PAGE_WINDOW_IDS = new Set([
 ]);
 
 const canUseNativeWindows = () =>
-    typeof window !== 'undefined' && typeof window.EditorPreload !== 'undefined';
+    typeof window !== 'undefined' &&
+    typeof window.EditorPreload !== 'undefined' &&
+    // In the desktop app (Electron), window.open() is intercepted and denied
+    // by the main process, so native popup windows can never be shown.
+    // Render windows inside the editor window instead of spawning new ones.
+    !navigator.userAgent.includes('Electron');
 
 window.addEventListener('pagehide', () => {
     for (const win of activeWindows.values()) {
@@ -172,6 +177,7 @@ class AddonWindow {
     constructor (options = {}) {
         this.id = options.id || `addon-window-${++windowCount}`;
         this.title = options.title || 'Addon Window';
+        this.msg = options.msg || (key => key);
         this.width = options.width || 400;
         this.height = options.height || 300;
         this.minWidth = options.minWidth || 200;
@@ -289,18 +295,18 @@ class AddonWindow {
         
         // Control buttons
         if (this.minimizable) {
-            const minimizeBtn = this.createControlButton('minimize', 'Minimize', () => this.minimize());
+            const minimizeBtn = this.createControlButton('minimize', this.msg('window-minimize'), () => this.minimize());
             controlsElement.appendChild(minimizeBtn);
         }
 
         if (this.maximizable) {
-            const maximizeBtn = this.createControlButton('maximize', 'Maximize', () => this.toggleMaximize());
+            const maximizeBtn = this.createControlButton('maximize', this.msg('window-maximize'), () => this.toggleMaximize());
             this.maximizeBtn = maximizeBtn; // Store reference to update icon when maximized
             controlsElement.appendChild(maximizeBtn);
         }
         
         if (this.closable) {
-            const closeBtn = this.createControlButton('close', 'Close', () => this.close());
+            const closeBtn = this.createControlButton('close', this.msg('window-close'), () => this.close());
             controlsElement.appendChild(closeBtn);
         }
         
@@ -429,7 +435,7 @@ class AddonWindow {
                         <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
                     </svg>`;
             this.maximizeBtn.innerHTML = svgIcon;
-            this.maximizeBtn.title = this.isMaximized ? 'Restore' : 'Maximize';
+            this.maximizeBtn.title = this.isMaximized ? this.msg('window-restore') : this.msg('window-maximize');
         }
     }
 

@@ -29,7 +29,7 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 10
 
       - name: Install Node.js
         uses: actions/setup-node@v4
@@ -98,8 +98,8 @@ jobs:
           git checkout -b develop-builds origin/develop
         fi
 
-        # Sync code with develop
-        git merge origin/develop --no-edit
+        # Sync code with develop (auto-resolve conflicts in favor of develop)
+        git merge origin/develop --no-edit -X theirs
 
         # Replace directories
         rm -rf static/microbit src/generated build

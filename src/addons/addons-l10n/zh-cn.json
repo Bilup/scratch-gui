@@ -24,6 +24,10 @@
   "find-bar/var-global": "变量 {name}",
   "find-bar/var-local": "变量 {name}",
   "middle-click-popup/start-typing": "请输入……",
+  "middle-click-popup/loading-blocks": "正在加载积木……",
+  "middle-click-popup/no-blocks": "没有可用的积木",
+  "middle-click-popup/error-loading": "加载积木失败",
+  "middle-click-popup/searching": "搜索中……",
   "editor-searchable-dropdowns/createBroadcast": "创建消息“{name}”",
   "editor-searchable-dropdowns/createGlobalList": "为所有角色创建列表 {name}",
   "editor-searchable-dropdowns/createGlobalVariable": "为所有角色创建变量 {name}",
@@ -375,6 +379,9 @@
   "dev-inspector/no": "否",
   "calculator/window-title": "计算器",
   "canvas-screenshot/screenshot-error": "截图失败",
+  "canvas-screenshot/screenshot-taken": "截图已复制到剪贴板！",
+  "canvas-screenshot/screenshot-fallback": "截图已下载（不支持剪贴板）",
+  "canvas-screenshot/clipboard-not-supported": "截图已捕获 - 不支持剪贴板",
   "editor-devtools/clean-up-detached": "清理已分离的脚本",
   "editor-devtools/detached-scripts": "{count, plural, one {开发者工具:删除 1 个已分离的脚本(没有帽子积木的脚本)?} other {开发者工具:删除 # 个已分离的脚本(没有帽子积木的脚本)?} }",
   "find-bar/case-sensitive": "区分大小写(Aa)",
@@ -827,5 +834,6 @@
   "project-size-display/stage": "舞台",
   "project-size-display/stage-size": "舞台大小",
   "project-size-display/sprite-size": "角色大小",
-  "project-size-display/unknown": "未知"
+  "project-size-display/unknown": "未知",
+  "project-size-display/error": "错误"
 }
