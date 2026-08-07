@@ -11,6 +11,7 @@ on:
       - sync-mw
       - web
       - sync-mw-web
+  workflow_dispatch: 
 
 permissions:
   contents: write
