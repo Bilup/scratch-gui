@@ -15,44 +15,53 @@ import App from '../community/App.jsx';
 import {applyThemeVisuals, detectTheme, onSystemPreferenceChange} from '../lib/themes/themePersistance.js';
 import render from './app-target.js';
 import '!!style-loader!css-loader!../community/styles/tokens.css';
+import {handleOAuthPopupCallback} from '../lib/rotur/git-oauth.js';
 
-// The dev server rewrites /<id>/embed to the embed player, but in production
-// that path falls through to this community bundle. Bounce it to the embed
-// player's hash form, which works everywhere. Numeric ids are Scratch projects;
-// everything else (e.g. p1784...) is a MistWarp community project.
-const embedMatch = typeof location !== 'undefined' &&
-    location.pathname.match(/^\/(\d+|p[A-Za-z0-9]+)\/embed\/?$/);
-if (embedMatch) {
-    const id = embedMatch[1];
-    location.replace(`/embed${location.search}#${/^\d+$/.test(id) ? id : `mw-${id}`}`);
+// Git OAuth popup 回调：popup 窗口跳转到 /oauth/callback 时，
+// 换 token 并通过 postMessage 把结果送回主窗口（由 startGitOAuth 监听），然后关窗。
+if (typeof window !== 'undefined' &&
+    window.opener &&
+    window.location.pathname === '/oauth/callback') {
+    handleOAuthPopupCallback();
 } else {
-    applyThemeVisuals(detectTheme());
-    onSystemPreferenceChange(() => applyThemeVisuals(detectTheme()));
+    // The dev server rewrites /<id>/embed to the embed player, but in production
+    // that path falls through to this community bundle. Bounce it to the embed
+    // player's hash form, which works everywhere. Numeric ids are Scratch projects;
+    // everything else (e.g. p1784...) is a MistWarp community project.
+    const embedMatch = typeof location !== 'undefined' &&
+        location.pathname.match(/^\/(\d+|p[A-Za-z0-9]+)\/embed\/?$/);
+    if (embedMatch) {
+        const id = embedMatch[1];
+        location.replace(`/embed${location.search}#${/^\d+$/.test(id) ? id : `mw-${id}`}`);
+    } else {
+        applyThemeVisuals(detectTheme());
+        onSystemPreferenceChange(() => applyThemeVisuals(detectTheme()));
 
-    // Register locale data (required for react-intl to format numbers/dates in zh-cn).
-    addLocaleData(localeData);
+        // Register locale data (required for react-intl to format numbers/dates in zh-cn).
+        addLocaleData(localeData);
 
-    // Merge TW/Bilup extra translations and community site translations.
-    addAdditionalTranslations(editorMessages);
-    for (const locale of Object.keys(editorMessages)) {
-        const toMixIn = communityTranslations[locale.toLowerCase()];
-        if (toMixIn) {
-            Object.assign(editorMessages[locale], toMixIn);
+        // Merge TW/Bilup extra translations and community site translations.
+        addAdditionalTranslations(editorMessages);
+        for (const locale of Object.keys(editorMessages)) {
+            const toMixIn = communityTranslations[locale.toLowerCase()];
+            if (toMixIn) {
+                Object.assign(editorMessages[locale], toMixIn);
+            }
         }
-    }
-    const supportedLocales = Object.keys(editorMessages);
-    const locale = detectLocale(supportedLocales);
+        const supportedLocales = Object.keys(editorMessages);
+        const locale = detectLocale(supportedLocales);
 
-    render(
-        <IntlProvider
-            locale={locale}
-            messages={editorMessages[locale]}
-        >
-            <IntlBridge>
-                <BrowserRouter>
-                    <App />
-                </BrowserRouter>
-            </IntlBridge>
-        </IntlProvider>
-    );
+        render(
+            <IntlProvider
+                locale={locale}
+                messages={editorMessages[locale]}
+            >
+                <IntlBridge>
+                    <BrowserRouter>
+                        <App />
+                    </BrowserRouter>
+                </IntlBridge>
+            </IntlProvider>
+        );
+    }
 }
