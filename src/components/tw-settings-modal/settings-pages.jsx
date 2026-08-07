@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import {FormattedMessage} from 'react-intl';
+import {FormattedMessage, injectIntl, intlShape} from 'react-intl';
 import FancyCheckbox from '../tw-fancy-checkbox/checkbox.jsx';
 
 import styles from './settings-modal.css';
@@ -15,7 +15,7 @@ Header.propTypes = {
     children: PropTypes.node
 };
 
-const AddonsPage = () => {
+const AddonsPage = ({intl}) => {
     const iframeRef = React.useRef(null);
 
     const syncCSSVariables = React.useCallback(() => {
@@ -90,7 +90,10 @@ const AddonsPage = () => {
             <iframe
                 ref={iframeRef}
                 className={styles.addonsIframe}
-                title="Addons settings"
+                title={intl.formatMessage({
+                    id: 'mw.settings.addonsSettings',
+                    defaultMessage: 'Addons settings'
+                })}
                 src={`/addons.html?locale=${encodeURIComponent(locale)}`}
                 frameBorder="0"
                 sandbox="allow-same-origin allow-scripts allow-modals allow-forms allow-popups"
@@ -152,7 +155,13 @@ ProjectPage.propTypes = {
     onStoreThemeInProjectChange: PropTypes.func
 };
 
+AddonsPage.propTypes = {
+    intl: intlShape
+};
+
+const AddonsPageWithIntl = injectIntl(AddonsPage);
+
 export {
-    AddonsPage,
+    AddonsPageWithIntl as AddonsPage,
     ProjectPage
 };

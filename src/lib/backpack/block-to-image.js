@@ -3,14 +3,16 @@ import LazyScratchBlocks from '../tw-lazy-scratch-blocks';
 
 /**
  * Given a blockId, return a data-uri image that can be used to create a thumbnail.
- * @param {string} blockId the ID of the block to imagify
+ * @param {string} blockId the ID of the block, or frame, to imagify
  * @return {Promise} resolves to a data-url of a picture of the blocks
  */
 export default function (blockId) {
     // Not sure any better way to access the scratch-blocks workspace than this...
     const ScratchBlocks = LazyScratchBlocks.get();
-    const block = ScratchBlocks.getMainWorkspace().getBlockById(blockId);
-    const blockSvg = block.getSvgRoot().cloneNode(true /* deep */);
+    const workspace = ScratchBlocks.getMainWorkspace();
+    const block = workspace.getBlockById(blockId);
+    const frame = block ? null : workspace.getFrameById(blockId);
+    const blockSvg = (block || frame).getSvgRoot().cloneNode(true /* deep */);
 
     // Once we have the cloned SVG, do the rest in a setTimeout to prevent
     // blocking the drag end from finishing promptly.
@@ -22,16 +24,20 @@ export default function (blockId) {
             // Strip &nbsp; entities that cannot be inlined
             blockSvg.innerHTML = blockSvg.innerHTML.replace(/&nbsp;/g, ' ');
 
-            // Ensure text elements have proper attributes for SVG import
-            const textElements = blockSvg.querySelectorAll('text');
-            textElements.forEach(text => {
-                if (!text.hasAttribute('dominant-baseline')) {
-                    text.setAttribute('dominant-baseline', 'middle');
+            // The scripts inside a frame are siblings of it on the workspace
+            // canvas, not children, so they have to be cloned in separately and
+            // offset to keep the layout they had inside the frame.
+            if (frame) {
+                const origin = frame.getXY();
+                for (const member of frame.getMembers()) {
+                    const memberSvg = member.getSvgRoot().cloneNode(true /* deep */);
+                    const xy = member.getRelativeToSurfaceXY();
+                    memberSvg.style.display = '';
+                    memberSvg.setAttribute(
+                        'transform', `translate(${xy.x - origin.x} ${xy.y - origin.y})`);
+                    blockSvg.appendChild(memberSvg);
                 }
-                if (!text.hasAttribute('text-anchor')) {
-                    text.setAttribute('text-anchor', 'middle');
-                }
-            });
+            }
 
             // Create an <svg> element to put the cloned blockSvg inside
             const NS = 'http://www.w3.org/2000/svg';

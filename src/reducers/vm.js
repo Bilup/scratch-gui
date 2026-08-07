@@ -2,6 +2,7 @@ import VM from 'scratch-vm';
 import formatMessage from 'format-message';
 import storage from '../lib/persistence/storage';
 import {MAXIMUM_CLOUD_VARIABLES} from '../lib/constants/tw-cloud-limits';
+import {installProjectMetadata} from '../lib/mw-project-metadata';
 
 const SET_VM = 'scratch-gui/vm/SET_VM';
 const defaultVM = new VM();
@@ -32,6 +33,8 @@ defaultVM.setLocale = (locale, messages) => {
     }
     return _setLocale(locale, messages);
 };
+
+installProjectMetadata(defaultVM);
 const initialState = defaultVM;
 
 const reducer = function (state, action) {

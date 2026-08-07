@@ -1,6 +1,21 @@
 const defaultsDeep = require('lodash.defaultsdeep');
 const path = require('path');
+const fs = require('fs');
 const webpack = require('webpack');
+
+try {
+    const envFile = fs.readFileSync(path.join(__dirname, '.env'), 'utf8');
+    for (const line of envFile.split('\n')) {
+        const match = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$/);
+        if (match && !(match[1] in process.env)) {
+            process.env[match[1]] = match[2];
+        }
+    }
+} catch (e) {
+    // .env is optional
+}
+
+const ENABLE_COMMUNITY = true;
 
 // Plugins
 const CopyWebpackPlugin = require('copy-webpack-plugin');
@@ -11,10 +26,54 @@ const autoprefixer = require('autoprefixer');
 const postcssVars = require('postcss-simple-vars');
 const postcssImport = require('postcss-import');
 
+const {getHtmlWebpackPluginHooks} = require('html-webpack-plugin/lib/hooks');
+
+// Inject the editor entry's JS chunk list into the community homepage HTML
+// (window.MW_EDITOR_CHUNKS). The community site reads this and prefetches the
+// editor's heavy bundles while the user is still browsing, so the first
+// navigation into the editor no longer blocks on a huge download.
+class EditorChunkPrefetchPlugin {
+    apply (compiler) {
+        compiler.hooks.compilation.tap('EditorChunkPrefetchPlugin', compilation => {
+            // afterTemplateExecution runs before html-webpack-plugin injects its
+            // own <script> tags, so our window.MW_EDITOR_CHUNKS definition is
+            // guaranteed to run before the community bundle.
+            getHtmlWebpackPluginHooks(compilation).afterTemplateExecution.tapAsync(
+                'EditorChunkPrefetchPlugin',
+                (data, callback) => {
+                    const chunks = data.plugin.options.chunks;
+                    // Only the community homepage gets the prefetch list.
+                    if (!Array.isArray(chunks) || !chunks.includes('community')) {
+                        return callback();
+                    }
+                    const entrypoint = compilation.entrypoints.get('editor');
+                    if (!entrypoint) {
+                        return callback();
+                    }
+                    const scripts = [];
+                    for (const chunk of entrypoint.chunks) {
+                        for (const file of chunk.files || []) {
+                            if (/\.js$/.test(file)) {
+                                scripts.push(`${root}${file}`);
+                            }
+                        }
+                    }
+                    if (scripts.length === 0) {
+                        return callback();
+                    }
+                    const tag = `<script>window.MW_EDITOR_CHUNKS=${JSON.stringify(scripts)};</script>`;
+                    data.html = data.html.replace('</body>', `${tag}</body>`);
+                    callback();
+                }
+            );
+        });
+    }
+}
+
 const STATIC_PATH = process.env.STATIC_PATH || '/static';
 const {APP_NAME} = require('./src/lib/constants/brand');
 
-const root = process.env.ROOT || '';
+const root = process.env.ROOT || '/';
 if (root.length > 0 && !root.endsWith('/')) {
     throw new Error('If ROOT is defined, it must have a trailing slash.');
 }
@@ -32,19 +91,25 @@ const base = {
     mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
     devtool: process.env.SOURCEMAP || (process.env.NODE_ENV === 'production' ? false : 'cheap-module-source-map'),
     devServer: {
-        contentBase: path.resolve(__dirname, 'build'),
+        contentBase: false,
         host: '0.0.0.0',
         disableHostCheck: true,
         compress: true,
-        port: process.env.PORT || 8061,
+        headers: {'Access-Control-Allow-Origin': '*'},
+        port: process.env.PORT || 8601,
         // allows ROUTING_STYLE=wildcard to work properly
         historyApiFallback: {
             rewrites: [
-                {from: /^\/\d+\/?$/, to: '/index.html'},
+                {from: /^\/editor\/?$/, to: '/editor.html'},
+                {from: /^\/fullscreen\/?$/, to: '/fullscreen.html'},
+                {from: /^\/embed\/?$/, to: '/embed.html'},
+                {from: /^\/addons\/?$/, to: '/addons.html'},
+                {from: /^\/\d+\/?$/, to: '/player.html'},
                 {from: /^\/\d+\/fullscreen\/?$/, to: '/fullscreen.html'},
                 {from: /^\/\d+\/editor\/?$/, to: '/editor.html'},
-                {from: /^\/\d+\/embed\/?$/, to: '/embed.html'},
-                {from: /^\/addons\/?$/, to: '/addons.html'}
+                {from: /^\/\d+\/embed\/?$/, to: '/embed.html'}
+                // anything else (/, /explore, /project/*, /users/*, /settings)
+                // falls through to index.html (the community app)
             ]
         }
     },
@@ -58,14 +123,24 @@ const base = {
     },
     resolve: {
         extensions: ['.js', '.jsx', '.ts', '.tsx'],
-        symlinks: false,
+        // Must be true so that pnpm symlinks are followed: with symlinks disabled,
+        // htmlparser2@3.10.0 resolves "domhandler" to the hoisted 5.x (ESM object export)
+        // instead of its own 2.x (CommonJS constructor), causing
+        // "TypeError: DomHandler is not a constructor" in scratch-vm.
+        symlinks: true,
         alias: {
             'react': require.resolve('react'),
             'react-dom': require.resolve('react-dom'),
             'text-encoding$': path.resolve(__dirname, 'src/lib/tw-text-encoder'),
+            'just-bash$': path.resolve(__dirname, 'node_modules/just-bash/dist/bundle/browser.js'),
+            'node:zlib$': path.resolve(__dirname, 'src/lib/just-bash-zlib.js'),
+            // just-bash bundles an ESM-only minimatch@10 that webpack 4 cannot parse.
+            // Pin it to the hoisted CJS minimatch@3 (already used by glob/babel/eslint),
+            // whose API is a superset of what just-bash needs (minimatch()).
+            'minimatch': require.resolve('minimatch'),
             'scratch-render-fonts$': path.resolve(__dirname, 'src/lib/tw-scratch-render-fonts'),
-            '@turbowarp/scratch-svg-renderer$': '@bilup/scratch-svg-renderer',
-            'exports-loader': require.resolve('exports-loader')
+            'exports-loader': require.resolve('exports-loader'),
+            'scratch-parser': path.resolve(__dirname, 'node_modules/scratch-parser')
         }
     },
     module: {
@@ -98,20 +173,25 @@ const base = {
                 /node_modules/
             ]
         }, {
-            test: /\.jsx?$/,
+            test: /\.m?jsx?$/,
             loader: 'babel-loader',
             include: [
                 path.resolve(__dirname, 'src'),
                 /node_modules[\\/]scratch-[^\\/]+[\\/]src/,
+                /node_modules[\\/]scratch-parser[\\/]/,
                 /node_modules[\\/]pify/,
                 /node_modules[\\/]@vernier[\\/]godirect/,
                 /node_modules[\\/]@chenglou[\\/]pretext/,
+                /node_modules[\\/]@xterm[\\/]/,
                 /node_modules[\\/]fractch[\\/]src/,
-                /node_modules[\\/]isomorphic-git/
+                /node_modules[\\/]isomorphic-git/,
+                /node_modules[\\/]just-bash/,
+                /node_modules[\\/]monaco-editor/,
+                /node_modules[\\/]rotur-sdk/,
+                /node_modules[\\/]accounts-sdk/,
+                /node_modules[\\/]fake-indexeddb/
             ],
             options: {
-                // Explicitly disable babelrc so we don't catch various config
-                // in much lower dependencies.
                 babelrc: false,
                 plugins: [
                     ['react-intl', {
@@ -121,7 +201,12 @@ const base = {
             }
         },
         {
+            test: /node_modules[\\/](?:@fontsource|@xterm[\\/]xterm|monaco-editor)[\\/].*\.css$/,
+            use: ['style-loader', 'css-loader']
+        },
+        {
             test: /\.css$/,
+            exclude: /node_modules[\\/](?:@fontsource|@xterm[\\/]xterm|monaco-editor)[\\/]/,
             use: [{
                 loader: 'style-loader'
             }, {
@@ -217,14 +302,12 @@ module.exports = [
     // to run editor examples
     defaultsDeep({}, base, {
         entry: {
+            ...(ENABLE_COMMUNITY ? {community: './src/playground/community.jsx'} : {}),
             'editor': './src/playground/editor.jsx',
             'player': './src/playground/player.jsx',
             'fullscreen': './src/playground/fullscreen.jsx',
             'embed': './src/playground/embed.jsx',
-            'addon-settings': './src/playground/addon-settings.jsx',
-            'credits': './src/playground/credits/credits.jsx',
-            'donate': './src/playground/donate/donate.jsx',
-            'about': './src/playground/about/about.jsx'
+            'addon-settings': './src/playground/addon-settings.jsx'
         },
         output: {
             path: path.resolve(__dirname, 'build')
@@ -232,7 +315,7 @@ module.exports = [
         module: {
             rules: base.module.rules.concat([
                 {
-                    test: /\.(svg|png|wav|mp3|gif|jpg|woff2)$/,
+                    test: /\.(svg|png|wav|mp3|gif|jpg|ttf|woff|woff2)$/,
                     loader: 'url-loader',
                     options: {
                         limit: 2048,
@@ -247,16 +330,65 @@ module.exports = [
                 chunks: 'all',
                 minChunks: 2,
                 minSize: 50000,
-                maxInitialRequests: 5
+                maxInitialRequests: 12,
+                cacheGroups: {
+                    // The Scratch engine core is huge (~several MB). Splitting it out
+                    // into its own chunk lets browsers download it in parallel with
+                    // other scripts instead of being trapped inside one giant
+                    // "vendors~editor~..." bundle, and lets the community site
+                    // prefetch it in idle time before navigating to the editor.
+                    // Note: `name` is intentionally fixed here - these engine libs
+                    // are only used by the editor/player/embed/fullscreen entries,
+                    // so a fixed name keeps a single shared, cacheable file.
+                    scratchEngine: {
+                        test: /node_modules[\\/](?:scratch-vm|scratch-render|scratch-svg-renderer|scratch-storage|scratch-audio|scratch-parser|@turbowarp[\\/]scratch-svg-renderer)[\\/]/,
+                        name: 'scratch-engine',
+                        priority: 20,
+                        reuseExistingChunk: true
+                    },
+                    // Git support pulls in isomorphic-git, lightning-fs and JSZip.
+                    // Most users never open the git panel, so keep these out of the
+                    // shared vendors chunk and load them only when actually needed.
+                    // (JSZip is still referenced synchronously by restore-points,
+                    // so part of this chunk remains on the initial load path.)
+                    gitLibs: {
+                        test: /node_modules[\\/](?:isomorphic-git|@isomorphic-git|lightning-fs|@turbowarp[\\/]jszip|jszip)[\\/]/,
+                        name: 'git-libs',
+                        priority: 20,
+                        reuseExistingChunk: true
+                    },
+                    // scratch-blocks is already lazy loaded via tw-lazy-scratch-blocks,
+                    // but split it from the shared vendors chunk as well so the async
+                    // "sb" chunk stays independent and reusable.
+                    scratchBlocks: {
+                        test: /node_modules[\\/]scratch-blocks[\\/]/,
+                        name: 'scratch-blocks',
+                        priority: 20,
+                        reuseExistingChunk: true
+                    },
+                    // The paint editor is only mounted when the costume tab is opened.
+                    scratchPaint: {
+                        test: /node_modules[\\/]scratch-paint[\\/]/,
+                        name: 'scratch-paint',
+                        priority: 20,
+                        reuseExistingChunk: true
+                    }
+                    // Other node_modules keep webpack's default behavior: the
+                    // defaultVendors cacheGroup auto-names chunks per entry
+                    // combination, so the community page never downloads code
+                    // that only the editor needs.
+                }
             }
         },
         plugins: base.plugins.concat([
+            new EditorChunkPrefetchPlugin(),
             new webpack.DefinePlugin({
                 'process.env.NODE_ENV': `"${process.env.NODE_ENV}"`,
                 'process.env.DEBUG': Boolean(process.env.DEBUG),
                 'process.env.ENABLE_SERVICE_WORKER': JSON.stringify(process.env.ENABLE_SERVICE_WORKER || ''),
                 'process.env.ROOT': JSON.stringify(root),
-                'process.env.ROUTING_STYLE': JSON.stringify(process.env.ROUTING_STYLE || 'filehash')
+                'process.env.ROUTING_STYLE': JSON.stringify(process.env.ROUTING_STYLE || 'wildcard'),
+                'process.env.MW_COMMUNITY': JSON.stringify(ENABLE_COMMUNITY ? 'true' : '')
             }),
             new HtmlWebpackPlugin({
                 chunks: ['editor'],
@@ -266,10 +398,24 @@ module.exports = [
                 isEditor: true,
                 ...htmlWebpackPluginCommon
             }),
+            new HtmlWebpackPlugin(ENABLE_COMMUNITY ? {
+                chunks: ['community'],
+                template: 'src/playground/simple.ejs',
+                filename: 'index.html',
+                title: APP_NAME,
+                ...htmlWebpackPluginCommon
+            } : {
+                chunks: ['editor'],
+                template: 'src/playground/index.ejs',
+                filename: 'index.html',
+                title: `${APP_NAME} - Refactoring freedom`,
+                isEditor: true,
+                ...htmlWebpackPluginCommon
+            }),
             new HtmlWebpackPlugin({
                 chunks: ['player'],
                 template: 'src/playground/index.ejs',
-                filename: 'index.html',
+                filename: 'player.html',
                 title: `${APP_NAME} - Refactoring freedom`,
                 ...htmlWebpackPluginCommon
             }),
@@ -294,32 +440,20 @@ module.exports = [
                 title: `Addon Settings - ${APP_NAME}`,
                 ...htmlWebpackPluginCommon
             }),
-            new HtmlWebpackPlugin({
-                chunks: ['credits'],
-                template: 'src/playground/simple.ejs',
-                filename: 'credits.html',
-                title: `${APP_NAME} Credits`,
-                ...htmlWebpackPluginCommon
-            }),
-            new HtmlWebpackPlugin({
-                chunks: ['donate'],
-                template: 'src/playground/simple.ejs',
-                filename: 'donate.html',
-                title: `${APP_NAME} Donate`,
-                ...htmlWebpackPluginCommon
-            }),
-            new HtmlWebpackPlugin({
-                chunks: ['about'],
-                template: 'src/playground/simple.ejs',
-                filename: 'about.html',
-                title: `${APP_NAME} About`,
-                ...htmlWebpackPluginCommon
-            }),
             new CopyWebpackPlugin({
                 patterns: [
                     {
                         from: 'static',
                         to: ''
+                    }
+                ]
+            }),
+            new CopyWebpackPlugin({
+                patterns: [
+                    {
+                        from: path.resolve(__dirname, '../docs/build'),
+                        to: 'docs',
+                        noErrorOnMissing: true
                     }
                 ]
             }),
@@ -356,7 +490,7 @@ module.exports = [
             module: {
                 rules: base.module.rules.concat([
                     {
-                        test: /\.(svg|png|wav|mp3|gif|jpg|woff2)$/,
+                        test: /\.(svg|png|wav|mp3|gif|jpg|ttf|woff|woff2)$/,
                         loader: 'url-loader',
                         options: {
                             limit: 2048,

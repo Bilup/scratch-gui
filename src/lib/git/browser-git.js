@@ -8,6 +8,7 @@ import {
     writeProjectToFractchTree,
     buildSb3FromFractchTree
 } from './fractch-tree.js';
+import RestorePointAPI from '../api/restore-points.js';
 
 const FS_NAME = 'mistwarp-git';
 const REPO_DIR = '/repo';
@@ -17,12 +18,10 @@ const SNAPSHOT_FILE = 'project.sb3';
 const GIT_EMBED_DIR = '.mistwarp-git';
 
 let fsSingleton = null;
-let shouldWipeOnStart = true;
 
 const getFs = () => {
     if (!fsSingleton) {
-        fsSingleton = new LightningFS(FS_NAME, {wipe: shouldWipeOnStart});
-        shouldWipeOnStart = false;
+        fsSingleton = new LightningFS(FS_NAME);
     }
     return fsSingleton;
 };
@@ -40,7 +39,7 @@ const exists = async (pfs, filePath) => {
     if (!filePath || typeof filePath !== 'string') {
         throw new Error('Invalid file path');
     }
-    
+
     try {
         await pfs.stat(filePath);
         return true;
@@ -56,7 +55,7 @@ const ensureDir = async (pfs, dirPath) => {
     if (!dirPath || typeof dirPath !== 'string') {
         throw new Error('Invalid directory path');
     }
-    
+
     try {
         await pfs.mkdir(dirPath);
     } catch (e) {
@@ -70,7 +69,7 @@ const removeRecursive = async (pfs, filePath) => {
     if (!pfs || !filePath || typeof filePath !== 'string') {
         return;
     }
-    
+
     let stat;
     try {
         stat = await pfs.stat(filePath);
@@ -113,7 +112,7 @@ const stageAll = async (fs, dir, {onProgress} = {}) => {
     if (!fs || !dir || typeof dir !== 'string') {
         throw new Error('Invalid filesystem or directory');
     }
-    
+
     if (typeof onProgress === 'function') {
         onProgress({phase: 'status', message: 'Computing file status…', completed: 0, total: 1});
     }
@@ -138,17 +137,17 @@ const stageAll = async (fs, dir, {onProgress} = {}) => {
     };
 
     report();
-    
+
     // Process files in batches to avoid overwhelming the system
     const batchSize = 10;
     for (let i = 0; i < rows.length; i += batchSize) {
         const batch = rows.slice(i, i + batchSize);
         await Promise.all(batch.map(async row => {
             if (!row || row.length < 3) return;
-            
+
             const [filepath, head, workdir] = row;
             if (!filepath) return;
-            
+
             try {
                 if (workdir === 0) {
                     if (head !== 0) {
@@ -163,7 +162,7 @@ const stageAll = async (fs, dir, {onProgress} = {}) => {
             report();
         }));
         completed += batch.length;
-        
+
         // Yield control to browser between batches
         if (i + batchSize < rows.length) {
             await new Promise(resolve => setTimeout(resolve, 0));
@@ -215,11 +214,24 @@ const listFilesRecursive = async (pfs, rootDir) => {
     return out;
 };
 
+const clearWorkdirExceptGit = async pfs => {
+    let entries;
+    try {
+        entries = await pfs.readdir(REPO_DIR);
+    } catch (e) {
+        return;
+    }
+    for (const entry of entries) {
+        if (entry === '.git') continue;
+        await removeRecursive(pfs, `${REPO_DIR}/${entry}`);
+    }
+};
+
 const initRepo = async ({defaultBranch = 'main', vm = null, onProgress} = {}) => {
     if (!defaultBranch || typeof defaultBranch !== 'string') {
         throw new Error('Invalid default branch name');
     }
-    
+
     const fs = getFs();
     const pfs = fs.promises;
     await ensureDir(pfs, REPO_DIR);
@@ -229,7 +241,7 @@ const initRepo = async ({defaultBranch = 'main', vm = null, onProgress} = {}) =>
         if (typeof onProgress === 'function') {
             onProgress({phase: 'init', message: 'Initializing repository…', completed: 0, total: 1});
         }
-        
+
         try {
             await git.init({fs, dir: REPO_DIR, defaultBranch});
             await pfs.writeFile(pathJoin(REPO_DIR, '.gitignore'), '');
@@ -239,7 +251,7 @@ const initRepo = async ({defaultBranch = 'main', vm = null, onProgress} = {}) =>
                 if (typeof onProgress === 'function') {
                     onProgress({phase: 'snapshot', message: 'Saving project snapshot…', completed: 0, total: 1});
                 }
-                
+
                 if (typeof vm.saveProjectSb3 !== 'function') {
                     throw new Error('VM does not support saveProjectSb3');
                 }
@@ -275,11 +287,11 @@ const readSnapshot = async () => {
     const fs = getFs();
     const pfs = fs.promises;
     const snapshotPath = pathJoin(REPO_DIR, SNAPSHOT_FILE);
-    
+
     if (!(await exists(pfs, snapshotPath))) {
         throw new Error('Project snapshot not found');
     }
-    
+
     try {
         const data = await pfs.readFile(snapshotPath);
         const view = data instanceof Uint8Array ? data : new Uint8Array(data);
@@ -356,6 +368,7 @@ const restoreProjectFromCurrentRef = async vm => {
             throw new Error('VM does not support loadProject method');
         }
 
+        await RestorePointAPI.createSafetyRestorePoint(vm, 'Before git restore');
         vm.quit();
         await vm.loadProject(snapshot, {skipGitImport: true});
     } catch (e) {
@@ -426,11 +439,11 @@ const createBranch = async ({ref} = {}) => {
     if (!ref || typeof ref !== 'string') {
         throw new Error('Invalid branch name');
     }
-    
+
     if (!/^[a-zA-Z0-9._/-]+$/.test(ref) || ref.startsWith('/') || ref.endsWith('/') || ref.includes('//')) {
         throw new Error('Invalid branch name format');
     }
-    
+
     const fs = getFs();
     const pfs = fs.promises;
 
@@ -456,9 +469,10 @@ const checkoutBranch = async ref => {
     if (!ref || typeof ref !== 'string') {
         throw new Error('Invalid branch reference');
     }
-    
+
     const fs = getFs();
     try {
+        await clearWorkdirExceptGit(fs.promises);
         await git.checkout({fs, dir: REPO_DIR, ref, force: true});
     } catch (e) {
         throw new Error(`Failed to checkout branch ${ref}: ${e.message}`);
@@ -470,9 +484,10 @@ const checkoutCommit = async oid => {
     if (!oid || typeof oid !== 'string') {
         throw new Error('Invalid commit OID');
     }
-    
+
     const fs = getFs();
     try {
+        await clearWorkdirExceptGit(fs.promises);
         await git.checkout({fs, dir: REPO_DIR, ref: oid, force: true});
     } catch (e) {
         throw new Error(`Failed to checkout commit ${oid}: ${e.message}`);
@@ -540,6 +555,33 @@ const getRemotes = async vm => {
     }));
 };
 
+const DEFAULT_CORS_PROXY = 'https://cors.isomorphic-git.org';
+const DIRECT_CORS_HOSTS = [];
+
+const corsProxyForUrl = url => {
+    try {
+        if (DIRECT_CORS_HOSTS.includes(new URL(url).host)) {
+            return null;
+        }
+    } catch (e) {
+        // ignore
+    }
+    return DEFAULT_CORS_PROXY;
+};
+
+const corsProxyForRemote = async (fs, remoteName) => {
+    try {
+        const remotes = await git.listRemotes({fs, dir: REPO_DIR});
+        const match = remotes.find(r => (r.remote || r.name) === remoteName);
+        if (match && match.url) {
+            return corsProxyForUrl(match.url);
+        }
+    } catch (e) {
+        // ignore
+    }
+    return DEFAULT_CORS_PROXY;
+};
+
 const push = async ({vm, remote, branch, ref, setUpstream = true, onProgress, ...options}) => {
     if (!vm) {
         throw new Error('VM is required');
@@ -578,7 +620,7 @@ const push = async ({vm, remote, branch, ref, setUpstream = true, onProgress, ..
     const result = await git.push({
         fs,
         http,
-        corsProxy: 'https://cors.isomorphic-git.org',
+        corsProxy: await corsProxyForRemote(fs, remote),
         dir: REPO_DIR,
         remote,
         ref: localRef,
@@ -630,7 +672,7 @@ const pull = async ({vm, remote, ref, author, onAuth, onProgress} = {}) => {
     await git.pull({
         fs,
         http,
-        corsProxy: 'https://cors.isomorphic-git.org',
+        corsProxy: await corsProxyForRemote(fs, remote || 'origin'),
         dir: REPO_DIR,
         ref: localRef,
         remote: remote || 'origin',
@@ -657,11 +699,11 @@ const commitProject = async ({vm, message, author, onProgress} = {}) => {
     if (!message || typeof message !== 'string' || !message.trim()) {
         throw new Error('Commit message is required');
     }
-    
+
     if (!vm) {
         throw new Error('VM is required');
     }
-    
+
     const fs = getFs();
     const pfs = fs.promises;
 
@@ -674,7 +716,7 @@ const commitProject = async ({vm, message, author, onProgress} = {}) => {
     }
 
     let sb3ArrayBuffer;
-    
+
     try {
         sb3ArrayBuffer = await vm.saveProjectSb3('arraybuffer');
         if (!sb3ArrayBuffer || sb3ArrayBuffer.byteLength === 0) {
@@ -721,7 +763,7 @@ const commitProject = async ({vm, message, author, onProgress} = {}) => {
             onProgress({phase: 'commit', message: 'Creating commit…', completed: 1, total: 1});
         }
 
-        
+
         const ret = await git.commit({
             fs,
             dir: REPO_DIR,
@@ -745,7 +787,7 @@ const deleteBranch = async ref => {
     if (!ref || typeof ref !== 'string') {
         throw new Error('Invalid branch name');
     }
-    
+
     const fs = getFs();
     try {
         const currentBranch = await git.currentBranch({fs, dir: REPO_DIR, fullname: false});
@@ -778,7 +820,7 @@ const mergeBranchesPreview = async ({ours, theirs} = {}) => {
             dir: REPO_DIR,
             ours,
             theirs,
-            abortOnConflict: false,
+            abortOnConflict: true,
             dryRun: true
         });
         return {
@@ -787,7 +829,8 @@ const mergeBranchesPreview = async ({ours, theirs} = {}) => {
         };
     } catch (e) {
         if (Errors && e instanceof Errors.MergeConflictError) {
-            const conflicts = Array.isArray(e.data) ? e.data : [];
+            const data = e.data || {};
+            const conflicts = Array.isArray(data.filepaths) ? data.filepaths : [];
             return {
                 result: null,
                 conflicts
@@ -797,28 +840,91 @@ const mergeBranchesPreview = async ({ours, theirs} = {}) => {
     }
 };
 
+const TEXT_MERGE_RE = /\.(fractch|json|svg|txt|md)$/i;
+
 const mergeBranchesApply = async ({ours, theirs, resolutions, author} = {}) => {
     if (!ours || !theirs || typeof ours !== 'string' || typeof theirs !== 'string') {
         throw new Error('Invalid branches for merge');
     }
     const fs = getFs();
+    const pfs = fs.promises;
     const map = resolutions && typeof resolutions === 'object' ? resolutions : {};
-    const mergeDriver = ({path, contents}) => {
-        const choice = map[path];
-        const useOurs = choice === 'ours';
-        const useTheirs = choice === 'theirs';
-        const mergedText = useOurs ? contents[1] : (useTheirs ? contents[2] : contents[1]);
-        return {cleanMerge: true, mergedText};
-    };
-    const res = await git.merge({
-        fs,
-        dir: REPO_DIR,
-        ours,
-        theirs,
-        abortOnConflict: true,
-        author: author || getDefaultAuthor(),
-        mergeDriver
-    });
+    const mergeAuthor = author || getDefaultAuthor();
+    const message = `Merge branch '${theirs}' into ${ours}`;
+
+    const oursOid = await git.resolveRef({fs, dir: REPO_DIR, ref: ours});
+    const theirsOid = await git.resolveRef({fs, dir: REPO_DIR, ref: theirs});
+    const {conflicts} = await mergeBranchesPreview({ours, theirs});
+
+    let res;
+    if (conflicts.length === 0) {
+        res = await git.merge({
+            fs,
+            dir: REPO_DIR,
+            ours,
+            theirs,
+            abortOnConflict: true,
+            author: mergeAuthor,
+            message
+        });
+    } else {
+        const mergeDriver = ({path, contents}) => {
+            const mergedText = map[path] === 'theirs' ? contents[2] : contents[1];
+            return {cleanMerge: true, mergedText};
+        };
+        try {
+            res = await git.merge({
+                fs,
+                dir: REPO_DIR,
+                ours,
+                theirs,
+                abortOnConflict: false,
+                author: mergeAuthor,
+                message,
+                mergeDriver
+            });
+        } catch (e) {
+            await clearWorkdirExceptGit(pfs);
+            await git.checkout({fs, dir: REPO_DIR, ref: ours, force: true});
+            throw new Error(`Failed to merge: ${e.message}`);
+        }
+    }
+
+    await clearWorkdirExceptGit(pfs);
+    await git.checkout({fs, dir: REPO_DIR, ref: ours, force: true});
+
+    const binaryConflicts = conflicts.filter(p => !TEXT_MERGE_RE.test(p));
+    if (binaryConflicts.length > 0) {
+        for (const filepath of binaryConflicts) {
+            const sideOid = map[filepath] === 'theirs' ? theirsOid : oursOid;
+            let blob = null;
+            try {
+                ({blob} = await git.readBlob({fs, dir: REPO_DIR, oid: sideOid, filepath}));
+            } catch (e) {
+                blob = null;
+            }
+            const dest = pathJoin(REPO_DIR, filepath);
+            if (blob) {
+                await ensureParentDir(pfs, dest);
+                await pfs.writeFile(dest, blob instanceof Uint8Array ? blob : new Uint8Array(blob));
+                await git.add({fs, dir: REPO_DIR, filepath});
+            } else {
+                try {
+                    await pfs.unlink(dest);
+                } catch (e) {
+                    // already absent
+                }
+                await git.remove({fs, dir: REPO_DIR, filepath});
+            }
+        }
+        res = await git.commit({
+            fs,
+            dir: REPO_DIR,
+            message,
+            author: mergeAuthor,
+            parent: [oursOid, theirsOid]
+        });
+    }
     return res;
 };
 
@@ -831,6 +937,89 @@ const getBranchLogs = async ({depth = 50} = {}) => {
         out.push({branch: b, commits});
     }
     return out;
+};
+
+const CONFLICT_MARKER_RE = /^(?:<{7}|={7}|>{7})/m;
+
+let pendingMerge = null;
+
+const getPendingMerge = () => (pendingMerge ? {...pendingMerge} : null);
+
+const setPendingMerge = value => {
+    pendingMerge = value;
+};
+
+const startEditorMerge = async ({ours, theirs, author} = {}) => {
+    if (!ours || !theirs || typeof ours !== 'string' || typeof theirs !== 'string') {
+        throw new Error('Invalid branches for merge');
+    }
+    const fs = getFs();
+    const oursOid = await git.resolveRef({fs, dir: REPO_DIR, ref: ours});
+    const theirsOid = await git.resolveRef({fs, dir: REPO_DIR, ref: theirs});
+    const message = `Merge branch '${theirs}' into ${ours}`;
+    try {
+        const result = await git.merge({
+            fs,
+            dir: REPO_DIR,
+            ours,
+            theirs,
+            abortOnConflict: false,
+            author: author || getDefaultAuthor(),
+            message
+        });
+        setPendingMerge(null);
+        return {conflicts: [], merged: true, result};
+    } catch (e) {
+        if (!(Errors && e instanceof Errors.MergeConflictError)) throw e;
+        const data = e.data || {};
+        const conflicts = Array.isArray(data.filepaths) ? data.filepaths : [];
+        const text = conflicts.filter(filepath => TEXT_MERGE_RE.test(filepath));
+        setPendingMerge({
+            binary: conflicts.filter(filepath => !TEXT_MERGE_RE.test(filepath)),
+            conflicts: text,
+            message,
+            ours,
+            oursOid,
+            theirs,
+            theirsOid
+        });
+        return {conflicts: text, merged: false};
+    }
+};
+
+const abortEditorMerge = async () => {
+    if (!pendingMerge) return;
+    const fs = getFs();
+    const {ours} = pendingMerge;
+    setPendingMerge(null);
+    await clearWorkdirExceptGit(fs.promises);
+    await git.checkout({fs, dir: REPO_DIR, ref: ours, force: true});
+};
+
+const completeEditorMerge = async ({author} = {}) => {
+    if (!pendingMerge) throw new Error('No merge in progress');
+    const fs = getFs();
+    const pfs = fs.promises;
+    const unresolved = [];
+    for (const filepath of pendingMerge.conflicts) {
+        const data = await pfs.readFile(pathJoin(REPO_DIR, filepath), 'utf8');
+        if (CONFLICT_MARKER_RE.test(String(data))) unresolved.push(filepath);
+    }
+    if (unresolved.length > 0) {
+        throw new Error(`Still has conflict markers: ${unresolved.join(', ')}`);
+    }
+    for (const filepath of pendingMerge.conflicts) {
+        await git.add({fs, dir: REPO_DIR, filepath});
+    }
+    const oid = await git.commit({
+        fs,
+        dir: REPO_DIR,
+        message: pendingMerge.message,
+        author: author || getDefaultAuthor(),
+        parent: [pendingMerge.oursOid, pendingMerge.theirsOid]
+    });
+    setPendingMerge(null);
+    return oid;
 };
 
 const computeCommitGraph = async ({depth = 50} = {}) => {
@@ -1003,6 +1192,29 @@ const writeReadme = async content => {
 
 // Clone a git repository into LightningFS, replacing any existing repo. After
 // this, the working tree holds the cloned files (fractch source + .git).
+const moveDir = async (pfs, from, to) => {
+    try {
+        await pfs.rename(from, to);
+        return;
+    } catch (e) {
+        // fall back to copy
+    }
+    await ensureDir(pfs, to);
+    const entries = await pfs.readdir(from);
+    for (const entry of entries) {
+        const src = `${from}/${entry}`;
+        const dest = `${to}/${entry}`;
+        const stat = await pfs.stat(src);
+        if (stat.isDirectory()) {
+            await moveDir(pfs, src, dest);
+        } else {
+            const data = await pfs.readFile(src);
+            await pfs.writeFile(dest, data instanceof Uint8Array ? data : new Uint8Array(data));
+        }
+    }
+    await removeRecursive(pfs, from);
+};
+
 const cloneRepo = async ({url, ref, onAuth, onProgress} = {}) => {
     if (!url || typeof url !== 'string') {
         throw new Error('Repository URL is required');
@@ -1010,17 +1222,16 @@ const cloneRepo = async ({url, ref, onAuth, onProgress} = {}) => {
 
     const fs = getFs();
     const pfs = fs.promises;
-
-    await deleteRepo();
-    await ensureDir(pfs, REPO_DIR);
+    const tmpDir = `${REPO_DIR}-clone-${Date.now()}`;
 
     try {
+        await ensureDir(pfs, tmpDir);
         const cloneOptions = {
             fs,
             http,
-            dir: REPO_DIR,
+            dir: tmpDir,
             url: url.trim(),
-            corsProxy: 'https://cors.isomorphic-git.org',
+            corsProxy: corsProxyForUrl(url.trim()),
             singleBranch: false,
             onAuth,
             onProgress: evt => {
@@ -1038,12 +1249,15 @@ const cloneRepo = async ({url, ref, onAuth, onProgress} = {}) => {
         await git.clone(cloneOptions);
     } catch (e) {
         try {
-            await deleteRepo();
+            await removeRecursive(pfs, tmpDir);
         } catch (cleanupError) {
             // ignore
         }
         throw new Error(`Failed to clone: ${e.message}`);
     }
+
+    await deleteRepo();
+    await moveDir(pfs, tmpDir, REPO_DIR);
 
     return {fs, dir: REPO_DIR};
 };
@@ -1059,6 +1273,72 @@ const repoHasFractch = async () => {
     } catch (e) {
         return false;
     }
+};
+
+const normalizeWorktreePath = filepath => {
+    if (!filepath || typeof filepath !== 'string' || filepath.includes('\\')) {
+        throw new Error('Invalid workspace path');
+    }
+    const parts = filepath.replace(/^\.\//, '').split('/');
+    if (filepath.startsWith('/') || parts.some(part => !part || part === '.' || part === '..') || parts[0] === '.git') {
+        throw new Error('Invalid workspace path');
+    }
+    return parts.join('/');
+};
+
+const listWorktreeFiles = async () => {
+    if (!(await repoExists())) return [];
+    const files = await listFilesRecursive(getFs().promises, REPO_DIR);
+    return files
+        .filter(file => !file.startsWith(`${REPO_DIR}/.git/`))
+        .map(file => file.slice(REPO_DIR.length + 1))
+        .sort();
+};
+
+const readWorktreeFile = async filepath => {
+    const relative = normalizeWorktreePath(filepath);
+    const data = await getFs().promises.readFile(pathJoin(REPO_DIR, relative));
+    return data instanceof Uint8Array ? data : new TextEncoder().encode(data);
+};
+
+const writeWorktreeFile = async (filepath, data) => {
+    const relative = normalizeWorktreePath(filepath);
+    const destination = pathJoin(REPO_DIR, relative);
+    await ensureParentDir(getFs().promises, destination);
+    await getFs().promises.writeFile(destination, data);
+};
+
+const deleteWorktreeFile = async filepath => {
+    const relative = normalizeWorktreePath(filepath);
+    await removeRecursive(getFs().promises, pathJoin(REPO_DIR, relative));
+};
+
+const readHeadFile = async filepath => {
+    const relative = normalizeWorktreePath(filepath);
+    const fs = getFs();
+    try {
+        const oid = await git.resolveRef({fs, dir: REPO_DIR, ref: 'HEAD'});
+        const {blob} = await git.readBlob({fs, dir: REPO_DIR, oid, filepath: relative});
+        return new TextDecoder().decode(blob instanceof Uint8Array ? blob : new Uint8Array(blob));
+    } catch (e) {
+        return null;
+    }
+};
+
+const prepareFractchWorkspace = async vm => {
+    await initRepo({vm});
+    await writeProjectToFractchTree({vm, fs: getFs().promises, dir: REPO_DIR});
+    return listWorktreeFiles();
+};
+
+const applyFractchWorkspace = async vm => {
+    if (!vm) throw new Error('VM not provided');
+    const bytes = await buildSb3FromFractchTree({fs: getFs().promises, dir: REPO_DIR});
+    const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+    await RestorePointAPI.createSafetyRestorePoint(vm, 'Before git restore');
+    vm.quit();
+    await vm.loadProject(buffer, {skipGitImport: true});
+    if (vm.renderer) vm.renderer.draw();
 };
 
 // Copy the entire LightningFS repo (fractch working tree + .git) into an sb3 zip
@@ -1108,6 +1388,11 @@ const importRepoFromSb3 = async input => {
     try {
         zip = await JSZip.loadAsync(input);
     } catch (e) {
+        try {
+            await deleteRepo();
+        } catch (cleanupError) {
+            // ignore
+        }
         return false;
     }
 
@@ -1132,6 +1417,11 @@ const importRepoFromSb3 = async input => {
     for (const p of entryPaths) {
         const rel = p.slice(prefix.length);
         if (!rel) continue;
+        const segments = rel.split('/');
+        if (segments.some(s => s === '..' || s === '')) {
+            console.warn('Skipping unsafe embedded repo path on import:', p);
+            continue;
+        }
         try {
             const data = await zip.files[p].async('uint8array');
             const dest = pathJoin(REPO_DIR, rel);
@@ -1199,6 +1489,17 @@ export {
     importRepoFromSb3,
     cloneRepo,
     repoHasFractch,
+    startEditorMerge,
+    completeEditorMerge,
+    abortEditorMerge,
+    getPendingMerge,
+    listWorktreeFiles,
+    readWorktreeFile,
+    readHeadFile,
+    writeWorktreeFile,
+    deleteWorktreeFile,
+    prepareFractchWorkspace,
+    applyFractchWorkspace,
     readReadme,
     writeReadme,
     REPO_DIR,

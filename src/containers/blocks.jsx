@@ -18,6 +18,7 @@ import {BLOCKS_DEFAULT_SCALE, STAGE_DISPLAY_SIZES} from '../lib/constants/layout
 import DropAreaHOC from '../lib/components/drop-area-hoc.jsx';
 import DragConstants from '../lib/constants/drag-constants';
 import SettingsStore from '../addons/settings-store-singleton';
+import {VANILLA_PALETTE_CHANGED} from '../lib/mw-vanilla-palette';
 import defineDynamicBlock from '../lib/utils/define-dynamic-block';
 import {Theme} from '../lib/themes';
 import {injectExtensionBlockTheme, injectExtensionCategoryTheme} from '../lib/themes/blockHelpers';
@@ -29,7 +30,8 @@ import {
     closeExtensionLibrary,
     openSoundRecorder,
     openConnectionModal,
-    openCustomExtensionModal
+    openCustomExtensionModal,
+    openAssetsModal
 } from '../reducers/modals';
 import {activateCustomProcedures, deactivateCustomProcedures} from '../reducers/custom-procedures';
 import {setConnectionModalExtensionId} from '../reducers/connection-modal';
@@ -45,7 +47,7 @@ import {
 } from '../reducers/editor-tab';
 import AddonHooks from '../addons/hooks.js';
 import LoadScratchBlocksHOC from '../lib/components/tw-load-scratch-blocks-hoc.jsx';
-import {findTopBlock} from '../lib/backpack/code-payload.js';
+import {offsetToPosition} from '../lib/backpack/code-payload.js';
 import {gentlyRequestPersistentStorage} from '../lib/utils/storage-request.js';
 import CollaborationService from '../lib/collaboration/index.js';
 
@@ -89,6 +91,8 @@ const addFunctionListener = (object, property, callback) => {
 const DroppableBlocks = DropAreaHOC([
     DragConstants.BACKPACK_CODE
 ])(BlocksComponent);
+
+const DEFERRED_WORKSPACE_LOAD_MIN_BLOCKS = 100;
 
 class Blocks extends React.Component {
     constructor (props) {
@@ -141,13 +145,9 @@ class Blocks extends React.Component {
         this.setFlyoutWidth = this.setFlyoutWidth.bind(this);
 
         this.handleAddonSettingChanged = this.handleAddonSettingChanged.bind(this);
+        this.handleVanillaPaletteChanged = this.handleVanillaPaletteChanged.bind(this);
         this.applyPaletteResizeEnabledState = this.applyPaletteResizeEnabledState.bind(this);
         this.updateBlockColors = this.updateBlockColors.bind(this);
-
-        this.handlePaletteHoverEnter = this.handlePaletteHoverEnter.bind(this);
-        this.handlePaletteHoverLeave = this.handlePaletteHoverLeave.bind(this);
-        this.attachPaletteHoverListeners = this.attachPaletteHoverListeners.bind(this);
-        this.detachPaletteHoverListeners = this.detachPaletteHoverListeners.bind(this);
 
         this.state = {
             prompt: null,
@@ -158,14 +158,16 @@ class Blocks extends React.Component {
         this.paletteResizeSession = null;
         this.paletteResizeRaf = null;
 
-        this.paletteHoverCount = 0;
-        this._paletteHoverEls = null;
         this.onTargetsUpdate = debounce(this.onTargetsUpdate, 100);
         this.onWorkspaceMetricsChange = debounce(this.onWorkspaceMetricsChange, 100);
         this.toolboxUpdateQueue = [];
+        this.deferredWorkspaceLoad = null;
+        this.toolboxStateUpdateTimeout = null;
+        this.workspaceVisibilityRaf = null;
     }
     componentDidMount () {
         SettingsStore.addEventListener('setting-changed', this.handleAddonSettingChanged);
+        window.addEventListener(VANILLA_PALETTE_CHANGED, this.handleVanillaPaletteChanged);
 
         this.ScratchBlocks = VMScratchBlocks(this.props.vm, this.props.useCatBlocks);
         this.ScratchBlocks.prompt = this.handlePromptStart;
@@ -236,6 +238,9 @@ class Blocks extends React.Component {
         toolboxWorkspace.registerButtonCallback('MAKE_A_VARIABLE', varListButtonCallback(''));
         toolboxWorkspace.registerButtonCallback('MAKE_A_LIST', varListButtonCallback('list'));
         toolboxWorkspace.registerButtonCallback('MAKE_A_PROCEDURE', procButtonCallback);
+        toolboxWorkspace.registerButtonCallback('OPEN_ASSETS_MODAL', () => {
+            this.props.onOpenAssetsModal();
+        });
         toolboxWorkspace.registerButtonCallback('EXTENSION_CALLBACK', block => {
             this.props.vm.handleExtensionButtonPress(block.callbackData_);
         });
@@ -288,9 +293,10 @@ class Blocks extends React.Component {
 
         gentlyRequestPersistentStorage();
 
-        // Defer attaching hover listeners until ScratchBlocks has finished injecting its DOM.
         setTimeout(() => {
-            if (!this.unmounted) this.attachPaletteHoverListeners();
+            if (!this.unmounted && this.ScratchBlocks.Field && this.ScratchBlocks.Field.prewarmFontCache) {
+                this.ScratchBlocks.Field.prewarmFontCache();
+            }
         }, 0);
     }
     shouldComponentUpdate (nextProps, nextState) {
@@ -324,7 +330,8 @@ class Blocks extends React.Component {
             prevTheme.name !== currentTheme.name;
 
         if (themeChanged) {
-            this.updateBlockColors(currentTheme);
+            const blocksThemeChanged = !prevTheme || !currentTheme || prevTheme.blocks !== currentTheme.blocks;
+            this.updateBlockColors(currentTheme, blocksThemeChanged);
         }
 
         // If any modals are open, call hideChaff to close z-indexed field editors
@@ -375,39 +382,43 @@ class Blocks extends React.Component {
                     }, 100);
                 }
                 
-                // Defer expensive operations to next tick
-                setTimeout(() => {
-                    if (this.workspace) {
-                        this.workspace.resize();
-                    }
-                }, 0);
             }
-            if (prevProps.locale !== this.props.locale || this.props.locale !== this.props.vm.getLocale()) {
+            const localeChanged = prevProps.locale !== this.props.locale ||
+                this.props.locale !== this.props.vm.getLocale();
+            if (localeChanged) {
                 // call setLocale if the locale has changed, or changed while the blocks were hidden.
                 // vm.getLocale() will be out of sync if locale was changed while not visible
                 this.setLocale();
-            } else {
-                // Defer workspace refresh to next tick for better performance
-                setTimeout(() => {
-                    if (this.workspace && !this.unmounted) {
-                        this.workspace.refreshToolboxSelection_();
-                        this.workspace.resize();
-                    }
-                }, 0);
             }
 
-            window.dispatchEvent(new Event('resize'));
+            // Visibility changes used to resize Blockly up to three times. Refresh
+            // and lay it out once, immediately before the next paint.
+            window.cancelAnimationFrame(this.workspaceVisibilityRaf);
+            this.workspaceVisibilityRaf = window.requestAnimationFrame(() => {
+                this.workspaceVisibilityRaf = null;
+                if (this.workspace && !this.unmounted) {
+                    if (!localeChanged) {
+                        this.workspace.refreshToolboxSelection_();
+                    }
+                    this.workspace.resize();
+                }
+            });
         } else {
+            window.cancelAnimationFrame(this.workspaceVisibilityRaf);
+            this.workspaceVisibilityRaf = null;
             this.workspace.setVisible(false);
         }
     }
     componentWillUnmount () {
         SettingsStore.removeEventListener('setting-changed', this.handleAddonSettingChanged);
-        this.detachPaletteHoverListeners();
+        window.removeEventListener(VANILLA_PALETTE_CHANGED, this.handleVanillaPaletteChanged);
         this.detachVM();
         this.unmounted = true;
+        this.cancelDeferredWorkspaceLoad();
         this.workspace.dispose();
         clearTimeout(this.toolboxUpdateTimeout);
+        clearTimeout(this.toolboxStateUpdateTimeout);
+        window.cancelAnimationFrame(this.workspaceVisibilityRaf);
 
         // Cancel any pending debounced calls
         this.onTargetsUpdate.cancel();
@@ -421,79 +432,6 @@ class Blocks extends React.Component {
         collaborationService.detachFromWorkspace();
 
         AddonHooks.blocklyWorkspace = null;
-    }
-
-    attachPaletteHoverListeners () {
-        if (!this.blocks) return;
-        if (!this.workspace || !this.workspace.getFlyout) return;
-
-        // toolbox div and flyout svg are siblings inside the injection container.
-        const toolboxDiv = this.blocks.querySelector('.blocklyToolboxDiv');
-        const flyoutSvgGroup = this.blocks.querySelector('.blocklyFlyout');
-        const els = [toolboxDiv, flyoutSvgGroup].filter(Boolean);
-        if (els.length === 0) return;
-
-        // Avoid double-binding.
-        if (this._paletteHoverEls) return;
-
-        for (const el of els) {
-            el.addEventListener('mouseenter', this.handlePaletteHoverEnter);
-            el.addEventListener('mouseleave', this.handlePaletteHoverLeave);
-        }
-        this._paletteHoverEls = els;
-
-        try {
-            const flyout = this.workspace && this.workspace.getFlyout && this.workspace.getFlyout();
-            if (flyout && typeof flyout.twSetClippingEnabled === 'function') {
-                flyout.twSetClippingEnabled(true);
-            }
-        } catch (e) {
-            // ignore
-        }
-    }
-
-    detachPaletteHoverListeners () {
-        if (!this._paletteHoverEls) return;
-        for (const el of this._paletteHoverEls) {
-            el.removeEventListener('mouseenter', this.handlePaletteHoverEnter);
-            el.removeEventListener('mouseleave', this.handlePaletteHoverLeave);
-        }
-        this._paletteHoverEls = null;
-        this.paletteHoverCount = 0;
-        // Default to no clipping when not hovered.
-        try {
-            const flyout = this.workspace && this.workspace.getFlyout && this.workspace.getFlyout();
-            if (flyout && typeof flyout.twSetClippingEnabled === 'function') {
-                flyout.twSetClippingEnabled(true);
-            }
-        } catch (e) {
-            // ignore
-        }
-    }
-
-    handlePaletteHoverEnter () {
-        this.paletteHoverCount += 1;
-        try {
-            const flyout = this.workspace && this.workspace.getFlyout && this.workspace.getFlyout();
-            if (flyout && typeof flyout.twSetClippingEnabled === 'function') {
-                flyout.twSetClippingEnabled(false);
-            }
-        } catch (e) {
-            // ignore
-        }
-    }
-
-    handlePaletteHoverLeave () {
-        this.paletteHoverCount = Math.max(0, this.paletteHoverCount - 1);
-        if (this.paletteHoverCount !== 0) return;
-        try {
-            const flyout = this.workspace && this.workspace.getFlyout && this.workspace.getFlyout();
-            if (flyout && typeof flyout.twSetClippingEnabled === 'function') {
-                flyout.twSetClippingEnabled(true);
-            }
-        } catch (e) {
-            // ignore
-        }
     }
 
     setFlyoutWidth (flyoutWidth) {
@@ -637,6 +575,13 @@ class Blocks extends React.Component {
         window.removeEventListener('mouseup', this.handlePaletteResizePointerUp);
     }
 
+    handleVanillaPaletteChanged () {
+        const toolboxXML = this.getToolboxXML();
+        if (toolboxXML) {
+            this.props.updateToolboxState(toolboxXML);
+        }
+    }
+
     handleAddonSettingChanged (e) {
         const detail = e && e.detail;
         if (!detail) return;
@@ -707,13 +652,18 @@ class Blocks extends React.Component {
                 this.workspace.getFlyout().setRecyclingEnabled(false);
                 this.props.vm.refreshWorkspace();
                 this.requestToolboxUpdate();
+                // The initial toolbox in the redux store is generated before
+                // scratch-blocks finishes loading, so block text (operators,
+                // strings, etc.) falls back to English. Rebuild it now that
+                // the translated block messages are available.
+                this.requestToolboxStateUpdate();
                 this.withToolboxUpdates(() => {
                     this.workspace.getFlyout().setRecyclingEnabled(true);
                 });
             });
     }
 
-    updateBlockColors (theme) {
+    updateBlockColors (theme, blocksThemeChanged) {
         if (!this.workspace || !this.ScratchBlocks) return;
 
         const newColors = theme.getBlockColors();
@@ -724,26 +674,26 @@ class Blocks extends React.Component {
                 this.ScratchBlocks.Colours.overrideColours(newColors);
             }
 
+            if (this.ScratchBlocks.Css && this.ScratchBlocks.Css.inject) {
+                this.ScratchBlocks.Css.inject(true, this.ScratchBlocks.Css.mediaPath_ || '');
+            }
+
             // Update flyout background constant (Blockly sets this, not CSS)
             const flyout = this.workspace.getFlyout && this.workspace.getFlyout();
             if (flyout && newColors.flyout && typeof flyout.setBackgroundColour_ === 'function') {
                 flyout.setBackgroundColour_(newColors.flyout);
             }
 
-            // Force update of all cached color lookups
-            if (this.ScratchBlocks.workspace && this.ScratchBlocks.workspace.Workspace) {
-                // Force Blockly to recalculate theme colors
-                if (this.workspace.getAllBlocks) {
-                    const blocks = this.workspace.getAllBlocks();
-                    blocks.forEach(block => {
-                        if (block.updateColour) {
-                            block.updateColour();
-                        }
-                    });
-                }
-
-                this.recolorFlyoutBlocks();
+            if (blocksThemeChanged && this.workspace.getAllBlocks) {
+                const blocks = this.workspace.getAllBlocks();
+                blocks.forEach(block => {
+                    if (block.updateColour) {
+                        block.updateColour();
+                    }
+                });
             }
+
+            this.recolorFlyoutBlocks();
 
             // Update workspace-specific colors directly if available
             const workspace = this.workspace;
@@ -779,7 +729,10 @@ class Blocks extends React.Component {
 
             // Update flyout background element (the path element ScratchBlocks creates)
             if (newColors.flyout) {
-                const flyoutBackground = document.querySelector('svg.blocklyFlyout > path.blocklyFlyoutBackground, svg.blocklyFlyout > rect.blocklyFlyoutBackground');
+                const flyoutBackground = document.querySelector(
+                    'svg.blocklyFlyout > path.blocklyFlyoutBackground, ' +
+                    'svg.blocklyFlyout > rect.blocklyFlyoutBackground'
+                );
                 if (flyoutBackground) {
                     flyoutBackground.setAttribute('fill', newColors.flyout);
                 }
@@ -841,7 +794,7 @@ class Blocks extends React.Component {
                 }
             });
 
-            if (this.workspace.getFlyout && this.workspace.setVisible) {
+            if (blocksThemeChanged && this.workspace.getFlyout && this.workspace.setVisible) {
                 this.workspace.setVisible(false);
                 this.workspace.setVisible(this.props.isVisible);
             }
@@ -858,7 +811,9 @@ class Blocks extends React.Component {
                     // Update toolbox and flyout elements again after they re-render
                     if (newColors.toolbox) {
                         const toolboxSvg = document.querySelector('svg.blocklyToolbox');
-                        const toolboxBackground = document.querySelector('svg.blocklyToolbox > path.blocklyToolboxBackground');
+                        const toolboxBackground = document.querySelector(
+                            'svg.blocklyToolbox > path.blocklyToolboxBackground'
+                        );
                         if (toolboxSvg) {
                             toolboxSvg.style.setProperty('background-color', newColors.toolbox, 'important');
                         }
@@ -868,7 +823,10 @@ class Blocks extends React.Component {
                     }
                     if (newColors.flyout) {
                         const flyoutSvg = document.querySelector('svg.blocklyFlyout');
-                        const flyoutBackground = document.querySelector('svg.blocklyFlyout > rect.blocklyFlyoutBackground, svg.blocklyFlyout > path.blocklyFlyoutBackground');
+                        const flyoutBackground = document.querySelector(
+                            'svg.blocklyFlyout > rect.blocklyFlyoutBackground, ' +
+                            'svg.blocklyFlyout > path.blocklyFlyoutBackground'
+                        );
                         if (flyoutSvg) {
                             flyoutSvg.style.setProperty('background-color', newColors.flyout, 'important');
                         }
@@ -884,7 +842,9 @@ class Blocks extends React.Component {
                         });
                     }
                     if (newColors.scrollbar) {
-                        const scrollbarElements = document.querySelectorAll('.blocklyScrollbarBackground, .blocklyScrollbarThumb');
+                        const scrollbarElements = document.querySelectorAll(
+                            '.blocklyScrollbarBackground, .blocklyScrollbarThumb'
+                        );
                         scrollbarElements.forEach(el => {
                             el.style.setProperty('fill', newColors.scrollbar, 'important');
                         });
@@ -897,7 +857,9 @@ class Blocks extends React.Component {
                 if (this.workspace && !this.unmounted) {
                     if (newColors.toolbox) {
                         const toolboxSvg = document.querySelector('svg.blocklyToolbox');
-                        const toolboxBackground = document.querySelector('svg.blocklyToolbox > path.blocklyToolboxBackground');
+                        const toolboxBackground = document.querySelector(
+                            'svg.blocklyToolbox > path.blocklyToolboxBackground'
+                        );
                         if (toolboxSvg) {
                             toolboxSvg.style.setProperty('background-color', newColors.toolbox, 'important');
                         }
@@ -907,7 +869,10 @@ class Blocks extends React.Component {
                     }
                     if (newColors.flyout) {
                         const flyoutSvg = document.querySelector('svg.blocklyFlyout');
-                        const flyoutBackground = document.querySelector('svg.blocklyFlyout > rect.blocklyFlyoutBackground, svg.blocklyFlyout > path.blocklyFlyoutBackground');
+                        const flyoutBackground = document.querySelector(
+                            'svg.blocklyFlyout > rect.blocklyFlyoutBackground, ' +
+                            'svg.blocklyFlyout > path.blocklyFlyoutBackground'
+                        );
                         if (flyoutSvg) {
                             flyoutSvg.style.setProperty('background-color', newColors.flyout, 'important');
                         }
@@ -963,7 +928,7 @@ class Blocks extends React.Component {
 
     withToolboxUpdates (fn) {
         // if there is a queued toolbox update, we need to wait
-        if (this.toolboxUpdateTimeout) {
+        if (this.toolboxStateUpdateTimeout || this.toolboxUpdateTimeout) {
             this.toolboxUpdateQueue.push(fn);
         } else {
             fn();
@@ -1040,6 +1005,8 @@ class Blocks extends React.Component {
             });
         }
     }
+    // The workspace records glow state by id whether or not the block is
+    // rendered, so a script that is offscreen still comes back glowing.
     onScriptGlowOn (data) {
         this.workspace.glowStack(data.id, true);
     }
@@ -1053,6 +1020,7 @@ class Blocks extends React.Component {
         this.workspace.glowBlock(data.id, false);
     }
     onVisualReport (data) {
+        if (!this.workspace.getBlockById(data.id)) return;
         this.workspace.reportValue(data.id, data.value, data.fullValue);
     }
     getToolboxXML () {
@@ -1071,32 +1039,48 @@ class Blocks extends React.Component {
                 this.props.vm.runtime.getBlocksXML(target),
                 this.props.theme
             );
+            const customAssets = runtime.assetManager.assets;
             return makeToolboxXML(false, target.isStage, target.id, dynamicBlocksXML,
                 targetCostumes[targetCostumes.length - 1].name,
                 stageCostumes[stageCostumes.length - 1].name,
                 targetSounds.length > 0 ? targetSounds[targetSounds.length - 1].name : '',
-                this.props.theme.getBlockColors()
+                this.props.theme.getBlockColors(),
+                customAssets.length > 0 ? customAssets[0].name : ''
             );
         } catch {
             return null;
         }
     }
     onWorkspaceUpdate (data) {
-        // When we change sprites, update the toolbox to have the new sprite's blocks
-        const toolboxXML = this.getToolboxXML();
-        if (toolboxXML) {
-            this.props.updateToolboxState(toolboxXML);
-        }
+        // Batch this with target-dependent extension updates. A sprite switch
+        // should describe and rebuild the toolbox once, not once per event.
+        this.requestToolboxStateUpdate();
 
         if (this.props.vm.editingTarget && !this.props.workspaceMetrics.targets[this.props.vm.editingTarget.id]) {
             this.onWorkspaceMetricsChange();
         }
 
         // Remove and reattach the workspace listener (but allow flyout events)
+        this.cancelDeferredWorkspaceLoad();
         this.workspace.removeChangeListener(this.props.vm.blockListener);
         const dom = this.ScratchBlocks.Xml.textToDom(data.xml);
+        const useDeferredLoad = !!this.ScratchBlocks.Xml.clearWorkspaceAndLoadFromXmlDeferred &&
+            (dom.getElementsByTagName('block').length >= DEFERRED_WORKSPACE_LOAD_MIN_BLOCKS ||
+                Object.keys(this.workspace.blockDB_ || {}).length >= DEFERRED_WORKSPACE_LOAD_MIN_BLOCKS);
         try {
-            this.ScratchBlocks.Xml.clearWorkspaceAndLoadFromXml(dom, this.workspace);
+            if (useDeferredLoad) {
+                this.deferredWorkspaceLoad = this.ScratchBlocks.Xml.clearWorkspaceAndLoadFromXmlDeferred(
+                    dom,
+                    this.workspace,
+                    {
+                        onDone: () => {
+                            this.deferredWorkspaceLoad = null;
+                        }
+                    }
+                );
+            } else {
+                this.ScratchBlocks.Xml.clearWorkspaceAndLoadFromXml(dom, this.workspace);
+            }
         } catch (error) {
             // The workspace is likely incomplete. What did update should be
             // functional.
@@ -1126,6 +1110,8 @@ class Blocks extends React.Component {
         // fresh workspace and we don't want any changes made to another sprites
         // workspace to be 'undone' here.
         this.workspace.clearUndo();
+
+        this.workspace.toolboxRefreshEnabled_ = true;
     }
     handleMonitorsUpdate (monitors) {
         // Update the checkboxes of the relevant monitors.
@@ -1151,6 +1137,8 @@ class Blocks extends React.Component {
                 const staticBlocksJson = [];
                 const dynamicBlocksInfo = [];
                 blockInfoArray.forEach(blockInfo => {
+                    // Patching uses native extendable Scratch Blocks definitions.
+                    if (categoryInfo.id === 'patching') return;
                     if (blockInfo.info && blockInfo.info.isDynamic) {
                         dynamicBlocksInfo.push(blockInfo);
                     } else if (blockInfo.json) {
@@ -1185,11 +1173,7 @@ class Blocks extends React.Component {
         defineBlocks(categoryInfo.menus);
         defineBlocks(categoryInfo.blocks);
 
-        // Update the toolbox with new blocks if possible
-        const toolboxXML = this.getToolboxXML();
-        if (toolboxXML) {
-            this.props.updateToolboxState(toolboxXML);
-        }
+        this.requestToolboxStateUpdate();
     }
     handleBlocksInfoUpdate (categoryInfo) {
         // @todo Later we should replace this to avoid all the warnings from redefining blocks.
@@ -1197,10 +1181,18 @@ class Blocks extends React.Component {
     }
 
     handleExtensionsChanged () {
-        const toolboxXML = this.getToolboxXML();
-        if (toolboxXML) {
-            this.props.updateToolboxState(toolboxXML);
-        }
+        this.requestToolboxStateUpdate();
+    }
+    requestToolboxStateUpdate () {
+        clearTimeout(this.toolboxStateUpdateTimeout);
+        this.toolboxStateUpdateTimeout = setTimeout(() => {
+            this.toolboxStateUpdateTimeout = null;
+            if (this.unmounted) return;
+            const toolboxXML = this.getToolboxXML();
+            if (toolboxXML) {
+                this.props.updateToolboxState(toolboxXML);
+            }
+        }, 0);
     }
     handleCategorySelected (categoryId) {
         const extension = extensionData.find(ext => ext.extensionId === categoryId);
@@ -1214,6 +1206,12 @@ class Blocks extends React.Component {
     }
     setBlocks (blocks) {
         this.blocks = blocks;
+    }
+    cancelDeferredWorkspaceLoad () {
+        this.deferredWorkspaceLoad = null;
+        if (this.workspace && this.workspace.cancelDeferredRender) {
+            this.workspace.cancelDeferredRender();
+        }
     }
     handlePromptStart (message, defaultValue, callback, optTitle, optVarType) {
         const p = {prompt: {callback, message, defaultValue}};
@@ -1271,18 +1269,17 @@ class Blocks extends React.Component {
             .then(response => response.json())
             .then(payload => {
                 // based on https://github.com/ScratchAddons/ScratchAddons/pull/7028
-                const topBlock = findTopBlock(payload);
-                if (topBlock) {
-                    const metrics = this.props.workspaceMetrics.targets[this.props.vm.editingTarget.id];
-                    if (metrics) {
-                        const {x, y} = dragInfo.currentOffset;
-                        const {left, right} = this.workspace.scrollbar.hScroll.outerSvg_.getBoundingClientRect();
-                        const {top} = this.workspace.scrollbar.vScroll.outerSvg_.getBoundingClientRect();
-                        topBlock.x = (
-                            this.props.isRtl ? metrics.scrollX - x + right : -metrics.scrollX + x - left
-                        ) / metrics.scale;
-                        topBlock.y = (-metrics.scrollY - top + y) / metrics.scale;
-                    }
+                const metrics = this.props.workspaceMetrics.targets[this.props.vm.editingTarget.id];
+                if (metrics) {
+                    const {x, y} = dragInfo.currentOffset;
+                    const {left, right} = this.workspace.scrollbar.hScroll.outerSvg_.getBoundingClientRect();
+                    const {top} = this.workspace.scrollbar.vScroll.outerSvg_.getBoundingClientRect();
+                    offsetToPosition(
+                        payload,
+                        (this.props.isRtl ? metrics.scrollX - x + right : -metrics.scrollX + x - left) /
+                            metrics.scale,
+                        (-metrics.scrollY - top + y) / metrics.scale
+                    );
                 }
                 return this.props.vm.shareBlocksToTarget(payload, this.props.vm.editingTarget.id);
             })
@@ -1331,6 +1328,7 @@ class Blocks extends React.Component {
             isRtl,
             isVisible,
             onActivateColorPicker,
+            onOpenAssetsModal,
             onOpenConnectionModal,
             onOpenSoundRecorder,
             onOpenCustomExtensionModal,
@@ -1404,6 +1402,7 @@ Blocks.propTypes = {
     onActivateColorPicker: PropTypes.func,
     onActivateCustomProcedures: PropTypes.func,
     onActivateBlocksTab: PropTypes.func,
+    onOpenAssetsModal: PropTypes.func,
     onOpenConnectionModal: PropTypes.func,
     onOpenSoundRecorder: PropTypes.func,
     onOpenCustomExtensionModal: PropTypes.func,
@@ -1484,6 +1483,7 @@ const mapDispatchToProps = dispatch => ({
         dispatch(openSoundRecorder());
     },
     reduxOnOpenCustomExtensionModal: () => dispatch(openCustomExtensionModal()),
+    onOpenAssetsModal: () => dispatch(openAssetsModal()),
     onRequestCloseExtensionLibrary: () => {
         dispatch(closeExtensionLibrary());
     },

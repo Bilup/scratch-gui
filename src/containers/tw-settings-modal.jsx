@@ -5,14 +5,16 @@ import bindAll from 'lodash.bindall';
 import {connect} from 'react-redux';
 import {closeSettingsModal} from '../reducers/modals';
 import {setCloudHost} from '../reducers/tw';
+import {setTheme} from '../reducers/theme';
 import SettingsModalComponent from '../components/tw-settings-modal/settings-modal.jsx';
 import {defaultStageSize} from '../reducers/custom-stage-size';
 import {CustomTheme} from '../lib/themes/custom-themes.js';
 import {setSearchParams} from '../lib/utils/navigation';
 import {getAppearanceSetting, setAppearanceSetting} from '../lib/mw-appearance-settings';
-import {getStyleSetting, setStyleSetting} from '../lib/mw-style-settings';
+import {getStyleSetting, getStyleSettings, setStyleSetting} from '../lib/mw-style-settings';
+import {applyTheme} from '../lib/themes/themePersistance';
 import {getHideOperatorArrows, setHideOperatorArrows} from '../lib/mw-operator-arrows';
-import WindowManager from '../addons/window-system/window-manager';
+import {getVanillaPalette, setVanillaPalette} from '../lib/mw-vanilla-palette';
 
 const messages = defineMessages({
     newFramerate: {
@@ -35,13 +37,12 @@ class UsernameModal extends React.Component {
             enableStageResize: localStorage.getItem('mw:enable-stage-resize') !== 'false',
             windowAnimation: localStorage.getItem('mw:window-animation') !== 'false',
             hideOperatorArrows: getHideOperatorArrows(),
+            vanillaPalette: getVanillaPalette(),
             squareStageCorners: getAppearanceSetting('square-stage-corners'),
             hideDeleteButton: getAppearanceSetting('hide-delete-button'),
             hideExtensionButton: getAppearanceSetting('hide-extension-button'),
-            hideBackpack: getAppearanceSetting('hide-backpack'),
-            tabStyle: getStyleSetting('tab-style'),
-            tabLooks: getStyleSetting('tab-looks'),
-            windowStyle: getStyleSetting('window-style')
+            unclipPalette: getAppearanceSetting('unclip-palette'),
+            hideBackpack: getAppearanceSetting('hide-backpack')
         };
 
         bindAll(this, [
@@ -69,9 +70,11 @@ class UsernameModal extends React.Component {
             'handleCloudVariableServerChange',
             'handleWindowAnimationChange',
             'handleHideOperatorArrowsChange',
+            'handleVanillaPaletteChange',
             'handleSquareStageCornersChange',
             'handleHideDeleteButtonChange',
             'handleHideExtensionButtonChange',
+            'handleUnclipPaletteChange',
             'handleHideBackpackChange',
             'handleTabStyleChange',
             'handleTabLooksChange',
@@ -140,9 +143,20 @@ class UsernameModal extends React.Component {
     }
     handleStageWidthChange (value) {
         this.props.vm.setStageSize(value, this.props.customStageSize.height);
+        this.storeStageSizeInProject();
     }
     handleStageHeightChange (value) {
         this.props.vm.setStageSize(this.props.customStageSize.width, value);
+        this.storeStageSizeInProject();
+    }
+    storeStageSizeInProject () {
+        if (this.storeStageSizeTimeout) {
+            clearTimeout(this.storeStageSizeTimeout);
+        }
+        this.storeStageSizeTimeout = setTimeout(() => {
+            this.storeStageSizeTimeout = null;
+            this.props.vm.storeProjectOptions();
+        }, 500);
     }
     handleStoreProjectOptions () {
         if (!this.state.storeThemeInProject) {
@@ -173,7 +187,8 @@ class UsernameModal extends React.Component {
                     blocks: theme.blocks,
                     menuBarAlign: theme.menuBarAlign,
                     wallpaper: theme.wallpaper,
-                    fonts: theme.fonts
+                    fonts: theme.fonts,
+                    appearance: theme.appearance
                 }
             };
         })();
@@ -265,6 +280,11 @@ handleWindowAnimationChange (e) {
         setHideOperatorArrows(e.target.checked);
     }
 
+    handleVanillaPaletteChange (e) {
+        this.setState({vanillaPalette: e.target.checked});
+        setVanillaPalette(e.target.checked);
+    }
+
     setAppearance_ (stateKey, id, checked) {
         this.setState({[stateKey]: checked});
         setAppearanceSetting(id, checked);
@@ -286,19 +306,27 @@ handleWindowAnimationChange (e) {
         this.setAppearance_('hideBackpack', 'hide-backpack', e.target.checked);
     }
 
+    handleUnclipPaletteChange (e) {
+        this.setAppearance_('unclipPalette', 'unclip-palette', e.target.checked);
+    }
+
+    setStyle_ (id, value) {
+        setStyleSetting(id, value);
+        if (this.props.theme) {
+            this.props.onChangeTheme(this.props.theme.setAppearance({styles: getStyleSettings()}));
+        }
+    }
+
     handleTabStyleChange (value) {
-        this.setState({tabStyle: value});
-        setStyleSetting('tab-style', value);
+        this.setStyle_('tab-style', value);
     }
 
     handleTabLooksChange (value) {
-        this.setState({tabLooks: value});
-        setStyleSetting('tab-looks', value);
+        this.setStyle_('tab-looks', value);
     }
 
     handleWindowStyleChange (value) {
-        this.setState({windowStyle: value});
-        setStyleSetting('window-style', value);
+        this.setStyle_('window-style', value);
     }
     render () {
         const {
@@ -341,20 +369,24 @@ handleWindowAnimationChange (e) {
                 onWindowAnimationChange={this.handleWindowAnimationChange}
                 onHideOperatorArrowsChange={this.handleHideOperatorArrowsChange}
                 hideOperatorArrows={this.state.hideOperatorArrows}
+                onVanillaPaletteChange={this.handleVanillaPaletteChange}
+                vanillaPalette={this.state.vanillaPalette}
                 onSquareStageCornersChange={this.handleSquareStageCornersChange}
                 squareStageCorners={this.state.squareStageCorners}
                 onHideDeleteButtonChange={this.handleHideDeleteButtonChange}
                 hideDeleteButton={this.state.hideDeleteButton}
                 onHideExtensionButtonChange={this.handleHideExtensionButtonChange}
                 hideExtensionButton={this.state.hideExtensionButton}
+                onUnclipPaletteChange={this.handleUnclipPaletteChange}
+                unclipPalette={this.state.unclipPalette}
                 onHideBackpackChange={this.handleHideBackpackChange}
                 hideBackpack={this.state.hideBackpack}
                 onTabStyleChange={this.handleTabStyleChange}
-                tabStyle={this.state.tabStyle}
+                tabStyle={getStyleSetting('tab-style')}
                 onTabLooksChange={this.handleTabLooksChange}
-                tabLooks={this.state.tabLooks}
+                tabLooks={getStyleSetting('tab-looks')}
                 onWindowStyleChange={this.handleWindowStyleChange}
-                windowStyle={this.state.windowStyle}
+                windowStyle={getStyleSetting('window-style')}
                 optimizeAnimations={this.state.optimizeAnimations}
                 debugMode={this.state.debugMode}
                 showFPSCounter={this.state.showFPSCounter}
@@ -374,7 +406,8 @@ UsernameModal.propTypes = {
     onClose: PropTypes.func,
     vm: PropTypes.shape({
         renderer: PropTypes.shape({
-            setUseHighQualityRender: PropTypes.func
+            setUseHighQualityRender: PropTypes.func,
+            useRealLayerIndexes: PropTypes.bool
         }),
         setFramerate: PropTypes.func,
         setCompilerOptions: PropTypes.func,
@@ -399,7 +432,8 @@ UsernameModal.propTypes = {
     disableCompiler: PropTypes.bool,
     caseSensitiveLists: PropTypes.bool,
     realLayerIndexes: PropTypes.bool,
-    theme: PropTypes.any
+    theme: PropTypes.any,
+    onChangeTheme: PropTypes.func
 };
 
 const mapStateToProps = state => ({
@@ -422,7 +456,11 @@ const mapStateToProps = state => ({
 
 const mapDispatchToProps = dispatch => ({
     onClose: () => dispatch(closeSettingsModal()),
-    onSetCloudHost: cloudHost => dispatch(setCloudHost(cloudHost))
+    onSetCloudHost: cloudHost => dispatch(setCloudHost(cloudHost)),
+    onChangeTheme: theme => {
+        dispatch(setTheme(theme));
+        applyTheme(theme);
+    }
 });
 
 export default injectIntl(connect(

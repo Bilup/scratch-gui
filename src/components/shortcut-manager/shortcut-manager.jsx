@@ -1,13 +1,11 @@
 import PropTypes from 'prop-types';
 import React from 'react';
-import classNames from 'classnames';
 import bindAll from 'lodash.bindall';
 import {connect} from 'react-redux';
 import {defineMessages, FormattedMessage, injectIntl} from 'react-intl';
 import {
     Search,
     Keyboard,
-    LayoutGrid,
     FileText,
     Pencil,
     Eye,
@@ -26,10 +24,8 @@ import {
     SHORTCUT_CATEGORIES
 } from '../../lib/shortcuts/registry.js';
 import {updateShortcuts} from '../../lib/shortcuts/event-router.js';
-import {closeShortcutManagerModal} from '../../reducers/modals';
 import {setShortcut, resetShortcut, resetAllShortcuts} from '../../reducers/shortcuts';
 
-import WindowedModal from '../../containers/windowed-modal.jsx';
 import Input from '../forms/input.jsx';
 import ShortcutCategory from './shortcut-category.jsx';
 import {isMac} from './key-combo.jsx';
@@ -47,12 +43,19 @@ const CATEGORY_ICONS = {
     [SHORTCUT_CATEGORIES.WINDOW_MANAGEMENT]: AppWindow
 };
 
+const CATEGORY_MESSAGE_MAP = {
+    [SHORTCUT_CATEGORIES.FILE]: 'categoryFile',
+    [SHORTCUT_CATEGORIES.EDIT]: 'categoryEdit',
+    [SHORTCUT_CATEGORIES.VIEW]: 'categoryView',
+    [SHORTCUT_CATEGORIES.PROJECT_CONTROLS]: 'categoryProjectControls',
+    [SHORTCUT_CATEGORIES.EDITOR_NAVIGATION]: 'categoryEditorNavigation',
+    [SHORTCUT_CATEGORIES.LIBRARY_ACCESS]: 'categoryLibraryAccess',
+    [SHORTCUT_CATEGORIES.SPRITE_MANAGEMENT]: 'categorySpriteManagement',
+    [SHORTCUT_CATEGORIES.WINDOW_MANAGEMENT]: 'categoryWindowManagement',
+    [SHORTCUT_CATEGORIES.COLLABORATION]: 'categoryCollaboration'
+};
+
 const messages = defineMessages({
-    title: {
-        defaultMessage: 'Keyboard Shortcuts',
-        description: 'Title of keyboard shortcuts manager modal',
-        id: 'shortcut-manager.title'
-    },
     search: {
         defaultMessage: 'Search shortcuts',
         description: 'Placeholder text for search input',
@@ -62,11 +65,6 @@ const messages = defineMessages({
         defaultMessage: 'No shortcuts found',
         description: 'Message when no shortcuts match search',
         id: 'shortcut-manager.noResults'
-    },
-    allShortcuts: {
-        defaultMessage: 'All Shortcuts',
-        description: 'Label for showing all shortcuts',
-        id: 'shortcut-manager.allShortcuts'
     },
     resetAll: {
         defaultMessage: 'Reset all to defaults',
@@ -142,6 +140,11 @@ const messages = defineMessages({
         defaultMessage: 'Restore Points',
         description: 'Shortcut label',
         id: 'shortcut.restorePoints'
+    },
+    spotlightSearch: {
+        defaultMessage: 'Spotlight Search',
+        description: 'Shortcut label',
+        id: 'shortcut.spotlightSearch'
     },
     settings: {
         defaultMessage: 'Settings',
@@ -295,8 +298,6 @@ class ShortcutManager extends React.Component {
         super(props);
         bindAll(this, [
             'handleSearchChange',
-            'handleClose',
-            'handleSidebarClick',
             'handleSaveShortcut',
             'handleResetShortcut',
             'handleResetAll',
@@ -304,17 +305,12 @@ class ShortcutManager extends React.Component {
         ]);
 
         this.state = {
-            searchQuery: '',
-            selectedCategory: null
+            searchQuery: ''
         };
     }
 
     handleSearchChange (e) {
         this.setState({searchQuery: e.target.value});
-    }
-
-    handleClose () {
-        this.props.onRequestClose();
     }
 
     handleSaveShortcut (id, key) {
@@ -357,14 +353,6 @@ class ShortcutManager extends React.Component {
         return match ? match.label : null;
     }
 
-    handleSidebarClick (e) {
-        const categoryId = e.currentTarget.dataset.category || null;
-        this.setState({
-            selectedCategory: categoryId,
-            searchQuery: ''
-        });
-    }
-
     getAllShortcuts () {
         const defaultShortcuts = getDefaultShortcuts();
         const customShortcuts = this.props.customShortcuts || {};
@@ -376,6 +364,7 @@ class ShortcutManager extends React.Component {
             'loadFromComputer': messages.loadFromComputer,
             'packageProject': messages.packageProject,
             'restorePoints': messages.restorePoints,
+            'spotlightSearch': messages.spotlightSearch,
             'settings': messages.settings,
             'fullScreen': messages.fullScreen,
             'blocksTab': messages.blocksTab,
@@ -420,74 +409,22 @@ class ShortcutManager extends React.Component {
 
     getFilteredShortcuts () {
         const allShortcuts = this.getAllShortcuts();
-        const {searchQuery, selectedCategory} = this.state;
+        const {searchQuery} = this.state;
 
-        return allShortcuts.filter(shortcut => {
-            if (selectedCategory && shortcut.category !== selectedCategory) {
-                return false;
-            }
+        if (!searchQuery) return allShortcuts;
 
-            if (!searchQuery) return true;
-
-            const query = searchQuery.toLowerCase();
-            return shortcut.label.toLowerCase().includes(query) ||
-                   shortcut.key.toLowerCase().includes(query);
-        });
-    }
-
-    getCategoriesWithCounts () {
-        const allShortcuts = this.getAllShortcuts();
-        const categories = {};
-        const {intl} = this.props;
-
-        const categoryMessages = {
-            'file': messages.categoryFile,
-            'edit': messages.categoryEdit,
-            'view': messages.categoryView,
-            'projectControls': messages.categoryProjectControls,
-            'editorNavigation': messages.categoryEditorNavigation,
-            'libraryAccess': messages.categoryLibraryAccess,
-            'spriteManagement': messages.categorySpriteManagement,
-            'windowManagement': messages.categoryWindowManagement,
-            'collaboration': messages.categoryCollaboration
-        };
-
-        allShortcuts.forEach(shortcut => {
-            if (!categories[shortcut.category]) {
-                categories[shortcut.category] = {
-                    label: intl.formatMessage(categoryMessages[shortcut.category]),
-                    count: 0
-                };
-            }
-            categories[shortcut.category].count++;
-        });
-
-        return Object.entries(categories)
-            .sort(([, a], [, b]) => a.label.localeCompare(b.label))
-            .map(([id, {label, count}]) => ({id, label, count}));
-    }
-
-    renderSidebarItem (id, label, Icon, count, isSelected) {
-        return (
-            <div
-                key={id || 'all'}
-                className={classNames(styles.sidebarItem, {[styles.selected]: isSelected})}
-                data-category={id || ''}
-                onClick={this.handleSidebarClick}
-                title={label}
-            >
-                <Icon className={styles.sidebarIcon} />
-                <span className={styles.sidebarLabel}>{label}</span>
-                <span className={styles.categoryCount}>{count}</span>
-            </div>
+        const query = searchQuery.toLowerCase();
+        return allShortcuts.filter(shortcut =>
+            shortcut.label.toLowerCase().includes(query) ||
+            shortcut.key.toLowerCase().includes(query) ||
+            getCategoryLabel(shortcut.category).toLowerCase().includes(query)
         );
     }
 
     render () {
-        const {searchQuery, selectedCategory} = this.state;
-        const categories = this.getCategoriesWithCounts();
+        const {searchQuery} = this.state;
         const shortcuts = this.getFilteredShortcuts();
-        const allShortcuts = this.getAllShortcuts();
+        const hasCustom = Object.keys(this.props.customShortcuts || {}).length > 0;
 
         const groupedShortcuts = shortcuts.reduce((groups, shortcut) => {
             if (!groups[shortcut.category]) {
@@ -498,110 +435,83 @@ class ShortcutManager extends React.Component {
         }, {});
 
         const hasResults = shortcuts.length > 0;
-        const showAllSelected = !selectedCategory && !searchQuery;
-        const hasCustom = Object.keys(this.props.customShortcuts || {}).length > 0;
 
         return (
-            <WindowedModal
-                id="shortcut-manager-modal"
-                contentLabel={this.props.intl.formatMessage(messages.title)}
-                visible={this.props.visible}
-                onRequestClose={this.handleClose}
-                width={880}
-                height={550}
-            >
-                <div className={styles.container}>
-                    <div className={styles.sidebar}>
-                        <div className={styles.searchContainer}>
-                            <Search
-                                size={15}
-                                className={styles.searchIcon}
-                            />
-                            <Input
-                                type="text"
-                                placeholder={this.props.intl.formatMessage(messages.search)}
-                                value={searchQuery}
-                                onChange={this.handleSearchChange}
-                                className={styles.searchInput}
-                            />
-                        </div>
-
-                        <div className={styles.sidebarItems}>
-                            {this.renderSidebarItem(
-                                null,
-                                this.props.intl.formatMessage(messages.allShortcuts),
-                                LayoutGrid,
-                                allShortcuts.length,
-                                showAllSelected
-                            )}
-
-                            {categories.map(category => this.renderSidebarItem(
-                                category.id,
-                                category.label,
-                                CATEGORY_ICONS[category.id] || Keyboard,
-                                category.count,
-                                selectedCategory === category.id
-                            ))}
-                        </div>
-
-                        {hasCustom && (
-                            <div className={styles.sidebarFooter}>
-                                <button
-                                    className={styles.resetAllButton}
-                                    onClick={this.handleResetAll}
-                                >
-                                    <RotateCcw size={14} />
-                                    <FormattedMessage {...messages.resetAll} />
-                                </button>
-                            </div>
-                        )}
+            <div className={styles.page}>
+                <div className={styles.toolbar}>
+                    <div className={styles.searchField}>
+                        <Search
+                            size={15}
+                            className={styles.searchIcon}
+                        />
+                        <Input
+                            type="text"
+                            placeholder={this.props.intl.formatMessage(messages.search)}
+                            value={searchQuery}
+                            onChange={this.handleSearchChange}
+                            className={styles.searchInput}
+                        />
                     </div>
+                    {hasCustom && (
+                        <button
+                            className={styles.resetAllButton}
+                            onClick={this.handleResetAll}
+                            type="button"
+                        >
+                            <RotateCcw size={14} />
+                            <FormattedMessage {...messages.resetAll} />
+                        </button>
+                    )}
+                </div>
 
-                    <div className={styles.content}>
-                        {isMac && (
-                            <div className={styles.hint}>
-                                <FormattedMessage
-                                    defaultMessage="On macOS, {cmd} is Command, {opt} is Option and {shift} is Shift."
-                                    description="Explains what the macOS modifier key symbols mean"
-                                    id="shortcut-manager.macHint"
-                                    values={{
-                                        cmd: <kbd className={styles.hintKey}>{'⌘'}</kbd>,
-                                        opt: <kbd className={styles.hintKey}>{'⌥'}</kbd>,
-                                        shift: <kbd className={styles.hintKey}>{'⇧'}</kbd>
-                                    }}
-                                />
-                            </div>
-                        )}
+                <div className={styles.pageBody}>
+                    {isMac && (
+                        <div className={styles.hint}>
+                            <FormattedMessage
+                                defaultMessage="On macOS, {cmd} is Command, {opt} is Option and {shift} is Shift."
+                                description="Explains what the macOS modifier key symbols mean"
+                                id="shortcut-manager.macHint"
+                                values={{
+                                    cmd: <kbd className={styles.hintKey}>{'⌘'}</kbd>,
+                                    opt: <kbd className={styles.hintKey}>{'⌥'}</kbd>,
+                                    shift: <kbd className={styles.hintKey}>{'⇧'}</kbd>
+                                }}
+                            />
+                        </div>
+                    )}
 
-                        {hasResults ? (
-                            Object.entries(groupedShortcuts).map(([categoryId, categoryShortcuts]) => (
+                    {hasResults ? (
+                        Object.entries(groupedShortcuts).map(([categoryId, categoryShortcuts]) => {
+                            const categoryMsgKey = CATEGORY_MESSAGE_MAP[categoryId];
+                            const categoryLabel = categoryMsgKey
+                                ? this.props.intl.formatMessage(messages[categoryMsgKey])
+                                : getCategoryLabel(categoryId);
+                            return (
                                 <ShortcutCategory
                                     key={categoryId}
-                                    category={this.props.intl.formatMessage(messages[`category${categoryId.charAt(0).toUpperCase() + categoryId.slice(1)}`])}
+                                    category={getCategoryLabel(categoryId)}
                                     icon={CATEGORY_ICONS[categoryId] || Keyboard}
                                     shortcuts={categoryShortcuts}
                                     onSave={this.handleSaveShortcut}
                                     onReset={this.handleResetShortcut}
                                     getConflict={this.getConflict}
                                 />
-                            ))
-                        ) : (
-                            <div className={styles.noResults}>
-                                <Search size={28} />
-                                <FormattedMessage {...messages.noResults} />
-                            </div>
-                        )}
-                    </div>
+                            );
+                        })
+                    ) : (
+                        <div className={styles.noResults}>
+                            <Search size={28} />
+                            <FormattedMessage {...messages.noResults} />
+                        </div>
+                    )}
                 </div>
-            </WindowedModal>
+            </div>
         );
     }
 }
 
 ShortcutManager.propTypes = {
-    visible: PropTypes.bool.isRequired,
     customShortcuts: PropTypes.object,
-    onRequestClose: PropTypes.func.isRequired,
     onSetShortcut: PropTypes.func.isRequired,
     onResetShortcut: PropTypes.func.isRequired,
     onResetAllShortcuts: PropTypes.func.isRequired,
@@ -615,7 +525,6 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = dispatch => ({
-    onRequestClose: () => dispatch(closeShortcutManagerModal()),
     onSetShortcut: (id, key) => dispatch(setShortcut(id, key)),
     onResetShortcut: id => dispatch(resetShortcut(id)),
     onResetAllShortcuts: () => dispatch(resetAllShortcuts())

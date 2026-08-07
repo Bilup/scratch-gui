@@ -123,7 +123,9 @@ const LIMITS = {
     MAX_CHUNK_BYTES: 256 * 1024,
     MAX_CHUNK_COUNT: 65536,
     MAX_TRANSFER_BYTES: 512 * 1024 * 1024,
-    MAX_ASSET_REFS: 64,
+    // A sprite-add carries one ref per costume and sound, so this has to
+    // clear a realistically fat sprite, not just a costume or two.
+    MAX_ASSET_REFS: 512,
     MAX_USERS: 128
 };
 
@@ -164,6 +166,7 @@ const isUserInfo = value =>
     isPlainObject(value) &&
     isNonEmptyString(value.id, LIMITS.MAX_ID) &&
     isNonEmptyString(value.username, LIMITS.MAX_USERNAME) &&
+    isOptionalString(value.handle, LIMITS.MAX_USERNAME) &&
     typeof value.isHost === 'boolean';
 
 const isMd5Ext = value =>
@@ -333,6 +336,7 @@ const PAYLOAD_VALIDATORS = {
     [CTRL.HELLO]: payload => {
         if (!isNonNegativeInt(payload.protocolVersion)) return 'hello requires protocolVersion';
         if (!isNonEmptyString(payload.username, LIMITS.MAX_USERNAME)) return 'hello requires username';
+        if (!isOptionalString(payload.handle, LIMITS.MAX_USERNAME)) return 'hello handle must be a string';
         if (!isNonEmptyString(payload.roomId, LIMITS.MAX_ROOM_ID)) return 'hello requires roomId';
         if (typeof payload.lastAppliedSeq !== 'undefined' && !isNonNegativeInt(payload.lastAppliedSeq)) {
             return 'hello lastAppliedSeq must be a non-negative integer';
@@ -458,8 +462,18 @@ const PAYLOAD_VALIDATORS = {
     [PRESENCE.CURSOR_CHAT]: payload =>
         // Missing/empty text clears the remote chat bubble.
         (isOptionalString(payload.text, LIMITS.MAX_CHAT) ? null : 'cursor-chat text too long'),
-    [PRESENCE.EDITING_TARGET]: payload =>
-        (isOptionalString(payload.targetId, LIMITS.MAX_ID) ? null : 'editing-target invalid targetId')
+    // Where a peer is working: which sprite, which tab, and which costume or
+    // sound within that tab. Peers on older builds send targetId alone.
+    [PRESENCE.EDITING_TARGET]: payload => {
+        if (!isOptionalString(payload.targetId, LIMITS.MAX_ID)) return 'editing-target invalid targetId';
+        if (typeof payload.tab !== 'undefined' && !isNonNegativeInt(payload.tab)) {
+            return 'editing-target invalid tab';
+        }
+        if (typeof payload.assetIndex !== 'undefined' && !isNonNegativeInt(payload.assetIndex)) {
+            return 'editing-target invalid assetIndex';
+        }
+        return null;
+    }
 };
 
 /**

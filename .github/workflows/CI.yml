@@ -2,14 +2,21 @@ name: CI
 
 on:
   push:
+    branches-ignore:
+      - sync-mw
+      - web
+      - sync-mw-web
   pull_request:
-  workflow_run:
-    workflows: ["Update package-lock.json", "Update pnpm-lock.yaml"]
-    types:
-      - completed
+    branches-ignore:
+      - sync-mw
+      - web
+      - sync-mw-web
 
 permissions:
   contents: write
+
+env:
+  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
 
 jobs:
   build:
@@ -18,26 +25,26 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
-        with:
-          bun-version: latest
-          cache: true
+          cache: pnpm
+
       - name: Install dependencies
-        run: bun install
-      # # Update version.json
-      # - name: Update version.json
-      #   run: |
-      #     COMMIT_DATE=$(TZ='Asia/Shanghai' git log -1 --format=%cd --date=format:%Y-%m-%d)
-      #     jq --arg date "$COMMIT_DATE" '.latest-date = $date' src/playground/about/version.json > tmp.json && mv tmp.json src/playground/about/version.json
-      #     jq '.version_little = ((.version_little | tonumber) + 1 | tostring)' src/playground/about/version.json > tmp.json && mv tmp.json src/playground/about/version.json
-      - run: npm run build
-      # Save dist as artifact
+        run: pnpm install
+
+      - name: Build (production)
+        run: pnpm run build
+        env:
+          NODE_ENV: production
+
       - name: Upload dist
         uses: actions/upload-artifact@v4
         with:
@@ -46,12 +53,6 @@ jobs:
             static/microbit
             src/generated
             build
-      # Temp: Save package-lock.json
-      #- name: Upload package-lock.json
-      #  uses: actions/upload-artifact@v4
-      #  with:
-      #    name: package-lock.json
-      #    path: package-lock.json
 
   deploy:
     runs-on: ubuntu-latest
@@ -73,13 +74,6 @@ jobs:
       with:
         name: dist
         path: .
-
-    # Temp: Download package-lock.json
-    #- name: Download package-lock.json
-    #  uses: actions/download-artifact@v4
-    #  with:
-    #    name: package-lock.json
-    #    path: package-lock.json
 
     - name: Deploy to develop-builds
       run: |

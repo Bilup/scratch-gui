@@ -30,3 +30,5 @@ bun.lock
 # for act
 .secrets
 /.workbuddy
+.env
+/temp

@@ -9,14 +9,30 @@ import FancyCheckbox from '../tw-fancy-checkbox/checkbox.jsx';
 import Input from '../forms/input.jsx';
 import BufferedInputHOC from '../forms/buffered-input-hoc.jsx';
 import DocumentationLink from '../tw-documentation-link/documentation-link.jsx';
+import {
+    ModalSidebar,
+    ModalSidebarContent,
+    ModalSidebarGroup,
+    ModalSidebarGroupHeader,
+    ModalSidebarItem,
+    ModalSidebarLayout
+} from '../modal-sidebar/modal-sidebar.jsx';
 import styles from './settings-modal.css';
 import helpIcon from './help-icon.svg';
 import {APP_NAME} from '../../lib/constants/brand.js';
 import {STYLE_GROUPS} from '../../lib/mw-style-settings';
 import StylePreview from './style-preview.jsx';
 import MenuBarLayoutSetting from './menu-bar-layout.jsx';
+import MenuBarFeatureSettings from './menu-bar-settings.jsx';
+import {LanguagePage, ThemePage, WallpaperPage, FontsPage} from './appearance-pages.jsx';
+import LoadingScreenPage from './loading-screen-page.jsx';
+import ShortcutManager from '../shortcut-manager/shortcut-manager.jsx';
+import {takeSettingsModalInitialView} from '../../lib/settings/modal-view.js';
 
-import {Settings, Zap, Blocks, Palette, PanelTop, Bug, ChevronDown, GitBranch, Variable} from 'lucide-react';
+import {Settings, Zap, Blocks, Palette, PanelTop, Bug, GitBranch, Variable, Radio,
+    Globe, SunMoon, Wallpaper, Type, Monitor, Keyboard, ChevronLeft,
+    Hourglass} from 'lucide-react';
+import {connect} from 'react-redux';
 
 import {DEFINITIONS as DEBUGGER_SETTINGS, getSetting as getDebuggerSetting,
     setSetting as setDebuggerSetting} from '../../lib/debugger/settings.js';
@@ -26,6 +42,13 @@ import {
     getAuthorName, getAuthorEmail, setAuthorName, setAuthorEmail,
     getDefaultBranch, setDefaultBranch, getAutoCommit, setAutoCommit
 } from '../../lib/git/config.js';
+import {
+    getRoturSettings,
+    setRoturSetting,
+    formatActivityTitle,
+    formatActivityStatus
+} from '../../lib/rotur/settings.js';
+import {readActivityGrants, writeActivityGrants} from '../../lib/rotur/extension-bridge.js';
 
 const BufferedInput = BufferedInputHOC(Input);
 
@@ -39,6 +62,31 @@ const messages = defineMessages({
         defaultMessage: 'Click for help',
         description: 'Hover text of help icon in settings',
         id: 'tw.settingsModal.help'
+    },
+    settingsSectionsAria: {
+        defaultMessage: 'Settings sections',
+        description: 'Aria label for the settings sidebar',
+        id: 'mw.settings.ariaLabel'
+    },
+    desktopSystemDefault: {
+        defaultMessage: 'System default',
+        id: 'mw.settingsModal.desktop.systemDefault'
+    },
+    desktopUpdateAll: {
+        defaultMessage: 'All updates, including betas',
+        id: 'mw.settingsModal.desktop.updateAll'
+    },
+    desktopUpdateStable: {
+        defaultMessage: 'Stable updates',
+        id: 'mw.settingsModal.desktop.updateStable'
+    },
+    desktopUpdateSecurity: {
+        defaultMessage: 'Security updates only',
+        id: 'mw.settingsModal.desktop.updateSecurity'
+    },
+    desktopUpdateNever: {
+        defaultMessage: 'Never',
+        id: 'mw.settingsModal.desktop.updateNever'
     },
     headerFeatured: {
         defaultMessage: 'Featured',
@@ -88,6 +136,18 @@ const messages = defineMessages({
         defaultMessage: 'Menu Bar',
         id: 'mw.settings.menuBarHeader'
     },
+    headerMenuBarLayout: {
+        defaultMessage: 'Layout',
+        id: 'mw.settings.menuBarLayoutHeader'
+    },
+    headerMenuBarItems: {
+        defaultMessage: 'Menu Items',
+        id: 'mw.settings.menuBarItemsHeader'
+    },
+    headerAutosave: {
+        defaultMessage: 'Autosave',
+        id: 'mw.settings.autosaveHeader'
+    },
     headerDebugger: {
         defaultMessage: 'Debugger',
         id: 'mw.settings.debuggerHeader'
@@ -99,6 +159,34 @@ const messages = defineMessages({
     headerVariableManager: {
         defaultMessage: 'Variable Manager',
         id: 'mw.settings.variableManagerHeader'
+    },
+    headerRotur: {
+        defaultMessage: 'Rotur',
+        id: 'mw.settings.roturHeader'
+    },
+    activitySharingAsk: {
+        defaultMessage: 'Ask each project',
+        id: 'mw.settings.rotur.activitySharing.ask'
+    },
+    activitySharingAll: {
+        defaultMessage: 'Always allow',
+        id: 'mw.settings.rotur.activitySharing.all'
+    },
+    activitySharingOff: {
+        defaultMessage: 'Never',
+        id: 'mw.settings.rotur.activitySharing.off'
+    },
+    cloudServerPlaceholder: {
+        defaultMessage: 'ws://localhost:8000',
+        id: 'mw.settings.cloudServerPlaceholder'
+    },
+    authorEmailPlaceholder: {
+        defaultMessage: 'user@example.com',
+        id: 'mw.settings.vc.authorEmailPlaceholder'
+    },
+    defaultBranchPlaceholder: {
+        defaultMessage: 'main',
+        id: 'mw.settings.vc.defaultBranchPlaceholder'
     }
 });
 
@@ -122,46 +210,6 @@ const Header = ({children}) => (
 );
 Header.propTypes = {
     children: PropTypes.node
-};
-
-const SidebarItem = ({id, label, icon: Icon, isSelected, onClick}) => (
-    <div
-        className={classNames(styles.sidebarItem, {[styles.selected]: isSelected})}
-        onClick={() => onClick(id)}
-        title={label}
-    >
-        {Icon && <Icon className={styles.sidebarIcon} />}
-        <span className={styles.sidebarLabel}>{label}</span>
-    </div>
-);
-
-SidebarItem.propTypes = {
-    id: PropTypes.string.isRequired,
-    label: PropTypes.string.isRequired,
-    icon: PropTypes.elementType,
-    onClick: PropTypes.func.isRequired,
-    isSelected: PropTypes.bool
-};
-
-const SidebarGroupHeader = ({id, label, collapsed, onClick}) => (
-    <button
-        type="button"
-        className={styles.sidebarGroupHeader}
-        onClick={() => onClick(id)}
-        aria-expanded={!collapsed}
-    >
-        <ChevronDown
-            className={classNames(styles.sidebarGroupChevron, {[styles.collapsed]: collapsed})}
-        />
-        <span>{label}</span>
-    </button>
-);
-
-SidebarGroupHeader.propTypes = {
-    id: PropTypes.string.isRequired,
-    label: PropTypes.string.isRequired,
-    collapsed: PropTypes.bool,
-    onClick: PropTypes.func.isRequired
 };
 
 class UnwrappedSetting extends React.Component {
@@ -455,6 +503,30 @@ const settingDefinitions = {
             id: 'mw.settingsModal.hideOperatorArrowsHelp'
         }
     },
+    vanillaPalette: {
+        label: {
+            defaultMessage: 'Vanilla Compatible Blocks Only',
+            id: 'mw.settingsModal.vanillaPalette'
+        },
+        help: {
+            defaultMessage: 'Hides blocks that vanilla Scratch cannot run, such as the return block, ' +
+                'the switch/case blocks, extra Strings blocks and the whole Assets category. ' +
+                'Extendable operators stay ' +
+                'visible because they are saved in a vanilla compatible way.',
+            id: 'mw.settingsModal.vanillaPaletteHelp'
+        }
+    },
+    unclipPalette: {
+        label: {
+            defaultMessage: 'Unclip Block Palette',
+            id: 'mw.settingsModal.unclipPalette'
+        },
+        help: {
+            defaultMessage: 'While the block palette is hovered, blocks that are wider than the ' +
+                'palette overflow past its edge instead of being cut off.',
+            id: 'mw.settingsModal.unclipPaletteHelp'
+        }
+    },
     showPauseButton: {
         label: {
             defaultMessage: 'Show Pause Button',
@@ -547,6 +619,8 @@ const HideDeleteButton = createBooleanSetting('HideDeleteButton', settingDefinit
 const HideExtensionButton = createBooleanSetting('HideExtensionButton', settingDefinitions.hideExtensionButton);
 const HideBackpack = createBooleanSetting('HideBackpack', settingDefinitions.hideBackpack);
 const HideOperatorArrows = createBooleanSetting('HideOperatorArrows', settingDefinitions.hideOperatorArrows);
+const UnclipPalette = createBooleanSetting('UnclipPalette', settingDefinitions.unclipPalette);
+const VanillaPalette = createBooleanSetting('VanillaPalette', settingDefinitions.vanillaPalette);
 
 const DisableCompiler = props => (
     <BooleanSetting
@@ -687,18 +761,30 @@ const TabLooksSelect = props => (
 );
 TabLooksSelect.propTypes = {value: PropTypes.string, onChange: PropTypes.func, intl: intlShape};
 
-const WindowStyleSelect = props => (
-    <StyleSelect
-        groupId="window-style"
-        label={<FormattedMessage
-            defaultMessage="Window Style"
-            id="mw.settingsModal.windowStyle"
-        />}
-        value={props.value}
-        onChange={props.onChange}
-        intl={props.intl}
-    />
-);
+const WindowStyleSelect = props => {
+    if (typeof window.EditorPreload !== 'undefined') {
+        return (
+            <p>
+                <FormattedMessage
+                    defaultMessage="Cannot set custom window styling on desktop"
+                    id="mw.settingsModal.windowStyleDesktop"
+                />
+            </p>
+        );
+    }
+    return (
+        <StyleSelect
+            groupId="window-style"
+            label={<FormattedMessage
+                defaultMessage="Window Style"
+                id="mw.settingsModal.windowStyle"
+            />}
+            value={props.value}
+            onChange={props.onChange}
+            intl={props.intl}
+        />
+    );
+};
 WindowStyleSelect.propTypes = {value: PropTypes.string, onChange: PropTypes.func, intl: intlShape};
 
 const CustomFPS = ({framerate, onChange, onCustomizeFramerate}) => (
@@ -813,7 +899,9 @@ CustomStageSize.propTypes = {
     onStageHeightChange: PropTypes.func
 };
 
-const CloudVariableServer = props => (
+const CloudVariableServer = props => {
+    const {intl} = props;
+    return (
     <Setting
         primary={
             <div className={classNames(styles.label, styles['cloud-variable-server'])}>
@@ -827,7 +915,7 @@ const CloudVariableServer = props => (
                     onSubmit={props.onCloudVariableServerChange}
                     className={styles['cloud-variable-server-input']}
                     type="text"
-                    placeholder="ws://localhost:8000"
+                    placeholder={intl.formatMessage(messages.cloudServerPlaceholder)}
                 />
             </div>
         }
@@ -839,12 +927,13 @@ const CloudVariableServer = props => (
                 id="tw.settingsModal.cloudVariableServerHelp"
             />
         }
-    />
-);
+    />);
+};
 
 CloudVariableServer.propTypes = {
     cloudVariableServer: PropTypes.string,
-    onCloudVariableServerChange: PropTypes.func
+    onCloudVariableServerChange: PropTypes.func,
+    intl: intlShape
 };
 
 const StoreProjectOptions = ({
@@ -1053,6 +1142,20 @@ const pageConfigurations = {
                             value: props.hideOperatorArrows,
                             onChange: props.onHideOperatorArrowsChange
                         })
+                    },
+                    {
+                        component: UnclipPalette,
+                        props: props => ({
+                            value: props.unclipPalette,
+                            onChange: props.onUnclipPaletteChange
+                        })
+                    },
+                    {
+                        component: VanillaPalette,
+                        props: props => ({
+                            value: props.vanillaPalette,
+                            onChange: props.onVanillaPaletteChange
+                        })
                     }
                 ]
             },
@@ -1110,11 +1213,45 @@ const pageConfigurations = {
     menuBar: {
         sections: [
             {
-                headerMessage: 'headerMenuBar',
+                headerMessage: 'headerMenuBarLayout',
                 settings: [
                     {
                         component: MenuBarLayoutSetting,
                         props: () => ({})
+                    }
+                ]
+            },
+            {
+                headerMessage: 'headerMenuBarItems',
+                settings: [
+                    {
+                        component: MenuBarFeatureSettings,
+                        props: () => ({
+                            ids: [
+                                'menu_labels',
+                                'show_block_count',
+                                'show_costume_count',
+                                'show_sound_count',
+                                'show_complexity_score',
+                                'show_media_recorder'
+                            ]
+                        })
+                    }
+                ]
+            },
+            {
+                headerMessage: 'headerAutosave',
+                settings: [
+                    {
+                        component: MenuBarFeatureSettings,
+                        props: () => ({
+                            ids: [
+                                'autosave_enabled',
+                                'autosave_interval',
+                                'autosave_notifications',
+                                'autosave_only_when_changed'
+                            ]
+                        })
                     }
                 ]
             }
@@ -1323,7 +1460,7 @@ class UnwrappedVersionControlPage extends React.Component {
                     />}
                     value={this.state.authorEmail}
                     onSubmit={this.handleEmailChange}
-                    placeholder="user@example.com"
+                    placeholder={intl.formatMessage(messages.authorEmailPlaceholder)}
                 />
                 <TextSetting
                     label={<FormattedMessage
@@ -1336,7 +1473,7 @@ class UnwrappedVersionControlPage extends React.Component {
                     />}
                     value={this.state.defaultBranch}
                     onSubmit={this.handleBranchChange}
-                    placeholder="main"
+                    placeholder={intl.formatMessage(messages.defaultBranchPlaceholder)}
                 />
                 <BooleanSetting
                     value={this.state.autoCommit}
@@ -1472,10 +1609,417 @@ UnwrappedVariableManagerPage.propTypes = {
 };
 const VariableManagerPage = injectIntl(UnwrappedVariableManagerPage);
 
+class UnwrappedRoturPage extends React.Component {
+    constructor (props) {
+        super(props);
+        bindAll(this, [
+            'handlePresenceChange',
+            'handleIncludeDurationChange',
+            'handleActivitySharingChange',
+            'handleResetActivityGrants'
+        ]);
+        this.state = {...getRoturSettings(), activityGrantCount: Object.keys(readActivityGrants()).length};
+    }
+    setSetting (key, value) {
+        setRoturSetting(key, value);
+        this.setState({[key]: value});
+    }
+    handlePresenceChange (e) {
+        this.setSetting('presenceEnabled', e.target.checked);
+    }
+    handleIncludeDurationChange (e) {
+        this.setSetting('includeEditDuration', e.target.checked);
+    }
+    handleActivitySharingChange (e) {
+        this.setSetting('activitySharing', e.target.value);
+    }
+    handleResetActivityGrants () {
+        writeActivityGrants({});
+        this.setState({activityGrantCount: 0});
+    }
+    render () {
+        const {intl, loggedIn, username, projectTitle} = this.props;
+        const {presenceEnabled, includeEditDuration, activitySharing, activityGrantCount} = this.state;
+
+        return (
+            <Box className={styles.body}>
+                <Header>{intl.formatMessage(messages.headerRotur)}</Header>
+                <p className={styles.detail}>
+                    {loggedIn ? (
+                        <FormattedMessage
+                            defaultMessage="Signed in as {username}. These options control how Bilup appears on your Bilup Accounts profile."
+                            id="mw.settings.rotur.signedInAs"
+                            values={{username}}
+                        />
+                    ) : (
+                        <FormattedMessage
+                            defaultMessage="Log in with Bilup Accounts from the top-right of the menu bar to publish presence."
+                            id="mw.settings.rotur.notSignedIn"
+                        />
+                    )}
+                </p>
+
+                <BooleanSetting
+                    value={presenceEnabled}
+                    onChange={this.handlePresenceChange}
+                    label={<FormattedMessage
+                        defaultMessage="Show Bilup activity on Bilup Accounts"
+                        id="mw.settings.rotur.presenceEnabled"
+                    />}
+                    help={<FormattedMessage
+                        defaultMessage="When signed in, friends on Bilup Accounts can see that you are editing in Bilup."
+                        id="mw.settings.rotur.presenceEnabledHelp"
+                    />}
+                />
+                <BooleanSetting
+                    value={includeEditDuration}
+                    onChange={this.handleIncludeDurationChange}
+                    label={<FormattedMessage
+                        defaultMessage="Show how long I've been editing"
+                        id="mw.settings.rotur.includeEditDuration"
+                    />}
+                    help={<FormattedMessage
+                        defaultMessage="Uses Bilup Accounts's elapsed timer. Not added to the title or status text."
+                        id="mw.settings.rotur.includeEditDurationHelp"
+                    />}
+                />
+
+                <div className={styles.setting}>
+                    <div className={styles.textSettingLabel}>
+                        <FormattedMessage
+                            defaultMessage="Let projects show activity on your profile"
+                            id="mw.settings.rotur.activitySharing"
+                        />
+                    </div>
+                    <select
+                        value={activitySharing}
+                        onChange={this.handleActivitySharingChange}
+                    >
+                        <option value="ask">{intl.formatMessage(messages.activitySharingAsk)}</option>
+                        <option value="all">{intl.formatMessage(messages.activitySharingAll)}</option>
+                        <option value="off">{intl.formatMessage(messages.activitySharingOff)}</option>
+                    </select>
+                    <p className={styles.detail}>
+                        <FormattedMessage
+                            // eslint-disable-next-line max-len
+                            defaultMessage="Projects can show what you're playing on your profile. Be asked per project, always allow, or never."
+                            id="mw.settings.rotur.activitySharingHelp"
+                        />
+                    </p>
+                    {activityGrantCount > 0 ? (
+                        <button
+                            className={styles.button}
+                            onClick={this.handleResetActivityGrants}
+                        >
+                            <FormattedMessage
+                                defaultMessage="Reset per-project choices ({count})"
+                                id="mw.settings.rotur.resetActivityGrants"
+                                values={{count: activityGrantCount}}
+                            />
+                        </button>
+                    ) : null}
+                </div>
+
+                <p className={styles.detail}>
+                    <FormattedMessage
+                        defaultMessage="Themes and settings sync to your Bilup Accounts account when signed in."
+                        id="mw.settings.rotur.cloudSyncNote"
+                    />
+                </p>
+
+                <div className={styles.setting}>
+                    <div className={styles.textSettingLabel}>
+                        <FormattedMessage
+                            defaultMessage="Preview"
+                            id="mw.settings.rotur.preview"
+                        />
+                    </div>
+                    <p className={styles.detail}>
+                        <strong>{APP_NAME}</strong>
+                        <br />
+                        {formatActivityTitle()}
+                        <br />
+                        {formatActivityStatus(projectTitle)}
+                        {includeEditDuration ? (
+                            <React.Fragment>
+                                <br />
+                                <em>
+                                    <FormattedMessage
+                                        defaultMessage="(+ live edit timer on Rotur)"
+                                        id="mw.settings.rotur.previewTimer"
+                                    />
+                                </em>
+                            </React.Fragment>
+                        ) : null}
+                        {!presenceEnabled ? (
+                            <React.Fragment>
+                                <br />
+                                <em>
+                                    <FormattedMessage
+                                        defaultMessage="(Presence is disabled — nothing is published.)"
+                                        id="mw.settings.rotur.previewDisabled"
+                                    />
+                                </em>
+                            </React.Fragment>
+                        ) : null}
+                    </p>
+                </div>
+            </Box>
+        );
+    }
+}
+UnwrappedRoturPage.propTypes = {
+    intl: intlShape.isRequired,
+    loggedIn: PropTypes.bool,
+    username: PropTypes.string,
+    projectTitle: PropTypes.string
+};
+const RoturPage = injectIntl(connect(
+    state => ({
+        loggedIn: Boolean(state.scratchGui.rotur && state.scratchGui.rotur.username),
+        username: state.scratchGui.rotur ? state.scratchGui.rotur.username : null,
+        projectTitle: state.scratchGui.projectTitle
+    })
+)(UnwrappedRoturPage));
+
+const DesktopSelectSetting = ({label, help, value, options, onChange}) => (
+    <Setting
+        help={help}
+        primary={
+            <div className={styles.label}>
+                <span className={styles.settingText}>{label}</span>
+                <select
+                    className={styles.select}
+                    value={value}
+                    onChange={onChange}
+                >
+                    {options.map(option => (
+                        <option
+                            key={option.value}
+                            value={option.value}
+                        >
+                            {option.label}
+                        </option>
+                    ))}
+                </select>
+            </div>
+        }
+    />
+);
+DesktopSelectSetting.propTypes = {
+    label: PropTypes.node,
+    help: PropTypes.node,
+    value: PropTypes.string,
+    options: PropTypes.arrayOf(PropTypes.shape({
+        value: PropTypes.string,
+        label: PropTypes.node
+    })),
+    onChange: PropTypes.func
+};
+
+class DesktopPage extends React.Component {
+    constructor (props) {
+        super(props);
+        this.state = {
+            settings: null,
+            devices: []
+        };
+    }
+
+    componentDidMount () {
+        try {
+            this.setState({settings: window.EditorPreload.getDesktopSettings()});
+        } catch (e) {
+            this.setState({settings: null});
+        }
+        navigator.mediaDevices.enumerateDevices()
+            .then(devices => this.setState({devices}))
+            .catch(() => {});
+    }
+
+    set (key, value) {
+        this.setState(prevState => ({
+            settings: {
+                ...prevState.settings,
+                [key]: value
+            }
+        }));
+        window.EditorPreload.setDesktopSetting(key, value);
+    }
+
+    renderDeviceSelect (key, label, help, kind) {
+        const {intl} = this.props;
+        const devices = this.state.devices.filter(device => device.kind === kind);
+        return (
+            <DesktopSelectSetting
+                label={label}
+                help={help}
+                value={this.state.settings[key] || ''}
+                options={[
+                    {
+                        value: '',
+                        label: intl.formatMessage(messages.desktopSystemDefault)
+                    },
+                    ...devices.map(device => ({
+                        value: device.deviceId,
+                        label: device.label || device.deviceId
+                    }))
+                ]}
+                onChange={e => this.set(key, e.target.value || null)}
+            />
+        );
+    }
+
+    render () {
+        const s = this.state.settings;
+        const {intl} = this.props;
+        if (!s) {
+            return null;
+        }
+        return (
+            <Box className={styles.pageContent}>
+                {s.updateCheckerAllowed ? (
+                    <DesktopSelectSetting
+                        label={<FormattedMessage
+                            defaultMessage="Update notifications"
+                            id="mw.settingsModal.desktop.updateChecker"
+                        />}
+                        help={<FormattedMessage
+                            defaultMessage="Controls which app updates you are notified about. Security updates only shows the most important releases; Never disables the update check entirely."
+                            id="mw.settingsModal.desktop.updateCheckerHelp"
+                        />}
+                        value={s.updateChecker}
+                        options={[
+                            {value: 'unstable',
+                                label: intl.formatMessage(messages.desktopUpdateAll)},
+                            {value: 'stable',
+                                label: intl.formatMessage(messages.desktopUpdateStable)},
+                            {value: 'security',
+                                label: intl.formatMessage(messages.desktopUpdateSecurity)},
+                            {value: 'never',
+                                label: intl.formatMessage(messages.desktopUpdateNever)}
+                        ]}
+                        onChange={e => this.set('updateChecker', e.target.value)}
+                    />
+                ) : null}
+                {this.renderDeviceSelect('microphone', (<FormattedMessage
+                    defaultMessage="Microphone"
+                    id="mw.settingsModal.desktop.microphone"
+                />), (<FormattedMessage
+                    defaultMessage="The input device projects use to record audio, such as the microphone extension."
+                    id="mw.settingsModal.desktop.microphoneHelp"
+                />), 'audioinput')}
+                {this.renderDeviceSelect('camera', (<FormattedMessage
+                    defaultMessage="Camera"
+                    id="mw.settingsModal.desktop.camera"
+                />), (<FormattedMessage
+                    defaultMessage="The camera projects use for video sensing."
+                    id="mw.settingsModal.desktop.cameraHelp"
+                />), 'videoinput')}
+                <BooleanSetting
+                    value={!!s.hardwareAcceleration}
+                    onChange={value => this.set('hardwareAcceleration', value)}
+                    label={<FormattedMessage
+                        defaultMessage="Hardware acceleration (requires restart)"
+                        id="mw.settingsModal.desktop.hardwareAcceleration"
+                    />}
+                    help={<FormattedMessage
+                        defaultMessage="Uses the GPU to speed up rendering. Turn this off if you see graphical glitches or crashes on your system."
+                        id="mw.settingsModal.desktop.hardwareAccelerationHelp"
+                    />}
+                />
+                <BooleanSetting
+                    value={!!s.backgroundThrottling}
+                    onChange={value => this.set('backgroundThrottling', value)}
+                    label={<FormattedMessage
+                        defaultMessage="Pause when the window is not visible"
+                        id="mw.settingsModal.desktop.backgroundThrottling"
+                    />}
+                    help={<FormattedMessage
+                        defaultMessage="Slows down projects while the window is hidden or minimized to save power. Disable this if projects need to keep running in the background."
+                        id="mw.settingsModal.desktop.backgroundThrottlingHelp"
+                    />}
+                />
+                <BooleanSetting
+                    value={!!s.bypassCORS}
+                    onChange={value => this.set('bypassCORS', value)}
+                    label={<FormattedMessage
+                        defaultMessage="Allow projects to access any website (requires restart, dangerous)"
+                        id="mw.settingsModal.desktop.bypassCORS"
+                    />}
+                    help={<FormattedMessage
+                        defaultMessage="Lets projects fetch data from websites that would normally block them. Only enable this for projects you trust, as it removes a security protection."
+                        id="mw.settingsModal.desktop.bypassCORSHelp"
+                    />}
+                />
+                <BooleanSetting
+                    value={!!s.spellchecker}
+                    onChange={value => this.set('spellchecker', value)}
+                    label={<FormattedMessage
+                        defaultMessage="Spellchecker (requires restart)"
+                        id="mw.settingsModal.desktop.spellchecker"
+                    />}
+                    help={<FormattedMessage
+                        defaultMessage="Underlines misspelled words in text fields like the ask block prompt and costume names."
+                        id="mw.settingsModal.desktop.spellcheckerHelp"
+                    />}
+                />
+                <BooleanSetting
+                    value={!!s.exitFullscreenOnEscape}
+                    onChange={value => this.set('exitFullscreenOnEscape', value)}
+                    label={<FormattedMessage
+                        defaultMessage="Exit fullscreen when escape is pressed"
+                        id="mw.settingsModal.desktop.exitFullscreenOnEscape"
+                    />}
+                    help={<FormattedMessage
+                        defaultMessage="Lets the Escape key leave fullscreen mode. Disable this if your project uses Escape for its own controls."
+                        id="mw.settingsModal.desktop.exitFullscreenOnEscapeHelp"
+                    />}
+                />
+                {s.richPresenceAvailable ? (
+                    <BooleanSetting
+                        value={!!s.richPresence}
+                        onChange={value => this.set('richPresence', value)}
+                        label={<FormattedMessage
+                            defaultMessage="Discord rich presence"
+                            id="mw.settingsModal.desktop.richPresence"
+                        />}
+                        help={<FormattedMessage
+                            defaultMessage="Shows that you are using Bilup on your Discord profile while the app is open."
+                            id="mw.settingsModal.desktop.richPresenceHelp"
+                        />}
+                    />
+                ) : null}
+                <button
+                    className={styles.button}
+                    onClick={() => window.EditorPreload.openUserData()}
+                >
+                    <FormattedMessage
+                        defaultMessage="Open user data folder"
+                        id="mw.settingsModal.desktop.openUserData"
+                    />
+                </button>
+            </Box>
+        );
+    }
+}
+
 const SettingsRouter = ({view, ...handlers}) => {
     switch (view) {
     case 'general':
         return <GeneralPage {...handlers} />;
+    case 'language':
+        return <LanguagePage />;
+    case 'shortcuts':
+        return <ShortcutManager />;
+    case 'theme':
+        return <ThemePage />;
+    case 'wallpaper':
+        return <WallpaperPage />;
+    case 'fonts':
+        return <FontsPage />;
+    case 'loadingScreen':
+        return <LoadingScreenPage />;
     case 'debugger':
         return <DebuggerPage {...handlers} />;
     case 'versionControl':
@@ -1488,6 +2032,10 @@ const SettingsRouter = ({view, ...handlers}) => {
         return <StylesPage {...handlers} />;
     case 'menuBar':
         return <MenuBarPage {...handlers} />;
+    case 'rotur':
+        return <RoturPage {...handlers} />;
+    case 'desktop':
+        return <DesktopPage {...handlers} />;
     case 'experimental':
         return <ExperimentalPage {...handlers} />;
     default:
@@ -1503,16 +2051,26 @@ SettingsRouter.propTypes = {
 class SettingsModalComponent extends React.Component {
     constructor (props) {
         super(props);
-        bindAll(this, ['handleNavigate', 'handleStoreProjectOptions', 'handleToggleGroup']);
+        bindAll(this, [
+            'handleNavigate',
+            'handleStoreProjectOptions',
+            'handleToggleGroup',
+            'handleMobileBack'
+        ]);
 
         this.state = {
-            currentView: 'general',
-            collapsedGroups: {}
+            currentView: takeSettingsModalInitialView() || 'general',
+            collapsedGroups: {},
+            mobileView: 'list'
         };
     }
 
     handleNavigate (category) {
-        this.setState({currentView: category});
+        this.setState({currentView: category, mobileView: 'content'});
+    }
+
+    handleMobileBack () {
+        this.setState({mobileView: 'list'});
     }
 
     handleToggleGroup (groupId) {
@@ -1541,6 +2099,19 @@ class SettingsModalComponent extends React.Component {
                         id: 'general',
                         label: intl.formatMessage({id: 'mw.settings.general', defaultMessage: 'General'}),
                         icon: Settings
+                    },
+                    {
+                        id: 'language',
+                        label: intl.formatMessage({id: 'gui.menuBar.language', defaultMessage: 'Language'}),
+                        icon: Globe
+                    },
+                    {
+                        id: 'shortcuts',
+                        label: intl.formatMessage({
+                            id: 'tw.menuBar.keyboardShortcuts',
+                            defaultMessage: 'Keyboard Shortcuts'
+                        }),
+                        icon: Keyboard
                     }
                 ]
             },
@@ -1548,6 +2119,21 @@ class SettingsModalComponent extends React.Component {
                 id: 'appearance',
                 label: intl.formatMessage({id: 'mw.settings.groupAppearance', defaultMessage: 'Appearance'}),
                 items: [
+                    {
+                        id: 'theme',
+                        label: intl.formatMessage({id: 'tw.menuBar.theme', defaultMessage: 'Theme'}),
+                        icon: SunMoon
+                    },
+                    {
+                        id: 'wallpaper',
+                        label: intl.formatMessage({id: 'tw.menuBar.wallpaper', defaultMessage: 'Wallpaper'}),
+                        icon: Wallpaper
+                    },
+                    {
+                        id: 'fonts',
+                        label: intl.formatMessage({id: 'tw.menuBar.fonts', defaultMessage: 'Fonts'}),
+                        icon: Type
+                    },
                     {
                         id: 'editor',
                         label: intl.formatMessage({id: 'mw.settings.editor', defaultMessage: 'Editor'}),
@@ -1562,6 +2148,14 @@ class SettingsModalComponent extends React.Component {
                         id: 'menuBar',
                         label: intl.formatMessage({id: 'mw.settings.menuBar', defaultMessage: 'Menu Bar'}),
                         icon: PanelTop
+                    },
+                    {
+                        id: 'loadingScreen',
+                        label: intl.formatMessage({
+                            id: 'mw.settings.loadingScreen',
+                            defaultMessage: 'Loading Screen'
+                        }),
+                        icon: Hourglass
                     }
                 ]
             },
@@ -1589,6 +2183,11 @@ class SettingsModalComponent extends React.Component {
                         id: 'debugger',
                         label: intl.formatMessage({id: 'mw.settings.debugger', defaultMessage: 'Debugger'}),
                         icon: Bug
+                    },
+                    {
+                        id: 'rotur',
+                        label: intl.formatMessage({id: 'mw.settings.rotur', defaultMessage: 'Bilup Accounts'}),
+                        icon: Radio
                     }
                 ]
             },
@@ -1605,6 +2204,20 @@ class SettingsModalComponent extends React.Component {
             }
         ];
 
+        if (typeof window.EditorPreload !== 'undefined') {
+            sidebarGroups.splice(sidebarGroups.length - 1, 0, {
+                id: 'desktop',
+                label: intl.formatMessage({id: 'mw.settings.groupDesktop', defaultMessage: 'Desktop'}),
+                items: [
+                    {
+                        id: 'desktop',
+                        label: intl.formatMessage({id: 'mw.settings.desktop', defaultMessage: 'Desktop'}),
+                        icon: Monitor
+                    }
+                ]
+            });
+        }
+
         return (
             <Modal
                 className={styles.modalContent}
@@ -1614,45 +2227,53 @@ class SettingsModalComponent extends React.Component {
                 width={880}
                 height={550}
             >
-                <Box className={styles.sidebarLayout}>
-                    <div className={styles.sidebar}>
-                        <div className={styles.sidebarItems}>
-                            {sidebarGroups.map(group => {
-                                const collapsed = !!this.state.collapsedGroups[group.id];
-                                return (
-                                    <div
-                                        key={group.id}
-                                        className={styles.sidebarGroup}
-                                    >
-                                        <SidebarGroupHeader
-                                            id={group.id}
-                                            label={group.label}
-                                            collapsed={collapsed}
-                                            onClick={this.handleToggleGroup}
+                <ModalSidebarLayout mobileView={this.state.mobileView}>
+                    <ModalSidebar
+                        ariaLabel={intl.formatMessage(messages.settingsSectionsAria)}
+                        width="wide"
+                    >
+                        {sidebarGroups.map(group => {
+                            const collapsed = !!this.state.collapsedGroups[group.id];
+                            return (
+                                <ModalSidebarGroup key={group.id}>
+                                    <ModalSidebarGroupHeader
+                                        collapsible
+                                        collapsed={collapsed}
+                                        label={group.label}
+                                        onClick={() => this.handleToggleGroup(group.id)}
+                                    />
+                                    {!collapsed && group.items.map(cat => (
+                                        <ModalSidebarItem
+                                            key={cat.id}
+                                            icon={cat.icon}
+                                            label={cat.label}
+                                            selected={currentView === cat.id}
+                                            onClick={() => this.handleNavigate(cat.id)}
                                         />
-                                        {!collapsed && group.items.map(cat => (
-                                            <SidebarItem
-                                                key={cat.id}
-                                                id={cat.id}
-                                                label={cat.label}
-                                                icon={cat.icon}
-                                                onClick={this.handleNavigate}
-                                                isSelected={currentView === cat.id}
-                                            />
-                                        ))}
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                    <div className={styles.contentArea}>
+                                    ))}
+                                </ModalSidebarGroup>
+                            );
+                        })}
+                    </ModalSidebar>
+                    <ModalSidebarContent className={styles.contentArea}>
+                        <button
+                            className={styles.mobileBackButton}
+                            onClick={this.handleMobileBack}
+                        >
+                            <ChevronLeft size={18} />
+                            <FormattedMessage
+                                defaultMessage="Settings"
+                                description="Back button in the settings window on mobile"
+                                id="tw.settingsModal.back"
+                            />
+                        </button>
                         <SettingsRouter
                             view={currentView}
                             {...this.props}
                             onStoreProjectOptions={this.handleStoreProjectOptions}
                         />
-                    </div>
-                </Box>
+                    </ModalSidebarContent>
+                </ModalSidebarLayout>
             </Modal>
         );
     }
@@ -1689,10 +2310,14 @@ SettingsModalComponent.propTypes = {
     onHideDeleteButtonChange: PropTypes.func,
     hideExtensionButton: PropTypes.bool,
     onHideExtensionButtonChange: PropTypes.func,
+    unclipPalette: PropTypes.bool,
+    onUnclipPaletteChange: PropTypes.func,
     hideBackpack: PropTypes.bool,
     onHideBackpackChange: PropTypes.func,
     hideOperatorArrows: PropTypes.bool,
     onHideOperatorArrowsChange: PropTypes.func,
+    vanillaPalette: PropTypes.bool,
+    onVanillaPaletteChange: PropTypes.func,
     tabStyle: PropTypes.string,
     onTabStyleChange: PropTypes.func,
     tabLooks: PropTypes.string,

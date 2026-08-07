@@ -25,8 +25,9 @@ import {
     setCollaborationRoomPrivacy,
     setCollaborationLoading,
     setCollaborationHostLoadingProgress,
-    setSpriteEditor,
-    removeSpriteEditor
+    setCollaborationReconnecting,
+    setUserActivity,
+    removeUserActivity
 } from '../reducers/collaboration';
 
 import {
@@ -79,6 +80,8 @@ class CollaborationContainer extends Component {
         this.handleProjectSyncWait = this.handleProjectSyncWait.bind(this);
         this.handleSessionReady = this.handleSessionReady.bind(this);
         this.handlePresenceEditingChanged = this.handlePresenceEditingChanged.bind(this);
+        this.handleReconnecting = this.handleReconnecting.bind(this);
+        this.handleReconnected = this.handleReconnected.bind(this);
     }
 
     componentDidMount () {
@@ -122,6 +125,8 @@ class CollaborationContainer extends Component {
         this.collaborationService.on('project-sync-wait', this.handleProjectSyncWait);
         this.collaborationService.on('session-ready', this.handleSessionReady);
         this.collaborationService.on('presence-editing-changed', this.handlePresenceEditingChanged);
+        this.collaborationService.on('reconnecting', this.handleReconnecting);
+        this.collaborationService.on('reconnected', this.handleReconnected);
 
         this.projectSyncProgress = 0;
         this.projectSyncLoadingBar = null;
@@ -133,6 +138,12 @@ class CollaborationContainer extends Component {
             console.log('Shortcuts updated in Redux:', this.props.customShortcuts);
             this.collaborationService.customShortcuts = this.props.customShortcuts;
             console.log('CollaborationService customShortcuts updated:', this.collaborationService.customShortcuts);
+        }
+
+        // The tabs are the one piece of our activity this container owns; the
+        // sprite and the costume/sound index are reported by their own panes.
+        if (this.props.activeTabIndex !== prevProps.activeTabIndex) {
+            this.collaborationService.setActivity({tab: this.props.activeTabIndex});
         }
     }
 
@@ -161,6 +172,13 @@ class CollaborationContainer extends Component {
         this.collaborationService.off('project-sync-wait', this.handleProjectSyncWait);
         this.collaborationService.off('session-ready', this.handleSessionReady);
         this.collaborationService.off('presence-editing-changed', this.handlePresenceEditingChanged);
+        this.collaborationService.off('reconnecting', this.handleReconnecting);
+        this.collaborationService.off('reconnected', this.handleReconnected);
+
+        if (this.attachTimeout) {
+            clearTimeout(this.attachTimeout);
+            this.attachTimeout = null;
+        }
 
         // Clear waiting overlay if it exists
         this.clearWaitingOverlay();
@@ -178,7 +196,7 @@ class CollaborationContainer extends Component {
         try {
             this.props.onSetError(null);
 
-            await this.collaborationService.connectToRoom(roomId, username, false);
+            await this.collaborationService.connectToRoom(roomId, username, false, 'public', this.props.roturHandle);
 
             // Don't set connected immediately - wait for connected-to-host event
             this.props.onSetRoomId(roomId);
@@ -207,7 +225,7 @@ class CollaborationContainer extends Component {
         try {
             this.props.onSetError(null);
 
-            await this.collaborationService.connectToRoom(roomId, username, true, privacy);
+            await this.collaborationService.connectToRoom(roomId, username, true, privacy, this.props.roturHandle);
 
             // For hosts, set connected immediately since they're always connected
             this.props.onSetConnected(true);
@@ -233,6 +251,10 @@ class CollaborationContainer extends Component {
     }
 
     tryAttachToWorkspace () {
+        if (this.attachTimeout) {
+            clearTimeout(this.attachTimeout);
+            this.attachTimeout = null;
+        }
         // Try to find the Blockly workspace via AddonHooks
         if (window.AddonHooks && window.AddonHooks.blocklyWorkspace) {
             this.collaborationService.attachToWorkspace(window.AddonHooks.blocklyWorkspace);
@@ -240,16 +262,15 @@ class CollaborationContainer extends Component {
             // Fallback to global Blockly workspace
             const workspace = window.Blockly.getMainWorkspace();
             this.collaborationService.attachToWorkspace(workspace);
-        } else {
-            // If workspace isn't available yet, try again after a short delay
-            setTimeout(() => {
+        } else if (this.collaborationService.isConnected) {
+            this.attachTimeout = setTimeout(() => {
+                this.attachTimeout = null;
                 this.tryAttachToWorkspace();
             }, 500);
         }
     }
 
     handleWorkspaceReattach () {
-        console.log('🔄 Handling workspace reattach request');
         this.tryAttachToWorkspace();
     }
 
@@ -346,8 +367,10 @@ class CollaborationContainer extends Component {
     handleUsernameChanged (user) {
         console.log('Username changed:', user);
 
-        // If this is our own username change from another client, update local state
+        // If this is our own username change from another client, update local state.
+        // When signed into Bilup Accounts the two names are separate, so don't clobber the project name.
         if (
+            !this.props.roturHandle &&
             user.id === this.getCurrentUserId() &&
             user.username !== this.props.currentUsername
         ) this.props.onSetUsername(user.username);
@@ -405,9 +428,10 @@ class CollaborationContainer extends Component {
         // Now we're actually connected and can show the connected UI
         this.props.onSetConnected(true);
 
-        // Sync username with collaboration service
+        // Sync username with collaboration service (guests only; see handleUsernameChanged)
         const serviceUsername = this.collaborationService.username;
         if (
+            !this.props.roturHandle &&
             serviceUsername &&
             serviceUsername !== this.props.currentUsername
         ) this.props.onSetUsername(serviceUsername);
@@ -679,13 +703,21 @@ class CollaborationContainer extends Component {
         this.clearWaitingOverlay();
     }
 
-    handlePresenceEditingChanged ({userId, username, targetId, previousTargetId}) {
-        if (previousTargetId) {
-            this.props.onRemoveSpriteEditor(previousTargetId, userId);
+    handleReconnecting () {
+        this.props.onSetReconnecting(true);
+    }
+
+    handleReconnected () {
+        this.props.onSetReconnecting(false);
+        NotificationSystem.info('Reconnected to the collaboration room', 3000);
+    }
+
+    handlePresenceEditingChanged ({userId, username, handle, activity}) {
+        if (!activity) {
+            this.props.onRemoveUserActivity(userId);
+            return;
         }
-        if (targetId) {
-            this.props.onSetSpriteEditor(targetId, userId, username, Date.now());
-        }
+        this.props.onSetUserActivity(Object.assign({userId, username, handle}, activity));
     }
 
     render () {
@@ -694,10 +726,13 @@ class CollaborationContainer extends Component {
                 visible={this.props.isVisible}
                 currentUsername={this.props.currentUsername}
                 currentUserId={this.getCurrentUserId()}
+                roturHandle={this.props.roturHandle}
                 isConnected={this.props.isConnected}
                 roomId={this.props.roomId}
                 roomPrivacy={this.props.roomPrivacy}
                 connectedUsers={this.props.connectedUsers}
+                userActivity={this.props.userActivity}
+                vm={this.props.vm}
                 connectionError={this.props.connectionError}
                 customShortcuts={this.props.customShortcuts}
                 onRequestClose={this.props.onRequestClose}
@@ -725,6 +760,7 @@ CollaborationContainer.propTypes = {
     connectedUsers: PropTypes.array.isRequired,
     connectionError: PropTypes.string,
     currentUsername: PropTypes.string,
+    roturHandle: PropTypes.string,
     vm: PropTypes.object.isRequired,
     onRequestClose: PropTypes.func.isRequired,
     onSetConnected: PropTypes.func.isRequired,
@@ -735,9 +771,13 @@ CollaborationContainer.propTypes = {
     onSetUsername: PropTypes.func.isRequired,
     onSetCollabLoading: PropTypes.func.isRequired,
     onSetHostLoadingProgress: PropTypes.func.isRequired,
-    onSetSpriteEditor: PropTypes.func.isRequired,
-    onRemoveSpriteEditor: PropTypes.func.isRequired,
-    onOpenChangeUsername: PropTypes.func.isRequired
+    onSetReconnecting: PropTypes.func.isRequired,
+    onSetUserActivity: PropTypes.func.isRequired,
+    onRemoveUserActivity: PropTypes.func.isRequired,
+    onOpenChangeUsername: PropTypes.func.isRequired,
+    activeTabIndex: PropTypes.number,
+    // eslint-disable-next-line react/forbid-prop-types
+    userActivity: PropTypes.object.isRequired
 };
 
 const mapStateToProps = state => ({
@@ -746,8 +786,14 @@ const mapStateToProps = state => ({
     roomId: state.scratchGui.collaboration.roomId,
     roomPrivacy: state.scratchGui.collaboration.roomPrivacy,
     connectedUsers: state.scratchGui.collaboration.connectedUsers,
+    userActivity: state.scratchGui.collaboration.activity,
+    activeTabIndex: state.scratchGui.editorTab.activeTabIndex,
     connectionError: state.scratchGui.collaboration.connectionError,
-    currentUsername: state.scratchGui.tw.username,
+    // Online identity is the Bilup Accounts handle when signed in; the custom name is only a fallback.
+    currentUsername: state.scratchGui.rotur.username ?
+        `@${state.scratchGui.rotur.username}` :
+        state.scratchGui.tw.username,
+    roturHandle: state.scratchGui.rotur.username,
     vm: state.scratchGui.vm,
     customShortcuts: state.scratchGui.shortcuts.customShortcuts
 });
@@ -762,9 +808,9 @@ const mapDispatchToProps = dispatch => ({
     onSetUsername: username => dispatch(setUsername(username)),
     onSetCollabLoading: (isLoading, message) => dispatch(setCollaborationLoading(isLoading, message)),
     onSetHostLoadingProgress: progress => dispatch(setCollaborationHostLoadingProgress(progress)),
-    onSetSpriteEditor: (spriteId, userId, username, timestamp) =>
-        dispatch(setSpriteEditor(spriteId, userId, username, timestamp)),
-    onRemoveSpriteEditor: (spriteId, userId) => dispatch(removeSpriteEditor(spriteId, userId)),
+    onSetReconnecting: isReconnecting => dispatch(setCollaborationReconnecting(isReconnecting)),
+    onSetUserActivity: activity => dispatch(setUserActivity(activity)),
+    onRemoveUserActivity: userId => dispatch(removeUserActivity(userId)),
     onOpenChangeUsername: () => dispatch(openUsernameModal())
 });
 
