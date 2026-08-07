@@ -489,7 +489,7 @@ class ShortcutManager extends React.Component {
                             return (
                                 <ShortcutCategory
                                     key={categoryId}
-                                    category={getCategoryLabel(categoryId)}
+                                    category={categoryLabel}
                                     icon={CATEGORY_ICONS[categoryId] || Keyboard}
                                     shortcuts={categoryShortcuts}
                                     onSave={this.handleSaveShortcut}
