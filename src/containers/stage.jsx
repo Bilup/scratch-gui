@@ -99,6 +99,7 @@ class Stage extends React.Component {
             this.props.isFullScreen !== nextProps.isFullScreen ||
             this.props.isWindowFullScreen !== nextProps.isWindowFullScreen ||
             this.props.stageContainerWidth !== nextProps.stageContainerWidth ||
+            this.props.stageMaxHeight !== nextProps.stageMaxHeight ||
             this.props.dimensions !== nextProps.dimensions ||
             this.state.question !== nextState.question ||
             this.props.micIndicator !== nextProps.micIndicator ||
@@ -480,6 +481,7 @@ Stage.propTypes = {
     isStarted: PropTypes.bool,
     micIndicator: PropTypes.bool,
     stageContainerWidth: PropTypes.number,
+    stageMaxHeight: PropTypes.number,
     onActivateColorPicker: PropTypes.func,
     onDeactivateColorPicker: PropTypes.func,
     stageSize: PropTypes.oneOf(Object.keys(STAGE_DISPLAY_SIZES)).isRequired,

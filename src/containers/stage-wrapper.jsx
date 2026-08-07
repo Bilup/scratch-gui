@@ -10,6 +10,7 @@ StageWrapper.propTypes = {
     isRendererSupported: PropTypes.bool.isRequired,
     stageSize: PropTypes.oneOf(Object.keys(STAGE_DISPLAY_SIZES)).isRequired,
     stageContainerWidth: PropTypes.number,
+    stageMaxHeight: PropTypes.number,
     vm: PropTypes.instanceOf(VM).isRequired
 };
 

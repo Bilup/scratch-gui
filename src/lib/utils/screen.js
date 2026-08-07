@@ -45,9 +45,10 @@ const resolveStageSize = (stageSizeMode, isUnconstrained) => {
  * @param {{width: number, height: number}} customStageSize Custom stage size
  * @param {boolean} isFullScreen - true if full-screen mode is enabled.
  * @param {?number} stageContainerWidth - optional container width to scale to in non-fullscreen mode.
+ * @param {?number} stageMaxHeight - optional maximum height to scale to in non-fullscreen mode.
  * @return {StageDimensions} - an object describing the dimensions of the stage.
  */
-const getStageDimensions = (stageSize, customStageSize, isFullScreen, stageContainerWidth) => {
+const getStageDimensions = (stageSize, customStageSize, isFullScreen, stageContainerWidth, stageMaxHeight) => {
     const stageDimensions = {
         heightDefault: customStageSize.height,
         widthDefault: customStageSize.width,
@@ -93,6 +94,19 @@ const getStageDimensions = (stageSize, customStageSize, isFullScreen, stageConta
         stageContainerWidth > 0) {
         const availableContentWidth = Math.max(0, stageContainerWidth - 2);
         const fitScale = availableContentWidth / stageDimensions.width;
+        stageDimensions.scale *= fitScale;
+        stageDimensions.width *= fitScale;
+        stageDimensions.height *= fitScale;
+    }
+
+    // On short viewports (mobile landscape, etc.) keep the sprite selector
+    // usable by capping the stage height and scaling the width proportionally.
+    if (!isFullScreen &&
+        typeof stageMaxHeight === 'number' &&
+        Number.isFinite(stageMaxHeight) &&
+        stageMaxHeight > 0 &&
+        stageDimensions.height > stageMaxHeight) {
+        const fitScale = stageMaxHeight / stageDimensions.height;
         stageDimensions.scale *= fitScale;
         stageDimensions.width *= fitScale;
         stageDimensions.height *= fitScale;

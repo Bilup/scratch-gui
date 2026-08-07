@@ -25,6 +25,7 @@ const StageComponent = props => {
         isStarted,
         isRtl,
         stageContainerWidth,
+        stageMaxHeight,
         colorInfo,
         micIndicator,
         question,
@@ -39,7 +40,8 @@ const StageComponent = props => {
     const isResizablePanel = !isFullScreen && typeof stageContainerWidth === 'number';
     const stageDimensions = getStageDimensions(
         stageSize, customStageSize, isFullScreen,
-        isResizablePanel ? stageContainerWidth : null
+        isResizablePanel ? stageContainerWidth : null,
+        isFullScreen ? null : stageMaxHeight
     );
     const minWidth = isResizablePanel ? 0 : getMinWidth(stageSize);
     const transformStyle = (!isResizablePanel && stageDimensions.width < minWidth && !isFullScreen) ? {
@@ -168,6 +170,7 @@ StageComponent.propTypes = {
     isPlayerOnly: PropTypes.bool,
     isRtl: PropTypes.bool,
     stageContainerWidth: PropTypes.number,
+    stageMaxHeight: PropTypes.number,
     isStarted: PropTypes.bool,
     micIndicator: PropTypes.bool,
     onDeactivateColorPicker: PropTypes.func,
