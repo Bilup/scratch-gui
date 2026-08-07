@@ -1,23 +1,4 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="google" value="notranslate">
-    <meta name="description" content="Bilup is a powerful Scratch mod that enhances your Scratch experience with advanced features and optimizations." />
-    <!-- OpenGraph Meta Tags for Discord/Social Embeds -->
-    <meta property="og:title" content="Bilup - Refactoring freedom" />
-    <meta property="og:description" content="Bilup is a powerful Scratch mod that enhances your Scratch experience with advanced features and optimizations." />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="images/apple-touch-icon.png" />
-    <meta property="og:url" content="https://editor.bilup.org/" />
-    <title>Bilup - Refactoring freedom</title>
-    <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
-    
-      <link rel="manifest" href="manifest.webmanifest">
-    
-    <style>
-      .splash-screen {
+<!doctype html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="google" value="notranslate"><meta name="description" content="Bilup is a powerful Scratch mod that enhances your Scratch experience with advanced features and optimizations."/><meta property="og:title" content="Bilup - Refactoring freedom"/><meta property="og:description" content="Bilup is a powerful Scratch mod that enhances your Scratch experience with advanced features and optimizations."/><meta property="og:type" content="website"/><meta property="og:image" content="/images/apple-touch-icon.png"/><meta property="og:url" content="https://editor.bilup.org/"/><title>Bilup - Refactoring freedom</title><link rel="apple-touch-icon" href="/images/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><style>.splash-screen {
         position: absolute;
         width: 100%;
         height: 100%;
@@ -105,31 +86,7 @@
       .splash-reset:disabled {
         opacity: 0.5;
         cursor: not-allowed;
-      }
-    </style>
-  </head>
-  <body>
-    <noscript>
-      <div class="splash-screen">
-        <div>
-          <h1>Bilup requires JavaScript</h1>
-          <p>Consider using <a href="https://desktop.turbowarp.org/">TurboWarp Desktop</a> if you are afraid of remote JavaScript.</p>
-        </div>
-      </div>
-    </noscript>
-
-    <div class="splash-screen spash-waiting-for-js" hidden>
-      <div class="splash-spinner"></div>
-
-      <div class="splash-error-title" hidden>Something went wrong. <a href="https://github.com/Bilup/scratch-gui/issues" target="_blank" rel="noreferrer">Please report</a> with the information below.</div>
-      <div class="splash-errors" hidden></div>
-      <button class="splash-reset" hidden> with the information below.</div>
-      <div class="splash-errors" hidden></div>
-      <button class="splash-reset" hidden>Click here to reset caches (can fix some errors)</button>
-    </div>
-
-    <script>
-      (function () {
+      }</style></head><body><noscript><div class="splash-screen"><div><h1>Bilup requires JavaScript</h1><p>Consider using <a href="https://desktop.turbowarp.org/">TurboWarp Desktop</a> if you are afraid of remote JavaScript.</p></div></div></noscript><div class="splash-screen spash-waiting-for-js" hidden><div class="splash-spinner"></div><div class="splash-error-title" hidden>Something went wrong. <a href="https://github.com/Bilup/scratch-gui/issues" target="_blank" rel="noreferrer">Please report</a> with the information below.</div><div class="splash-errors" hidden></div><button class="splash-reset" hidden>with the information below.</button></div><div class="splash-errors" hidden></div><button class="splash-reset" hidden>Click here to reset caches (can fix some errors)</button><script>(function () {
         'use strict';
 
         var theme = '';
@@ -188,7 +145,7 @@
           }
           if ('serviceWorker' in navigator) {
             setTimeout(hardRefresh, 5000);
-            navigator.serviceWorker.getRegistration("")
+            navigator.serviceWorker.getRegistration("/")
               .then(function(registration) {
                 if (registration) {
                   return registration.unregister();
@@ -205,9 +162,4 @@
           splash.hidden = true;
           window.onerror = null;
         };
-      })();
-    </script>
-
-    <div id="app"></div>
-  <script src="js/vendors~about~addon-settings~credits~donate~editor~embed~fullscreen~player.js"></script><script src="js/vendors~editor~embed~fullscreen~player.js"></script><script src="js/about~addon-settings~credits~donate~editor~embed~fullscreen~player.js"></script><script src="js/addon-settings~editor~embed~fullscreen~player.js"></script><script src="js/fullscreen.js"></script></body>
-</html>
+      })();</script><div id="app"></div><script src="/js/gleba/git-libs.af600451d9024df604fa.js"></script><script src="/js/gleba/scratch-engine.6add7000ab558f8e0e88.js"></script><script src="/js/gleba/scratch-paint.c8e0162ef1414c54d86c.js"></script><script src="/js/gleba/vendors~addon-settings~community~editor~embed~fullscreen~player.df4a437d86e54cb63c56.js"></script><script src="/js/gleba/vendors~community~editor~embed~fullscreen~player.0c4dadfccc28cec2ef15.js"></script><script src="/js/gleba/vendors~editor~embed~fullscreen~player.fd8295d2a91a7204a658.js"></script><script src="/js/gleba/addon-settings~community~editor~embed~fullscreen~player.f4fd461834a7c8fe2b64.js"></script><script src="/js/gleba/community~editor~embed~fullscreen~player.c12f8c2e4c43630aaf5a.js"></script><script src="/js/gleba/addon-settings~editor~embed~fullscreen~player.900f0eeb2550250e0bdb.js"></script><script src="/js/gleba/editor~embed~fullscreen~player.1b77cc78eb099ba42cd8.js"></script><script src="/js/gleba/editor~fullscreen~player.7d0320e94e57121e1c88.js"></script><script src="/js/gleba/fullscreen.c005e1bd3aa77bf2178f.js"></script></body></html>
