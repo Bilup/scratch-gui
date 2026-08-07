@@ -841,8 +841,8 @@ class GitModalComponent extends React.Component {
                 <Box className={styles.field}>
                     <label className={styles.fieldLabel}>
                         <FormattedMessage
-                            defaultMessage="Access token / password (stored locally)"
-                            description="Token label"
+                            defaultMessage="Forgejo access token (PAT)"
+                            description="Token label for Forgejo Personal Access Token"
                             id="mw.git.remote.token"
                         />
                     </label>
@@ -851,13 +851,13 @@ class GitModalComponent extends React.Component {
                         type="password"
                         value={this.props.remoteToken}
                         onChange={this.props.onChangeRemoteToken}
-                        placeholder="token…"
+                        placeholder="Personal access token…"
                     />
                     <p className={styles.muted}>
                         <FormattedMessage
-                            defaultMessage="Your commit author name (Settings) is used as the remote username."
-                            description="Explains that the author name is the git username"
-                            id="mw.git.remote.usernameNote"
+                            defaultMessage="Generate one at git.bilup.org → Settings → Applications → Generate new token. Required for API calls to Bilup Git."
+                            description="Explains how to get a Forgejo PAT"
+                            id="mw.git.remote.tokenHelp"
                         />
                     </p>
                 </Box>

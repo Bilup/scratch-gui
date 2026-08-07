@@ -1,40 +1,51 @@
-import {getRotur, fetchCurrentUser} from './client.js';
-
 const GIT_HOST = 'https://git.bilup.org';
 const API_BASE = `${GIT_HOST}/api/v1`;
+const TOKEN_KEY = 'mw:git-token';
 const PAGE_SIZE = 50;
 const MAX_PAGES = 10;
 
-let cachedIdentity = null;
+let cachedUsername = null;
 
-const requireAuth = async () => {
-    const rotur = getRotur();
-    if (!rotur.loggedIn || !rotur.token) {
-        cachedIdentity = null;
-        throw new Error('Sign in to Bilup Accounts to use Bilup Git');
+const readToken = () => {
+    try {
+        return localStorage.getItem(TOKEN_KEY) || '';
+    } catch (_) {
+        return '';
     }
-    const token = rotur.token;
-    if (cachedIdentity && cachedIdentity.token === token) {
-        return {username: cachedIdentity.username, password: token};
+};
+
+const writeToken = token => {
+    try {
+        if (token) {
+            localStorage.setItem(TOKEN_KEY, token);
+        } else {
+            localStorage.removeItem(TOKEN_KEY);
+        }
+    } catch (_) {
+        // ignore
     }
-    const user = await fetchCurrentUser();
-    if (!user) {
-        throw new Error('Sign in to Bilup Accounts to use Bilup Git');
+};
+
+const requireAuth = () => {
+    const token = readToken();
+    if (!token) {
+        const error = new Error('No Git access token. Please set one in the Git panel.');
+        error.code = 'GIT_AUTH_REQUIRED';
+        throw error;
     }
-    // eslint-disable-next-line require-atomic-updates
-    cachedIdentity = {token, username: user.username};
-    return {username: user.username, password: token};
+    return token;
 };
 
 const clearGitAuth = () => {
-    cachedIdentity = null;
+    cachedUsername = null;
+    writeToken('');
 };
 
-const authHeader = ({username, password}) => `Basic ${btoa(`${username}:${password}`)}`;
+const authHeader = token => `Bearer ${token}`;
 
 const apiFetch = async (path, {method = 'GET', body} = {}) => {
-    const auth = await requireAuth();
-    const headers = {Authorization: authHeader(auth)};
+    const token = requireAuth();
+    const headers = {Authorization: authHeader(token)};
     const init = {method, headers};
     if (body) {
         headers['Content-Type'] = 'application/json';
@@ -42,7 +53,7 @@ const apiFetch = async (path, {method = 'GET', body} = {}) => {
     }
     const response = await fetch(`${API_BASE}${path}`, init);
     if (!response.ok) {
-        let message = `Bilup Git request failed (${response.status})`;
+        let message = `Git request failed (${response.status})`;
         try {
             const data = await response.json();
             if (data && data.message) {
@@ -113,11 +124,20 @@ const deleteRepo = (owner, name) => apiFetch(
     {method: 'DELETE'}
 );
 
-const getAuth = () => requireAuth();
+const getAuth = () => {
+    const token = requireAuth();
+    return () => ({username: null, password: token});
+};
 
 const getGitUsername = async () => {
-    const auth = await requireAuth();
-    return auth.username;
+    if (cachedUsername) return cachedUsername;
+    try {
+        const user = await apiFetch('/user');
+        cachedUsername = user?.login || null;
+        return cachedUsername;
+    } catch (_) {
+        return null;
+    }
 };
 
 const getRemoteUrl = (owner, name) => `${GIT_HOST}/${encodeURIComponent(owner)}/${encodeURIComponent(name)}.git`;
