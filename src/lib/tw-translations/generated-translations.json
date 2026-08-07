@@ -1389,7 +1389,16 @@
         "gui.menuBar.stopRecording": "停止录制",
         "mw.menuBar.help": "帮助",
         "mw.menuBar.roturAccount": "Bilup Accounts 账户",
-        "mw.menuBar.share": "保存到 Bilup"
+        "mw.menuBar.share": "保存到 Bilup",
+        "mw.assets.none": "将文件拖到此处、粘贴文件，或点击添加文件。在积木加载素材之前，素材不消耗运行时资源。",
+        "mw.assets.noSelection": "选择一份文件来预览",
+        "mw.assets.destination": "添加至 {folder}",
+        "mw.assets.noPreview": "暂无预览",
+        "mw.assets.metaPath": "路径",
+        "mw.assets.metaSize": "大小",
+        "mw.assets.metaFormat": "格式",
+        "mw.assets.metaChecksum": "MD5 校验和",
+        "mw.assets.deleteButton": "删除"
     },
     "en": {
         "mw.menuBar.file": "File",

@@ -477,22 +477,19 @@ const control = function (isInitialSetup, isStage, targetId, colors, vanilla) {
         ${blockSeparator}
         <block type="control_switch">
             <value name="VALUE">
-                <shadow type="text">
-                    <field name="TEXT">value</field>
-                </shadow>
             </value>
         </block>
         <block type="control_case">
             <value name="VALUE">
                 <shadow type="text">
-                    <field name="TEXT">case</field>
+                    <field name="TEXT"></field>
                 </shadow>
             </value>
         </block>
         <block type="control_case_fallthrough">
             <value name="VALUE">
                 <shadow type="text">
-                    <field name="TEXT">case</field>
+                    <field name="TEXT"></field>
                 </shadow>
             </value>
         </block>
@@ -806,7 +803,7 @@ const strings = function (isInitialSetup, isStage, targetId, colors, vanilla) {
             ${text('STRING', apple)}
         </block>
         <block type="operator_index_of">
-            ${text('SUBSTRING', 'p')}
+            ${text('SUBSTRING', letter)}
             ${text('STRING', apple)}
         </block>
         <block type="operator_replace">
@@ -819,7 +816,7 @@ const strings = function (isInitialSetup, isStage, targetId, colors, vanilla) {
             ${number('REPEAT', 3)}
         </block>
         <block type="operator_change_case">
-            ${text('STRING', apple)}
+            ${text('STRING', 'apple')}
             <field name="CASE">uppercase</field>
         </block>
         <block type="operator_trim">${text('STRING', `  ${apple}  `)}</block>
@@ -833,6 +830,7 @@ const strings = function (isInitialSetup, isStage, targetId, colors, vanilla) {
 };
 
 const assets = function (isInitialSetup, isStage, targetId, assetName, colors) {
+    const hello = translate('LOOKS_HELLO', 'Hello!');
     const asset = function (name) {
         return `
         <value name="ASSET">
@@ -887,7 +885,7 @@ const assets = function (isInitialSetup, isStage, targetId, assetName, colors) {
         </block>
         <block type="assets_set">
             ${asset(assetName)}
-            ${text('VALUE', 'hello')}
+            ${text('VALUE', hello)}
         </block>
         <block type="assets_delete">
             ${asset(assetName)}
