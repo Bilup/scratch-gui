@@ -1,7 +1,0 @@
-# Cloudflare Pages SPA fallback
-# 格式：source destination statuscode
-# 200 = rewrite（URL 不变，浏览器/前端看到的是 /oauth/callback，但内容是 index.html）
-# Cloudflare Pages 优先按真实文件匹配，所以 /static/xxx、/embed.html、/favicon.ico 等不会被影响
-
-# OAuth popup 回调路径：返回主入口（community bundle）让前端处理 code 交换
-/oauth/callback    /index.html    200
