@@ -189,7 +189,7 @@ describe('protocol envelope validation', () => {
         test('hello requires protocolVersion, username and roomId', () => {
             const good = makeCtrl(CTRL.HELLO, {
                 protocolVersion: PROTOCOL_VERSION,
-                username: 'sophie',
+                username: 'ryan',
                 roomId: 'myroom'
             });
             expect(validateEnvelope(good)).toBeNull();

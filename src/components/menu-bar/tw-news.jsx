@@ -42,21 +42,22 @@ class TWNews extends React.Component {
         });
     }
     render () {
-        if (this.state.closed || isScratchDesktop()) {
-            return null;
-        }
-        return (
-            <div className={styles.news}>
-                <div className={styles.text}>
-                    {/* eslint-disable-next-line max-len */}
-                    {`New in ${APP_NAME}: Vanilla Compatible Extendables. Operators like +, and, or and join can now hold extra inputs!`}
-                </div>
-                <CloseButton
-                    className={styles.close}
-                    onClick={this.handleClose}
-                />
-            </div>
-        );
+        // if (this.state.closed || isScratchDesktop()) {
+        //     return null;
+        // }
+        // return (
+        //     <div className={styles.news}>
+        //         <div className={styles.text}>
+        //             {/* eslint-disable-next-line max-len */}
+        //             {`New in ${APP_NAME}: Vanilla Compatible Extendables. Operators like +, and, or and join can now hold extra inputs!`}
+        //         </div>
+        //         <CloseButton
+        //             className={styles.close}
+        //             onClick={this.handleClose}
+        //         />
+        //     </div>
+        // );
+        return null;
     }
 }
 

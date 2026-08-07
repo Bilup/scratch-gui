@@ -1,42 +1,87 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import bindAll from 'lodash.bindall';
 import {FormattedMessage, injectIntl, intlShape} from 'react-intl';
-import PropTypes from 'prop-types';
-import {GripVertical} from 'lucide-react';
+import {connect} from 'react-redux';
+import classNames from 'classnames';
+import {AlignLeft, AlignCenter, AlignRight, GripVertical} from 'lucide-react';
 import FancyCheckbox from '../tw-fancy-checkbox/checkbox.jsx';
 import styles from './settings-modal.css';
 import {
     ZONES,
+    ALWAYS_SHOW,
     getZoneDisplayOrder,
     getZoneExtras,
     setZoneOrder,
     getHidden,
     setHidden,
-    getPresentOrderedIds
+    getPresentOrderedIds,
+    getMenuBarLayout
 } from '../../lib/mw-menu-bar-layout';
+import {Theme} from '../../lib/themes/index.js';
+import {setTheme} from '../../reducers/theme.js';
+import {applyTheme} from '../../lib/themes/themePersistance.js';
+import {onSettingsChanged} from '../../lib/menu-bar/settings.js';
 
 const LABELS = {
     'file': 'mw.menuBar.file',
-    'view': 'mw.menuBar.view',
     'bookmarks': 'mw.menuBar.bookmarks',
     'edit': 'mw.menuBar.edit',
     'tools': 'mw.menuBar.tools',
     'mode': 'mw.menuBar.mode',
     'block-count': 'mw.menuBar.blockCount',
+    'media-recorder': 'mw.settings.menuBar.videoRecorder',
+    'nova': 'mw.menuBar.nova',
     'save-status': 'mw.menuBar.saveStatus',
     'addons': 'mw.menuBar.addons',
     'settings': 'mw.menuBar.settings',
     'about': 'mw.menuBar.about',
     'project-title': 'mw.menuBar.projectTitle',
-    'community': 'mw.menuBar.community'
+    'rotur-account': 'mw.menuBar.roturAccount',
+    'collab-presence': 'mw.menuBar.collabPresence'
 };
 
+const ALIGN_OPTIONS = [
+    {
+        id: 'left',
+        icon: AlignLeft,
+        label: (
+            <FormattedMessage
+                defaultMessage="Left aligned"
+                description="Menu bar alignment option"
+                id="mw.settings.menuBar.alignLeft"
+            />
+        )
+    },
+    {
+        id: 'center',
+        icon: AlignCenter,
+        label: (
+            <FormattedMessage
+                defaultMessage="Middle aligned"
+                description="Menu bar alignment option"
+                id="mw.settings.menuBar.alignMiddle"
+            />
+        )
+    },
+    {
+        id: 'right',
+        icon: AlignRight,
+        label: (
+            <FormattedMessage
+                defaultMessage="Right aligned"
+                description="Menu bar alignment option"
+                id="mw.settings.menuBar.alignRight"
+            />
+        )
+    }
+];
 const isVisibleItem = id => !id.startsWith('__');
 
 class UnwrappedMenuBarLayoutSetting extends React.Component {
     constructor (props) {
         super(props);
-        bindAll(this, ['handleDragEnd']);
+        bindAll(this, ['handleDragEnd', 'handleDragOver', 'handleAlignChange', 'persistAppearance']);
         const present = getPresentOrderedIds();
         this.state = {
             present,
@@ -46,6 +91,21 @@ class UnwrappedMenuBarLayoutSetting extends React.Component {
             dragZone: null
         };
     }
+    componentDidMount () {
+        this.disposeSettingsListener = onSettingsChanged(() => {
+            requestAnimationFrame(() => {
+                const present = getPresentOrderedIds();
+                this.setState({
+                    present,
+                    orders: this.readOrders(present),
+                    hidden: getHidden()
+                });
+            });
+        });
+    }
+    componentWillUnmount () {
+        if (this.disposeSettingsListener) this.disposeSettingsListener();
+    }
     readOrders (present) {
         const orders = {};
         for (const zone of ZONES) {
@@ -53,10 +113,14 @@ class UnwrappedMenuBarLayoutSetting extends React.Component {
         }
         return orders;
     }
+    persistAppearance () {
+        if (!this.props.theme) return;
+        this.props.onChangeTheme(this.props.theme.setAppearance({menuBarLayout: getMenuBarLayout()}));
+    }
     handleToggle (id) {
         return e => {
             setHidden(id, !e.target.checked);
-            this.setState({hidden: getHidden()});
+            this.setState({hidden: getHidden()}, this.persistAppearance);
         };
     }
     handleDragStart (zoneId, id) {
@@ -64,6 +128,9 @@ class UnwrappedMenuBarLayoutSetting extends React.Component {
     }
     handleDragEnd () {
         this.setState({dragId: null, dragZone: null});
+    }
+    handleDragOver (e) {
+        e.preventDefault();
     }
     handleDrop (zoneId, overId) {
         return e => {
@@ -81,7 +148,13 @@ class UnwrappedMenuBarLayoutSetting extends React.Component {
                 orders: {...prev.orders, [zoneId]: order},
                 dragId: null,
                 dragZone: null
-            }));
+            }), this.persistAppearance);
+        };
+    }
+    handleAlignChange (id) {
+        return () => {
+            if (!this.props.theme || this.props.theme.menuBarAlign === id) return;
+            this.props.onChangeTheme(this.props.theme.set('menuBarAlign', id));
         };
     }
     renderRow (zoneId, id, draggable) {
@@ -89,6 +162,7 @@ class UnwrappedMenuBarLayoutSetting extends React.Component {
         const visible = !this.state.hidden.includes(id);
         const labelId = LABELS[id];
         const label = labelId ? intl.formatMessage({id: labelId, defaultMessage: labelId}) : id;
+        const canHide = !ALWAYS_SHOW.includes(id);
         return (
             <div
                 key={id}
@@ -96,7 +170,7 @@ class UnwrappedMenuBarLayoutSetting extends React.Component {
                 draggable={draggable}
                 onDragStart={draggable ? this.handleDragStart(zoneId, id) : null}
                 onDragEnd={draggable ? this.handleDragEnd : null}
-                onDragOver={draggable ? (e => e.preventDefault()) : null}
+                onDragOver={draggable ? this.handleDragOver : null}
                 onDrop={draggable ? this.handleDrop(zoneId, id) : null}
             >
                 {draggable && (
@@ -108,8 +182,9 @@ class UnwrappedMenuBarLayoutSetting extends React.Component {
                 <span className={styles.menuBarRowLabel}>{label}</span>
                 <FancyCheckbox
                     className={styles.checkbox}
-                    checked={visible}
-                    onChange={this.handleToggle(id)}
+                    checked={canHide ? visible : true}
+                    disabled={!canHide}
+                    onChange={canHide ? this.handleToggle(id) : null}
                 />
             </div>
         );
@@ -133,8 +208,45 @@ class UnwrappedMenuBarLayoutSetting extends React.Component {
     }
     render () {
         const {intl} = this.props;
+        const currentAlign = (this.props.theme && this.props.theme.menuBarAlign) || 'center';
         return (
-            <div className={styles.setting}>
+            <div className={styles.menuBarLayout}>
+                <div className={styles.menuBarZoneLabel}>
+                    <FormattedMessage
+                        defaultMessage="Alignment"
+                        description="Label for menu bar alignment selector in settings"
+                        id="mw.settings.menuBar.alignment"
+                    />
+                </div>
+                <div
+                    className={styles.alignSelector}
+                    role="radiogroup"
+                    aria-label={intl.formatMessage({
+                        id: 'mw.settings.menuBar.alignment',
+                        defaultMessage: 'Menu bar alignment'
+                    })}
+                >
+                    {ALIGN_OPTIONS.map(option => {
+                        const Icon = option.icon;
+                        const selected = currentAlign === option.id;
+                        return (
+                            <button
+                                key={option.id}
+                                type="button"
+                                role="radio"
+                                aria-checked={selected}
+                                className={classNames(styles.alignOption, {
+                                    [styles.alignOptionSelected]: selected
+                                })}
+                                onClick={this.handleAlignChange(option.id)}
+                            >
+                                <Icon size={18} />
+                                <span>{option.label}</span>
+                            </button>
+                        );
+                    })}
+                </div>
+
                 <div className={styles.menuBarHint}>
                     <FormattedMessage
                         defaultMessage="Drag to reorder items within each group. Uncheck to hide."
@@ -161,9 +273,23 @@ class UnwrappedMenuBarLayoutSetting extends React.Component {
 }
 
 UnwrappedMenuBarLayoutSetting.propTypes = {
-    intl: intlShape.isRequired
+    intl: intlShape.isRequired,
+    theme: PropTypes.instanceOf(Theme),
+    onChangeTheme: PropTypes.func
 };
 
-const MenuBarLayoutSetting = injectIntl(UnwrappedMenuBarLayoutSetting);
+const mapStateToProps = state => ({
+    theme: state.scratchGui.theme.theme
+});
 
-export default MenuBarLayoutSetting;
+const mapDispatchToProps = dispatch => ({
+    onChangeTheme: theme => {
+        dispatch(setTheme(theme));
+        applyTheme(theme);
+    }
+});
+
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps
+)(injectIntl(UnwrappedMenuBarLayoutSetting));

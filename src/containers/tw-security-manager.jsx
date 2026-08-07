@@ -6,6 +6,9 @@ import bindAll from 'lodash.bindall';
 import SecurityManagerModal from '../components/tw-security-manager-modal/security-manager-modal.jsx';
 import SecurityModals from '../lib/constants/security-manager.js';
 import {getPersistedUnsandboxed, setPersistedUnsandboxed} from '../lib/persistence/tw-unsandboxed.js';
+import isTrustedExtensionUrl, {isGalleryExtensionUrl} from '../lib/trusted-extension.js';
+import {getRememberedPlatformProjectState} from '../lib/community/publish.js';
+import {extensionSourceUrl, hashExtensionUrl} from '../lib/community/api.js';
 
 /* eslint-disable require-atomic-updates */
 
@@ -18,106 +21,87 @@ const manuallyTrustExtension = url => {
     extensionsTrustedByUser.add(url);
 };
 
+const isPlatformProjectLoad = () => {
+    try {
+        const params = new URLSearchParams(location.search);
+        return params.has('mw_assets') || params.has('platform_project') || /^#bl-/.test(location.hash);
+    } catch (e) {
+        return false;
+    }
+};
+
+const isPlatformTrustedExtension = async url => {
+    if (!isPlatformProjectLoad()) return false;
+    const project = getRememberedPlatformProjectState();
+    if (!project || !Array.isArray(project.trustedExtensions)) return false;
+    return project.trustedExtensions.includes(await hashExtensionUrl(url));
+};
+
 /**
  * Trusted extensions are loaded automatically and without a sandbox.
  * @param {string} url URL as a string.
  * @returns {boolean} True if the extension can is trusted
  */
-const isTrustedExtension = url => (
-    // Always trust our official extension repostiory.
-    url.startsWith('https://extensions.turbowarp.org/') ||
-    url.startsWith('https://extensions.bilup.org/') ||
-    url.startsWith('https://extensions.mistium.com/') ||
-    url.startsWith('https://sharkpools-extensions.vercel.app/') ||
-    url.startsWith('https://editors.astras.top/extensions/') ||
+const isTrustedExtension = url => {
+    const platformProject = isPlatformProjectLoad() && getRememberedPlatformProjectState();
+    if (platformProject && Array.isArray(platformProject.trustedExtensions)) {
+        return isGalleryExtensionUrl(url) || extensionsTrustedByUser.has(url);
+    }
+    return isTrustedExtensionUrl(url) || extensionsTrustedByUser.has(url);
+};
 
+const jsExecutionExtension = url => (/\/EvalPlus\.js$/i.test(url) ? 'EvalPlus' : null);
 
+const isOwnedPlatformProject = () => {
+    const project = getRememberedPlatformProjectState();
+    return Boolean(isPlatformProjectLoad() && project && project.isOwner === true);
+};
 
-    // For development.
-    url.startsWith('http://localhost:8000/') ||
+const isLocalProjectUrl = url => {
+    try {
+        const parsed = new URL(url);
+        return ['http:', 'https:'].includes(parsed.protocol) &&
+            ['127.0.0.1', 'localhost'].includes(parsed.hostname);
+    } catch (e) {
+        return false;
+    }
+};
 
-    extensionsTrustedByUser.has(url)
-);
+const canTrustLoadedProject = vm => {
+    const projectUrl = typeof location === 'undefined' ?
+        null :
+        new URLSearchParams(location.search).get('project_url');
+    return isOwnedPlatformProject() || Boolean(vm._mwCanTrustProject) || isLocalProjectUrl(projectUrl);
+};
 
-/**
- * Set of fetch resource hosts that were manually trusted by the user.
- * @type {Set<string>}
- */
 const fetchHostsTrustedByUser = new Set();
-
-/**
- * Set of hosts manually trusted by the user for embedding.
- * @type {Set<string>}
- */
 const embedHostsTrustedByUser = new Set();
 
-/**
- * @param {URL} parsed Parsed URL object
- * @returns {boolean} True if the URL is part of the builtin set of URLs to always trust fetching from.
- */
-const isAlwaysTrustedForFetching = parsed => (
-    // If we would trust loading an extension from here, we can trust loading resources too.
-    isTrustedExtension(parsed.href) ||
+const isUntrustedPath = parsed => /^\/cdn-cgi\//i.test(parsed.pathname);
 
-    // Any TurboWarp service such as trampoline
+const isAlwaysTrustedForFetching = parsed => (
+    isTrustedExtension(parsed.href) ||
     parsed.origin === 'https://turbowarp.org' ||
     parsed.origin.endsWith('.turbowarp.org') ||
     parsed.origin.endsWith('.turbowarp.xyz') ||
-
-    // Any Bilup service such as trampoline
-    parsed.origin === 'https://bilup.org' ||
-    parsed.origin.endsWith('.bilup.org') ||
-
-    // GitHub API
-    // GitHub Pages allows redirects, so not included here.
     parsed.origin === 'https://raw.githubusercontent.com' ||
     parsed.origin === 'https://gist.githubusercontent.com' ||
     parsed.origin === 'https://api.github.com' ||
-
-    // GitLab API
-    // GitLab Pages allows redirects, so not included here.
     parsed.origin === 'https://gitlab.com' ||
-
-    // Sourcehut Pages
     parsed.origin.endsWith('.srht.site') ||
-
-    // Itch
     parsed.origin.endsWith('.itch.io') ||
-
-    // GameJolt
     parsed.origin === 'https://api.gamejolt.com' ||
-
-    // httpbin
     parsed.origin === 'https://httpbin.org' ||
-
-    // ScratchDB
     parsed.origin === 'https://scratchdb.lefty.one'
 );
 
-const FETCHABLE_PROTOCOLS = [
-    'http:',
-    'https:',
-    'data:',
-    'blob:',
-    'ws:',
-    'wss:'
-];
-
-const VISITABLE_PROTOCOLS = [
-    // The important one we want to exclude is javascript:
-    'http:',
-    'https:',
-    'data:',
-    'blob:',
-    'mailto:',
-    'steam:',
-    'calculator:'
-];
+const FETCHABLE_PROTOCOLS = ['http:', 'https:', 'data:', 'blob:', 'ws:', 'wss:'];
+const VISITABLE_PROTOCOLS = ['http:', 'https:', 'data:', 'blob:', 'mailto:', 'steam:', 'calculator:'];
 
 /**
  * @param {string} url Original URL string
- * @param {string[]} protocols List of allowed protocols
- * @returns {URL|null} A URL object if it is valid and of a known protocol, otherwise null.
+ * @param {string[]} protocols Allowed protocols
+ * @returns {URL|null} A URL object if it is valid and uses an allowed protocol, otherwise null.
  */
 const parseURL = (url, protocols) => {
     let parsed;
@@ -141,6 +125,7 @@ let allowedGeolocation = false;
 const SECURITY_MANAGER_METHODS = [
     'getSandboxMode',
     'canLoadExtensionFromProject',
+    'rewriteExtensionURL',
     'canFetch',
     'canOpenWindow',
     'canRedirect',
@@ -153,12 +138,19 @@ const SECURITY_MANAGER_METHODS = [
     'canDownload'
 ];
 
+const withSecurityBypass = (method, implementation, allowAll) => (...args) => {
+    if (method === 'rewriteExtensionURL') return implementation(...args);
+    return allowAll() ? (method === 'getSandboxMode' ? 'unsandboxed' : true) : implementation(...args);
+};
+
 class TWSecurityManagerComponent extends React.Component {
     constructor (props) {
         super(props);
         bindAll(this, [
             'handleAllowed',
-            'handleDenied'
+            'handleDenied',
+            'handleLoadAll',
+            'handleProjectLoading'
         ]);
         bindAll(this, SECURITY_MANAGER_METHODS);
         this.nextModalCallbacks = [];
@@ -175,8 +167,18 @@ class TWSecurityManagerComponent extends React.Component {
         const vmSecurityManager = this.props.vm.extensionManager.securityManager;
         const propsSecurityManager = this.props.securityManager;
         for (const method of SECURITY_MANAGER_METHODS) {
-            vmSecurityManager[method] = propsSecurityManager[method] || this[method];
+            vmSecurityManager[method] = withSecurityBypass(
+                method,
+                propsSecurityManager[method] || this[method],
+                () => this.props.vm.runtime._mwProjectTrusted === true ||
+                    (typeof window !== 'undefined' && window.__mwAllowAllSecurity === true)
+            );
         }
+        this.props.vm.on('LOAD_PROGRESS', this.handleProjectLoading);
+    }
+
+    componentWillUnmount () {
+        this.props.vm.off('LOAD_PROGRESS', this.handleProjectLoading);
     }
 
     // eslint-disable-next-line valid-jsdoc
@@ -234,7 +236,7 @@ class TWSecurityManagerComponent extends React.Component {
                 
                 this.setState(oldState => ({
                     type,
-                    data,
+                    data: data || {},
                     callback: (value) => {
                         clearTimeout(timeoutId);
                         resolve(value);
@@ -267,16 +269,43 @@ class TWSecurityManagerComponent extends React.Component {
         this.state.callback(false);
     }
 
+    handleLoadAll () {
+        this.props.vm.runtime._mwProjectTrusted = true;
+        this.state.callback(true);
+    }
+
+    handleProjectLoading ({stage}) {
+        if (stage !== 'building') return;
+        this.props.vm.runtime._mwProjectTrusted = false;
+        extensionsTrustedByUser.clear();
+        fetchHostsTrustedByUser.clear();
+        embedHostsTrustedByUser.clear();
+        allowedAudio = false;
+        allowedVideo = false;
+        allowedReadClipboard = false;
+        allowedNotify = false;
+        allowedGeolocation = false;
+    }
+
     /**
      * @param {string} url The extension's URL
      * @returns {string} The VM worker mode to use
      */
-    getSandboxMode (url) {
-        if (isTrustedExtension(url)) {
+    async getSandboxMode (url) {
+        if (await isPlatformTrustedExtension(url) || isTrustedExtension(url)) {
             log.info(`Loading extension ${url} unsandboxed`);
             return 'unsandboxed';
         }
         return 'iframe';
+    }
+
+    async rewriteExtensionURL (url) {
+        const project = isPlatformProjectLoad() && getRememberedPlatformProjectState();
+        if (project && project.id && project.projectJsonUrl && !isGalleryExtensionUrl(url)) {
+            const rewritten = await extensionSourceUrl(project, url);
+            return rewritten;
+        }
+        return url;
     }
 
     handleChangeUnsandboxed (e) {
@@ -294,56 +323,46 @@ class TWSecurityManagerComponent extends React.Component {
      * @returns {Promise<boolean>} Whether the extension can be loaded
      */
     async canLoadExtensionFromProject (url) {
-        console.log('[Security Manager] canLoadExtensionFromProject called with URL:', url);
-        
-        // 添加整体超时保护，防止任何环节卡住
-        const TIMEOUT_MS = 60000; // 60秒超时
-        const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(() => {
-                console.error('[Security Manager] canLoadExtensionFromProject timeout');
-                reject(new Error('Extension loading timeout'));
-            }, TIMEOUT_MS);
-        });
-        
-        const resultPromise = (async () => {
-            if (isTrustedExtension(url)) {
-                log.info(`Loading extension ${url} automatically`);
-                console.log('[Security Manager] Extension is trusted, allowing automatically');
-                return true;
-            }
-            console.log('[Security Manager] Extension is not trusted, acquiring modal lock...');
+        const dangerousJs = jsExecutionExtension(url);
+        if (await isPlatformTrustedExtension(url)) {
+            log.info(`Loading extension ${url} automatically`);
+            return true;
+        }
+        if (!dangerousJs && isTrustedExtension(url)) {
+            log.info(`Loading extension ${url} automatically`);
+            return true;
+        }
+        if (url === 'builtin:patching' || dangerousJs) {
             const {showModal} = await this.acquireModalLock();
-            console.log('[Security Manager] Modal lock acquired');
-            if (url.startsWith('data:')) {
-                console.log('[Security Manager] Extension is data:url, showing special modal');
-                const allowed = await showModal(SecurityModals.LoadExtension, {
-                    url,
-                    unsandboxed: getPersistedUnsandboxed(),
-                    onChangeUnsandboxed: this.handleChangeUnsandboxed.bind(this)
-                });
-                console.log('[Security Manager] Data:url extension modal result:', allowed);
-                if (allowed) {
-                    setPersistedUnsandboxed(this.state.data.unsandboxed);
-                }
-                if (allowed && this.state.data.unsandboxed) {
-                    manuallyTrustExtension(url);
-                }
-                return allowed;
-            }
-            console.log('[Security Manager] Showing standard extension modal');
             return showModal(SecurityModals.LoadExtension, {
                 url,
-                unsandboxed: false
+                dangerousBuiltin: !dangerousJs,
+                dangerousJs,
+                unsandboxed: true
             });
-        })();
-        
-        try {
-            return await Promise.race([resultPromise, timeoutPromise]);
-        } catch (error) {
-            console.error('[Security Manager] canLoadExtensionFromProject failed:', error);
-            // 返回false而不是抛出错误，这样扩展不会被加载但项目仍然可以打开
-            return false;
         }
+        if (this.props.vm.runtime._mwProjectTrusted === true) return true;
+        const {showModal} = await this.acquireModalLock();
+        let unsandboxed = getPersistedUnsandboxed();
+        const allowed = await showModal(SecurityModals.LoadExtension, {
+            url,
+            unsandboxed,
+            onChangeUnsandboxed: e => {
+                unsandboxed = e.target.checked;
+                this.handleChangeUnsandboxed(e);
+            }
+        });
+        if (!allowed) return false;
+
+        if (this.props.vm.runtime._mwProjectTrusted === true) {
+            return true;
+        }
+
+        setPersistedUnsandboxed(unsandboxed);
+        if (unsandboxed) {
+            manuallyTrustExtension(url);
+        }
+        return true;
     }
 
     /**
@@ -352,29 +371,16 @@ class TWSecurityManagerComponent extends React.Component {
      */
     async canFetch (url) {
         const parsed = parseURL(url, FETCHABLE_PROTOCOLS);
-        if (!parsed) {
-            return false;
-        }
-        if (isAlwaysTrustedForFetching(parsed)) {
-            return true;
-        }
+        if (!parsed) return false;
+        if (isAlwaysTrustedForFetching(parsed)) return !isUntrustedPath(parsed);
         const {showModal, releaseLock} = await this.acquireModalLock();
-        const host = (
-            parsed.protocol === 'http:' ||
-            parsed.protocol === 'https:' ||
-            parsed.protocol === 'ws:' ||
-            parsed.protocol === 'wss:'
-        ) ? parsed.host : null;
+        const host = ['http:', 'https:', 'ws:', 'wss:'].includes(parsed.protocol) ? parsed.host : null;
         if (host && fetchHostsTrustedByUser.has(host)) {
             releaseLock();
             return true;
         }
-        const allowed = await showModal(SecurityModals.Fetch, {
-            url
-        });
-        if (host && allowed) {
-            fetchHostsTrustedByUser.add(host);
-        }
+        const allowed = await showModal(SecurityModals.Fetch, {url});
+        if (host && allowed) fetchHostsTrustedByUser.add(host);
         return allowed;
     }
 
@@ -383,14 +389,9 @@ class TWSecurityManagerComponent extends React.Component {
      * @returns {Promise<boolean>} True if the website can be opened
      */
     async canOpenWindow (url) {
-        const parsed = parseURL(url, VISITABLE_PROTOCOLS);
-        if (!parsed) {
-            return false;
-        }
+        if (!parseURL(url, VISITABLE_PROTOCOLS)) return false;
         const {showModal} = await this.acquireModalLock();
-        return showModal(SecurityModals.OpenWindow, {
-            url
-        });
+        return showModal(SecurityModals.OpenWindow, {url});
     }
 
     /**
@@ -398,14 +399,9 @@ class TWSecurityManagerComponent extends React.Component {
      * @returns {Promise<boolean>} True if the website can be redirected to
      */
     async canRedirect (url) {
-        const parsed = parseURL(url, VISITABLE_PROTOCOLS);
-        if (!parsed) {
-            return false;
-        }
+        if (!parseURL(url, VISITABLE_PROTOCOLS)) return false;
         const {showModal} = await this.acquireModalLock();
-        return showModal(SecurityModals.Redirect, {
-            url
-        });
+        return showModal(SecurityModals.Redirect, {url});
     }
 
     /**
@@ -469,37 +465,27 @@ class TWSecurityManagerComponent extends React.Component {
      */
     async canEmbed (url) {
         const parsed = parseURL(url, FETCHABLE_PROTOCOLS);
-        if (!parsed) {
-            return false;
-        }
-        const host = (parsed.protocol === 'http:' || parsed.protocol === 'https:') ? parsed.host : null;
+        if (!parsed) return false;
+        const host = ['http:', 'https:'].includes(parsed.protocol) ? parsed.host : null;
         const {showModal, releaseLock} = await this.acquireModalLock();
         if (host && embedHostsTrustedByUser.has(host)) {
             releaseLock();
             return true;
         }
         const allowed = await showModal(SecurityModals.Embed, {url});
-        if (host && allowed) {
-            embedHostsTrustedByUser.add(host);
-        }
+        if (host && allowed) embedHostsTrustedByUser.add(host);
         return allowed;
     }
 
     /**
      * @param {string} url URL to download
-     * @param {string} name Name to download as
-     * @returns {Promise<boolean>} True if allowed
+     * @param {string} name Download filename
+     * @returns {Promise<boolean>} Whether the download is allowed
      */
     async canDownload (url, name) {
-        const parsed = parseURL(url, FETCHABLE_PROTOCOLS);
-        if (!parsed) {
-            return false;
-        }
+        if (!parseURL(url, FETCHABLE_PROTOCOLS)) return false;
         const {showModal} = await this.acquireModalLock();
-        return showModal(SecurityModals.Download, {
-            url,
-            name
-        });
+        return showModal(SecurityModals.Download, {url, name});
     }
 
     render () {
@@ -510,8 +496,10 @@ class TWSecurityManagerComponent extends React.Component {
                 <SecurityManagerModal
                     type={this.state.type}
                     data={this.state.data}
+                    showLoadAll={canTrustLoadedProject(this.props.vm)}
                     onAllowed={this.handleAllowed}
                     onDenied={this.handleDenied}
+                    onLoadAll={this.handleLoadAll}
                     key={this.state.modalCount}
                 />
             );
@@ -523,6 +511,13 @@ class TWSecurityManagerComponent extends React.Component {
 
 TWSecurityManagerComponent.propTypes = {
     vm: PropTypes.shape({
+        on: PropTypes.func.isRequired,
+        off: PropTypes.func.isRequired,
+        runtime: PropTypes.shape({
+            on: PropTypes.func.isRequired,
+            off: PropTypes.func.isRequired,
+            _mwProjectTrusted: PropTypes.bool
+        }).isRequired,
         extensionManager: PropTypes.shape({
             securityManager: PropTypes.shape(
                 SECURITY_MANAGER_METHODS.reduce((obj, method) => {
@@ -553,5 +548,9 @@ const ConnectedSecurityManagerComponent = connect(
 export {
     ConnectedSecurityManagerComponent as default,
     manuallyTrustExtension,
-    isTrustedExtension
+    isTrustedExtension,
+    isPlatformTrustedExtension,
+    isOwnedPlatformProject,
+    isLocalProjectUrl,
+    canTrustLoadedProject
 };

@@ -1,6 +1,7 @@
 import {BLOCKS_CUSTOM, Theme, ACCENT_DEFAULT, GUI_DEFAULT, BLOCKS_THREE, MENUBAR_ALIGN_DEFAULT} from './index.js';
 import {customThemeManager, CustomTheme} from './custom-themes.js';
 import {applyGuiColors} from './guiHelpers.js';
+import {captureStoredAppearance, mergeStoredAppearance, applyAppearance} from './appearance.js';
 
 const matchMedia = query => (window.matchMedia ? window.matchMedia(query) : null);
 const PREFERS_HIGH_CONTRAST_QUERY = matchMedia('(prefers-contrast: more)');
@@ -62,25 +63,39 @@ const onSystemPreferenceChange = onChange => {
  */
 const detectTheme = () => {
     const systemPreferences = systemPreferencesTheme();
+    const storedAppearance = captureStoredAppearance();
+    const addStoredAppearance = theme => {
+        const missingStoredValue = Object.keys(storedAppearance)
+            .some(key => typeof theme.appearance[key] === 'undefined');
+        return missingStoredValue ? theme.set('appearance', mergeStoredAppearance(theme.appearance)) : theme;
+    };
 
     try {
         const local = localStorage.getItem(STORAGE_KEY);
+        if (local === null) {
+            return addStoredAppearance(systemPreferences);
+        }
 
         // Migrate legacy preferences
         if (local === 'dark') {
-            return Theme.defaults.dark;
+            return addStoredAppearance(Theme.defaults.dark);
         }
         if (local === 'light') {
-            return Theme.defaults.light;
+            return addStoredAppearance(Theme.defaults.light);
         }
 
         const parsed = JSON.parse(local);
-        
+        if (!parsed || typeof parsed !== 'object') {
+            return addStoredAppearance(systemPreferences);
+        }
+
         // Check if this is a custom theme
         if (parsed.isCustom && parsed.customThemeUuid) {
             const customTheme = customThemeManager.getTheme(parsed.customThemeUuid);
             if (customTheme) {
-                return customTheme;
+                const migratedTheme = addStoredAppearance(customTheme);
+                return migratedTheme === customTheme ? customTheme :
+                    customThemeManager.updateTheme(customTheme.uuid, {appearance: migratedTheme.appearance});
             }
             // Fall back to system preferences if custom theme not found
             console.warn(`Custom theme ${parsed.customThemeUuid} not found, falling back to system preferences`);
@@ -88,7 +103,7 @@ const detectTheme = () => {
 
         if (parsed.inlineCustomTheme && typeof parsed.inlineCustomTheme === 'object') {
             try {
-                return CustomTheme.import(parsed.inlineCustomTheme);
+                return addStoredAppearance(CustomTheme.import(parsed.inlineCustomTheme));
             } catch (e) {
                 console.warn('Failed to import inline custom theme, falling back to system preferences', e);
             }
@@ -102,19 +117,26 @@ const detectTheme = () => {
             wallpaper.gridVisible = true;
         }
 
+        const legacyAppearance = {
+            ...(parsed.menuBarLayout ? {menuBarLayout: parsed.menuBarLayout} : {}),
+            ...(parsed.styleSettings ? {styles: parsed.styleSettings} : {})
+        };
+
         return new Theme(
             parsed.accent || systemPreferences.accent,
             parsed.gui || systemPreferences.gui,
             parsed.blocks || systemPreferences.blocks,
             parsed.menuBarAlign || systemPreferences.menuBarAlign,
             wallpaper,
-            parsed.fonts || {system: [], google: [], history: []}
+            parsed.fonts || {system: [], google: [], history: []},
+            null,
+            {...storedAppearance, ...legacyAppearance, ...(parsed.appearance || {})}
         );
     } catch (e) {
         // ignore
     }
 
-    return systemPreferences;
+    return addStoredAppearance(systemPreferences);
 };
 
 /**
@@ -126,10 +148,13 @@ const persistTheme = theme => {
 
     // Handle custom themes differently
     if (theme instanceof CustomTheme) {
-        const isSavedCustomTheme = !!customThemeManager.getTheme(theme.uuid);
-        if (isSavedCustomTheme) {
+        const savedCustomTheme = customThemeManager.getTheme(theme.uuid);
+        if (savedCustomTheme) {
             nonDefaultSettings.customThemeUuid = theme.uuid;
             nonDefaultSettings.isCustom = true;
+            if (JSON.stringify(savedCustomTheme.appearance) !== JSON.stringify(theme.appearance)) {
+                customThemeManager.updateTheme(theme.uuid, {appearance: theme.appearance});
+            }
         } else {
             // Modified/unselected custom theme: persist inline so it can be restored.
             nonDefaultSettings.inlineCustomTheme = theme.export();
@@ -148,6 +173,9 @@ const persistTheme = theme => {
         if (theme.menuBarAlign !== systemPreferences.menuBarAlign) {
             nonDefaultSettings.menuBarAlign = theme.menuBarAlign;
         }
+        if (Object.keys(theme.appearance).length > 0) {
+            nonDefaultSettings.appearance = theme.appearance;
+        }
         // Always save wallpaper settings if they exist
         if (theme.wallpaper && (theme.wallpaper.url || theme.wallpaper.history.length > 0)) {
             nonDefaultSettings.wallpaper = theme.wallpaper;
@@ -162,19 +190,46 @@ const persistTheme = theme => {
         }
     }
 
-    if (Object.keys(nonDefaultSettings).length === 0) {
-        try {
+    let previous = null;
+    try {
+        previous = localStorage.getItem(STORAGE_KEY);
+    } catch (e) {
+        // ignore
+    }
+    const next = Object.keys(nonDefaultSettings).length === 0 ? null : JSON.stringify(nonDefaultSettings);
+    try {
+        if (next === null) {
             localStorage.removeItem(STORAGE_KEY);
-        } catch (e) {
-            // ignore
+        } else {
+            localStorage.setItem(STORAGE_KEY, next);
         }
-    } else {
+    } catch (e) {
+        // ignore
+    }
+
+    if (next !== previous) {
         try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(nonDefaultSettings));
-        } catch (e) {
-            // ignore
+            require('../rotur/cloud-sync.js').notifyLocalChange();
+        } catch (_) {
+            // cloud sync optional
         }
     }
+};
+
+/**
+ * Apply a theme to the GUI pipeline without persisting it.
+ * Use for boot, storage events, and forced themes (embeds); persistence
+ * must only happen on an explicit user change via applyTheme.
+ * @param {Theme} theme the theme
+ */
+const applyThemeVisuals = theme => {
+    try {
+        applyGuiColors(theme);
+    } catch (e) {
+        console.error('Failed to apply GUI colors for theme:', e);
+    }
+
+    applyAppearance(theme.appearance);
 };
 
 /**
@@ -183,18 +238,18 @@ const persistTheme = theme => {
  * @param {Theme} theme the theme
  */
 const applyTheme = theme => {
-    try {
-        applyGuiColors(theme);
-    } catch (e) {
-        // Don't let GUI application failures block persistence
-        console.error('Failed to apply GUI colors for theme:', e);
-    }
-
+    applyThemeVisuals(theme);
     persistTheme(theme);
 };
 
+if (typeof window !== 'undefined') {
+    window.addEventListener('storage', event => {
+        if (event.key === STORAGE_KEY) applyThemeVisuals(detectTheme());
+    });
+}
+
 try {
-    applyTheme(detectTheme());
+    applyThemeVisuals(detectTheme());
 } catch (e) {
     console.error('Failed to apply theme:', e);
 }
@@ -203,5 +258,6 @@ export {
     onSystemPreferenceChange,
     detectTheme,
     persistTheme,
-    applyTheme
+    applyTheme,
+    applyThemeVisuals
 };

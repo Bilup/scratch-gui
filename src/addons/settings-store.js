@@ -18,6 +18,22 @@ import addons from './generated/addon-manifests';
 import upstreamMeta from './generated/upstream-meta.json';
 import EventTargetShim from './event-target';
 
+const NARROW_SCREEN_WIDTH = 900;
+
+const NARROW_SCREEN_ADDONS = ['hide-flyout'];
+
+const NARROW_SCREEN_SETTINGS = {
+    'hide-flyout': {
+        toggle: 'category'
+    }
+};
+
+const isNarrowScreen = () => (
+    typeof window !== 'undefined' &&
+    typeof window.innerWidth === 'number' &&
+    window.innerWidth < NARROW_SCREEN_WIDTH
+);
+
 const SETTINGS_KEY = 'tw:addons';
 const VERSION = 5;
 
@@ -28,8 +44,7 @@ const migrateSettings = settings => {
     }
 
     // Migrate 1 -> 2
-    // tw-project-info is now block-count
-    // tw-interface-customization split into tw-remove-backpack and tw-remove-feedback
+    // tw-interface-customization split into native menu settings and tw-remove-backpack
     if (oldVersion < 2) {
         const projectInfo = settings['tw-project-info'];
         if (projectInfo && projectInfo.enabled) {
@@ -41,11 +56,6 @@ const migrateSettings = settings => {
         if (interfaceCustomization && interfaceCustomization.enabled) {
             if (interfaceCustomization.removeBackpack) {
                 settings['tw-remove-backpack'] = {
-                    enabled: true
-                };
-            }
-            if (interfaceCustomization.removeFeedback) {
-                settings['tw-remove-feedback'] = {
                     enabled: true
                 };
             }
@@ -229,6 +239,9 @@ class SettingsStore extends EventTargetShim {
         if (Object.prototype.hasOwnProperty.call(storage, 'enabled')) {
             return storage.enabled;
         }
+        if (NARROW_SCREEN_ADDONS.includes(addonId) && isNarrowScreen()) {
+            return true;
+        }
         return !!manifest.enabledByDefault;
     }
 
@@ -247,6 +260,10 @@ class SettingsStore extends EventTargetShim {
         }
         if (Object.prototype.hasOwnProperty.call(storage, settingId)) {
             return storage[settingId];
+        }
+        const narrowDefaults = NARROW_SCREEN_SETTINGS[addonId];
+        if (narrowDefaults && Object.prototype.hasOwnProperty.call(narrowDefaults, settingId) && isNarrowScreen()) {
+            return narrowDefaults[settingId];
         }
         return settingObject.default;
     }

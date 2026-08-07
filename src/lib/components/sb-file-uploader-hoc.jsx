@@ -7,7 +7,7 @@ import log from '../utils/log';
 import sharedMessages from '../constants/shared-messages';
 import {setFileHandle, setProjectError} from '../../reducers/tw';
 import unpackage from '../unpackager';
-import {importRepoFromSb3} from '../git/browser-git';
+import RestorePointAPI from '../api/restore-points';
 
 import {
     LoadingStates,
@@ -82,17 +82,7 @@ const SBFileUploaderHOC = function (WrappedComponent) {
                 (async () => {
                     try {
                         const [handle] = await this.props.showOpenFilePicker({
-                            multiple: false,
-                            types: [
-                                {
-                                    description: 'Scratch Project',
-                                    accept: {
-                                        // Using application/x.scratch.sb3 as done in scratch-vm causes file pickers
-                                        // to disallow picking any items in Chrome 133 on Android.
-                                        'application/x.scratch.sb3': ['.sb', '.sb2', '.sb3']
-                                    }
-                                }
-                            ]
+                            multiple: false
                         });
                         const file = await handle.getFile();
                         console.log('[SBFileUploader] Step 2: File selected via FS API:', file.name, file.size);
@@ -116,7 +106,6 @@ const SBFileUploaderHOC = function (WrappedComponent) {
                 console.log('[SBFileUploader] Step 2: Using fallback input element');
                 // create <input> element and add it to DOM
                 this.inputElement = document.createElement('input');
-                this.inputElement.accept = '.sb,.sb2,.sb3,.html';
                 this.inputElement.style = 'display: none;';
                 this.inputElement.type = 'file';
                 this.inputElement.onchange = this.handleChange; // connects to step 3
@@ -131,7 +120,6 @@ const SBFileUploaderHOC = function (WrappedComponent) {
             console.log('[SBFileUploader] Step 3: File selected, handling change');
             const {
                 intl,
-                isShowingWithoutId,
                 loadingState,
                 projectChanged,
                 userOwnsProject
@@ -146,8 +134,7 @@ const SBFileUploaderHOC = function (WrappedComponent) {
                 // replace it. (If they don't own the project and haven't
                 // changed it, no need to confirm.)
                 let uploadAllowed = true;
-                if (userOwnsProject || (projectChanged && isShowingWithoutId)) {
-                    console.log('[SBFileUploader] Step 3: Requesting confirmation from user');
+                if (userOwnsProject || projectChanged) {
                     uploadAllowed = confirm( // eslint-disable-line no-alert
                         intl.formatMessage(sharedMessages.replaceProjectWarning)
                     );
@@ -213,7 +200,9 @@ const SBFileUploaderHOC = function (WrappedComponent) {
                 this.props.onLoadingStarted();
                 const filename = this.fileToUpload && this.fileToUpload.name;
                 let loadingSuccess = false;
-                console.log('[SBFileUploader] Step 6: Loading file:', filename);
+                if (this.props.projectChanged) {
+                    await RestorePointAPI.createSafetyRestorePoint(this.props.vm, this.props.projectTitle);
+                }
                 // tw: stop when loading new project
                 console.log('[SBFileUploader] Step 6: Quitting VM before loading new project');
                 this.props.vm.quit();
@@ -240,8 +229,7 @@ const SBFileUploaderHOC = function (WrappedComponent) {
                 // Snapshot the resolved bytes so the async handler below reads a
                 // stable value (projectData may have been reassigned for .html).
                 const loadedBytes = projectData;
-                console.log('[SBFileUploader] Step 6: Calling vm.loadProject...');
-                this.props.vm.loadProject(loadedBytes)
+                this.props.vm.loadProject(loadedBytes, {mwCanTrustProject: true})
                     .then(async () => {
                         console.log('[SBFileUploader] Step 6: VM loadProject succeeded');
                         if (filename) {
@@ -254,6 +242,7 @@ const SBFileUploaderHOC = function (WrappedComponent) {
                         // Restore any git history embedded in the .sb3 (fractch tree + .git),
                         // or clear a stale repo if the loaded project has none.
                         try {
+                            const {importRepoFromSb3} = await import('../git/browser-git');
                             await importRepoFromSb3(loadedBytes);
                         } catch (gitError) {
                             log.error('Failed to restore embedded git history:', gitError);
@@ -301,6 +290,7 @@ const SBFileUploaderHOC = function (WrappedComponent) {
                 onSetFileHandle,
                 onSetProjectTitle,
                 projectChanged,
+                projectTitle,
                 requestProjectUpload: requestProjectUploadProp,
                 userOwnsProject,
                 /* eslint-enable no-unused-vars */
@@ -331,6 +321,7 @@ const SBFileUploaderHOC = function (WrappedComponent) {
         onLoadingStarted: PropTypes.func,
         onSetProjectTitle: PropTypes.func,
         projectChanged: PropTypes.bool,
+        projectTitle: PropTypes.string,
         requestProjectUpload: PropTypes.func,
         showOpenFilePicker: PropTypes.func,
         userOwnsProject: PropTypes.bool,
@@ -357,6 +348,7 @@ const SBFileUploaderHOC = function (WrappedComponent) {
             isShowingWithoutId: getIsShowingWithoutId(loadingState),
             loadingState: loadingState,
             projectChanged: state.scratchGui.projectChanged,
+            projectTitle: state.scratchGui.projectTitle,
             userOwnsProject: ownProps.authorUsername && user &&
                 (ownProps.authorUsername === user.username),
             vm: state.scratchGui.vm

@@ -4,10 +4,10 @@ import * as accentRed from './accent/red';
 import * as accentOrange from './accent/orange';
 import * as accentYellow from './accent/yellow';
 import * as accentGreen from './accent/green';
-import * as accentRainbow from './accent/rainbow';
 import * as accentGreenTea from './accent/green-tea';
 import * as accentPaleBlue from './accent/pale-blue';
 import * as accentEggplantPurple from './accent/eggplant-purple';
+import * as accentPink from './accent/pink';
 
 const ACCENTS = [
     {
@@ -65,26 +65,39 @@ const ACCENTS = [
         id: 'tw.accent.eggplant-purple'
     },
     {
-        name: 'Rainbow',
-        accent: accentRainbow,
-        description: 'Rainbow accent color',
-        id: 'tw.accent.rainbow'
+        name: 'Pink',
+        accent: accentPink,
+        description: 'Pink accent color',
+        id: 'tw.accent.pink'
+    }
+];
+
+const ACCENT_GROUPS = [
+    {
+        label: {id: 'mw.accentGroup.colors', defaultMessage: 'Colors'},
+        accents: ['red', 'orange', 'yellow', 'green', 'pale-blue', 'blue', 'purple', 'eggplant-purple', 'pink']
     }
 ];
 
 const ACCENT_MAP = {};
 for (const accent of ACCENTS) {
-    ACCENT_MAP[accent.name.toLowerCase()] = {
+    // Use the id short name (e.g. "pale-blue", "eggplant-purple") as the key so
+    // it matches ACCENT_GROUPS, the settings panel and persisted theme values.
+    // Previously the display name was used ("Pale Blue" -> "pale blue",
+    // "Eggplant" -> "eggplant"), which hid those accents from the picker.
+    const accentId = accent.id.split('.').pop();
+    ACCENT_MAP[accentId] = {
+        ...accent.accent,
         defaultMessage: accent.name,
-        accent: accent.accent,
         description: accent.description,
         id: accent.id
     };
 }
-const ACCENT_DEFAULT = ACCENTS[5].name.toLowerCase();
+const ACCENT_DEFAULT = ACCENTS[5].id.split('.').pop();
 
 export {
     ACCENTS,
     ACCENT_MAP,
+    ACCENT_GROUPS,
     ACCENT_DEFAULT
 };

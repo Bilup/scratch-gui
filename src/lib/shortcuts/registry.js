@@ -31,8 +31,8 @@ export const getDefaultShortcuts = () => [
         key: 'Ctrl+S',
         defaultKey: 'Ctrl+S',
         category: SHORTCUT_CATEGORIES.FILE,
-        actionType: 'redux',
-        action: 'manualUpdateProject',
+        actionType: 'callback',
+        action: 'saveSmart',
         params: [],
         label: 'Save'
     },
@@ -75,6 +75,16 @@ export const getDefaultShortcuts = () => [
         action: 'openRestorePointModal',
         params: [],
         label: 'Restore Points'
+    },
+    {
+        id: 'spotlightSearch',
+        key: 'Ctrl+K',
+        defaultKey: 'Ctrl+K',
+        category: SHORTCUT_CATEGORIES.EDITOR_NAVIGATION,
+        actionType: 'callback',
+        action: 'openSpotlight',
+        params: [],
+        label: 'Spotlight Search'
     },
     {
         id: 'settings',

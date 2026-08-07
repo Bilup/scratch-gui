@@ -11,10 +11,12 @@
   },
   "main": "./dist/scratch-gui.js",
   "scripts": {
-    "build": "npm run prepublish && npm run clean && webpack --colors --bail",
+    "postinstall": "patch-package || echo 'skipping patch-package (not installed)'",
+    "build": "npm run prepublish && npm run clean && cross-env NODE_ENV=production webpack --colors --bail",
     "clean": "rimraf ./build && mkdirp build && rimraf ./dist && mkdirp dist",
+    "setup": "npm install",
     "reinstall": "rm -rf node_modules package-lock.json && npm i && npm run link",
-    "deploy": "NODE_ENV=production npm run build && touch build/.nojekyll && gh-pages -t -d build -m \"Build for $(git log --pretty=format:%H -n1)\"",
+    "deploy": "NODE_ENV=production npm run build && touch build/.nojekyll && cp -r functions build/functions && gh-pages -t -d build -m \"Build for $(git log --pretty=format:%H -n1)\"",
     "prepublish": "node scripts/prepublish.mjs",
     "i18n:push": "tx-push-src scratch-editor interface translations/en.json",
     "i18n:src": "rimraf ./translations/messages/src && babel src > tmp.js && rimraf tmp.js && build-i18n-src ./translations/messages/src ./translations/",
@@ -36,13 +38,16 @@
   },
   "dependencies": {
     "@bilup/scratch-l10n": "github:Bilup/scratch-l10n#develop-builds",
+    "@bilup/scratch-storage": "github:Bilup/scratch-storage#develop-builds",
     "@bilup/scratch-svg-renderer": "github:Bilup/scratch-svg-renderer#develop-builds",
+    "@fontsource/jetbrains-mono": "^5.2.8",
     "@isomorphic-git/lightning-fs": "^4.6.2",
     "@microbit/microbit-universal-hex": "0.2.2",
     "@turbowarp/jszip": "^3.11.1",
     "@turbowarp/nanolog": "^0.2.0",
-    "@bilup/scratch-storage": "github:Bilup/scratch-storage#develop-builds",
     "@turbowarp/startaudiocontext": "^1.0.0",
+    "@xterm/addon-fit": "^0.11.0",
+    "@xterm/xterm": "^6.0.0",
     "arraybuffer-loader": "^1.0.6",
     "autoprefixer": "^9.0.1",
     "balance-text": "3.3.1",
@@ -53,11 +58,12 @@
     "computed-style-to-inline-style": "3.0.0",
     "cookie": "0.5.0",
     "copy-webpack-plugin": "6.4.1",
-    "core-js": "^3.48.0",
+    "core-js": "^2.6.12",
     "css-loader": "^1.0.0",
     "dapjs": "2.3.0",
-    "es6-object-assign": "1.1.0",
-    "fractch": "0.6.1",
+    "fake-indexeddb": "^6.2.5",
+    "format-message": "^6.2.4",
+    "fractch": "0.7.8",
     "get-float-time-domain-data": "0.1.0",
     "get-user-media-promise": "1.1.4",
     "https-proxy-agent": "^9.0.0",
@@ -67,6 +73,7 @@
     "isomorphic-git": "^1.34.0",
     "js-base64": "2.4.9",
     "jsoneditor": "10.4.2",
+    "just-bash": "^3.1.0",
     "keymirror": "0.1.1",
     "lodash.bindall": "4.4.0",
     "lodash.debounce": "4.0.8",
@@ -75,6 +82,7 @@
     "lodash.throttle": "4.0.1",
     "lucide-react": "^0.562.0",
     "mammoth": "^1.6.0",
+    "monaco-editor": "^0.34.1",
     "nanoid": "^3.3.0",
     "omggif": "1.0.9",
     "papaparse": "5.3.0",
@@ -96,6 +104,7 @@
     "react-popover": "0.5.10",
     "react-redux": "5.0.7",
     "react-responsive": "5.0.0",
+    "react-router-dom": "^6.30.4",
     "react-string-replace": "^0.4.4",
     "react-style-proptype": "3.2.2",
     "react-tabs": "2.3.0",
@@ -104,8 +113,11 @@
     "redux": "3.7.2",
     "redux-throttle": "0.1.1",
     "remark-gfm": "^2.0.0",
+    "rotur-sdk": "^1.3.4",
+    "accounts-sdk": "github:Bilup/accounts-sdk#main",
     "scratch-audio": "github:Bilup/scratch-audio#develop-builds",
-    "scratch-blocks": "github:Bilup/scratch-blocks#develop-builds",
+    "scratch-blocks": "github:Bilup/new-scratch-blocks#develop-builds",
+    "scratch-parser": "github:Bilup/scratch-parser#main",
     "scratch-paint": "github:Bilup/scratch-paint#develop",
     "scratch-render": "github:Bilup/scratch-render#develop-builds",
     "scratch-vm": "github:Bilup/scratch-vm#develop-builds",
@@ -141,6 +153,7 @@
     "eslint-plugin-import": "2.29.1",
     "eslint-plugin-jest": "22.17.0",
     "eslint-plugin-react": "7.33.2",
+    "cross-env": "^7.0.3",
     "exports-loader": "0.7.0",
     "file-loader": "6.2.0",
     "gh-pages": "3.2.3",
@@ -152,6 +165,7 @@
     "less": "^4.1.0",
     "less-loader": "^7.3.0",
     "mkdirp": "1.0.3",
+    "patch-package": "^8.0.1",
     "raf": "3.4.1",
     "react-test-renderer": "16.14.0",
     "redux-mock-store": "1.5.3",
@@ -165,6 +179,7 @@
     "webpack": "4.47.0",
     "webpack-cli": "3.3.12",
     "webpack-dev-server": "3.11.2",
+    "worker-loader": "^2.0.0",
     "yauzl": "2.10.0"
   },
   "jest": {
@@ -178,12 +193,64 @@
     "moduleNameMapper": {
       "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/test/__mocks__/fileMock.js",
       "\\.(css|less)$": "<rootDir>/test/__mocks__/styleMock.js",
-      "editor-msgs(\\.js)?$": "<rootDir>/test/__mocks__/editor-msgs-mock.js"
+      "editor-msgs(\\.js)?$": "<rootDir>/test/__mocks__/editor-msgs-mock.js",
+      "^scratch-render-fonts$": "<rootDir>/src/lib/tw-scratch-render-fonts",
+      "^!arraybuffer-loader!.*$": "<rootDir>/test/__mocks__/arrayBufferMock.js",
+      "^!raw-loader!.*$": "<rootDir>/test/__mocks__/fileMock.js",
+      "^scratch-audio$": "<rootDir>/node_modules/scratch-audio/src/index.js",
+      "^@turbowarp/scratch-svg-renderer$": "<rootDir>/node_modules/@turbowarp/scratch-svg-renderer"
+    },
+    "testEnvironment": "jsdom",
+    "testEnvironmentOptions": {
+      "customExportConditions": [
+        "node",
+        "require",
+        "default"
+      ]
+    },
+    "transformIgnorePatterns": [
+      "/node_modules/(?!(scratch-audio|scratch-parser|fractch|pify|isomorphic-git|rotur-sdk|accounts-sdk|@vernier/godirect|@chenglou/pretext)/)"
+    ],
+    "transform": {
+      "^.+\\.(js|jsx|mjs|cjs)$": [
+        "babel-jest",
+        {
+          "babelrc": false,
+          "configFile": false,
+          "presets": [
+            [
+              "@babel/preset-env",
+              {
+                "targets": {
+                  "node": "current"
+                }
+              }
+            ],
+            "@babel/preset-react"
+          ],
+          "plugins": [
+            "@babel/plugin-syntax-dynamic-import",
+            "@babel/plugin-transform-object-rest-spread"
+          ]
+        }
+      ]
     }
   },
-  "overrides": {
-    "webpack@4.47.0": {
-      "terser-webpack-plugin": "^4.2.3"
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "chromedriver",
+      "fsevents",
+      "scratch-audio",
+      "scratch-blocks",
+      "scratch-paint",
+      "scratch-render",
+      "scratch-vm"
+    ],
+    "overrides": {
+      "webpack@4.47.0>terser-webpack-plugin": "^1.4.1",
+      "cheerio": "1.0.0-rc.12",
+      "brace-expansion": "1.1.11",
+      "rotur-sdk": "github:Bilup/accounts-sdk#main"
     }
   }
 }

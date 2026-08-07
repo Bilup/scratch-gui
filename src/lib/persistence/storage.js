@@ -1,6 +1,8 @@
 import ScratchStorage from '@bilup/scratch-storage';
 
 import defaultProject from '../default-project';
+import {hasBridge, bridgeFetch} from '../community/embed-bridge';
+import {cachedFetchBuffer} from '../community/cached-fetch';
 
 /**
  * Wrapper for ScratchStorage which adds default web sources.
@@ -9,6 +11,12 @@ import defaultProject from '../default-project';
 class Storage extends ScratchStorage {
     constructor () {
         super();
+        this.AssetType.CustomAsset = {
+            contentType: 'application/octet-stream',
+            name: 'CustomAsset',
+            runtimeFormat: 'bin',
+            immutable: true
+        };
         this.cacheDefaultProject();
     }
     addOfficialScratchWebStores () {
@@ -19,13 +27,54 @@ class Storage extends ScratchStorage {
             this.getProjectUpdateConfig.bind(this)
         );
         this.addWebStore(
-            [this.AssetType.ImageVector, this.AssetType.ImageBitmap, this.AssetType.Sound, this.AssetType.Font],
+            [
+                this.AssetType.ImageVector,
+                this.AssetType.ImageBitmap,
+                this.AssetType.Sound,
+                this.AssetType.Font,
+                this.AssetType.CustomAsset
+            ],
             this.getAssetGetConfig.bind(this),
             // We set both the create and update configs to the same method because
             // storage assumes it should update if there is an assetId, but the
             // asset store uses the assetId as part of the create URI.
             this.getAssetCreateConfig.bind(this),
             this.getAssetCreateConfig.bind(this)
+        );
+    }
+    addMistWarpAssetStore (assetsBase) {
+        const base = assetsBase.replace(/\/+$/, '');
+        if (this.mistwarpAssetsBase === base) {
+            return;
+        }
+        if (this.mistwarpAssetsBase) {
+            this.mistwarpAssetsBase = base;
+            return;
+        }
+        this.mistwarpAssetsBase = base;
+        if (hasBridge()) {
+            this.addHelper({
+                load: (assetType, assetId, dataFormat) =>
+                    bridgeFetch(`${this.mistwarpAssetsBase}/${assetId}.${dataFormat}`)
+                        .then(buffer => this.createAsset(assetType, dataFormat, new Uint8Array(buffer), assetId))
+            });
+        } else {
+            this.addHelper({
+                load: (assetType, assetId, dataFormat) =>
+                    cachedFetchBuffer(`${this.mistwarpAssetsBase}/${assetId}.${dataFormat}`)
+                        .then(buffer => this.createAsset(assetType, dataFormat, new Uint8Array(buffer), assetId))
+                        .catch(() => null)
+            });
+        }
+        this.addWebStore(
+            [
+                this.AssetType.ImageVector,
+                this.AssetType.ImageBitmap,
+                this.AssetType.Sound,
+                this.AssetType.Font,
+                this.AssetType.CustomAsset
+            ],
+            asset => `${this.mistwarpAssetsBase}/${asset.assetId}.${asset.dataFormat}`
         );
     }
     setProjectHost (projectHost) {

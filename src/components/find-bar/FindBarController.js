@@ -1,4 +1,5 @@
 import BlockItem from '../../lib/find-bar/BlockItem';
+import {getCodeSearch, setFindBarApi} from '../../lib/find-bar/api';
 
 import Dropdown from './Dropdown';
 
@@ -69,6 +70,9 @@ export default class FindBarController {
         this.findBarOuter = null;
         this.findWrapper = null;
         this.findInput = null;
+        this.codeResults = [];
+        this.codeIndex = 0;
+        this.codeSearchToken = 0;
         this.dropdownOut = null;
         this.dropdown = new Dropdown({ScratchBlocks, utils, vm, msg});
         this.searchControls = null;
@@ -76,16 +80,21 @@ export default class FindBarController {
         this._onDocumentKeyDown = e => this.eventKeyDown(e);
         document.addEventListener('keydown', this._onDocumentKeyDown, true);
 
+        this._onDocumentPointerDown = e => {
+            if (!this.findBarOuter || !this.findBarOuter.classList.contains('mw-find-expanded')) return;
+            if (this.findBarOuter.contains(e.target)) return;
+            this.collapseMobileSearch();
+        };
+        document.addEventListener('pointerdown', this._onDocumentPointerDown, true);
+
         this._cachedScratchBlocks = null;
         this._cachedScratchCostumes = null;
         this._cachedScratchSounds = null;
-        this._lastWorkspaceVersion = null;
         this._debounceTimer = null;
-        this._workspaceChangeListener = null;
-    }
 
-    get workspace () {
-        return this.ScratchBlocks.getMainWorkspace();
+        this._invalidateOnVmChange = () => this._invalidateCache();
+        this.vm.on('PROJECT_CHANGED', this._invalidateOnVmChange);
+        this.vm.on('workspaceUpdate', this._invalidateOnVmChange);
     }
 
     _debounce (func, delay) {
@@ -99,35 +108,6 @@ export default class FindBarController {
         this._cachedScratchBlocks = null;
         this._cachedScratchCostumes = null;
         this._cachedScratchSounds = null;
-        this._lastWorkspaceVersion = null;
-    }
-
-    _getWorkspaceVersion () {
-        const workspace = this.workspace;
-        if (!workspace) return null;
-        return workspace.id || (workspace.getAllBlocks && workspace.getAllBlocks().length);
-    }
-
-    _setupWorkspaceListener () {
-        if (this._workspaceChangeListener) return;
-
-        this._workspaceChangeListener = () => {
-            this._invalidateCache();
-            this.dropdown.empty();
-        };
-
-        const workspace = this.workspace;
-        if (workspace && workspace.addChangeListener) {
-            workspace.addChangeListener(this._workspaceChangeListener);
-        }
-    }
-
-    _removeWorkspaceListener () {
-        const workspace = this.workspace;
-        if (workspace && workspace.removeChangeListener && this._workspaceChangeListener) {
-            workspace.removeChangeListener(this._workspaceChangeListener);
-        }
-        this._workspaceChangeListener = null;
     }
 
     createDom (root) {
@@ -154,6 +134,15 @@ export default class FindBarController {
                 <path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
             </svg>
         `;
+
+        this.searchIcon.addEventListener('click', () => {
+            if (this.findBarOuter.classList.contains('mw-find-expanded')) {
+                this.collapseMobileSearch();
+            } else {
+                this.findBarOuter.classList.add('mw-find-expanded');
+                if (this.findInput) this.findInput.focus();
+            }
+        });
 
         this.dropdownOut = this.findWrapper.appendChild(document.createElement('label'));
         this.dropdownOut.className = 'sa-find-dropdown-out';
@@ -199,13 +188,20 @@ export default class FindBarController {
         this.searchStats.className = 'sa-find-stats';
 
         this.bindEvents();
-        this._setupWorkspaceListener();
         this.tabChanged();
+
+        setFindBarApi({
+            expand: () => this.expandMobileSearch(),
+            collapse: () => this.collapseMobileSearch()
+        });
     }
 
     destroy () {
+        setFindBarApi(null);
         document.removeEventListener('keydown', this._onDocumentKeyDown, true);
-        this._removeWorkspaceListener();
+        document.removeEventListener('pointerdown', this._onDocumentPointerDown, true);
+        this.vm.removeListener('PROJECT_CHANGED', this._invalidateOnVmChange);
+        this.vm.removeListener('workspaceUpdate', this._invalidateOnVmChange);
         if (this._debounceTimer) {
             clearTimeout(this._debounceTimer);
             this._debounceTimer = null;
@@ -223,6 +219,10 @@ export default class FindBarController {
     bindEvents () {
         this.findInput.addEventListener('focus', () => {
             this.updateModifierVisibility();
+            if (getCodeSearch()) {
+                if (this.findInput.value) this.inputChange({skipDebounce: true});
+                return;
+            }
             this.showDropDown();
             if (this.findInput.value) {
                 this.inputChange({skipDebounce: true});
@@ -352,6 +352,21 @@ export default class FindBarController {
     }
 
     inputChange (options = {}) {
+        const codeSearch = getCodeSearch();
+        if (codeSearch) {
+            const query = this.findInput.value;
+            codeSearch.search(query, this.isCaseSensitive);
+            if (!query) {
+                this.showCodeResults([]);
+                return;
+            }
+            const token = ++this.codeSearchToken;
+            codeSearch.searchAll(query, this.isCaseSensitive).then(results => {
+                if (token === this.codeSearchToken) this.showCodeResults(results);
+            });
+            return;
+        }
+
         if (!this.findInput.value) {
             this.showAllItems();
             return;
@@ -430,7 +445,81 @@ export default class FindBarController {
         }
     }
 
+    showCodeResults (results) {
+        this.dropdown.empty();
+        this.codeResults = results;
+        this.codeIndex = 0;
+        if (!results.length) {
+            this.hideDropDown();
+            return;
+        }
+        for (const result of results) {
+            const item = document.createElement('li');
+            item.className = 'sa-find-code-result';
+
+            const where = document.createElement('span');
+            where.className = 'sa-find-code-where';
+            where.textContent = `${result.filepath}:${result.line}`;
+
+            const preview = document.createElement('span');
+            preview.className = 'sa-find-code-preview';
+            preview.textContent = result.preview;
+
+            item.appendChild(where);
+            item.appendChild(preview);
+            item.addEventListener('mousedown', e => {
+                e.preventDefault();
+                const codeSearch = getCodeSearch();
+                if (codeSearch) codeSearch.open(result);
+                this.findInput.blur();
+            });
+
+            this.dropdown.items.push(item);
+            this.dropdown.el.appendChild(item);
+        }
+        this.selectCodeResult(0);
+        this.showDropDown();
+    }
+
+    selectCodeResult (index) {
+        const items = this.dropdown.items;
+        if (!items.length) return;
+        const wrapped = ((index % items.length) + items.length) % items.length;
+        this.codeIndex = wrapped;
+        items.forEach((item, i) => item.classList.toggle('sel', i === wrapped));
+        items[wrapped].scrollIntoView({block: 'nearest'});
+    }
+
     inputKeyDown (e) {
+        const codeSearch = getCodeSearch();
+        if (codeSearch) {
+            const results = this.codeResults || [];
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                if (results.length) {
+                    this.selectCodeResult(this.codeIndex + (e.key === 'ArrowDown' ? 1 : -1));
+                    e.preventDefault();
+                }
+            } else if (e.key === 'Enter') {
+                if (results[this.codeIndex]) {
+                    codeSearch.open(results[this.codeIndex]);
+                    this.findInput.blur();
+                } else {
+                    codeSearch.step(e.shiftKey ? -1 : 1);
+                }
+                e.preventDefault();
+            } else if (e.key === 'F3') {
+                codeSearch.step(e.shiftKey ? -1 : 1);
+                e.preventDefault();
+            } else if (e.key === 'Escape') {
+                this.findInput.value = '';
+                codeSearch.search('', this.isCaseSensitive);
+                this.showCodeResults([]);
+                this.findInput.blur();
+                e.preventDefault();
+            }
+            return;
+        }
+
         this.dropdown.inputKeyDown(e);
 
         if (e.key === 'F3') {
@@ -450,10 +539,22 @@ export default class FindBarController {
                 this.inputChange();
             } else {
                 this.findInput.blur();
+                this.collapseMobileSearch();
             }
             e.preventDefault();
             return;
         }
+    }
+
+    collapseMobileSearch () {
+        if (!this.findBarOuter) return;
+        this.findBarOuter.classList.remove('mw-find-expanded');
+    }
+
+    expandMobileSearch () {
+        if (!this.findBarOuter) return;
+        this.findBarOuter.classList.add('mw-find-expanded');
+        if (this.findInput) this.findInput.focus();
     }
 
     toggleCaseSensitive () {
@@ -537,16 +638,14 @@ export default class FindBarController {
 
         let scratchBlocks;
         const tabIndex = this.activeTabIndexRef.current;
-        const workspaceVersion = this._getWorkspaceVersion();
 
         switch (tabIndex) {
         case 0:
-            if (this._cachedScratchBlocks && this._cachedScratchBlocks.length > 0 && this._lastWorkspaceVersion === workspaceVersion) {
+            if (this._cachedScratchBlocks) {
                 scratchBlocks = this._cachedScratchBlocks;
             } else {
                 scratchBlocks = this.getScratchBlocks();
                 this._cachedScratchBlocks = scratchBlocks;
-                this._lastWorkspaceVersion = workspaceVersion;
             }
             break;
         case 1:
@@ -600,42 +699,12 @@ export default class FindBarController {
         const myBlocks = [];
         const myBlocksByProcCode = {};
 
-        const currentTarget = this.utils.getEditingTarget();
-        const targets = [currentTarget];
+        const target = this.utils.getEditingTarget();
+        const vmBlocks = target && target.blocks && target.blocks._blocks;
+        if (!vmBlocks) return myBlocks;
 
-        for (const target of targets) {
-            const workspace = target === currentTarget ? this.workspace : target.blocks;
-            const spriteName = target.sprite ? target.sprite.name : null;
-            const isCurrentSprite = target === currentTarget;
-
-            if (!isCurrentSprite && workspace && workspace._blocks) {
-                this.addBlocksFromTarget(target, myBlocks, myBlocksByProcCode, spriteName);
-            } else if (isCurrentSprite) {
-                this.addBlocksFromWorkspace(this.workspace, myBlocks, myBlocksByProcCode, spriteName, isCurrentSprite);
-            }
-        }
-
-        const clsOrder = {flag: 0, receive: 1, event: 2, define: 3, var: 4, VAR: 5, list: 6, LIST: 7};
-
-        myBlocks.sort((a, b) => {
-            const t = clsOrder[a.cls] - clsOrder[b.cls];
-            if (t !== 0) return t;
-            if (a.lower < b.lower) return -1;
-            if (a.lower > b.lower) return 1;
-            return (a.y || 0) - (b.y || 0);
-        });
-
-        return myBlocks;
-    }
-
-    addBlocksFromWorkspace (workspace, myBlocks, myBlocksByProcCode, spriteName, isCurrentSprite) {
-        const topBlocks = workspace.getTopBlocks();
-
-        const addBlock = (cls, txt, root, opcode = null) => {
-            const id = root.id ? root.id : root.getId ? root.getId() : null;
-            const displayText = isCurrentSprite || !spriteName ? txt : `[${spriteName}] ${txt}`;
-
-            const clone = myBlocksByProcCode[displayText];
+        const addBlock = (cls, txt, id, opcode = null, y = null) => {
+            const clone = myBlocksByProcCode[txt];
             if (clone) {
                 if (!clone.clones) clone.clones = [];
                 clone.clones.push(id);
@@ -796,56 +865,156 @@ export default class FindBarController {
             item.isTextInputEntry = true;
         }
 
+        // The workspace only renders the scripts you are near, but searching has
+        // to cover the whole sprite, so pick up whatever is not rendered from the
+        // VM, which holds all of it either way.
+        this.addUnrenderedBlocks(workspace, addBlock);
+
         return myBlocks;
     }
 
-    addBlocksFromTarget (target, myBlocks, myBlocksByProcCode, spriteName) {
-        const blocks = target.blocks;
-        if (!blocks._blocks) return;
+    /**
+     * Index the blocks the workspace has not rendered, straight from the VM.
+     * @param {object} workspace The Blockly workspace.
+     * @param {Function} addBlock Adds an entry, as used by addBlocksFromWorkspace.
+     */
+    addUnrenderedBlocks (workspace, addBlock) {
+        const target = this.utils.getEditingTarget();
+        const vmBlocks = target && target.blocks && target.blocks._blocks;
+        if (!vmBlocks) return;
 
-        const addBlock = (cls, txt, blockId, opcode = null) => {
-            const displayText = `[${spriteName}] ${txt}`;
-            const clone = myBlocksByProcCode[displayText];
-            if (clone) {
-                if (!clone.clones) clone.clones = [];
-                clone.clones.push(blockId);
-                return clone;
-            }
-            const items = new BlockItem(cls, displayText, blockId, 0, opcode);
-            items.spriteName = spriteName;
-            items.isCurrentSprite = false;
-            items.targetId = target.id;
-            myBlocks.push(items);
-            myBlocksByProcCode[displayText] = items;
-            return items;
-        };
-
-        for (const blockId of Object.keys(blocks._blocks)) {
-            const block = blocks._blocks[blockId];
-
-            if (block.topLevel) {
-                if (block.opcode === 'procedures_definition') {
-                    const procCode = block.mutation?.proccode || 'custom block';
-                    addBlock('define', `define ${procCode}`, blockId, block.opcode);
-                } else if (block.opcode === 'event_whenflagclicked') {
-                    addBlock('flag', 'when flag clicked', blockId, block.opcode);
-                } else if (block.opcode.startsWith('event_when')) {
-                    addBlock('event', block.opcode.replace('event_when', 'when '), blockId, block.opcode);
-                }
+        const scriptY = new Map();
+        if (typeof workspace.getDeferredScripts === 'function') {
+            for (const script of workspace.getDeferredScripts()) {
+                scriptY.set(script.id, script.y);
             }
         }
 
-        const variables = target.variables;
-        if (variables) {
+        const textOf = value => (
+            value === null || typeof value === 'undefined' ? '' : String(value).trim()
+        );
+        const fieldValuesOf = block => {
+            const values = [];
+            for (const name of Object.keys(block.fields || {})) {
+                const text = textOf(block.fields[name].value);
+                if (text) values.push(text);
+            }
+            for (const name of Object.keys(block.inputs || {})) {
+                const shadow = vmBlocks[block.inputs[name].shadow];
+                if (!shadow || !shadow.fields) continue;
+                for (const fieldName of Object.keys(shadow.fields)) {
+                    const text = textOf(shadow.fields[fieldName].value);
+                    if (text) values.push(text);
+                }
+            }
+            return values;
+        };
+        const hatLabel = block => {
+            const template = this.ScratchBlocks.Msg[block.opcode.toUpperCase()];
+            if (typeof template === 'string') {
+                const values = fieldValuesOf(block);
+                let i = 0;
+                return template.replace(/%\d+/g, () => {
+                    const value = values[i++];
+                    return typeof value === 'undefined' ? '()' : value;
+                }).trim();
+            }
+            return block.opcode.replace('event_when', 'when ').replace(/_/g, ' ');
+        };
+
+        for (const blockId of Object.keys(vmBlocks)) {
+            const block = vmBlocks[blockId];
+            if (!block || block.shadow || !block.opcode) continue;
+            const opcode = block.opcode;
+            const y = block.topLevel && typeof block.y === 'number' ? block.y : null;
+
+            if (block.topLevel) {
+                if (opcode === 'procedures_definition') {
+                    const protoId = block.inputs && block.inputs.custom_block &&
+                        block.inputs.custom_block.block;
+                    const proto = protoId && vmBlocks[protoId];
+                    const procCode = (proto && proto.mutation && proto.mutation.proccode) ||
+                        'custom block';
+                    addBlock('define', `define ${procCode}`, blockId, opcode, y);
+                } else if (opcode === 'event_whenflagclicked') {
+                    const flag = this.msgAny('/_general/blocks/green-flag');
+                    addBlock('flag', `when ${flag} clicked`, blockId, opcode, y);
+                } else if (opcode === 'event_whenbroadcastreceived') {
+                    const eventName = (block.fields && block.fields.BROADCAST_OPTION &&
+                        block.fields.BROADCAST_OPTION.value) || 'message';
+                    addBlock('receive', this.msg('event', {name: eventName}), blockId, opcode, y)
+                        .eventName = eventName;
+                } else if (opcode.startsWith('event_when') || opcode === 'control_start_as_clone') {
+                    addBlock('event', hatLabel(block), blockId, opcode, y);
+                }
+            }
+
+            if (
+                !opcode.startsWith('data_') &&
+                !opcode.startsWith('event_') &&
+                !opcode.startsWith('procedures_') &&
+                opcode !== 'control_start_as_clone'
+            ) {
+                addBlock(opcode, opcode, blockId, opcode);
+            }
+
+            if (opcode === 'event_broadcast' || opcode === 'event_broadcastandwait') {
+                const menuId = block.inputs && block.inputs.BROADCAST_INPUT &&
+                    (block.inputs.BROADCAST_INPUT.block || block.inputs.BROADCAST_INPUT.shadow);
+                const menu = menuId && vmBlocks[menuId];
+                const eventName = menu && menu.fields && menu.fields.BROADCAST_OPTION ?
+                    menu.fields.BROADCAST_OPTION.value :
+                    this.msg('complex-broadcast');
+                addBlock('receive', this.msg('event', {name: eventName}), blockId, opcode)
+                    .eventName = eventName;
+            }
+
+            const values = fieldValuesOf(block);
+            if (values.length) {
+                addBlock(opcode, `${opcode}: ${values.join(', ')}`, blockId, opcode)
+                    .isTextInputEntry = true;
+            }
+        }
+
+        const addVars = (variables, isLocal) => {
+            if (!variables) return;
             for (const varId of Object.keys(variables)) {
                 const variable = variables[varId];
                 if (variable.type === '') {
-                    addBlock('var', `var ${variable.name}`, varId);
+                    addBlock(
+                        isLocal ? 'var' : 'VAR',
+                        isLocal ?
+                            this.msg('var-local', {name: variable.name}) :
+                            this.msg('var-global', {name: variable.name}),
+                        varId
+                    );
                 } else if (variable.type === 'list') {
-                    addBlock('list', `list ${variable.name}`, varId);
+                    addBlock(
+                        isLocal ? 'list' : 'LIST',
+                        isLocal ?
+                            this.msg('list-local', {name: variable.name}) :
+                            this.msg('list-global', {name: variable.name}),
+                        varId
+                    );
                 }
             }
-        }
+        };
+        const stage = this.vm.runtime.getTargetForStage();
+        if (stage) addVars(stage.variables, false);
+        if (target !== stage) addVars(target.variables, true);
+
+        const clsOrder = {flag: 0, receive: 1, event: 2, define: 3, var: 4, VAR: 5, list: 6, LIST: 7};
+        const rank = cls => (cls in clsOrder ? clsOrder[cls] : 8);
+
+        myBlocks.sort((a, b) => {
+            const t = rank(a.cls) - rank(b.cls);
+            if (t !== 0) return t;
+            if (a.lower < b.lower) return -1;
+            if (a.lower > b.lower) return 1;
+            return (a.y || 0) - (b.y || 0);
+        });
+
+        return myBlocks;
     }
 
     getScratchCostumes () {
@@ -869,7 +1038,6 @@ export default class FindBarController {
         }
         return items;
     }
-
     getCallsToEvents () {
         const uses = [];
         const alreadyFound = new Set();

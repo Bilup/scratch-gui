@@ -1,7 +1,6 @@
 import {applyMiddleware, compose, combineReducers} from 'redux';
 import alertsReducer, {alertsInitialState} from './alerts';
 import assetDragReducer, {assetDragInitialState} from './asset-drag';
-import autosaveReducer, {autosaveInitialState} from './autosave';
 import cardsReducer, {cardsInitialState} from './cards';
 import colorPickerReducer, {colorPickerInitialState} from './color-picker';
 import collaborationReducer, {collaborationInitialState} from './collaboration';
@@ -33,9 +32,9 @@ import vmReducer, {vmInitialState} from './vm';
 import vmStatusReducer, {vmStatusInitialState} from './vm-status';
 import workspaceMetricsReducer, {workspaceMetricsInitialState} from './workspace-metrics';
 import mwProjectThemeReducer, {mwProjectThemeInitialState} from './mw-project-theme';
-import onboardingReducer, {onboardingInitialState} from './onboarding';
 import toastReducer, {toastInitialState} from './toast';
 import shortcutsReducer, {shortcutsInitialState} from './shortcuts';
+import roturReducer, {roturInitialState} from './rotur';
 import throttle from 'redux-throttle';
 
 import decks from '../lib/libraries/decks/index.jsx';
@@ -45,7 +44,6 @@ const guiMiddleware = compose(applyMiddleware(throttle(300, {leading: true, trai
 const guiInitialState = {
     alerts: alertsInitialState,
     assetDrag: assetDragInitialState,
-    autosave: autosaveInitialState,
     blockDrag: blockDragInitialState,
     cards: cardsInitialState,
     colorPicker: colorPickerInitialState,
@@ -78,7 +76,7 @@ const guiInitialState = {
     vm: vmInitialState,
     vmStatus: vmStatusInitialState,
     workspaceMetrics: workspaceMetricsInitialState,
-    onboarding: onboardingInitialState,
+    rotur: roturInitialState,
     shortcuts: shortcutsInitialState
 };
 
@@ -154,23 +152,9 @@ const initTelemetryModal = function (currentState) {
     );
 };
 
-const initOnboarding = function (currentState) {
-    return Object.assign(
-        {},
-        currentState,
-        {
-            onboarding: {
-                visible: true,
-                step: 0
-            }
-        }
-    );
-};
-
 const guiReducer = combineReducers({
     alerts: alertsReducer,
     assetDrag: assetDragReducer,
-    autosave: autosaveReducer,
     blockDrag: blockDragReducer,
     cards: cardsReducer,
     colorPicker: colorPickerReducer,
@@ -203,8 +187,8 @@ const guiReducer = combineReducers({
     vm: vmReducer,
     vmStatus: vmStatusReducer,
     workspaceMetrics: workspaceMetricsReducer,
-    onboarding: onboardingReducer,
-    shortcuts: shortcutsReducer
+    shortcuts: shortcutsReducer,
+    rotur: roturReducer
 });
 
 export {
@@ -215,6 +199,5 @@ export {
     initFullScreen,
     initPlayer,
     initTelemetryModal,
-    initTutorialCard,
-    initOnboarding
+    initTutorialCard
 };

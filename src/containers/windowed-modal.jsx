@@ -32,19 +32,16 @@ class WindowedModal extends React.Component {
     }
     
     componentDidMount () {
-        // Always create window, visibility will be handled separately
+        if (this.props.visible === false) {
+            return;
+        }
         this.createWindow();
         // Add a history event only if it's not currently for our modal. This
         // avoids polluting the history with many entries. We only need one.
         this.pushHistory(this.id, (history.state === null || history.state !== this.id));
-        
-        // Handle initial visibility
+
         if (this.window) {
-            if (this.props.visible === false) {
-                this.window.hide();
-            } else {
-                this.window.show();
-            }
+            this.window.show();
         }
 
         this.resizeToContentIfNeeded();
@@ -230,7 +227,11 @@ class WindowedModal extends React.Component {
             onResize: this.handleWindowResize
         });
         this.createdWindow = true;
-        
+
+        if (this.props.centered && this.window.center) {
+            this.window.center();
+        }
+
         // Create content container with modal styling
         this.contentContainer = document.createElement('div');
         this.contentContainer.className = 'modal-window-content windowed-modal-content';
@@ -386,15 +387,20 @@ class WindowedModal extends React.Component {
     };
     
     handleWindowMinimize = () => {
-        if (this.props.onRequestClose) {
-            const shouldClose = this.props.onRequestClose();
-            if (shouldClose === false) {
-                return false;
+        // Delay Redux update and cleanup until after the close animation completes.
+        // This ensures the portal content stays visible during the animation.
+        // Use 220ms to ensure the destroy() animation (200ms) finishes first.
+        setTimeout(() => {
+            if (this.props.onRequestClose) {
+                const shouldClose = this.props.onRequestClose();
+                if (shouldClose === false) {
+                    return;
+                }
             }
-        }
-        this.window = null;
-        this.contentContainer = null;
-        this.createdWindow = false;
+            this.window = null;
+            this.contentContainer = null;
+            this.createdWindow = false;
+        }, 220);
     };
     
     addEventListeners () {
@@ -407,7 +413,9 @@ class WindowedModal extends React.Component {
     
     handlePopState () {
         // Whenever someone navigates, we want to be closed
-        this.props.onRequestClose();
+        if (this.props.onRequestClose) {
+            this.props.onRequestClose();
+        }
     }
     
     get id () {
@@ -434,6 +442,7 @@ WindowedModal.propTypes = {
     onRequestClose: PropTypes.func,
     children: PropTypes.node,
     className: PropTypes.string,
+    centered: PropTypes.bool,
     contentLabel: PropTypes.oneOfType([
         PropTypes.string,
         PropTypes.object

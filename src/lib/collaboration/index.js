@@ -11,6 +11,8 @@ import AssetChannel from './assets.js';
 import PresenceChannel from './presence.js';
 import CursorOverlay from './cursor-overlay.js';
 import {getAssetData, storeAssetData, hasAssetData, clearAssetCache} from './vm-assets.js';
+import {avatarForCollabUser} from './avatar.js';
+import RestorePointAPI from '../api/restore-points.js';
 
 /**
  * The collaboration engine facade — the only module the React layer talks
@@ -26,6 +28,7 @@ class CollabService extends Emitter {
         this.isHost = false;
         this.roomId = null;
         this.username = null;
+        this.handle = null;
 
         this._transport = null;
         this._session = null;
@@ -38,6 +41,8 @@ class CollabService extends Emitter {
         this._cursorOverlay = null;
         this._workspace = null;
         this._approved = false;
+        this._sendChain = Promise.resolve();
+        this._activity = {targetId: null, tab: 0, assetIndex: 0};
     }
 
     init (vm) {
@@ -50,15 +55,17 @@ class CollabService extends Emitter {
      * @param {string} username Display name.
      * @param {boolean} isHost Create (true) or join (false).
      * @param {string} [privacy] 'public' | 'private' (host only).
+     * @param {string} [handle] Bilup Accounts handle, for avatars.
      * @returns {Promise<string>} Our peer id.
      */
-    async connectToRoom (roomId, username, isHost = false, privacy = 'public') {
+    async connectToRoom (roomId, username, isHost = false, privacy = 'public', handle = null) {
         if (!roomId) throw new Error('roomId is required to connect to a room');
         if (!this.vm) throw new Error('CollabService.init(vm) must be called first');
         if (this._transport) this.disconnect();
 
         this.roomId = roomId;
         this.username = username || `User${Math.floor(Math.random() * 1000)}`;
+        this.handle = handle || null;
         this.isHost = isHost;
 
         this._transport = new Transport();
@@ -98,6 +105,7 @@ class CollabService extends Emitter {
             applier: this._applier,
             roomId,
             username: this.username,
+            handle: this.handle,
             privacy
         });
         this._session = session;
@@ -155,6 +163,7 @@ class CollabService extends Emitter {
             applier: this._applier,
             roomId,
             username: this.username,
+            handle: this.handle,
             hasAsset: md5ext => hasAssetData(this.vm, md5ext)
         });
         this._session = session;
@@ -259,17 +268,18 @@ class CollabService extends Emitter {
             getUsername: userId => {
                 const user = session.users.get(userId);
                 return user ? user.username : '';
-            }
+            },
+            getAvatarUrl: userId => avatarForCollabUser(session.users.get(userId))
         });
-        // The container turns these into spriteEditors Redux updates —
-        // the engine itself never touches the store.
-        this._presence.on('editing-changed', (userId, targetId, previousTargetId) => {
+        // The container turns these into Redux updates — the engine itself
+        // never touches the store.
+        this._presence.on('editing-changed', (userId, activity) => {
             const user = session.users.get(userId);
             this.emit('presence-editing-changed', {
                 userId,
                 username: user ? user.username : '',
-                targetId,
-                previousTargetId
+                handle: user ? user.handle || null : null,
+                activity
             });
         });
         if (this._workspace) this._cursorOverlay.attach(this._workspace);
@@ -280,12 +290,23 @@ class CollabService extends Emitter {
         // Clients may not propose until approved AND onboarded — anything
         // captured before the snapshot landed is render noise.
         if (!this.isHost && (!this._approved || this._session.lastAppliedSeq === null)) return;
-        // Asset bytes travel ahead of the op on the same ordered channel,
-        // so the host always has them before the proposal arrives.
-        if (!this.isHost && Array.isArray(payload.assetRefs) && this._assets) {
-            this._assets.sendAssets('host', payload.assetRefs);
-        }
-        this._session.submitLocal(type, payload);
+
+        const assetRefs = !this.isHost && Array.isArray(payload.assetRefs) ? payload.assetRefs : null;
+
+        // Asset bytes travel ahead of the op on the same ordered channel, so
+        // the host always has them before the proposal arrives. Pushing them
+        // is paced (and so async), and ops must stay in causal order — a
+        // block edit cannot overtake the sprite-add it belongs to — so every
+        // op leaves through this one chain.
+        this._sendChain = this._sendChain.then(async () => {
+            if (!this._session || !this.isConnected) return;
+            if (assetRefs && this._assets) await this._assets.sendAssets('host', assetRefs);
+            if (!this._session || !this.isConnected) return;
+            this._session.submitLocal(type, payload);
+        }).catch(error => {
+            // eslint-disable-next-line no-console
+            console.warn(`[Collab] Could not submit ${type}:`, error);
+        });
     }
 
     /**
@@ -325,6 +346,10 @@ class CollabService extends Emitter {
     }
 
     async _loadProjectSuppressed (buffer) {
+        if (!this._backedUpBeforeSync) {
+            this._backedUpBeforeSync = true;
+            await RestorePointAPI.createSafetyRestorePoint(this.vm, 'Before joining collaboration');
+        }
         this.emit('project-sync-apply-start');
         this._adapter.setSuppressed(true);
         try {
@@ -352,6 +377,7 @@ class CollabService extends Emitter {
     _teardown () {
         this.isConnected = false;
         this._approved = false;
+        this._backedUpBeforeSync = false;
         if (this._adapter) {
             this._adapter.destroy();
             this._adapter = null;
@@ -426,11 +452,29 @@ class CollabService extends Emitter {
         }
     }
 
-    /** Presence hook (target-pane): announce which sprite we now edit. */
-    onEditingTargetChange () {
-        if (!this._presence || !this.isConnected) return;
+    /**
+     * Presence hook: announce where we are working. Callers report only the
+     * part they own (the target pane the sprite, the tabs the tab, the
+     * costume/sound lists the index) and the rest is carried over.
+     * @param {object} [partial] Any of {targetId, tab, assetIndex}.
+     */
+    setActivity (partial) {
         const target = this.vm && this.vm.editingTarget;
-        this._presence.sendEditingTarget(target ? target.id : null);
+        const next = Object.assign({}, this._activity, {
+            targetId: target ? target.id : null
+        }, partial);
+        // Switching sprite or tab lands you on that view's first item.
+        if (partial && (typeof partial.tab === 'number') && partial.tab !== this._activity.tab) {
+            next.assetIndex = typeof partial.assetIndex === 'number' ? partial.assetIndex : 0;
+        }
+        this._activity = next;
+        if (!this._presence || !this.isConnected) return;
+        this._presence.sendActivity(next);
+    }
+
+    /** Presence hook (target-pane): the edited sprite changed. */
+    onEditingTargetChange () {
+        this.setActivity({assetIndex: 0});
     }
 
     // ----- Room state accessors -----

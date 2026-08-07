@@ -18,6 +18,79 @@ const css = `
   background: var(--red-primary, #e64a4a);
   color: white;
 }
+
+.addon-window-content {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+.addon-window-content::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.addon-window-content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 6px;
+  margin: 2px;
+}
+
+.addon-window-content::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+  min-height: 20px;
+}
+
+.addon-window-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+  background-clip: content-box;
+}
+
+.addon-window-content::-webkit-scrollbar-thumb:active {
+  background: rgba(0, 0, 0, 0.4);
+  background-clip: content-box;
+}
+
+.addon-window-content::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+@media only screen and (max-width: 900px) {
+  .addon-window {
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+
+  .addon-window .resize-handle {
+    display: none !important;
+  }
+
+  .addon-window-header {
+    cursor: default !important;
+    touch-action: auto !important;
+  }
+
+  .addon-window-btn-maximize,
+  .addon-window-btn-minimize {
+    display: none !important;
+  }
+
+  .addon-window-content {
+    -webkit-overflow-scrolling: touch;
+  }
+}
 `;
 
 const style = document.createElement('style');
@@ -37,7 +110,63 @@ let nextOnTopZIndex = WINDOW_ON_TOP_Z_INDEX_BASE;
 let windowCount = 0;
 const activeWindows = new Map();
 
-let animationsEnabled = localStorage.getItem('mw:window-animation') !== 'false';
+const IN_PAGE_WINDOW_IDS = new Set([
+    'customProceduresModal'
+]);
+
+const canUseNativeWindows = () =>
+    typeof window !== 'undefined' && typeof window.EditorPreload !== 'undefined';
+
+window.addEventListener('pagehide', () => {
+    for (const win of activeWindows.values()) {
+        if (win.closePopup) {
+            win.closePopup();
+        }
+    }
+});
+
+const copyStylesInto = doc => {
+    for (const node of document.querySelectorAll('head style, head link[rel="stylesheet"], body style')) {
+        const clone = doc.importNode(node, true);
+        clone.setAttribute('data-mw-copied-style', '');
+        doc.head.appendChild(clone);
+    }
+};
+
+const copyRootAttributesInto = doc => {
+    for (const attr of document.documentElement.attributes) {
+        doc.documentElement.setAttribute(attr.name, attr.value);
+    }
+    doc.body.className = document.body.className;
+};
+
+let styleObserver = null;
+let resyncScheduled = false;
+
+const scheduleResync = () => {
+    if (resyncScheduled) return;
+    resyncScheduled = true;
+    requestAnimationFrame(() => {
+        resyncScheduled = false;
+        for (const win of activeWindows.values()) {
+            if (win.resyncStyles) {
+                win.resyncStyles();
+            }
+        }
+    });
+};
+
+const ensureStyleObserver = () => {
+    if (styleObserver) return;
+    styleObserver = new MutationObserver(scheduleResync);
+    styleObserver.observe(document.documentElement, {attributes: true});
+    styleObserver.observe(document.head, {childList: true, subtree: true, characterData: true});
+    styleObserver.observe(document.body, {childList: true});
+    const addonStyles = document.querySelector('.addons-styles');
+    if (addonStyles) {
+        styleObserver.observe(addonStyles, {childList: true, subtree: true, characterData: true});
+    }
+};
 
 class AddonWindow {
     constructor (options = {}) {
@@ -64,7 +193,6 @@ class AddonWindow {
         this.isVisible = false;
         this.isMinimized = false;
         this.isMaximized = false;
-        this.isDestroying = false;
         this.zIndex = this.alwaysOnTop ? ++nextOnTopZIndex : ++nextZIndex;
         
         this.onClose = options.onClose || (() => {});
@@ -74,16 +202,17 @@ class AddonWindow {
         this.onResize = options.onResize || (() => {});
         this.onMove = options.onMove || (() => {});
         
+        this._animTimer = null; // Track pending animation timeout
         this.element = null;
         this.headerElement = null;
         this.contentElement = null;
         this.isDragging = false;
         this.isResizing = false;
-        this.isTouchDragging = false;
-        this.isTouchResizing = false;
         this.dragOffset = {x: 0, y: 0};
+        this.dragPointerId = null;
+        this.resizePointerId = null;
+        this.resizeHandle = null;
         this.savedState = null; // For maximize/restore
-        this._hideTimer = null;
         
         this.createWindow();
         activeWindows.set(this.id, this);
@@ -109,12 +238,10 @@ class AddonWindow {
             display: none;
             flex-direction: column;
             overflow: hidden;
-            backdrop-filter: blur(20px);
-            will-change: opacity, transform, left, top, width, height, border-radius;
-            transition: opacity 0.2s ease-out, transform 0.2s ease-out, left 0.3s ease-out, top 0.3s ease-out, width 0.3s ease-out, height 0.3s ease-out, border-radius 0.3s ease-out;
+            transition: none !important;
         `;
 
-        this.element.addEventListener('mousedown', () => this.bringToFront());
+        this.element.addEventListener('pointerdown', () => this.bringToFront());
         
         // Create header
         this.headerElement = document.createElement('div');
@@ -125,6 +252,7 @@ class AddonWindow {
             padding: 8px 16px;
             cursor: move;
             user-select: none;
+            touch-action: none;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -200,9 +328,6 @@ class AddonWindow {
             scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
         `;
         
-        // Add custom scrollbar styling
-        this.addScrollbarStyling(this.contentElement);
-        
         this.element.appendChild(this.headerElement);
         this.element.appendChild(this.contentElement);
         
@@ -216,8 +341,17 @@ class AddonWindow {
         
         // Add to DOM
         document.body.appendChild(this.element);
+
+        this.escapeHandler = e => {
+            if (e.key !== 'Escape' || !this.closable || !this.isVisible) return;
+            const top = Array.from(activeWindows.values())
+                .filter(w => w.isVisible)
+                .sort((a, b) => b.zIndex - a.zIndex)[0];
+            if (top === this) this.close();
+        };
+        document.addEventListener('keydown', this.escapeHandler);
     }
-    
+
     createControlButton (type, title, onClick) {
         const button = document.createElement('button');
         button.title = title;
@@ -271,7 +405,7 @@ class AddonWindow {
             padding: 0;
         `;
         
-        button.addEventListener('mousedown', e => {
+        button.addEventListener('pointerdown', e => {
             e.stopPropagation();
         });
         
@@ -301,60 +435,42 @@ class AddonWindow {
     }
 
     addDragFunctionality () {
-        this.headerElement.addEventListener('mousedown', e => {
-            if (e.target.tagName === 'BUTTON') return;
-            
+        this.headerElement.addEventListener('pointerdown', e => {
+            // Only primary button / primary touch; ignore control buttons
+            if (e.button !== 0) return;
+            if (e.target.closest('button')) return;
+
             this.isDragging = true;
-            this.isTouchDragging = false;
+            this.dragPointerId = e.pointerId;
             this.bringToFront();
-            
-            this.element.style.transition = 'none';
-            
+
             // Get the current position of the window
             const currentX = parseInt(this.element.style.left, 10) || this.x;
             const currentY = parseInt(this.element.style.top, 10) || this.y;
-            
+
             // Calculate offset relative to current window position
             this.dragOffset = {
                 x: e.clientX - currentX,
                 y: e.clientY - currentY
             };
-            
-            document.addEventListener('mousemove', this.handleDrag);
-            document.addEventListener('mouseup', this.handleDragEnd);
-            
+
+            try {
+                this.headerElement.setPointerCapture(e.pointerId);
+            } catch (err) {
+                // setPointerCapture can throw if the pointer is already released
+            }
+
+            this.headerElement.addEventListener('pointermove', this.handleDrag);
+            this.headerElement.addEventListener('pointerup', this.handleDragEnd);
+            this.headerElement.addEventListener('pointercancel', this.handleDragEnd);
+
             e.preventDefault();
         });
-        
-        this.headerElement.addEventListener('touchstart', e => {
-            if (e.target.tagName === 'BUTTON') return;
-            if (e.touches.length !== 1) return;
-            
-            this.isDragging = true;
-            this.isTouchDragging = true;
-            this.bringToFront();
-            
-            this.element.style.transition = 'none';
-            
-            const touch = e.touches[0];
-            const currentX = parseInt(this.element.style.left, 10) || this.x;
-            const currentY = parseInt(this.element.style.top, 10) || this.y;
-            
-            this.dragOffset = {
-                x: touch.clientX - currentX,
-                y: touch.clientY - currentY
-            };
-            
-            document.addEventListener('touchmove', this.handleTouchDrag, {passive: false});
-            document.addEventListener('touchend', this.handleTouchDragEnd);
-            document.addEventListener('touchcancel', this.handleTouchDragEnd);
-            
-            e.preventDefault();
-        }, {passive: false});
     }
     
     handleDrag = e => {
         if (!this.isDragging) return;
+        if (this.dragPointerId !== null && e.pointerId !== this.dragPointerId) return;
         
         const newX = e.clientX - this.dragOffset.x;
         const newY = e.clientY - this.dragOffset.y;
@@ -375,45 +491,21 @@ class AddonWindow {
         this.onMove(this.x, this.y);
     };
     
-    handleDragEnd = () => {
+    handleDragEnd = e => {
+        if (e && this.dragPointerId !== null && e.pointerId !== this.dragPointerId) return;
+
         this.isDragging = false;
-        document.removeEventListener('mousemove', this.handleDrag);
-        document.removeEventListener('mouseup', this.handleDragEnd);
-        this.element.style.transition = '';
-    };
-    
-    handleTouchDrag = e => {
-        if (!this.isDragging || !this.isTouchDragging) return;
-        if (e.touches.length !== 1) return;
-        
-        const touch = e.touches[0];
-        const newX = touch.clientX - this.dragOffset.x;
-        const newY = touch.clientY - this.dragOffset.y;
-        
-        const minVisiblePixels = 50;
-        const minX = -(this.width - minVisiblePixels);
-        const maxX = window.innerWidth - minVisiblePixels;
-        const minY = 0;
-        const maxY = window.innerHeight - minVisiblePixels;
-        
-        this.x = Math.max(minX, Math.min(newX, maxX));
-        this.y = Math.max(minY, Math.min(newY, maxY));
-        
-        this.element.style.left = `${this.x}px`;
-        this.element.style.top = `${this.y}px`;
-        
-        this.onMove(this.x, this.y);
-        
-        e.preventDefault();
-    };
-    
-    handleTouchDragEnd = () => {
-        this.isDragging = false;
-        this.isTouchDragging = false;
-        document.removeEventListener('touchmove', this.handleTouchDrag);
-        this.element.style.transition = '';
-        document.removeEventListener('touchend', this.handleTouchDragEnd);
-        document.removeEventListener('touchcancel', this.handleTouchDragEnd);
+        if (this.dragPointerId !== null) {
+            try {
+                this.headerElement.releasePointerCapture(this.dragPointerId);
+            } catch (err) {
+                // already released
+            }
+            this.dragPointerId = null;
+        }
+        this.headerElement.removeEventListener('pointermove', this.handleDrag);
+        this.headerElement.removeEventListener('pointerup', this.handleDragEnd);
+        this.headerElement.removeEventListener('pointercancel', this.handleDragEnd);
     };
     
     addResizeHandles () {
@@ -506,53 +598,51 @@ class AddonWindow {
             }
             
             Object.assign(handle.style, styles);
+            handle.style.touchAction = 'none';
             
-            handle.addEventListener('mousedown', e => {
+            handle.addEventListener('pointerdown', e => {
+                if (e.button !== 0) return;
                 e.stopPropagation();
-                this.startResize(e, direction);
+                this.startResize(e, direction, handle);
             });
-            
-            handle.addEventListener('touchstart', e => {
-                if (e.touches.length !== 1) return;
-                e.stopPropagation();
-                this.isTouchResizing = true;
-                this.startResize(e, direction);
-                document.addEventListener('touchmove', this.handleTouchResize, {passive: false});
-                document.addEventListener('touchend', this.handleTouchResizeEnd);
-                document.addEventListener('touchcancel', this.handleTouchResizeEnd);
-                e.preventDefault();
-            }, {passive: false});
             
             this.element.appendChild(handle);
         });
     }
     
-    startResize (e, direction) {
+    startResize (e, direction, handle) {
         this.isResizing = true;
         this.resizeDirection = direction;
+        this.resizePointerId = e.pointerId;
+        this.resizeHandle = handle;
         this.bringToFront();
         
         const rect = this.element.getBoundingClientRect();
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        
         this.resizeStart = {
-            x: clientX,
-            y: clientY,
+            x: e.clientX,
+            y: e.clientY,
             width: rect.width,
             height: rect.height,
             left: rect.left,
             top: rect.top
         };
+
+        try {
+            handle.setPointerCapture(e.pointerId);
+        } catch (err) {
+            // setPointerCapture can throw if the pointer is already released
+        }
         
-        document.addEventListener('mousemove', this.handleResize);
-        document.addEventListener('mouseup', this.handleResizeEnd);
+        handle.addEventListener('pointermove', this.handleResize);
+        handle.addEventListener('pointerup', this.handleResizeEnd);
+        handle.addEventListener('pointercancel', this.handleResizeEnd);
         
         e.preventDefault();
     }
     
     handleResize = e => {
         if (!this.isResizing) return;
+        if (this.resizePointerId !== null && e.pointerId !== this.resizePointerId) return;
         
         const deltaX = e.clientX - this.resizeStart.x;
         const deltaY = e.clientY - this.resizeStart.y;
@@ -607,133 +697,24 @@ class AddonWindow {
         this.onResize(newWidth, newHeight);
     };
     
-    handleResizeEnd = () => {
+    handleResizeEnd = e => {
+        if (e && this.resizePointerId !== null && e.pointerId !== this.resizePointerId) return;
+
         this.isResizing = false;
-        document.removeEventListener('mousemove', this.handleResize);
-        document.removeEventListener('mouseup', this.handleResizeEnd);
+        const handle = this.resizeHandle;
+        if (handle && this.resizePointerId !== null) {
+            try {
+                handle.releasePointerCapture(this.resizePointerId);
+            } catch (err) {
+                // already released
+            }
+            handle.removeEventListener('pointermove', this.handleResize);
+            handle.removeEventListener('pointerup', this.handleResizeEnd);
+            handle.removeEventListener('pointercancel', this.handleResizeEnd);
+        }
+        this.resizePointerId = null;
+        this.resizeHandle = null;
     };
-    
-    handleTouchResize = e => {
-        if (!this.isResizing || !this.isTouchResizing) return;
-        if (e.touches.length !== 1) return;
-
-        const touch = e.touches[0];
-        const deltaX = touch.clientX - this.resizeStart.x;
-        const deltaY = touch.clientY - this.resizeStart.y;
-        const direction = this.resizeDirection;
-
-        let newWidth = this.resizeStart.width;
-        let newHeight = this.resizeStart.height;
-        let newX = this.resizeStart.left;
-        let newY = this.resizeStart.top;
-
-        if (direction.includes('e')) newWidth += deltaX;
-        if (direction.includes('w')) {
-            newWidth -= deltaX;
-            newX = this.resizeStart.left + deltaX;
-        }
-        if (direction.includes('s')) newHeight += deltaY;
-        if (direction.includes('n')) {
-            newHeight -= deltaY;
-            newY = this.resizeStart.top + deltaY;
-        }
-
-        const originalNewWidth = newWidth;
-        const originalNewHeight = newHeight;
-
-        newWidth = Math.max(this.minWidth, newWidth);
-        newHeight = Math.max(this.minHeight, newHeight);
-
-        if (this.maxWidth) newWidth = Math.min(this.maxWidth, newWidth);
-        if (this.maxHeight) newHeight = Math.min(this.maxHeight, newHeight);
-
-        if (direction.includes('w') && newWidth !== originalNewWidth) {
-            newX = this.resizeStart.left + (this.resizeStart.width - newWidth);
-        }
-        if (direction.includes('n') && newHeight !== originalNewHeight) {
-            newY = this.resizeStart.top + (this.resizeStart.height - newHeight);
-        }
-
-        const minY = getMenuBarHeight();
-        if (newY < minY) {
-            const bottom = this.resizeStart.top + this.resizeStart.height;
-            newY = minY;
-            newHeight = Math.max(this.minHeight, bottom - newY);
-            if (this.maxHeight) newHeight = Math.min(this.maxHeight, newHeight);
-            if (direction.includes('n')) {
-                newY = Math.max(minY, bottom - newHeight);
-            }
-        }
-
-        this.width = newWidth;
-        this.height = newHeight;
-        this.x = newX;
-        this.y = newY;
-
-        this.element.style.width = `${newWidth}px`;
-        this.element.style.height = `${newHeight}px`;
-        this.element.style.left = `${newX}px`;
-        this.element.style.top = `${newY}px`;
-
-        this.onResize(newWidth, newHeight);
-
-        e.preventDefault();
-    };
-
-    handleTouchResizeEnd = () => {
-        this.isResizing = false;
-        this.isTouchResizing = false;
-        document.removeEventListener('touchmove', this.handleTouchResize);
-        document.removeEventListener('touchend', this.handleTouchResizeEnd);
-        document.removeEventListener('touchcancel', this.handleTouchResizeEnd);
-    };
-
-    addScrollbarStyling () {
-        const newStyle = document.createElement('style');
-        
-        newStyle.textContent = `
-            .addon-window-content {
-                scrollbar-width: thin;
-                scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
-            }
-            
-            .addon-window-content::-webkit-scrollbar {
-                width: 12px;
-                height: 12px;
-            }
-            
-            .addon-window-content::-webkit-scrollbar-track {
-                background: rgba(0, 0, 0, 0.03);
-                border-radius: 6px;
-                margin: 2px;
-            }
-            
-            .addon-window-content::-webkit-scrollbar-thumb {
-                background: rgba(0, 0, 0, 0.2);
-                border-radius: 6px;
-                border: 2px solid transparent;
-                background-clip: content-box;
-                min-height: 20px;
-            }
-
-            .addon-window-content::-webkit-scrollbar-thumb:hover {
-                background: rgba(0, 0, 0, 0.3);
-                background-clip: content-box;
-            }
-
-            .addon-window-content::-webkit-scrollbar-thumb:active {
-                background: rgba(0, 0, 0, 0.4);
-                background-clip: content-box;
-            }
-            
-            .addon-window-content::-webkit-scrollbar-corner {
-                background: transparent;
-            }
-        `;
-        
-        document.head.appendChild(newStyle);
-        this.scrollbarStyle = newStyle;
-    }
     
     bringToFront () {
         const isOnTopTier = this.alwaysOnTop;
@@ -766,88 +747,150 @@ class AddonWindow {
     }
     
     show () {
-        if (this._hideTimer) {
-            clearTimeout(this._hideTimer);
-            this._hideTimer = null;
+        // Cancel any pending animation timer
+        if (this._animTimer) {
+            clearTimeout(this._animTimer);
+            this._animTimer = null;
         }
-        if (this.isVisible) {
-            this.bringToFront();
-            return this;
-        }
+
+        activeWindows.set(this.id, this);
+        const wasVisible = this.isVisible;
         this.isVisible = true;
+
+        // Always ensure the element is displayed immediately
         this.element.style.display = 'flex';
-        this.element.style.visibility = 'visible';
         this.element.style.pointerEvents = 'auto';
-        this.bringToFront();
-        
-        if (animationsEnabled) {
-            this.element.style.transition = 'none';
-            this.element.style.opacity = '0';
-            this.element.style.transform = 'scale(0.95) translateY(-8px)';
-            this.element.offsetHeight;
-            this.element.style.transition = 'opacity 0.2s ease-out, transform 0.2s ease-out, left 0.3s ease-out, top 0.3s ease-out, width 0.3s ease-out, height 0.3s ease-out, border-radius 0.3s ease-out';
-            this.element.style.opacity = '1';
-            this.element.style.transform = 'scale(1) translateY(0)';
-        } else {
-            this.element.style.opacity = '1';
-            this.element.style.transform = 'scale(1) translateY(0)';
-            this.element.style.transition = 'none';
+
+        if (!wasVisible) {
+            this.bringToFront();
+            if (WindowManager.getAnimationsEnabled()) {
+                // Set initial hidden state
+                this.element.style.opacity = '0';
+                this.element.style.transform = 'scale(0.92)';
+                this.element.style.transition = 'opacity 0.2s ease-out, transform 0.2s ease-out';
+
+                // Force browser to apply initial state before animating
+                // eslint-disable-next-line no-unused-expressions
+                this.element.offsetHeight;
+
+                // Kick off the animation
+                this.element.style.opacity = '1';
+                this.element.style.transform = 'scale(1)';
+
+                this._animTimer = setTimeout(() => {
+                    this._animTimer = null;
+                    if (this.element && this.element.style) {
+                        this.element.style.transition = 'none';
+                    }
+                }, 220);
+            }
         }
         return this;
     }
-    
+
     hide () {
-        if (this._hideTimer) {
-            clearTimeout(this._hideTimer);
-            this._hideTimer = null;
+        // Cancel any pending animation timer
+        if (this._animTimer) {
+            clearTimeout(this._animTimer);
+            this._animTimer = null;
         }
+
         if (!this.isVisible) {
+            this.element.style.display = 'none';
+            this.element.style.transition = 'none';
             return this;
         }
+
         this.isVisible = false;
-        
-        if (animationsEnabled) {
-            this.element.style.opacity = '0';
-            this.element.style.transform = 'scale(0.95) translateY(-8px)';
-            this._hideTimer = setTimeout(() => {
-                this._hideTimer = null;
-                if (!this.isVisible) {
-                    this.element.style.display = 'none';
-                }
-            }, 200);
-        } else {
+
+        if (!WindowManager.getAnimationsEnabled()) {
             this.element.style.display = 'none';
-            this.element.style.opacity = '0';
-            this.element.style.transform = 'scale(0.95) translateY(-8px)';
+            this.element.style.transition = 'none';
+            return this;
         }
+
+        // Start close animation
+        this.element.style.pointerEvents = 'none';
+        // Ensure no transition interference — remove any previous transition first
+        this.element.style.transition = 'none';
+        // eslint-disable-next-line no-unused-expressions
+        this.element.offsetHeight;
+        // Now set the animated transition
+        this.element.style.transition = 'opacity 0.18s ease-in, transform 0.18s ease-in';
+        // eslint-disable-next-line no-unused-expressions
+        this.element.offsetHeight;
+        this.element.style.opacity = '0';
+        this.element.style.transform = 'scale(0.92)';
+
+        this._animTimer = setTimeout(() => {
+            this._animTimer = null;
+            if (this.element && this.element.style) {
+                this.element.style.display = 'none';
+                this.element.style.transition = 'none';
+            }
+        }, 200);
+
         return this;
     }
     
     destroy (callOnClose = true) {
-        if (this._hideTimer) {
-            clearTimeout(this._hideTimer);
-            this._hideTimer = null;
+        // Cancel any pending animation timer
+        if (this._animTimer) {
+            clearTimeout(this._animTimer);
+            this._animTimer = null;
         }
-        if (callOnClose) {
-            const shouldClose = this.onClose();
-            if (shouldClose === false) {
-                return;
-            }
+
+        const needsAnimation = WindowManager.getAnimationsEnabled() && this.isVisible;
+
+        // Clean up event handlers immediately
+        if (this.escapeHandler) {
+            document.removeEventListener('keydown', this.escapeHandler);
+            this.escapeHandler = null;
         }
-        this.isVisible = false;
-        this.isDestroying = true;
-        this.element.style.opacity = '0';
-        this.element.style.transform = 'scale(0.95) translateY(-8px)';
-        this._hideTimer = setTimeout(() => {
-            this._hideTimer = null;
-            activeWindows.delete(this.id);
-            if (this.scrollbarStyle && this.scrollbarStyle.parentNode) {
-                this.scrollbarStyle.parentNode.removeChild(this.scrollbarStyle);
+        activeWindows.delete(this.id);
+
+        if (needsAnimation) {
+            // Play hide animation
+            this.isVisible = false;
+            this.element.style.pointerEvents = 'none';
+            this.element.style.transition = 'none';
+            // eslint-disable-next-line no-unused-expressions
+            this.element.offsetHeight;
+            this.element.style.transition = 'opacity 0.18s ease-in, transform 0.18s ease-in';
+            // eslint-disable-next-line no-unused-expressions
+            this.element.offsetHeight;
+            this.element.style.opacity = '0';
+            this.element.style.transform = 'scale(0.92)';
+
+            const element = this.element;
+            const shouldCallOnClose = callOnClose;
+            this._animTimer = setTimeout(() => {
+                this._animTimer = null;
+                if (element && element.parentNode) {
+                    if (element.style) {
+                        element.style.display = 'none';
+                        element.style.transition = 'none';
+                    }
+                    element.parentNode.removeChild(element);
+                }
+                // Call onClose after animation completes so React content
+                // stays visible during the closing animation
+                if (shouldCallOnClose) {
+                    this.onClose();
+                }
+            }, 200);
+        } else {
+            // No animation — immediate cleanup
+            this.isVisible = false;
+            this.element.style.display = 'none';
+            this.element.style.transition = 'none';
+            if (callOnClose) {
+                this.onClose();
             }
             if (this.element && this.element.parentNode) {
                 this.element.parentNode.removeChild(this.element);
             }
-        }, 200);
+        }
     }
 
     close () {
@@ -872,18 +915,20 @@ class AddonWindow {
         if (this.isMaximized) {
             this.isMaximized = false;
             if (this.savedState) {
+                if (WindowManager.getAnimationsEnabled()) {
+                    this.element.style.transition = 'left 0.25s ease-in, top 0.25s ease-in, width 0.25s ease-in, height 0.25s ease-in';
+                }
                 this.x = this.savedState.x;
                 this.y = this.savedState.y;
                 this.width = this.savedState.width;
                 this.height = this.savedState.height;
-                
-                this.element.style.transition = 'opacity 0.2s ease-out, transform 0.2s ease-out, ' +
-                    'left 0.3s ease-out, top 0.3s ease-out, width 0.3s ease-out, height 0.3s ease-out, border-radius 0.3s ease-out';
                 this.element.style.left = `${this.x}px`;
                 this.element.style.top = `${this.y}px`;
                 this.element.style.width = `${this.width}px`;
                 this.element.style.height = `${this.height}px`;
-                this.element.style.borderRadius = '12px';
+                if (WindowManager.getAnimationsEnabled()) {
+                    setTimeout(() => { this.element.style.transition = 'none'; }, 250);
+                }
             }
             this.updateMaximizeButton();
         }
@@ -900,6 +945,7 @@ class AddonWindow {
     maximize () {
         if (this.isMaximized) return this;
         
+        // Save current state
         this.savedState = {
             x: this.x,
             y: this.y,
@@ -907,20 +953,25 @@ class AddonWindow {
             height: this.height
         };
         
+        if (WindowManager.getAnimationsEnabled()) {
+            this.element.style.transition = 'left 0.25s ease-out, top 0.25s ease-out, width 0.25s ease-out, height 0.25s ease-out';
+        }
+
         this.isMaximized = true;
         this.x = 0;
         this.y = 0;
         this.width = window.innerWidth;
         this.height = window.innerHeight;
         
-        this.element.style.transition = 'opacity 0.2s ease-out, transform 0.2s ease-out, ' +
-            'left 0.3s ease-out, top 0.3s ease-out, width 0.3s ease-out, height 0.3s ease-out, border-radius 0.3s ease-out';
         this.element.style.left = '0px';
         this.element.style.top = '0px';
         this.element.style.width = '100vw';
         this.element.style.height = '100vh';
-        this.element.style.borderRadius = '0px';
         
+        if (WindowManager.getAnimationsEnabled()) {
+            setTimeout(() => { this.element.style.transition = 'none'; }, 250);
+        }
+
         this.updateMaximizeButton();
         this.onMaximize();
         return this;
@@ -959,10 +1010,18 @@ class AddonWindow {
     }
     
     center () {
-        this.x = (window.innerWidth - this.width) / 2;
-        this.y = (window.innerHeight - this.height) / 2;
+        this.x = Math.max(0, (window.innerWidth - this.width) / 2);
+        this.y = Math.max(0, (window.innerHeight - this.height) / 2);
         this.element.style.left = `${this.x}px`;
         this.element.style.top = `${this.y}px`;
+        return this;
+    }
+
+    moveTo (x, y) {
+        this.x = x;
+        this.y = y;
+        this.element.style.left = `${x}px`;
+        this.element.style.top = `${y}px`;
         return this;
     }
     
@@ -977,18 +1036,301 @@ class AddonWindow {
     }
 }
 
+class NativeAddonWindow {
+    constructor (options = {}) {
+        this.id = options.id || `addon-window-${++windowCount}`;
+        this.title = options.title || 'Addon Window';
+        this.width = options.width || 400;
+        this.height = options.height || 300;
+        this.minWidth = options.minWidth || 200;
+        this.minHeight = options.minHeight || 150;
+        this.maxWidth = options.maxWidth || null;
+        this.maxHeight = options.maxHeight || null;
+        this.x = options.x || (Math.random() * 100) + 50;
+        this.y = options.y || (Math.random() * 100) + 50;
+        this.resizable = options.resizable !== false;
+        this.modal = options.modal || false;
+        this.closable = options.closable !== false;
+        this.destroyOnMinimize = options.destroyOnMinimize || false;
+        this.alwaysOnTop = options.alwaysOnTop || false;
+        this.className = options.className || '';
+
+        this.isVisible = false;
+        this.isMinimized = false;
+        this.isMaximized = false;
+        this.zIndex = ++nextZIndex;
+
+        this.onClose = options.onClose || (() => {});
+        this.onMinimize = options.onMinimize || (() => {});
+        this.onMaximize = options.onMaximize || (() => {});
+        this.onRestore = options.onRestore || (() => {});
+        this.onResize = options.onResize || (() => {});
+        this.onMove = options.onMove || (() => {});
+
+        this.popup = null;
+        this.centerOnShow = false;
+
+        this.element = document.createElement('div');
+        this.element.className = `addon-window ${this.className}`;
+        this.element.style.cssText = `
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: var(--ui-modal-background, #ffffff);
+            color: var(--text-primary, #2d3748);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        `;
+        this.element.style.setProperty('margin', '0', 'important');
+        this.element.style.setProperty('width', '100%', 'important');
+        this.element.style.setProperty('height', '100%', 'important');
+
+        this.headerElement = document.createElement('div');
+
+        this.contentElement = document.createElement('div');
+        this.contentElement.className = 'addon-window-content';
+        this.contentElement.style.cssText = `
+            flex: 1;
+            overflow: auto;
+            box-sizing: border-box;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+        `;
+        this.element.appendChild(this.contentElement);
+
+        activeWindows.set(this.id, this);
+    }
+
+    show () {
+        activeWindows.set(this.id, this);
+        if (this.popup && !this.popup.closed) {
+            this.isVisible = true;
+            return this;
+        }
+
+        const width = Math.round(this.width);
+        const height = Math.round(this.height);
+        let left;
+        let top;
+        if (this.centerOnShow) {
+            left = Math.round((window.screen.availWidth - width) / 2);
+            top = Math.round((window.screen.availHeight - height) / 2);
+        } else {
+            left = Math.round(window.screenX + this.x);
+            top = Math.round(window.screenY + this.y);
+        }
+
+        const features = [
+            'mistwarpAddonWindow=1',
+            'popup=1',
+            `width=${width}`,
+            `height=${height}`,
+            `left=${left}`,
+            `top=${top}`,
+            `minWidth=${Math.round(this.minWidth)}`,
+            `minHeight=${Math.round(this.minHeight)}`,
+            `resizable=${this.resizable ? 1 : 0}`,
+            `alwaysOnTop=${this.alwaysOnTop ? 1 : 0}`
+        ].join(',');
+
+        const popup = window.open('about:blank', this.id, features);
+        if (!popup) {
+            return this;
+        }
+        this.popup = popup;
+        this.isVisible = true;
+        this.isMinimized = false;
+        this.zIndex = ++nextZIndex;
+
+        const doc = popup.document;
+        doc.open();
+        doc.write('<!DOCTYPE html><html><head></head><body></body></html>');
+        doc.close();
+        doc.documentElement.setAttribute('data-mw-native-window', '');
+        doc.title = this.title;
+
+        const base = doc.createElement('base');
+        base.href = document.baseURI;
+        doc.head.appendChild(base);
+
+        copyStylesInto(doc);
+        copyRootAttributesInto(doc);
+        doc.body.style.cssText = 'margin:0;width:100%;height:100vh;overflow:hidden;';
+        doc.body.appendChild(this.element);
+        ensureStyleObserver();
+
+        doc.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && this.closable) {
+                this.close();
+            }
+        });
+
+        popup.addEventListener('resize', () => {
+            this.width = popup.innerWidth;
+            this.height = popup.innerHeight;
+            this.onResize(this.width, this.height);
+        });
+
+        popup.addEventListener('pagehide', () => {
+            if (this.popup === popup) {
+                this.popup = null;
+                this.isVisible = false;
+                document.adoptNode(this.element);
+                activeWindows.delete(this.id);
+                this.onClose();
+            }
+        });
+
+        return this;
+    }
+
+    resyncStyles () {
+        if (!this.popup || this.popup.closed) return;
+        const doc = this.popup.document;
+        for (const node of doc.querySelectorAll('[data-mw-copied-style]')) {
+            node.remove();
+        }
+        copyStylesInto(doc);
+        copyRootAttributesInto(doc);
+    }
+
+    closePopup () {
+        const popup = this.popup;
+        this.popup = null;
+        this.isVisible = false;
+        if (popup && !popup.closed) {
+            document.adoptNode(this.element);
+            popup.close();
+        }
+    }
+
+    hide () {
+        if (this.popup && !this.popup.closed) {
+            this.destroy(true);
+        }
+        this.isVisible = false;
+        return this;
+    }
+
+    destroy (callOnClose = true) {
+        activeWindows.delete(this.id);
+        this.closePopup();
+        if (callOnClose) {
+            this.onClose();
+        }
+    }
+
+    close () {
+        this.destroy(true);
+    }
+
+    minimize () {
+        if (this.destroyOnMinimize) {
+            this.onMinimize();
+            this.destroy(false);
+            return this;
+        }
+        this.isMinimized = true;
+        this.onMinimize();
+        return this;
+    }
+
+    restore () {
+        this.isMinimized = false;
+        this.show();
+        this.onRestore();
+        return this;
+    }
+
+    maximize () {
+        return this;
+    }
+
+    toggleMaximize () {
+        return this;
+    }
+
+    setContent (content) {
+        this.contentElement.innerHTML = '';
+        if (typeof content === 'string') {
+            this.contentElement.innerHTML = content;
+        } else if (content instanceof HTMLElement) {
+            this.contentElement.appendChild(content);
+        }
+        return this;
+    }
+
+    setTitle (newTitle) {
+        this.title = newTitle;
+        if (this.popup && !this.popup.closed) {
+            this.popup.document.title = newTitle;
+        }
+        return this;
+    }
+
+    getContentElement () {
+        return this.contentElement;
+    }
+
+    center () {
+        if (this.popup && !this.popup.closed) {
+            this.popup.moveTo(
+                Math.round((window.screen.availWidth - this.popup.outerWidth) / 2),
+                Math.round((window.screen.availHeight - this.popup.outerHeight) / 2)
+            );
+        } else {
+            this.centerOnShow = true;
+        }
+        return this;
+    }
+
+    moveTo (x, y) {
+        this.x = x;
+        this.y = y;
+        if (this.popup && !this.popup.closed) {
+            const chromeHeight = window.outerHeight - window.innerHeight;
+            this.popup.moveTo(
+                Math.round(window.screenX + x),
+                Math.round(window.screenY + chromeHeight + y)
+            );
+        }
+        return this;
+    }
+
+    bringToFront () {
+        this.zIndex = ++nextZIndex;
+        if (this.popup && !this.popup.closed) {
+            this.popup.focus();
+        }
+        return this;
+    }
+
+    focus () {
+        return this.bringToFront();
+    }
+
+    isClosed () {
+        return !this.popup || this.popup.closed;
+    }
+}
+
 // Window Manager API
 const WindowManager = {
-    createWindow (options) {
+    getAnimationsEnabled () {
+        return localStorage.getItem('mw:window-animation') !== 'false';
+    },
+    
+    createWindow (options = {}) {
+        if (canUseNativeWindows() && !IN_PAGE_WINDOW_IDS.has(options.id)) {
+            return new NativeAddonWindow(options);
+        }
         return new AddonWindow(options);
     },
     
     getWindow (id) {
-        const window = activeWindows.get(id);
-        if (window && window.isDestroying) {
-            return null;
-        }
-        return window;
+        return activeWindows.get(id);
     },
     
     getAllWindows () {
@@ -1010,23 +1352,14 @@ const WindowManager = {
     
     bringToFront (id) {
         const window = activeWindows.get(id);
-        if (window && !window.isDestroying) {
+        if (window) {
             window.bringToFront();
         }
-    },
-    
-    setAnimationsEnabled (enabled) {
-        animationsEnabled = enabled;
-        try {
-            localStorage.setItem('mw:window-animation', enabled);
-        } catch (err) {
-            // ignore
-        }
-    },
-    
-    getAnimationsEnabled () {
-        return animationsEnabled;
     }
 };
+
+if (typeof window !== 'undefined') {
+    window.wm = WindowManager;
+}
 
 export default WindowManager;

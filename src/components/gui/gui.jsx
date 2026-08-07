@@ -41,35 +41,54 @@ import TWCustomExtensionModal from '../../containers/tw-custom-extension-modal.j
 import CustomGalleryModal from '../../containers/custom-gallery-modal.jsx';
 import TWRestorePointManager from '../../containers/tw-restore-point-manager.jsx';
 import TWFontsModal from '../../containers/tw-fonts-modal.jsx';
+import MWAssetsModal from '../../containers/mw-assets-modal.jsx';
+import MWProjectMetadataModal from '../../containers/mw-project-metadata-modal.jsx';
 import TWDebugger from '../../containers/tw-debugger.jsx';
 import TWUnknownPlatformModal from '../../containers/tw-unknown-platform-modal.jsx';
 import TWInvalidProjectModal from '../../containers/tw-invalid-project-modal.jsx';
-import TWGitModal from '../../containers/mw-git-modal.jsx';
 import MWExtensionManagerModal from '../../containers/mw-extension-manager-modal.jsx';
+import MWHelpModal from '../../containers/mw-help-modal.jsx';
 import MWProjectThemeModal from '../../containers/mw-project-theme-modal.jsx';
-import BilmeModal from '../../containers/bl-bilme-modal.jsx';
-import ShortcutManager from '../shortcut-manager/shortcut-manager.jsx';
+import RoturSession from '../../containers/rotur-session.jsx';
+import RoturExtensionHost from '../../containers/rotur-extension-host.jsx';
+import RoturLoginModal from '../mw-rotur-login-modal/rotur-login-modal.jsx';
+import {closeRoturLoginModal} from '../../reducers/modals.js';
 import SimpleDialog from '../../containers/simple-dialog.jsx';
 import AddonHooks from '../../addons/hooks.js';
 import NativeFindBar from '../find-bar/find-bar.jsx';
-import Onboarding from '../../containers/onboarding.jsx';
+import NativeSpotlight from '../../containers/spotlight.jsx';
 
 import {STAGE_SIZE_MODES, FIXED_WIDTH, UNCONSTRAINED_NON_STAGE_WIDTH} from '../../lib/constants/layout-constants';
 import {resolveStageSize} from '../../lib/utils/screen';
+import {getFindBarApi} from '../../lib/find-bar/api';
+import {setFractchModeOpener} from '../../lib/git/fractch-mode';
 import {Theme} from '../../lib/themes';
 
+import {BLOCKS_TAB_INDEX, COSTUMES_TAB_INDEX, SOUNDS_TAB_INDEX} from '../../reducers/editor-tab';
+import CollaborationTabIndicator from '../../containers/collaboration-tab-indicator.jsx';
 import {setStageSize} from '../../reducers/stage-size';
-import {showOnboarding} from '../../reducers/onboarding';
 
 import {isRendererSupported, isBrowserSupported} from '../../lib/utils/tw-environment-support-prober.js';
 
 import styles from './gui.css';
+
+const FractchWorkspace = React.lazy(() => import('../mw-fractch-workspace/fractch-workspace.jsx'));
+
+// The git panel imports the whole git toolchain (isomorphic-git, lightning-fs,
+// jszip). Lazy load it so it does not slow down the first editor load; it is
+// only mounted when the user actually opens the git panel.
+const TWGitModal = React.lazy(() => import('../../containers/mw-git-modal.jsx'));
 
 const messages = defineMessages({
     addExtension: {
         id: 'gui.gui.addExtension',
         description: 'Button to add an extension in the target pane',
         defaultMessage: 'Add Extension'
+    },
+    findBlocks: {
+        id: 'gui.gui.findBlocks',
+        description: 'Button in the block palette that opens block search',
+        defaultMessage: 'Find Blocks'
     }
 });
 
@@ -77,7 +96,8 @@ import {
     Blocks as BlocksIcon,
     PaintbrushVertical as CostumesIcon,
     Volume2 as SoundsIcon,
-    PackagePlus as ExtensionIcon
+    PackagePlus as ExtensionIcon,
+    Search
 } from 'lucide-react';
 
 const getFullscreenBackgroundColor = () => {
@@ -96,6 +116,10 @@ const fullscreenBackgroundColor = getFullscreenBackgroundColor();
 const AUTO_SMALL_STAGE_INNER_WIDTH = Math.round(FIXED_WIDTH);
 const MIN_EDITOR_PANE_WIDTH = 598;
 const MIN_TARGET_PANE_HEIGHT = 180;
+const HIDE_STAGE_DRAG_SLOP = 80;
+const NARROW_LAYOUT_WIDTH = 900;
+const STAGE_RESIZER_WIDTH = 6;
+const MIN_STAGE_PANEL_WIDTH = (FIXED_WIDTH * 0.5) + 18;
 
 const cachedStyleValues = new WeakMap();
 
@@ -116,6 +140,27 @@ const getCachedBorderWidth = element => {
 };
 
 const GUIComponent = props => {
+    const [fractchMode, setFractchMode] = useState(false);
+    const [fractchExitRequested, setFractchExitRequested] = useState(false);
+    const handleToggleFractchMode = useCallback(() => {
+        if (props.activeTabIndex !== BLOCKS_TAB_INDEX) props.onActivateTab(BLOCKS_TAB_INDEX);
+        if (fractchMode) {
+            setFractchExitRequested(true);
+        } else {
+            setFractchMode(true);
+        }
+    }, [fractchMode, props.activeTabIndex, props.onActivateTab]);
+    const handleExitFractchMode = useCallback(() => {
+        setFractchExitRequested(false);
+        setFractchMode(false);
+    }, []);
+    useEffect(() => {
+        setFractchModeOpener(() => {
+            props.onActivateTab(BLOCKS_TAB_INDEX);
+            setFractchMode(true);
+        });
+        return () => setFractchModeOpener(null);
+    }, [props.onActivateTab]);
     const handleEnableProcedureReturns = useCallback(() => {
         try {
             const workspace = AddonHooks.blocklyWorkspace;
@@ -210,11 +255,27 @@ const GUIComponent = props => {
     const skipNextMeasureRef = useRef(false);
     const [stagePanelWidth, setStagePanelWidth] = useState(null);
     const [stageContainerWidth, setStageContainerWidth] = useState(null);
+    const [isNarrowLayout, setIsNarrowLayout] = useState(false);
+    const [playerStageWidth, setPlayerStageWidth] = useState(null);
+
+    const isStageHidden = props.stageSizeMode === STAGE_SIZE_MODES.hidden && !props.isFullScreen;
+    const preferredPanelWidthRef = useRef(null);
+    const isStageHiddenRef = useRef(isStageHidden);
+    isStageHiddenRef.current = isStageHidden;
+
+    const handleOpenSearch = useCallback(() => {
+        const findBar = getFindBarApi();
+        if (findBar) findBar.expand();
+    }, []);
 
     const handleStagePanelResizeDoubleClick = useCallback(() => {
+        preferredPanelWidthRef.current = null;
         setStagePanelWidth(null);
         setStageContainerWidth(null);
-    }, []);
+        if (isStageHiddenRef.current && typeof props.onSetStageSize === 'function') {
+            props.onSetStageSize(STAGE_SIZE_MODES.full);
+        }
+    }, [props.onSetStageSize]);
 
     const getStageBorderExtraWidth = useCallback(containerEl => {
         if (!containerEl || typeof window === 'undefined') return 0;
@@ -328,6 +389,9 @@ const GUIComponent = props => {
             return;
         }
 
+        if (props.stageSizeMode === STAGE_SIZE_MODES.hidden) {
+            return;
+        }
         if (props.stageSizeMode === STAGE_SIZE_MODES.small) {
             setStageWidth(FIXED_WIDTH * 0.5);
         } else if (props.stageSizeMode === STAGE_SIZE_MODES.large) {
@@ -343,6 +407,7 @@ const GUIComponent = props => {
         lastSyncedWidthRef.current = stageContainerWidth;
 
         if (props.isFullScreen) return;
+        if (props.stageSizeMode === STAGE_SIZE_MODES.hidden) return;
         if (typeof stageContainerWidth !== 'number') return;
         if (typeof props.onSetStageSize !== 'function') return;
 
@@ -362,7 +427,82 @@ const GUIComponent = props => {
     }, [stageContainerWidth, props.isFullScreen, props.onSetStageSize, props.stageSizeMode, props.customStageSize, enableStageResize]);
 
     useEffect(() => {
-        if (!enableStageResize) return;
+        if (!props.isPlayerOnly || typeof window === 'undefined') return;
+        const fitPlayer = () => {
+            const naturalWidth = (props.customStageSize && props.customStageSize.width) || FIXED_WIDTH;
+            setPlayerStageWidth(Math.min(window.innerWidth, naturalWidth + 2));
+        };
+        fitPlayer();
+        window.addEventListener('resize', fitPlayer);
+        return () => window.removeEventListener('resize', fitPlayer);
+    }, [props.isPlayerOnly, props.customStageSize]);
+
+    const autoHiddenRef = useRef(false);
+    useEffect(() => {
+        const editorEl = editorWrapperRef.current;
+        const containerEl = editorEl ? editorEl.parentElement : null;
+        if (!containerEl || typeof ResizeObserver === 'undefined') return;
+
+        const fit = () => {
+            if (props.isFullScreen || typeof props.onSetStageSize !== 'function') return;
+
+            const measuredWidth = containerEl.getBoundingClientRect().width;
+            if (!Number.isFinite(measuredWidth) || measuredWidth <= 0) return;
+
+            const containerWidth = Math.min(measuredWidth, window.innerWidth);
+            setIsNarrowLayout(containerWidth < NARROW_LAYOUT_WIDTH);
+            const available = containerWidth - MIN_EDITOR_PANE_WIDTH - STAGE_RESIZER_WIDTH;
+
+            if (available < MIN_STAGE_PANEL_WIDTH) {
+                if (!isStageHiddenRef.current) {
+                    autoHiddenRef.current = true;
+                    isStageHiddenRef.current = true;
+                    syncingModeRef.current = true;
+                    props.onSetStageSize(STAGE_SIZE_MODES.hidden);
+                }
+                return;
+            }
+
+            if (isStageHiddenRef.current) {
+                if (!autoHiddenRef.current) return;
+                autoHiddenRef.current = false;
+                isStageHiddenRef.current = false;
+                props.onSetStageSize(STAGE_SIZE_MODES.small);
+                return;
+            }
+
+            const stageEl = stageAndTargetWrapperRef.current;
+            if (!stageEl) return;
+
+            const outerWidth = stageEl.getBoundingClientRect().width;
+            if (!Number.isFinite(outerWidth) || outerWidth <= 0) return;
+
+            const preferred = preferredPanelWidthRef.current;
+            const target = Math.min(
+                typeof preferred === 'number' ? preferred : outerWidth,
+                available
+            );
+            if (Math.abs(outerWidth - target) <= 1) return;
+
+            const computedStyle = window.getComputedStyle(stageEl);
+            const paddingLeft = Number.parseFloat(computedStyle.paddingLeft) || 0;
+            const paddingRight = Number.parseFloat(computedStyle.paddingRight) || 0;
+            const borderExtra = getStageBorderExtraWidth(stageEl);
+
+            setStageWidth(Math.max(0, target - paddingLeft - paddingRight - borderExtra - 2));
+        };
+
+        fit();
+        const observer = new ResizeObserver(fit);
+        observer.observe(containerEl);
+        window.addEventListener('resize', fit);
+        return () => {
+            observer.disconnect();
+            window.removeEventListener('resize', fit);
+        };
+    }, [props.isFullScreen, props.onSetStageSize, setStageWidth, getStageBorderExtraWidth]);
+
+    useEffect(() => {
         measureStageContainerWidth();
         const el = stageAndTargetWrapperRef.current;
         if (!el || typeof ResizeObserver === 'undefined') return;
@@ -431,13 +571,17 @@ const GUIComponent = props => {
 
         const stageWrapperRect = stageWrapperEl ? stageWrapperEl.getBoundingClientRect() : null;
         const stageCanvasRect = stageCanvasEl ? stageCanvasEl.getBoundingClientRect() : null;
-        const stageOverheadHeight = (stageWrapperRect && stageCanvasRect) ?
+        const stageOverheadHeight = (stageWrapperRect && stageCanvasRect && stageCanvasRect.height > 0) ?
             Math.max(0, stageWrapperRect.height - stageCanvasRect.height) :
             88;
 
+        const panelHeight = startRect.height > 0 ?
+            startRect.height :
+            ((editorRect && editorRect.height > 0) ? editorRect.height : window.innerHeight);
+
         const maxStageCanvasHeight = Math.max(
             0,
-            startRect.height - MIN_TARGET_PANE_HEIGHT - stageOverheadHeight
+            panelHeight - MIN_TARGET_PANE_HEIGHT - stageOverheadHeight
         );
 
         const customSize = props.customStageSize;
@@ -464,9 +608,29 @@ const GUIComponent = props => {
                 
                 const x = (typeof ev.clientX === 'number') ? ev.clientX : 0;
                 const dx = x - startX;
-                const nextWidth = Math.min(maxWidth, Math.max(minWidth, startWidth + (dx * directionFactor)));
+                const rawWidth = startWidth + (dx * directionFactor);
+
+                if (typeof props.onSetStageSize === 'function') {
+                    if (rawWidth < minWidth - HIDE_STAGE_DRAG_SLOP) {
+                        if (!isStageHiddenRef.current) {
+                            isStageHiddenRef.current = true;
+                            syncingModeRef.current = true;
+                            props.onSetStageSize(STAGE_SIZE_MODES.hidden);
+                        }
+                        return;
+                    }
+                    if (isStageHiddenRef.current) {
+                        isStageHiddenRef.current = false;
+                        autoHiddenRef.current = false;
+                        syncingModeRef.current = true;
+                        props.onSetStageSize(STAGE_SIZE_MODES.small);
+                    }
+                }
+
+                const nextWidth = Math.min(maxWidth, Math.max(minWidth, rawWidth));
                 const nextInnerWidth = Math.max(0, nextWidth - paddingLeft - paddingRight - borderExtra);
-                
+                preferredPanelWidthRef.current = nextWidth;
+
                 setStagePanelWidth(nextWidth);
                 setStageContainerWidth(prev => {
                     if (typeof prev === 'number' && Math.abs(prev - nextInnerWidth) < 0.5) {
@@ -590,33 +754,25 @@ const GUIComponent = props => {
         telemetryModalVisible,
         theme,
         tipsLibraryVisible,
-        onOpenOnboarding,
-        onboardingVisible,
         usernameModalVisible,
         settingsModalVisible,
         customExtensionModalVisible,
         customGalleryModalVisible,
         fontsModalVisible,
+        assetsModalVisible,
+        projectMetadataModalVisible,
         unknownPlatformModalVisible,
         invalidProjectModalVisible,
         gitModalVisible,
         shortcutManagerModalVisible,
+        roturLoginModalVisible,
+        onRequestCloseRoturLogin,
         vm,
         ...componentProps
     } = omit(props, 'dispatch');
     if (children) {
         return <Box {...componentProps}>{children}</Box>;
     }
-
-    useEffect(() => {
-        const hasSeenOnboarding = localStorage.getItem('mw:has-seen-onboarding');
-        if (!hasSeenOnboarding && !isEmbedded && !isPlayerOnly && typeof onOpenOnboarding === 'function') {
-            const timer = setTimeout(() => {
-                onOpenOnboarding();
-            }, 500);
-            return () => clearTimeout(timer);
-        }
-    }, [isEmbedded, isPlayerOnly, onOpenOnboarding]);
 
     useEffect(() => {
         if (onStartSelectingFileUpload || onClickPackager) {
@@ -649,13 +805,14 @@ const GUIComponent = props => {
 
     const alwaysEnabledModals = useMemo(() => (
         <React.Fragment>
+            <RoturSession />
+            {!isEmbedded && <RoturExtensionHost />}
             <NotificationsProvider />
             <TWSecurityManager securityManager={securityManager} />
             <TWRestorePointManager />
             <MWExtensionManagerModal />
+            <MWHelpModal />
             <MWProjectThemeModal />
-            <BilmeModal />
-            <ShortcutManager visible={shortcutManagerModalVisible} />
             {usernameModalVisible && <TWUsernameModal visible={usernameModalVisible} />}
             {settingsModalVisible && (
                 <TWSettingsModal
@@ -666,11 +823,17 @@ const GUIComponent = props => {
             {customExtensionModalVisible && <TWCustomExtensionModal />}
             {customGalleryModalVisible && <CustomGalleryModal />}
             {fontsModalVisible && <TWFontsModal />}
+            {assetsModalVisible && <MWAssetsModal />}
+            {projectMetadataModalVisible && <MWProjectMetadataModal />}
             {unknownPlatformModalVisible && <TWUnknownPlatformModal />}
             {invalidProjectModalVisible && <TWInvalidProjectModal />}
-            {gitModalVisible && <TWGitModal />}
+            <React.Suspense fallback={null}>
+                {gitModalVisible && <TWGitModal />}
+            </React.Suspense>
+            {roturLoginModalVisible && (
+                <RoturLoginModal onRequestClose={onRequestCloseRoturLogin} />
+            )}
             <SimpleDialog />
-            {onboardingVisible && <Onboarding />}
         </React.Fragment>
     ), [
         securityManager,
@@ -680,34 +843,68 @@ const GUIComponent = props => {
         customExtensionModalVisible,
         customGalleryModalVisible,
         fontsModalVisible,
+        assetsModalVisible,
+        projectMetadataModalVisible,
         unknownPlatformModalVisible,
         invalidProjectModalVisible,
         gitModalVisible,
-        shortcutManagerModalVisible,
-        onboardingVisible
+        roturLoginModalVisible,
+        onRequestCloseRoturLogin,
+        isEmbedded
     ]);
 
-    // const minDimensions = useMemo(() => ({
-    //     minWidth: typeof stagePanelWidth === 'number' ?
-    //         MIN_EDITOR_PANE_WIDTH + stagePanelWidth + 6 + 16 :
-    //         1024 + Math.max(0, customStageSize.width - 480),
-    //     minHeight: 640 + Math.max(0, customStageSize.height - 360)
-    // }), [customStageSize.width, customStageSize.height, stagePanelWidth]);
+    const minDimensions = useMemo(() => {
+        if (isNarrowLayout) {
+            return {
+                minWidth: 0,
+                minHeight: 0
+            };
+        }
+        if (isStageHidden) {
+            return {
+                minWidth: MIN_EDITOR_PANE_WIDTH + 16,
+                minHeight: 640 + Math.max(0, customStageSize.height - 360)
+            };
+        }
+        return {
+            minWidth: MIN_EDITOR_PANE_WIDTH + MIN_STAGE_PANEL_WIDTH + STAGE_RESIZER_WIDTH + 16,
+            minHeight: 640 + Math.max(0, customStageSize.height - 360)
+        };
+    }, [customStageSize.height, isStageHidden, isNarrowLayout]);
 
     const stagePanelStyle = useMemo(() => {
-        if (!enableStageResize || !stagePanelWidth) return null;
+        if (isStageHidden) {
+            return {
+                width: 'auto',
+                flexBasis: 'auto',
+                flexGrow: 0,
+                flexShrink: 0
+            };
+        }
+        if (!stagePanelWidth) return null;
         return {
             width: `${stagePanelWidth}px`,
             flexBasis: `${stagePanelWidth}px`,
             flexShrink: 0
         };
-    }, [stagePanelWidth, enableStageResize]);
+    }, [stagePanelWidth, isStageHidden]);
 
     return (<MediaQuery minWidth={unconstrainedWidth}>{isUnconstrained => {
-        const stageSize = resolveStageSize(stageSizeMode, isUnconstrained);
+        const stageSize = resolveStageSize(
+            stageSizeMode === STAGE_SIZE_MODES.hidden ? STAGE_SIZE_MODES.small : stageSizeMode,
+            isUnconstrained
+        );
 
         return (
             <React.Fragment>
+                {isWindowFullScreen ? (
+                    <div
+                        className={styles.fullscreenBackground}
+                        style={{
+                            backgroundColor: fullscreenBackgroundColor
+                        }}
+                    />
+                ) : null}
                 {alwaysEnabledModals}
                 {isPlayerOnly ? (
                     <React.Fragment>
@@ -803,6 +1000,8 @@ const GUIComponent = props => {
                 ) : null}
                 <MenuBar
                     accountNavOpen={accountNavOpen}
+                    fractchMode={fractchMode}
+                    onToggleFractchMode={handleToggleFractchMode}
                     authorId={authorId}
                     authorThumbnailUrl={authorThumbnailUrl}
                     authorUsername={authorUsername}
@@ -854,6 +1053,12 @@ const GUIComponent = props => {
                                 locale={locale}
                                 vm={vm}
                             />
+                            <NativeSpotlight
+                                activeTabIndex={activeTabIndex}
+                                isPlayerOnly={isPlayerOnly}
+                                locale={locale}
+                                vm={vm}
+                            />
                             <Tabs
                                 forceRenderTabPanel
                                 className={tabClassNames.tabs}
@@ -870,6 +1075,7 @@ const GUIComponent = props => {
                                             description="Button to get to the code panel"
                                             id="gui.gui.codeTab"
                                         />
+                                        <CollaborationTabIndicator tab={BLOCKS_TAB_INDEX} />
                                     </Tab>
                                     <Tab
                                         className={tabClassNames.tab}
@@ -889,6 +1095,7 @@ const GUIComponent = props => {
                                                 id="gui.gui.costumesTab"
                                             />
                                         )}
+                                        <CollaborationTabIndicator tab={COSTUMES_TAB_INDEX} />
                                     </Tab>
                                     <Tab
                                         className={tabClassNames.tab}
@@ -900,39 +1107,66 @@ const GUIComponent = props => {
                                             description="Button to get to the sounds panel"
                                             id="gui.gui.soundsTab"
                                         />
+                                        <CollaborationTabIndicator tab={SOUNDS_TAB_INDEX} />
                                     </Tab>
                                 </TabList>
                                 <TabPanel className={tabClassNames.tabPanel}>
-                                    <Box className={styles.blocksWrapper}>
-                                        <Blocks
-                                            key={`${blocksId}/${theme.id}`}
-                                            canUseCloud={canUseCloud}
-                                            grow={1}
-                                            isVisible={blocksTabVisible}
-                                            options={{
-                                                media: `${basePath}static/${theme.getBlocksMediaFolder()}/`
-                                            }}
-                                            stageSize={stageSize}
-                                            onOpenCustomExtensionModal={onOpenCustomExtensionModal}
-                                            theme={theme}
-                                            vm={vm}
-                                        />
-                                    </Box>
-                                    <Box className={styles.extensionButtonContainer}>
-                                        <button
-                                            className={styles.extensionButton}
-                                            title={intl.formatMessage(messages.addExtension)}
-                                            onClick={onExtensionButtonClick}
-                                        >
-                                            <ExtensionIcon
-                                                className={styles.extensionButtonIcon}
-                                                draggable={false}
+                                    {fractchMode ? (
+                                        <React.Suspense fallback={<Loader />}>
+                                            <FractchWorkspace
+                                                exitRequested={fractchExitRequested}
+                                                theme={theme}
+                                                vm={vm}
+                                                onExit={handleExitFractchMode}
                                             />
-                                        </button>
-                                    </Box>
-                                    <Box className={styles.watermark}>
-                                        <Watermark />
-                                    </Box>
+                                        </React.Suspense>
+                                    ) : (
+                                        <React.Fragment>
+                                            <Box className={styles.blocksWrapper}>
+                                                <Blocks
+                                                    key={`${blocksId}/${theme.getBlocksThemeId()}`}
+                                                    canUseCloud={canUseCloud}
+                                                    grow={1}
+                                                    isVisible={blocksTabVisible}
+                                                    options={{
+                                                        media: `${basePath}static/${theme.getBlocksMediaFolder()}/`
+                                                    }}
+                                                    stageSize={stageSize}
+                                                    onOpenCustomExtensionModal={onOpenCustomExtensionModal}
+                                                    theme={theme}
+                                                    vm={vm}
+                                                />
+                                            </Box>
+                                            <Box className={styles.paletteFooter}>
+                                                <button
+                                                    className={classNames(
+                                                        styles.paletteButton,
+                                                        styles.paletteSearchButton
+                                                    )}
+                                                    title={intl.formatMessage(messages.findBlocks)}
+                                                    onClick={handleOpenSearch}
+                                                >
+                                                    <Search
+                                                        className={styles.paletteButtonIcon}
+                                                        size={22}
+                                                    />
+                                                </button>
+                                                <button
+                                                    className={styles.paletteButton}
+                                                    title={intl.formatMessage(messages.addExtension)}
+                                                    onClick={onExtensionButtonClick}
+                                                >
+                                                    <ExtensionIcon
+                                                        className={styles.extensionButtonIcon}
+                                                        draggable={false}
+                                                    />
+                                                </button>
+                                            </Box>
+                                            <Box className={styles.watermark}>
+                                                <Watermark />
+                                            </Box>
+                                        </React.Fragment>
+                                    )}
                                 </TabPanel>
                                 <TabPanel className={tabClassNames.tabPanel}>
                                     {costumesTabVisible ? <CostumeTab
@@ -943,7 +1177,7 @@ const GUIComponent = props => {
                                     {soundsTabVisible ? <SoundTab vm={vm} /> : null}
                                 </TabPanel>
                             </Tabs>
-                            {backpackVisible ? (
+                            {backpackVisible && !fractchMode ? (
                                 <Backpack host={backpackHost} />
                             ) : null}
                         </Box>
@@ -958,7 +1192,9 @@ const GUIComponent = props => {
                         />
 
                         <Box
-                            className={classNames(styles.stageAndTargetWrapper, styles[stageSize])}
+                            className={classNames(styles.stageAndTargetWrapper, styles[stageSize], {
+                                [styles.stageHidden]: isStageHidden
+                            })}
                             ref={stageAndTargetWrapperRef}
                             style={enableStageResize ? stagePanelStyle : undefined}
                         >
@@ -966,18 +1202,21 @@ const GUIComponent = props => {
                                 isFullScreen={isFullScreen}
                                 isRendererSupported={isRendererSupported()}
                                 isRtl={isRtl}
+                                isStageHidden={isStageHidden}
                                 stageSize={stageSize}
                                 stageContainerWidth={
                                     typeof stageContainerWidth === 'number' ? stageContainerWidth : null
                                 }
                                 vm={vm}
                             />
-                            <Box className={styles.targetWrapper}>
-                                <TargetPane
-                                    stageSize={stageSize}
-                                    vm={vm}
-                                />
-                            </Box>
+                            {isStageHidden ? null : (
+                                <Box className={styles.targetWrapper}>
+                                    <TargetPane
+                                        stageSize={stageSize}
+                                        vm={vm}
+                                    />
+                                </Box>
+                            )}
                         </Box>
                     </Box>
                 </Box>
@@ -1088,14 +1327,16 @@ GUIComponent.propTypes = {
     telemetryModalVisible: PropTypes.bool,
     theme: PropTypes.instanceOf(Theme),
     tipsLibraryVisible: PropTypes.bool,
-    onOpenOnboarding: PropTypes.func,
-    onboardingVisible: PropTypes.bool,
     usernameModalVisible: PropTypes.bool,
+    roturLoginModalVisible: PropTypes.bool,
+    onRequestCloseRoturLogin: PropTypes.func,
     settingsModalVisible: PropTypes.bool,
     shortcutManagerModalVisible: PropTypes.bool,
     customExtensionModalVisible: PropTypes.bool,
     customGalleryModalVisible: PropTypes.bool,
     fontsModalVisible: PropTypes.bool,
+    assetsModalVisible: PropTypes.bool,
+    projectMetadataModalVisible: PropTypes.bool,
     unknownPlatformModalVisible: PropTypes.bool,
     invalidProjectModalVisible: PropTypes.bool,
     gitModalVisible: PropTypes.bool,
@@ -1133,13 +1374,12 @@ const mapStateToProps = state => ({
     stageSizeRequestId: state.scratchGui.stageSize.requestId,
     theme: state.scratchGui.theme.theme,
     locale: state.locales.locale,
-    onboardingVisible: state.scratchGui.onboarding.visible,
-    shortcutManagerModalVisible: state.scratchGui.modals.shortcutManagerModal
+    roturLoginModalVisible: state.scratchGui.modals.roturLoginModal
 });
 
 const mapDispatchToProps = dispatch => ({
     onSetStageSize: stageSize => dispatch(setStageSize(stageSize)),
-    onOpenOnboarding: () => dispatch(showOnboarding())
+    onRequestCloseRoturLogin: () => dispatch(closeRoturLoginModal())
 });
 
 export default injectIntl(connect(

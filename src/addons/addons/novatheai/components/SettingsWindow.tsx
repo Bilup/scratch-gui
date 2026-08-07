@@ -565,7 +565,7 @@ const AboutSettings: React.FC<{ msg: (key: string) => string }> = ({ msg }) => (
         </div>
         <div className={styles.toolbar}>
           <strong>{msg("about-license")}</strong>
-          <span className={styles.hint}>GNU Affero General Public License v3.0 or later（AGPL-3.0-or-later）</span>
+          <span className={styles.hint}>GNU Affero General Public License v3.0 or later(AGPL-3.0-or-later)</span>
         </div>
         <div className={styles.toolbar}>
           <strong>{msg("about-repo")}</strong>
