@@ -767,7 +767,10 @@ const strings = function (isInitialSetup, isStage, targetId, colors, vanilla) {
     const apple = translate('OPERATORS_JOIN_APPLE', 'apple');
     const banana = translate('OPERATORS_JOIN_BANANA', 'banana');
     const letter = translate('OPERATORS_LETTEROF_APPLE', 'a');
-    const text = (name, value) => `
+    const hello_world = translate('OPERATORS_REPLACE_HELLO_WORLD', 'Hello world!');
+    const world = translate('OPERATORS_REPLACE_WORLD', 'world');
+    const fellow_scratchers = translate('OPERATORS_REPLACE_FELLOW_SCRATCHERS', 'fellow Scratchers');
+       const text = (name, value) => `
         <value name="${name}">
             <shadow type="text"><field name="TEXT">${value}</field></shadow>
         </value>`;
@@ -807,9 +810,9 @@ const strings = function (isInitialSetup, isStage, targetId, colors, vanilla) {
             ${text('STRING', apple)}
         </block>
         <block type="operator_replace">
-            ${text('SUBSTRING', 'world')}
-            ${text('STRING', 'Hello world!')}
-            ${text('REPLACE', 'fellow Scratchers')}
+            ${text('SUBSTRING', world)}
+            ${text('STRING', hello_world)}
+            ${text('REPLACE', fellow_scratchers)}
         </block>
         <block type="operator_repeat">
             ${text('STRING', `${apple} `)}

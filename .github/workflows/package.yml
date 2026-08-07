@@ -38,16 +38,11 @@ jobs:
       - name: Regenerate pnpm-lock.yaml
         run: pnpm install --lockfile-only --ignore-scripts
 
-      - name: Update version.json
-        run: |
-          DATE=$(TZ='Asia/Shanghai' date +%Y-%m-%d)
-          jq --arg date "$DATE" '.version_little |= (tonumber + 1 | tostring) | .["latest-date"] = $date' src/playground/about/version.json > tmp.json && mv tmp.json src/playground/about/version.json
-
       - name: Commit and push
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          git add pnpm-lock.yaml src/playground/about/version.json
+          git add pnpm-lock.yaml
           git commit -m "chore: update pnpm-lock.yaml" || echo "No changes"
           git push origin develop
