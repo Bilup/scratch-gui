@@ -20,6 +20,7 @@ const StageWrapperComponent = function (props) {
         isStageHidden,
         loading,
         stageContainerWidth,
+        stageMaxHeight,
         stageSize,
         vm
     } = props;
@@ -65,6 +66,7 @@ const StageWrapperComponent = function (props) {
                         isRendererSupported ?
                             <Stage
                                 stageContainerWidth={stageContainerWidth}
+                                stageMaxHeight={stageMaxHeight}
                                 stageSize={stageSize}
                                 vm={vm}
                             /> :
@@ -87,6 +89,7 @@ StageWrapperComponent.propTypes = {
     isStageHidden: PropTypes.bool,
     loading: PropTypes.bool,
     stageContainerWidth: PropTypes.number,
+    stageMaxHeight: PropTypes.number,
     stageSize: PropTypes.oneOf(Object.keys(STAGE_DISPLAY_SIZES)).isRequired,
     vm: PropTypes.instanceOf(VM).isRequired
 };

@@ -433,3 +433,39 @@ $fade-out-distance: 15px;
         padding-inline: 0.1rem !important;
     }
 }
+
+/*
+    Short viewports (phones in landscape, small windows): there isn't enough
+    vertical space for the stage and the sprite selector at their normal sizes.
+    Give the sprite selector a compact fixed-height strip at the bottom and let
+    the stage canvas fill (and scale to fit) the remaining space.
+*/
+@media only screen and (max-height: 480px) {
+    .stage-and-target-wrapper {
+        overflow: hidden;
+    }
+
+    .target-wrapper {
+        flex-grow: 0;
+        flex-basis: auto;
+    }
+
+    /* Only the editor layout (`.offset-controls`, i.e. not full-screen or
+       embedded) gets the flexible stage area; full-screen and embedded keep
+       their own sizing. */
+    [class*="stage-wrapper_offset-controls_"] {
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 auto;
+        min-height: 0;
+    }
+
+    [class*="stage-wrapper_offset-controls_"] [class*="stage-wrapper_stage-canvas-wrapper_"] {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}

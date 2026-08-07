@@ -121,6 +121,16 @@ const NARROW_LAYOUT_WIDTH = 900;
 const STAGE_RESIZER_WIDTH = 6;
 const MIN_STAGE_PANEL_WIDTH = (FIXED_WIDTH * 0.5) + 18;
 
+// Short viewports (e.g. phones in landscape) don't have enough vertical space
+// for both the stage and the sprite selector. Below this height we switch to a
+// compact layout where the sprite selector is always visible and the stage
+// canvas is scaled down to fit the remaining space.
+const SHORT_LAYOUT_MAX_HEIGHT = 480;
+const SHORT_LAYOUT_TARGET_PANE_HEIGHT = 136;
+const SHORT_LAYOUT_STAGE_MENU_HEIGHT = 44;
+const MENU_BAR_HEIGHT = 48;
+const SHORT_LAYOUT_MIN_STAGE_PANEL_WIDTH = 120;
+
 const cachedStyleValues = new WeakMap();
 
 const getCachedBorderWidth = element => {
@@ -257,11 +267,13 @@ const GUIComponent = props => {
     const [stageContainerWidth, setStageContainerWidth] = useState(null);
     const [isNarrowLayout, setIsNarrowLayout] = useState(false);
     const [playerStageWidth, setPlayerStageWidth] = useState(null);
+    const [stageCanvasMaxHeight, setStageCanvasMaxHeight] = useState(null);
 
     const isStageHidden = props.stageSizeMode === STAGE_SIZE_MODES.hidden && !props.isFullScreen;
     const preferredPanelWidthRef = useRef(null);
     const isStageHiddenRef = useRef(isStageHidden);
     isStageHiddenRef.current = isStageHidden;
+    const isShortLayoutRef = useRef(false);
 
     const handleOpenSearch = useCallback(() => {
         const findBar = getFindBarApi();
@@ -453,7 +465,36 @@ const GUIComponent = props => {
             setIsNarrowLayout(containerWidth < NARROW_LAYOUT_WIDTH);
             const available = containerWidth - MIN_EDITOR_PANE_WIDTH - STAGE_RESIZER_WIDTH;
 
-            if (available < MIN_STAGE_PANEL_WIDTH) {
+            // Short viewports (mobile landscape, etc.) keep the stage visible
+            // with a height-capped canvas so the sprite selector always fits.
+            // Note: keep in sync with the `max-height: 480px` media queries.
+            const isShortLayout = window.innerHeight <= SHORT_LAYOUT_MAX_HEIGHT;
+            isShortLayoutRef.current = isShortLayout;
+
+            const updateStageCanvasMaxHeight = () => {
+                if (!isShortLayout) {
+                    setStageCanvasMaxHeight(null);
+                    return;
+                }
+                const stageEl = stageAndTargetWrapperRef.current;
+                const wrapperHeight = (stageEl && stageEl.getBoundingClientRect().height > 0) ?
+                    stageEl.getBoundingClientRect().height :
+                    (window.innerHeight - MENU_BAR_HEIGHT);
+                const next = Math.max(
+                    0,
+                    wrapperHeight - SHORT_LAYOUT_STAGE_MENU_HEIGHT - SHORT_LAYOUT_TARGET_PANE_HEIGHT
+                );
+                setStageCanvasMaxHeight(prev => (
+                    typeof prev === 'number' && Math.abs(prev - next) < 1 ? prev : next
+                ));
+            };
+            updateStageCanvasMaxHeight();
+
+            const minStagePanelWidth = isShortLayout ?
+                SHORT_LAYOUT_MIN_STAGE_PANEL_WIDTH :
+                MIN_STAGE_PANEL_WIDTH;
+
+            if (available < minStagePanelWidth) {
                 if (!isStageHiddenRef.current) {
                     autoHiddenRef.current = true;
                     isStageHiddenRef.current = true;
@@ -1206,6 +1247,9 @@ const GUIComponent = props => {
                                 stageSize={stageSize}
                                 stageContainerWidth={
                                     typeof stageContainerWidth === 'number' ? stageContainerWidth : null
+                                }
+                                stageMaxHeight={
+                                    typeof stageCanvasMaxHeight === 'number' ? stageCanvasMaxHeight : null
                                 }
                                 vm={vm}
                             />
