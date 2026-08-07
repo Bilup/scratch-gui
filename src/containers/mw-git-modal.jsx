@@ -1057,13 +1057,20 @@ class TWGitModal extends React.Component {
                 await addRemote({vm: this.props.vm, name: 'bilup', url});
             }
 
+            // Use the same inline onAuth as handlePush: commit author name as
+            // username (Gitea/Forgejo smart HTTP requires non-token username for
+            // git-receive-pack), falling back to token-as-username (GitHub PAT).
+            const token = this.state.remoteToken;
+            const username = (this.state.authorName || '').trim();
             await push({
                 vm: this.props.vm,
                 remote: remoteName,
                 ref: branch,
                 setUpstream: true,
                 onProgress: this.handleGitProgress,
-                onAuth: getRoturGitAuth
+                onAuth: () => (username ?
+                    {username, password: token} :
+                    {username: token || 'x-access-token', password: token})
             });
             await this.handleLoadRoturRepos();
             await this.refresh();
