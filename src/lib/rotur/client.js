@@ -226,6 +226,15 @@ const login = async () => {
         throw new Error('Logged in but could not load Bilup Accounts profile');
     }
     writeRestoreCache(rotur.token, user);
+
+    // ===== 自动触发 Forgejo Git OAuth =====
+    // 默认关闭，让用户在需要 Git 时按需触发（startGitOAuth）。
+    // 如需"登录后自动连 Git"，取消以下注释即可：
+    //
+    // import('./git-oauth.js')
+    //     .then(({startGitOAuth}) => startGitOAuth())
+    //     .catch(() => { /* 用户取消或 popup 被阻止，忽略 */ });
+
     return user;
 };
 
