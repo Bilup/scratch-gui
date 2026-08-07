@@ -116,7 +116,7 @@ class AssetPreview extends React.Component {
 
                     <dt>
                         <FormattedMessage
-                            defaultMessage="Checksum"
+                            defaultMessage="MD5 Checksum"
                             description="Metadata label for a custom asset's md5 checksum"
                             id="mw.assets.metaChecksum"
                         />
