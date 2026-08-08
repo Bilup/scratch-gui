@@ -579,7 +579,9 @@ const sensing = function (isInitialSetup, isStage, targetId, colors, vanilla) {
         `}
         ${isStage ? '' : `
             ${blockSeparator}
-            '<block type="sensing_setdragmode" id="sensing_setdragmode"></block>'+
+            <block type="sensing_setdragmode">
+                <field name="DRAG_MODE">draggable</field>
+            </block>
             ${blockSeparator}
         `}
         ${blockSeparator}

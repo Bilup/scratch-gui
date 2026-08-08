@@ -3,9 +3,21 @@ import BlockInstance from '../../lib/find-bar/BlockInstance';
 import Carousel from './Carousel';
 import {getReactInternalKey} from './dom-utils';
 
+// Opcode -> scratch-blocks message key remapping for blocks whose opcode has
+// underscores that the message table does not.
+const operatorMap = {
+    'OPERATORS_LETTER_OF': 'OPERATORS_LETTEROF',
+    'OPERATORS_LETTERS_OF': 'OPERATORS_LETTERSOF',
+    'OPERATORS_INDEX_OF': 'OPERATORS_INDEXOF',
+    'OPERATORS_CHANGE_CASE': 'OPERATORS_CHANGECASE'
+};
+
 const normalizeType = type => {
     const upper = type.toUpperCase();
-    if (upper.startsWith('OPERATOR'))  return 'OPERATORS' + upper.slice(8);
+    if (upper.startsWith('OPERATOR')) {
+        const mapped = 'OPERATORS' + upper.slice(8);
+        return operatorMap[mapped] || mapped;
+    }
     if (upper === 'SOUND_SETEFFECTTO') return 'SOUND_SETEFFECTO';
     const controlMap = {
         'CONTROL_WAIT_UNTIL': 'CONTROL_WAITUNTIL',
@@ -16,7 +28,8 @@ const normalizeType = type => {
         'CONTROL_DELETE_THIS_CLONE': 'CONTROL_DELETETHISCLONE',
         'CONTROL_INCR_COUNTER': 'CONTROL_INCRCOUNTER',
         'CONTROL_CLEAR_COUNTER': 'CONTROL_CLEARCOUNTER',
-        'CONTROL_ALL_AT_ONCE': 'CONTROL_ALLATONCE'
+        'CONTROL_ALL_AT_ONCE': 'CONTROL_ALLATONCE',
+        'CONTROL_GET_COUNTER': 'CONTROL_COUNTER'
     };
     if (controlMap[upper]) return controlMap[upper];
     return upper;
@@ -44,6 +57,17 @@ export default class Dropdown {
     createDom () {
         this.el = document.createElement('ul');
         this.el.className = 'sa-find-dropdown';
+        // Event delegation instead of one listener per item: big projects can
+        // build hundreds of entries and individual listeners add up quickly.
+        this.el.addEventListener('mousedown', e => {
+            const item = e.target && e.target.closest ? e.target.closest('li') : null;
+            if (item && this.items.indexOf(item) !== -1) {
+                this.onItemClick(item);
+                e.preventDefault();
+                return false;
+            }
+            return undefined;
+        });
         return this.el;
     }
 
@@ -92,15 +116,8 @@ export default class Dropdown {
         const item = document.createElement('li');
         item.innerText = proc.procCode;
         item.data = proc;
+        item.displayName = this.translateProcCode(proc, messagesList);
         const name = normalizeType(proc.procCode);
-        if (name == 'CONTROL_IF_ELSE') {
-            item.displayName = normalizeMessagePlaceholders(
-                normalizeMessagePlaceholders(messagesList[0]["CONTROL_IF"] || messagesList[1]["CONTROL_IF"]) + " %2 " + normalizeMessagePlaceholders(messagesList[0]["CONTROL_ELSE"] || messagesList[1]["CONTROL_ELSE"]) + " %3 "
-            );
-        } else
-            item.displayName = normalizeMessagePlaceholders(
-            messagesList[0][name] || messagesList[1][name] || proc.procCode
-        );
 
         const colorIds = {
             receive: 'events',
@@ -149,15 +166,55 @@ export default class Dropdown {
             }
         }
 
-        item.addEventListener('mousedown', e => {
-            this.onItemClick(item);
-            e.preventDefault();
-            return false;
-        });
-
         this.items.push(item);
         this.el.appendChild(item);
         return item;
+    }
+
+    /**
+     * Resolve the translated name shown for a search result.
+     * scratch-blocks core messages take priority (they are complete for the
+     * core category blocks); the translated block JSON covers extension blocks
+     * that are not present in ScratchBlocks.Msg.
+     */
+    translateBlockName (name, messagesList) {
+        if (!name) return null;
+        return messagesList[0][name] || messagesList[1][name] || null;
+    }
+
+    /**
+     * Compute the display name of a search result.
+     * @param {object} proc - the BlockItem being rendered.
+     * @param {Array} messagesList - [ScratchBlocks.Msg, translatedBlockJson].
+     * @returns {string} the translated (or fallback) display text.
+     */
+    translateProcCode (proc, messagesList) {
+        const procCode = proc.procCode;
+        const name = normalizeType(procCode);
+
+        if (proc.isTextInputEntry) {
+            // Entries look like "motion_movesteps: 10". Translate the opcode
+            // prefix and keep the user-entered value, so the row shows the
+            // localized block name instead of the raw English opcode.
+            const colonIndex = procCode.indexOf(':');
+            if (colonIndex !== -1) {
+                const opcodePart = procCode.substring(0, colonIndex).trim();
+                const valuePart = procCode.substring(colonIndex + 1).trim();
+                const translated = this.translateBlockName(normalizeType(opcodePart), messagesList);
+                if (translated) {
+                    return normalizeMessagePlaceholders(`${translated}: ${valuePart}`);
+                }
+            }
+        }
+
+        if (name === 'CONTROL_IF_ELSE') {
+            return normalizeMessagePlaceholders(
+                normalizeMessagePlaceholders(this.translateBlockName('CONTROL_IF', messagesList)) + ' %2 ' +
+                normalizeMessagePlaceholders(this.translateBlockName('CONTROL_ELSE', messagesList)) + ' %3 '
+            );
+        }
+
+        return normalizeMessagePlaceholders(this.translateBlockName(name, messagesList) || procCode);
     }
 
     onItemClick (item, instanceBlock) {
