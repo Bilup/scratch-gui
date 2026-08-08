@@ -174,6 +174,15 @@ class FakeCollabTransport extends Emitter {
         this.hub.enqueueClose(this.isHost ? peerId : this._id);
     }
 
+    /**
+     * Real transports cancel their redial loop here. The fake has no
+     * automatic redialing, so this only records the flag for tests that
+     * assert a client stopped trying to re-join.
+     */
+    abortReconnect () {
+        this.reconnectAborted = true;
+    }
+
     destroy () {
         this.destroyed = true;
     }

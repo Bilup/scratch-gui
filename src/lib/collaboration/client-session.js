@@ -3,6 +3,7 @@ import {
     PROTOCOL_VERSION,
     KIND,
     CTRL,
+    SNAPSHOT,
     makePropose,
     makeCtrl
 } from './protocol.js';
@@ -13,6 +14,11 @@ const GAP_RESYNC_DELAY_MS = 10000;
 const PENDING_OP_TIMEOUT_MS = 30000;
 const PENDING_PRUNE_INTERVAL_MS = 10000;
 const MAX_BUFFERED_OPS = 5000;
+// After a reconnect the host needs a moment to replay missed ops / echo back
+// ops we proposed just before the drop. Once this window closes, any still
+// unconfirmed pending op is lost locally, so we re-onboard to guarantee every
+// peer's document converges to the host state.
+const RECONNECT_SETTLE_MS = 3000;
 
 /**
  * A client's view of the room. Sends local edits to the host as proposals
@@ -67,6 +73,14 @@ class ClientSession extends Emitter {
         // Set once the host denies our join; suppresses the auto-reconnect
         // loop that would otherwise re-send HELLO and re-trigger a request.
         this._denied = false;
+        // Set once we cancel our own join request or get kicked: the client
+        // is leaving on purpose and must never redial / re-hello the host.
+        this._stop = false;
+        this._settleTimer = null;
+        // True while a snapshot transfer is running; a reconnect-settle
+        // check must not fire a resync mid-onboarding (it would cancel the
+        // transfer and re-download in a loop).
+        this._onboarding = false;
 
         this._opBuffer = new Map();
         this._clientOpCounter = 0;
@@ -108,6 +122,10 @@ class ClientSession extends Emitter {
         this.transport.off('reconnected', this._onReconnected);
         this.transport.off('fatal', this._onFatal);
         this._clearGapTimers();
+        if (this._settleTimer) {
+            clearTimeout(this._settleTimer);
+            this._settleTimer = null;
+        }
         if (this._pruneTimer) {
             clearInterval(this._pruneTimer);
             this._pruneTimer = null;
@@ -162,6 +180,9 @@ class ClientSession extends Emitter {
     }
 
     cancelJoinRequest () {
+        // Tell the host we no longer want in, then stop the transport from
+        // redialing (which would re-send HELLO and re-queue the request).
+        this._stopReconnect();
         this.transport.sendToHost(makeCtrl(CTRL.JOIN_CANCELLED, {}));
     }
 
@@ -171,8 +192,17 @@ class ClientSession extends Emitter {
      * @param {number} atSeq The host seq the snapshot was taken at.
      */
     setBaseSeq (atSeq) {
+        // A fresh snapshot is the complete host state; any unconfirmed
+        // local ops from before are stale (their edits are not in the
+        // snapshot) and must not be re-applied on top of it.
+        this.pendingOps = [];
+        this._onboarding = false;
         this.lastAppliedSeq = atSeq;
         this._drainBuffer();
+        // If we just reconnected and still hold unconfirmed ops (only
+        // possible on the log-replay path, where setBaseSeq is not called),
+        // the settle check re-arms when onboarding actually finished.
+        this._armSettleCheck();
     }
 
     /**
@@ -197,6 +227,13 @@ class ClientSession extends Emitter {
         this._blockedOp = null;
         this._opBuffer.clear();
         this._clearGapTimers();
+        // A re-onboard starts from scratch: no snapshot in flight, and any
+        // reconnect-settle check is moot until the new snapshot arrives.
+        this._onboarding = false;
+        if (this._settleTimer) {
+            clearTimeout(this._settleTimer);
+            this._settleTimer = null;
+        }
     }
 
     _sendHello () {
@@ -226,6 +263,7 @@ class ClientSession extends Emitter {
             this._onCtrl(envelope);
             break;
         case KIND.SNAPSHOT:
+            if (envelope.type === SNAPSHOT.BEGIN) this._onboarding = true;
             this.emit('snapshot-message', envelope);
             break;
         case KIND.ASSET:
@@ -380,6 +418,7 @@ class ClientSession extends Emitter {
             break;
         }
         case CTRL.KICK:
+            this._stopReconnect();
             this.emit('kicked', payload.reason || 'You were removed from the room');
             break;
         case CTRL.PRIVACY_CHANGED:
@@ -446,23 +485,60 @@ class ClientSession extends Emitter {
 
     _onPeerDisconnected (peerId) {
         if (peerId !== this.transport.hostPeerId) return;
+        // We cancelled the request or were kicked: the disconnect is expected,
+        // so skip the reconnect bookkeeping entirely.
+        if (this._denied || this._stop) return;
         // The transport handles redialing; surface state for the UI.
         this.isApproved = false;
         this.emit('host-connection-lost');
     }
 
     _onReconnecting (info) {
+        if (this._denied || this._stop) return;
         this.emit('reconnecting', info);
     }
 
     _onReconnected () {
-        // A denied join must never re-hello the host.
-        if (this._denied) return;
+        // A denied join, a cancelled request or a kick must never re-hello
+        // the host.
+        if (this._denied || this._stop) return;
         // Re-join. With lastAppliedSeq in the hello the host can replay
         // the missed window from its log instead of re-streaming the
         // whole project.
         this._sendHello();
         this.emit('reconnected');
+        // Ops we proposed just before the drop may never have reached the
+        // host. Let the host's replay/echo confirm the ones that did; any
+        // that are still unconfirmed after the settle window are lost
+        // locally, so re-onboard to keep every peer's document identical.
+        this._armSettleCheck();
+    }
+
+    /**
+     * Permanently stop the transport's redial loop (used when the client is
+     * leaving on purpose: cancelling a join request or being kicked).
+     */
+    _stopReconnect () {
+        this._stop = true;
+        if (this.transport) this.transport.abortReconnect();
+    }
+
+    /**
+     * After a reconnect, schedule a check that confirms pending local ops
+     * were acknowledged. If any remain unconfirmed once the window closes,
+     * they never reached the host, so fall back to a full re-onboard.
+     */
+    _armSettleCheck () {
+        if (this._settleTimer) clearTimeout(this._settleTimer);
+        this._settleTimer = setTimeout(() => {
+            this._settleTimer = null;
+            // A snapshot is still streaming in (or never started): the op
+            // stream is not live yet, so defer — setBaseSeq re-arms us.
+            if (this._onboarding) return;
+            if (this.pendingOps.length > 0) {
+                this.emit('resync-needed', 'local ops were never confirmed after reconnect');
+            }
+        }, RECONNECT_SETTLE_MS);
     }
 
     _onFatal ({error}) {

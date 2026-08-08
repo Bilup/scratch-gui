@@ -4,7 +4,7 @@ import bindAll from 'lodash.bindall';
 import {FormattedMessage, injectIntl, intlShape} from 'react-intl';
 import {connect} from 'react-redux';
 import classNames from 'classnames';
-import {AlignLeft, AlignCenter, AlignRight, GripVertical} from 'lucide-react';
+import {AlignLeft, AlignCenter, GripVertical} from 'lucide-react';
 import FancyCheckbox from '../tw-fancy-checkbox/checkbox.jsx';
 import styles from './settings-modal.css';
 import {
@@ -61,17 +61,6 @@ const ALIGN_OPTIONS = [
                 defaultMessage="Middle aligned"
                 description="Menu bar alignment option"
                 id="mw.settings.menuBar.alignMiddle"
-            />
-        )
-    },
-    {
-        id: 'right',
-        icon: AlignRight,
-        label: (
-            <FormattedMessage
-                defaultMessage="Right aligned"
-                description="Menu bar alignment option"
-                id="mw.settings.menuBar.alignRight"
             />
         )
     }

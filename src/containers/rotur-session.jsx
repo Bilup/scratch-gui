@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import {connect} from 'react-redux';
+import {injectIntl} from 'react-intl';
 import bindAll from 'lodash.bindall';
 
 import {
@@ -218,7 +219,9 @@ class RoturSession extends React.Component {
             doing: describeActivity(vm, target ? {
                 targetId: target.id,
                 tab: this.props.activeTabIndex
-            } : null),
+            } : null, this.props.intl ? (
+                (descriptor, values) => this.props.intl.formatMessage(descriptor, values)
+            ) : null),
             editingSince: this.editingSince
         };
     }
@@ -300,4 +303,4 @@ const mapDispatchToProps = dispatch => ({
 export default connect(
     mapStateToProps,
     mapDispatchToProps
-)(RoturSession);
+)(injectIntl(RoturSession));
