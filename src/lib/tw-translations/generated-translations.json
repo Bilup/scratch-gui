@@ -1415,7 +1415,21 @@
         "mw.assets.metaFormat": "格式",
         "mw.assets.metaChecksum": "MD5 校验和",
         "mw.assets.deleteButton": "删除",
-        "gui.customProcedures.labelType": "纯文本"
+        "gui.customProcedures.labelType": "纯文本",
+        "mw.community.route.explore": "发现",
+        "mw.community.route.settings": "设置",
+        "mw.community.route.manageProject": "管理作品",
+        "mw.community.route.myStuff": "我的作品",
+        "mw.community.route.wallet": "钱包",
+        "mw.community.route.notifications": "通知",
+        "mw.community.route.news": "新闻与更新",
+        "mw.community.route.leaderboard": "排行榜",
+        "mw.community.route.profile": "个人资料",
+        "mw.community.route.project": "作品",
+        "mw.community.visibilityMenu.shared": "已分享",
+        "mw.community.visibilityMenu.unlisted": "未列出",
+        "mw.community.visibilityMenu.private": "未分享",
+        "mw.community.visibilityMenu.ariaLabel": "作品可见性"
     },
     "en": {
         "mw.menuBar.file": "File",
@@ -1467,6 +1481,20 @@
         "mw.debugger.logBroadcasts": "Log broadcasts",
         "mw.debugger.logBroadcastsHelp": "Adds a debugger log entry each time a broadcast is received.",
         "mw.debugger.fancyGraphs": "Animated graphs (may affect performance)",
-        "mw.debugger.fancyGraphsHelp": "Smoothly animates the performance and memory graphs. Turning this off can improve performance on slower devices."
+        "mw.debugger.fancyGraphsHelp": "Smoothly animates the performance and memory graphs. Turning this off can improve performance on slower devices.",
+        "mw.community.route.explore": "Explore",
+        "mw.community.route.settings": "Settings",
+        "mw.community.route.manageProject": "Manage project",
+        "mw.community.route.myStuff": "My Stuff",
+        "mw.community.route.wallet": "Wallet",
+        "mw.community.route.notifications": "Notifications",
+        "mw.community.route.news": "News",
+        "mw.community.route.leaderboard": "Leaderboard",
+        "mw.community.route.profile": "Profile",
+        "mw.community.route.project": "Project",
+        "mw.community.visibilityMenu.shared": "Shared",
+        "mw.community.visibilityMenu.unlisted": "Unlisted",
+        "mw.community.visibilityMenu.private": "Unshared",
+        "mw.community.visibilityMenu.ariaLabel": "Project visibility"
     }
 }

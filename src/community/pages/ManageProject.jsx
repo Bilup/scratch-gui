@@ -25,7 +25,10 @@ const SECTIONS = [
 const ManageProject = () => {
     const {id} = useParams();
     const intl = useIntl();
-    const t = (id, defaultMessage, values) => intl.formatMessage({id, defaultMessage}, values);
+    const t = useCallback(
+        (messageId, defaultMessage, values) => intl.formatMessage({id: messageId, defaultMessage}, values),
+        [intl]
+    );
     const {user, loading} = useUser();
     const [project, setProject] = useState(null);
     const [error, setError] = useState(null);
