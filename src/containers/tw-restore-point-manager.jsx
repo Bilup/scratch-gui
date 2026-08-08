@@ -181,7 +181,12 @@ class TWRestorePointManager extends React.Component {
 
         RestorePointAPI.exportRestorePoint(id)
             .then(result => {
-                downloadBlob(`${result.title}.sb3`, result.blob);
+                // The project title may be blank (new project that was never
+                // named), which would produce a download named ".sb3". Fall back
+                // to a default name so the exported file always has a useful
+                // "作品名.sb3" style filename.
+                const title = (result.title || '').trim();
+                downloadBlob(`${title || 'project'}.sb3`, result.blob);
                 removeFromExportingList();
             })
             .catch(error => {

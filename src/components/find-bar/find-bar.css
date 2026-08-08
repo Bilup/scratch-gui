@@ -286,12 +286,14 @@
 }
 
 :global(.sa-find-dropdown .sa-find-flag) {
-    color: var(--operators-primary, var(--editorTheme3-operators-primary, #59c059));
+    /* The green flag hat is an Events block, so use the events category
+       colour instead of the operators green. */
+    color: var(--events-primary, var(--editorTheme3-events-primary, #ffab19));
 }
 
 :global(.sa-find-dropdown .sa-find-flag:hover),
 :global(.sa-find-dropdown .sa-find-flag.sel) {
-    background-color: var(--operators-primary, var(--editorTheme3-operators-primary, #59c059));
+    background-color: var(--events-primary, var(--editorTheme3-events-primary, #ffab19));
     color: var(--sa-block-text-on-bright-background);
 }
 
