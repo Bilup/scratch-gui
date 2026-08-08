@@ -28,6 +28,7 @@ import {LanguagePage, ThemePage, WallpaperPage, FontsPage} from './appearance-pa
 import LoadingScreenPage from './loading-screen-page.jsx';
 import ShortcutManager from '../shortcut-manager/shortcut-manager.jsx';
 import {takeSettingsModalInitialView} from '../../lib/settings/modal-view.js';
+import isScratchDesktop from '../../lib/utils/isScratchDesktop.js';
 
 import {Settings, Zap, Blocks, Palette, PanelTop, Bug, GitBranch, Variable, Radio,
     Globe, SunMoon, Wallpaper, Type, Monitor, Keyboard, ChevronLeft,
@@ -2184,11 +2185,11 @@ class SettingsModalComponent extends React.Component {
                         label: intl.formatMessage({id: 'mw.settings.debugger', defaultMessage: 'Debugger'}),
                         icon: Bug
                     },
-                    {
+                    ...(isScratchDesktop() ? [] : [{
                         id: 'rotur',
                         label: intl.formatMessage({id: 'mw.settings.rotur', defaultMessage: 'Bilup Accounts'}),
                         icon: Radio
-                    }
+                    }])
                 ]
             },
             {

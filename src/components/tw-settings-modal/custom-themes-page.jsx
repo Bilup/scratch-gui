@@ -432,17 +432,19 @@ class CustomThemesPage extends React.Component {
                                 id="mw.customThemes.empty.create"
                             />
                         </button>
-                        <button
-                            type="button"
-                            className={styles.ctButtonSecondary}
-                            onClick={this.props.onOpenWarpThemeMarketplace}
-                        >
-                            <Store size={14} />
-                            <FormattedMessage
-                                defaultMessage="Browse marketplace"
-                                id="mw.customThemes.empty.marketplace"
-                            />
-                        </button>
+                        {this.props.onOpenWarpThemeMarketplace && (
+                            <button
+                                type="button"
+                                className={styles.ctButtonSecondary}
+                                onClick={this.props.onOpenWarpThemeMarketplace}
+                            >
+                                <Store size={14} />
+                                <FormattedMessage
+                                    defaultMessage="Browse marketplace"
+                                    id="mw.customThemes.empty.marketplace"
+                                />
+                            </button>
+                        )}
                     </div>
                 </div>
             );
@@ -761,34 +763,36 @@ class CustomThemesPage extends React.Component {
                     </button>
                 </div>
 
-                <div className={styles.ctActionCard}>
-                    <div className={styles.ctActionIcon}><Store size={18} /></div>
-                    <div className={styles.ctActionBody}>
-                        <h3>
-                            <FormattedMessage
-                                defaultMessage="BilupTheme Marketplace"
-                                id="mw.menu.biluptheme"
-                            />
-                        </h3>
-                        <p className={styles.detail}>
-                            <FormattedMessage
-                                defaultMessage="Browse community themes and add them to your library."
-                                id="mw.customThemes.marketplace.hint"
-                            />
-                        </p>
-                    </div>
-                    <button
-                        type="button"
-                        className={styles.ctButtonSecondary}
-                        onClick={this.props.onOpenWarpThemeMarketplace}
-                    >
-                        <Store size={14} />
-                        <FormattedMessage
-                            defaultMessage="Open"
-                            id="mw.customThemes.marketplace.open"
-                        />
-                    </button>
-                </div>
+                    {this.props.onOpenWarpThemeMarketplace && (
+                        <div className={styles.ctActionCard}>
+                            <div className={styles.ctActionIcon}><Store size={18} /></div>
+                            <div className={styles.ctActionBody}>
+                                <h3>
+                                    <FormattedMessage
+                                        defaultMessage="BilupTheme Marketplace"
+                                        id="mw.menu.biluptheme"
+                                    />
+                                </h3>
+                                <p className={styles.detail}>
+                                    <FormattedMessage
+                                        defaultMessage="Browse community themes and add them to your library."
+                                        id="mw.customThemes.marketplace.hint"
+                                    />
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                className={styles.ctButtonSecondary}
+                                onClick={this.props.onOpenWarpThemeMarketplace}
+                            >
+                                <Store size={14} />
+                                <FormattedMessage
+                                    defaultMessage="Open"
+                                    id="mw.customThemes.marketplace.open"
+                                />
+                            </button>
+                        </div>
+                    )}
             </div>
         );
     }

@@ -20,6 +20,7 @@ import {
 } from '../../lib/themes/menu-bar-accent.js';
 import {getRoturSettings, updateRoturSettings} from '../../lib/rotur/settings.js';
 import {presenceSupported} from '../../lib/rotur/client.js';
+import isScratchDesktop from '../../lib/utils/isScratchDesktop.js';
 import styles from './Settings.module.css';
 
 const PROJECT_THEME_MODE_KEY = 'mw:project-theme-mode';
@@ -41,10 +42,10 @@ const SECTIONS = [
     {key: 'theme', labelKey: 'mw.community.settings.section.theme', labelDefault: 'Theme', icon: Palette},
     {key: 'project-themes', labelKey: 'mw.community.settings.section.project-themes', labelDefault: 'Project themes', icon: Brush},
     {key: 'custom-themes', labelKey: 'mw.community.settings.section.custom-themes', labelDefault: 'Custom themes', icon: SwatchBook},
-    {key: 'biluptheme', labelKey: 'mw.community.settings.section.biluptheme', labelDefault: 'BilupTheme', icon: Store},
+    ...(!isScratchDesktop() ? [{key: 'biluptheme', labelKey: 'mw.community.settings.section.biluptheme', labelDefault: 'BilupTheme', icon: Store}] : []),
     {key: 'menu-bar', labelKey: 'mw.community.settings.section.menu-bar', labelDefault: 'Menu bar', icon: Menu},
     {key: 'presence', labelKey: 'mw.community.settings.section.presence', labelDefault: 'Presence', icon: Radio},
-    {key: 'identity', labelKey: 'mw.community.settings.section.identity', labelDefault: 'Identity', icon: User}
+    ...(!isScratchDesktop() ? [{key: 'identity', labelKey: 'mw.community.settings.section.identity', labelDefault: 'Identity', icon: User}] : [])
 ];
 
 const MENU_BAR_TEXT_LABEL_KEYS = {
@@ -175,7 +176,7 @@ const Settings = () => {
                             <CustomThemesPage
                                 theme={theme}
                                 onChangeTheme={applyAndPersist}
-                                onOpenWarpThemeMarketplace={() => setActiveSection('biluptheme')}
+                                onOpenWarpThemeMarketplace={isScratchDesktop() ? null : () => setActiveSection('biluptheme')}
                             />
                         </section>
                     ) : null}
@@ -310,7 +311,7 @@ const Settings = () => {
                         </section>
                     ) : null}
 
-                    {!user ? (
+                    {!user && !isScratchDesktop() ? (
                         <p className={styles.note}>
                             {t('mw.community.settings.signInNote',
                                 'Sign in to sync your settings across devices through your Bilup Accounts account.')}
