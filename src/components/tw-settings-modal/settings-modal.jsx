@@ -371,7 +371,7 @@ const settingDefinitions = {
             description: 'Remove Miscellaneous Limits setting help',
             id: 'tw.settingsModal.removeMiscLimitsHelp'
         },
-        slug: 'remove-misc-limits'
+        slug: 'remove-limits'
     },
     disableCompiler: {
         label: {

@@ -277,7 +277,7 @@ const RemoveMiscLimits = props => (
                 id="tw.settingsModal.removeMiscLimitsHelp"
             />
         }
-        slug="remove-misc-limits"
+        slug="remove-limits"
     />
 );
 

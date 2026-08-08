@@ -2,7 +2,7 @@ scratch-gui modified for use in [Bilup](https://www.bilup.org/)
 
 ## Setup
 
-See https://docs.bilup.org/development/getting-started to setup the complete Bilup environment.
+See https://docs.bilup.org/contributing/building-running to setup the complete Bilup environment.
 
 If you just want to play with the GUI then it's the same process as upstream scratch-gui.
 
