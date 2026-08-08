@@ -1414,7 +1414,8 @@
         "mw.assets.metaSize": "大小",
         "mw.assets.metaFormat": "格式",
         "mw.assets.metaChecksum": "MD5 校验和",
-        "mw.assets.deleteButton": "删除"
+        "mw.assets.deleteButton": "删除",
+        "gui.customProcedures.labelType": "纯文本"
     },
     "en": {
         "mw.menuBar.file": "File",

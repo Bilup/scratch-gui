@@ -118,7 +118,7 @@ export default [
                 id="tw.extension.rotur.name"
             />
         ),
-        extensionId: 'rotur',
+        extensionId: 'bilupAccounts',
         iconURL: roturAccountIcon,
         description: (
             <FormattedMessage
@@ -139,7 +139,7 @@ export default [
                 id="tw.extension.roturEconomy.name"
             />
         ),
-        extensionId: 'roturEconomy',
+        extensionId: 'bilupEconomy',
         iconURL: roturEconomyIcon,
         description: (
             <FormattedMessage
@@ -160,7 +160,7 @@ export default [
                 id="tw.extension.roturKeys.name"
             />
         ),
-        extensionId: 'roturKeys',
+        extensionId: 'bilupKeys',
         iconURL: roturKeysIcon,
         description: (
             <FormattedMessage
@@ -181,7 +181,7 @@ export default [
                 id="tw.extension.roturStatus.name"
             />
         ),
-        extensionId: 'roturStatus',
+        extensionId: 'bilupStatus',
         iconURL: roturStatusIcon,
         description: (
             <FormattedMessage
@@ -202,7 +202,7 @@ export default [
                 id="tw.extension.roturSocial.name"
             />
         ),
-        extensionId: 'roturSocial',
+        extensionId: 'bilupSocial',
         iconURL: roturSocialIcon,
         description: (
             <FormattedMessage
@@ -223,7 +223,7 @@ export default [
                 id="tw.extension.roturShop.name"
             />
         ),
-        extensionId: 'roturShop',
+        extensionId: 'bilupShop',
         iconURL: roturShopIcon,
         description: (
             <FormattedMessage
@@ -244,7 +244,7 @@ export default [
                 id="tw.extension.roturGroups.name"
             />
         ),
-        extensionId: 'roturGroups',
+        extensionId: 'bilupGroups',
         iconURL: roturGroupsIcon,
         description: (
             <FormattedMessage
@@ -265,7 +265,7 @@ export default [
                 id="tw.extension.roturFiles.name"
             />
         ),
-        extensionId: 'roturFiles',
+        extensionId: 'bilupFiles',
         iconURL: roturFilesIcon,
         description: (
             <FormattedMessage

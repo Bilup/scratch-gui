@@ -803,7 +803,7 @@ const strings = function (isInitialSetup, isStage, targetId, colors, vanilla) {
         <block type="operator_letters_of">
             ${number('LETTER1', 2)}
             ${number('LETTER2', 4)}
-            ${text('STRING', apple)}
+            ${text('STRING', hello_world)}
         </block>
         <block type="operator_index_of">
             ${text('SUBSTRING', letter)}
