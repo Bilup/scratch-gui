@@ -34,6 +34,7 @@ import {
 } from '../modal-sidebar/modal-sidebar.jsx';
 import {takeGitModalInitialView} from '../../lib/git/modal-view.js';
 import {GIT_HOST, parseRepoUrl} from '../../lib/rotur/git-api.js';
+import isScratchDesktop from '../../lib/utils/isScratchDesktop.js';
 
 import styles from './git-modal.css';
 
@@ -1394,8 +1395,10 @@ class GitModalComponent extends React.Component {
             {id: 'history', label: intl.formatMessage(messages.history), icon: History},
             {id: 'branches', label: intl.formatMessage(messages.branches), icon: GitBranch},
             {id: 'diff', label: intl.formatMessage(messages.diff), icon: FileDiff},
-            {id: 'remote', label: intl.formatMessage(messages.remote), icon: Cloud},
-            {id: 'rotur', label: intl.formatMessage(messages.rotur), icon: Globe},
+            ...(!isScratchDesktop() ? [
+                {id: 'remote', label: intl.formatMessage(messages.remote), icon: Cloud},
+                {id: 'rotur', label: intl.formatMessage(messages.rotur), icon: Globe}
+            ] : []),
             {id: 'readme', label: intl.formatMessage(messages.readme), icon: FileText}
         ];
 

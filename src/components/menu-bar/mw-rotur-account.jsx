@@ -21,9 +21,10 @@ import {
     accountMenuOpen
 } from '../../reducers/menus.js';
 import {openRoturLoginModal} from '../../reducers/modals.js';
+import isScratchDesktop from '../../lib/utils/isScratchDesktop.js';
 
 const RoturAccount = props => {
-    if (!props.username) {
+    if (!props.username && !isScratchDesktop()) {
         return (
             <div
                 className={classNames(menuBarStyles.menuBarItem, menuBarStyles.hoverable)}
