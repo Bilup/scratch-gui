@@ -526,7 +526,11 @@ class CollaborationModal extends Component {
     }
 
     describeActivity (userId) {
-        return describeActivity(this.props.vm, (this.props.userActivity || {})[userId]);
+        return describeActivity(
+            this.props.vm,
+            (this.props.userActivity || {})[userId],
+            (descriptor, values) => this.props.intl.formatMessage(descriptor, values)
+        );
     }
 
     renderUserIcon (user, isHost) {

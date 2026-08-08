@@ -1,10 +1,12 @@
 import cursorIcon from '../assets/icon--cursor.svg';
+import {parseKeyCombo} from '../shortcuts/registry.js';
 
 /**
  * DOM overlay showing remote cursors, name labels and chat bubbles above
- * the Blockly workspace, plus local capture: mouse movement, "/" to open
- * the cursor chat input, and viewport-change re-projection. Rendering is
- * ported from the old cursor-sync.js; state lives on this instance.
+ * the Blockly workspace, plus local capture: mouse movement, the custom
+ * collaboration-chat shortcut to open the cursor chat input, and
+ * viewport-change re-projection. Rendering is ported from the old
+ * cursor-sync.js; state lives on this instance.
  */
 class CursorOverlay {
     /**
@@ -13,12 +15,16 @@ class CursorOverlay {
      * @param {PresenceChannel} options.presence Presence send/receive.
      * @param {Function} options.getUsername (userId) => display name.
      * @param {Function} [options.getAvatarUrl] (userId) => avatar URL or null.
+     * @param {Function} [options.getCustomShortcuts] () => customShortcuts map.
+     *   Read on every keydown so shortcut edits apply without re-attaching.
      */
-    constructor ({vm, presence, getUsername, getAvatarUrl}) {
+    constructor ({vm, presence, getUsername, getAvatarUrl, getCustomShortcuts, getTranslations}) {
         this.vm = vm;
         this.presence = presence;
         this.getUsername = getUsername;
         this.getAvatarUrl = getAvatarUrl || (() => null);
+        this.getCustomShortcuts = getCustomShortcuts || (() => ({}));
+        this.getTranslations = getTranslations || (() => ({}));
 
         this.workspace = null;
         this.layer = null;
@@ -120,7 +126,8 @@ class CursorOverlay {
         const chatInput = document.createElement('input');
         chatInput.type = 'text';
         chatInput.className = 'collaboration-chat-input';
-        chatInput.placeholder = 'Say something... (max 500 chars)';
+        chatInput.placeholder = this.getTranslations().chatPlaceholder ||
+            'Say something... (max 500 chars)';
         chatInput.maxLength = 500;
         chatInput.style.position = 'absolute';
         chatInput.style.display = 'none';
@@ -200,7 +207,7 @@ class CursorOverlay {
             this.presence.sendCursorLeave();
         });
         this._listen(window, 'keydown', e => {
-            if (e.key !== '/' || this.isChatting) return;
+            if (this.isChatting || !this._isChatShortcut(e)) return;
             const active = document.activeElement;
             const activeTag = active ? active.tagName : '';
             if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || (active && active.isContentEditable)) {
@@ -216,6 +223,22 @@ class CursorOverlay {
                 this.chatInput.focus();
             }
         });
+    }
+
+    /**
+     * Match a keydown event against the user's configured collaboration-chat
+     * shortcut (customShortcuts.collaborationChat, default '/').
+     * @param {KeyboardEvent} e Keydown event.
+     * @returns {boolean} Whether this key opens the chat input.
+     */
+    _isChatShortcut (e) {
+        const shortcuts = this.getCustomShortcuts();
+        const combo = (shortcuts && shortcuts.collaborationChat) || '/';
+        const parsed = parseKeyCombo(combo);
+        if (e.ctrlKey !== parsed.ctrl) return false;
+        if (e.altKey !== parsed.alt) return false;
+        if (e.shiftKey !== parsed.shift) return false;
+        return Boolean(e.key) && e.key.toLowerCase() === parsed.key.toLowerCase();
     }
 
     _bindViewportSync () {

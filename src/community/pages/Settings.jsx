@@ -246,12 +246,13 @@ const Settings = () => {
                                 </div>
                             ) : null}
                             <div className={styles.settingRows}>
-                                {Object.entries(presence).map(([key, enabled]) => (
+                                {Object.entries(presence).filter(([key]) => presenceLabels[key])
+                                    .map(([key, enabled]) => (
                                     <label
                                         key={key}
                                         className={styles.settingRow}
                                     >
-                                        <span>{presenceLabels[key] || key}</span>
+                                        <span>{presenceLabels[key]}</span>
                                         <input
                                             className={styles.checkbox}
                                             type="checkbox"

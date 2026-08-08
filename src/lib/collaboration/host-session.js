@@ -10,6 +10,10 @@ import {
 } from './protocol.js';
 
 const OP_LOG_SIZE = 512;
+// How long a kicked peer stays blacklisted. The kicked client stops its own
+// redial loop, but the ban backstops the (rare) case where the KICK message
+// is lost in the channel close, so the peer cannot silently re-join.
+const BAN_DURATION_MS = 60000;
 
 /**
  * The room authority. Runs on the host peer: sequences every operation,
@@ -57,6 +61,8 @@ class HostSession extends Emitter {
         this.pendingSyncs = new Set();
         this._clientOpCounter = 0;
         this._started = false;
+        // peerId -> expiry timestamp, for peers kicked by the host.
+        this._bannedPeers = new Map();
 
         this._onMessage = this._onMessage.bind(this);
         this._onPeerDisconnected = this._onPeerDisconnected.bind(this);
@@ -95,6 +101,7 @@ class HostSession extends Emitter {
         this.users.clear();
         this.pendingJoinRequests.clear();
         this.pendingSyncs.clear();
+        this._bannedPeers.clear();
         this.removeAllListeners();
     }
 
@@ -161,6 +168,9 @@ class HostSession extends Emitter {
 
     kickUser (peerId, reason = 'You were removed from the room') {
         if (!this.isClientApproved(peerId)) return;
+        // Remember the kick so a reconnect racing the channel close (or a
+        // lost KICK message) cannot re-join.
+        this._bannedPeers.set(peerId, Date.now() + BAN_DURATION_MS);
         this.transport.send(peerId, makeCtrl(CTRL.KICK, {reason}));
         this.transport.closeConnection(peerId);
         this._removeClient(peerId);
@@ -308,6 +318,14 @@ class HostSession extends Emitter {
             this.transport.closeConnection(peerId);
             return;
         }
+        if (this._isBanned(peerId)) {
+            // The host kicked this peer; refuse the re-join.
+            this.transport.send(peerId, makeCtrl(CTRL.JOIN_DENIED, {
+                reason: 'You were removed from the room'
+            }));
+            this.transport.closeConnection(peerId);
+            return;
+        }
         if (this.users.has(peerId)) {
             this._admitClient(peerId, payload.username, payload.lastAppliedSeq, payload.handle);
             return;
@@ -388,6 +406,21 @@ class HostSession extends Emitter {
         envelope.payload.userId = peerId;
         this.transport.broadcast(envelope, peerId);
         this.emit('presence', peerId, envelope);
+    }
+
+    /**
+     * True when the peer was recently kicked; expired bans are dropped lazily.
+     * @param {string} peerId Peer id.
+     * @returns {boolean} Whether the peer is blacklisted.
+     */
+    _isBanned (peerId) {
+        const expiry = this._bannedPeers.get(peerId);
+        if (expiry === undefined) return false;
+        if (expiry < Date.now()) {
+            this._bannedPeers.delete(peerId);
+            return false;
+        }
+        return true;
     }
 
     _onPeerDisconnected (peerId) {

@@ -13,6 +13,16 @@ const messages = defineMessages({
         defaultMessage: 'Say something... (max 500 chars)',
         description: 'Placeholder text for collaboration chat input',
         id: 'tw.collaboration.chatPlaceholder'
+    },
+    downloadingProject: {
+        defaultMessage: 'Downloading project from host…',
+        description: 'Loading message while downloading the project from the host',
+        id: 'gui.collaboration.downloadingProject'
+    },
+    loadingProject: {
+        defaultMessage: 'Loading project…',
+        description: 'Loading message while applying the project received from the host',
+        id: 'gui.collaboration.loadingProject'
     }
 });
 
@@ -381,6 +391,16 @@ class CollaborationContainer extends Component {
     handleKickedFromRoom (data) {
         console.log('Kicked from room:', data);
 
+        const kickMessage = this.props.intl.formatMessage({
+            id: 'gui.collaboration.kickedFromRoom',
+            defaultMessage: 'You have been removed from the collaboration room by the host.',
+            description: 'Error message when kicked from room'
+        });
+
+        // The disconnect below fires a generic "Disconnected" notice; the
+        // kick warning is more specific, so suppress it this once.
+        this._suppressDisconnectNotice = true;
+
         // Disconnect from the collaboration service but don't clear the error
         this.collaborationService.disconnect();
 
@@ -389,14 +409,11 @@ class CollaborationContainer extends Component {
         this.props.onSetRoomId(null);
         this.props.onSetUsers([]);
 
+        // Pop the same kind of reminder as the other collaboration notices.
+        NotificationSystem.warning(kickMessage, 5000);
+
         // Set a specific kick message AFTER clearing the room state
-        this.props.onSetError(
-            this.props.intl.formatMessage({
-                id: 'gui.collaboration.kickedFromRoom',
-                defaultMessage: 'You have been removed from the collaboration room by the host.',
-                description: 'Error message when kicked from room'
-            })
-        );
+        this.props.onSetError(kickMessage);
     }
 
     handleHostLeft () {
@@ -446,14 +463,20 @@ class CollaborationContainer extends Component {
     handleDisconnected () {
         console.log('Disconnected from collaboration');
 
-        NotificationSystem.info(
-            this.props.intl.formatMessage({
-                id: 'gui.collaboration.disconnected',
-                defaultMessage: 'Disconnected from collaboration room',
-                description: 'Notification when disconnected'
-            }),
-            3000
-        );
+        // When a more specific notice (e.g. "kicked") already covered this
+        // disconnect, skip the generic one.
+        if (this._suppressDisconnectNotice) {
+            this._suppressDisconnectNotice = false;
+        } else {
+            NotificationSystem.info(
+                this.props.intl.formatMessage({
+                    id: 'gui.collaboration.disconnected',
+                    defaultMessage: 'Disconnected from collaboration room',
+                    description: 'Notification when disconnected'
+                }),
+                3000
+            );
+        }
 
         this.clearWaitingOverlay();
 
@@ -578,26 +601,26 @@ class CollaborationContainer extends Component {
 
     handleProjectSyncDownloadStart () {
         this.projectSyncProgress = 0;
-        this.props.onSetCollabLoading(true, 'Downloading project from host…');
+        this.props.onSetCollabLoading(true, this.props.intl.formatMessage(messages.downloadingProject));
         this.props.onSetHostLoadingProgress(0);
     }
 
     handleProjectSyncDownloadProgress (data) {
         if (data && typeof data.progress === 'number') {
             this.projectSyncProgress = data.progress;
-            this.props.onSetCollabLoading(true, 'Downloading project from host…');
+            this.props.onSetCollabLoading(true, this.props.intl.formatMessage(messages.downloadingProject));
             this.props.onSetHostLoadingProgress(data.progress);
         }
     }
 
     handleProjectSyncDownloadComplete () {
         this.projectSyncProgress = null;
-        this.props.onSetCollabLoading(true, 'Loading project…');
+        this.props.onSetCollabLoading(true, this.props.intl.formatMessage(messages.loadingProject));
         this.props.onSetHostLoadingProgress(0);
     }
 
     handleProjectSyncApplyStart () {
-        this.props.onSetCollabLoading(true, 'Loading project…');
+        this.props.onSetCollabLoading(true, this.props.intl.formatMessage(messages.loadingProject));
         this.props.onSetHostLoadingProgress(0);
     }
 

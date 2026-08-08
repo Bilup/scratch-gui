@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import classNames from 'classnames';
 import VM from 'scratch-vm';
 
@@ -26,16 +26,25 @@ const StageWrapperComponent = function (props) {
     } = props;
 
     const [isExitingFullScreen, setIsExitingFullScreen] = useState(false);
+    const wasFullScreenRef = useRef(false);
 
     useEffect(() => {
         if (isFullScreen) {
+            wasFullScreenRef.current = true;
             setIsExitingFullScreen(false);
-        } else {
+        } else if (wasFullScreenRef.current) {
+            // Only play the exit animation when we are actually leaving fullscreen.
+            wasFullScreenRef.current = false;
             setIsExitingFullScreen(true);
             const timer = setTimeout(() => {
                 setIsExitingFullScreen(false);
             }, 250);
             return () => clearTimeout(timer);
+        } else {
+            // Initial mount while not fullscreen: do not trigger the exit animation.
+            // Otherwise the stage wrapper briefly becomes a fixed fullscreen overlay
+            // on page load, which can leave the stage stuck / flickering.
+            setIsExitingFullScreen(false);
         }
     }, [isFullScreen]);
 

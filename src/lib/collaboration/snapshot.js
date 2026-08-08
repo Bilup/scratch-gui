@@ -97,9 +97,14 @@ class HostSnapshotService extends Emitter {
             // during serialization are not in the snapshot, and the client
             // replays everything after atSeq, so it must not skip them.
             atSeq = this.session.seq;
+            buffer = toArrayBuffer(await this.getProjectData());
+            // Capture the target id map and extension list AFTER serializing
+            // so they describe exactly what the snapshot contains. Capturing
+            // them before would leave peers with stale target ids for sprites
+            // added while serializing, so later id-keyed ops would miss and
+            // the peers' projects would drift apart.
             targetIds = this.getTargetIds ? this.getTargetIds() : null;
             extensions = this.getExtensions ? this.getExtensions() : null;
-            buffer = toArrayBuffer(await this.getProjectData());
         } catch (error) {
             this._transfers.delete(peerId);
             this.emit('upload-error', {peerId, error});

@@ -29,6 +29,13 @@ class CollabService extends Emitter {
         this.roomId = null;
         this.username = null;
         this.handle = null;
+        // shortcut id -> key combo map (e.g. {collaborationChat: 'Shift+C'}).
+        // The collaboration container assigns this directly; the cursor
+        // overlay reads it lazily on every keydown so edits apply live.
+        this.customShortcuts = {};
+        // i18n strings (e.g. {chatPlaceholder}) assigned by the collaboration
+        // container; the cursor overlay reads them when building the chat input.
+        this.translations = {};
 
         this._transport = null;
         this._session = null;
@@ -265,6 +272,8 @@ class CollabService extends Emitter {
         this._cursorOverlay = new CursorOverlay({
             vm: this.vm,
             presence: this._presence,
+            getCustomShortcuts: () => this.customShortcuts,
+            getTranslations: () => this.translations,
             getUsername: userId => {
                 const user = session.users.get(userId);
                 return user ? user.username : '';
