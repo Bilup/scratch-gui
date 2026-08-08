@@ -238,14 +238,14 @@ const Footer = () => (
                         {/* Do not translate */}
                         {'Bilup Packager'}
                     </a>
-                    <a href="https://docs.bilup.org/embedding">
+                    <a href="https://docs.bilup.org/advanced/embedding">
                         <FormattedMessage
                             defaultMessage="Embedding"
                             description="Link in footer to embedding documentation for embedding link"
                             id="tw.footer.embed"
                         />
                     </a>
-                    <a href="https://docs.bilup.org/url-parameters">
+                    <a href="https://docs.bilup.org/advanced/url-parameters">
                         <FormattedMessage
                             defaultMessage="URL Parameters"
                             description="Link in footer to URL parameters documentation"
@@ -428,11 +428,11 @@ class Interface extends React.Component {
                                             values={{
                                                 link: (
                                                     <a
-                                                        href="https://docs.bilup.org/unshared-projects"
+                                                        href="https://docs.bilup.org/advanced/unshared-projects"
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                     >
-                                                        {'https://docs.bilup.org/unshared-projects'}
+                                                        {'https://docs.bilup.org/advanced/unshared-projects'}
                                                     </a>
                                                 )
                                             }}

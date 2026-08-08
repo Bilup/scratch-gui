@@ -118,7 +118,7 @@ const CloudVariableBadge = props => {
             <a
                 target="_blank"
                 rel="noreferrer"
-                href="https://docs.bilup.org/cloud-variables"
+                href="https://docs.bilup.org/advanced/cloud-variables"
             >
                 <FormattedMessage
                     defaultMessage="Learn more about cloud variables."
