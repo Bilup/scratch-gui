@@ -47,6 +47,10 @@ const RoturAccount = props => {
         );
     }
 
+    if (!props.username && isScratchDesktop()) {
+        return null;
+    }
+
     const go = path => () => {
         props.onCloseMenu();
         window.location.href = path;
