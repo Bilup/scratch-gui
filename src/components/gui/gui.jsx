@@ -258,6 +258,7 @@ const GUIComponent = props => {
     const editorWrapperRef = useRef(null);
     const stageAndTargetWrapperRef = useRef(null);
     const stageResizeRafRef = useRef(null);
+    const resizeAfterTransitionRafRef = useRef(null);
     const measureRafRef = useRef(null);
     const syncingModeRef = useRef(false);
     const prevStageSizeModeRef = useRef(null);
@@ -560,6 +561,40 @@ const GUIComponent = props => {
         };
     }, [measureStageContainerWidth, enableStageResize]);
 
+    // The stage panel has a CSS transition on its width/flex-basis. Blockly's
+    // resize handler fires (and reads the container width) right when the
+    // animation starts, so it always lays out at an intermediate width. Wait
+    // for the transition to finish, then re-trigger a resize so the blocks
+    // workspace settles on the final dimensions. This prevents the blocks
+    // pane from being misaligned / clipped after the stage is resized.
+    useEffect(() => {
+        if (!enableStageResize) return;
+        const el = stageAndTargetWrapperRef.current;
+        if (!el) return;
+
+        const handleTransitionEnd = e => {
+            if (e.target !== el) return;
+            const prop = e.propertyName;
+            if (prop !== 'width' && prop !== 'flex-basis') return;
+            if (resizeAfterTransitionRafRef.current) {
+                cancelAnimationFrame(resizeAfterTransitionRafRef.current);
+            }
+            resizeAfterTransitionRafRef.current = requestAnimationFrame(() => {
+                resizeAfterTransitionRafRef.current = null;
+                window.dispatchEvent(new Event('resize'));
+            });
+        };
+
+        el.addEventListener('transitionend', handleTransitionEnd);
+        return () => {
+            el.removeEventListener('transitionend', handleTransitionEnd);
+            if (resizeAfterTransitionRafRef.current) {
+                cancelAnimationFrame(resizeAfterTransitionRafRef.current);
+                resizeAfterTransitionRafRef.current = null;
+            }
+        };
+    }, [enableStageResize]);
+
     const handleStagePanelResizePointerDown = useCallback(e => {
         if (!enableStageResize) return;
         if (typeof e.button !== 'undefined' && e.button !== 0) return;
@@ -567,6 +602,12 @@ const GUIComponent = props => {
 
         const el = stageAndTargetWrapperRef.current;
         if (!el) return;
+
+        // While dragging, disable the CSS width/flex-basis transition so
+        // Blockly always lays out against the live width instead of an
+        // animated intermediate value. It is restored on pointer up.
+        el.style.transition = 'none';
+
         const editorEl = editorWrapperRef.current;
         const startRect = el.getBoundingClientRect();
         const computedStyle = window.getComputedStyle(el);
@@ -691,6 +732,20 @@ const GUIComponent = props => {
             window.removeEventListener('pointerup', onUp);
             window.removeEventListener('mousemove', onMove);
             window.removeEventListener('mouseup', onUp);
+
+            // Restore the CSS transition and re-measure the final width.
+            el.style.transition = '';
+            measureStageContainerWidth();
+
+            // Let React commit the final width, then tell Blockly to re-layout
+            // against the settled dimensions.
+            if (resizeAfterTransitionRafRef.current) {
+                cancelAnimationFrame(resizeAfterTransitionRafRef.current);
+            }
+            resizeAfterTransitionRafRef.current = requestAnimationFrame(() => {
+                resizeAfterTransitionRafRef.current = null;
+                window.dispatchEvent(new Event('resize'));
+            });
         };
 
         window.addEventListener('pointermove', onMove);
@@ -699,6 +754,7 @@ const GUIComponent = props => {
         window.addEventListener('mouseup', onUp);
     }, [
         getStageBorderExtraWidth,
+        measureStageContainerWidth,
         props.customStageSize,
         enableStageResize
     ]);
