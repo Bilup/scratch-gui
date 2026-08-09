@@ -168,6 +168,10 @@ class Blocks extends React.Component {
         this.deferredWorkspaceLoad = null;
         this.toolboxStateUpdateTimeout = null;
         this.workspaceVisibilityRaf = null;
+        this.workspaceResizeRaf = null;
+        this.blocksResizeObserver = null;
+        this.lastBlocksWidth = null;
+        this.lastBlocksHeight = null;
         this._toolboxXMLCache = null;
     }
     componentDidMount () {
@@ -303,6 +307,12 @@ class Blocks extends React.Component {
                 this.ScratchBlocks.Field.prewarmFontCache();
             }
         }, 0);
+
+        // Keep Blockly's layout in sync with the actual container size. Window
+        // resize events miss many real changes (CSS transitions, flex layout
+        // shifts from stage resizing, tab switches, addons resizing the pane),
+        // any of which can leave the blocks area misaligned or clipped.
+        this.setupBlocksResizeObserver();
     }
     shouldComponentUpdate (nextProps, nextState) {
         return (
@@ -405,7 +415,7 @@ class Blocks extends React.Component {
                     if (!localeChanged) {
                         this.workspace.refreshToolboxSelection_();
                     }
-                    this.workspace.resize();
+                    this.resizeBlocksWorkspace();
                 }
             });
         } else {
@@ -424,6 +434,14 @@ class Blocks extends React.Component {
         clearTimeout(this.toolboxUpdateTimeout);
         clearTimeout(this.toolboxStateUpdateTimeout);
         window.cancelAnimationFrame(this.workspaceVisibilityRaf);
+        if (this.workspaceResizeRaf) {
+            window.cancelAnimationFrame(this.workspaceResizeRaf);
+            this.workspaceResizeRaf = null;
+        }
+        if (this.blocksResizeObserver) {
+            this.blocksResizeObserver.disconnect();
+            this.blocksResizeObserver = null;
+        }
 
         // Cancel any pending debounced calls
         this.onTargetsUpdate.cancel();
@@ -1159,6 +1177,17 @@ class Blocks extends React.Component {
         // workspace to be 'undone' here.
         this.workspace.clearUndo();
 
+        // Large projects take a while to render. The container may have been
+        // resized (stage zoom, window resize, tab switch) before every block
+        // finished laying out, so re-run the layout once the current frame is
+        // done. This keeps the scrollbars and block positions consistent and
+        // prevents the blocks area from being misaligned or clipped.
+        window.requestAnimationFrame(() => {
+            if (this.unmounted || !this.workspace || this.workspace.isDisposed) return;
+            if (!this.props.isVisible) return;
+            this.resizeBlocksWorkspace();
+        });
+
         this.workspace.toolboxRefreshEnabled_ = true;
     }
     handleMonitorsUpdate (monitors) {
@@ -1258,6 +1287,50 @@ class Blocks extends React.Component {
     }
     setBlocks (blocks) {
         this.blocks = blocks;
+    }
+    resizeBlocksWorkspace () {
+        if (this.unmounted || !this.workspace || this.workspace.isDisposed) return;
+        // Blockly's resize() repositions toolbox/flyout/scrollbars but does NOT
+        // reset the SVG width/height attributes. If the workspace was resized
+        // while hidden (e.g. the stage was dragged while on the costumes/sounds
+        // tab), svgResize reads a 0-sized container and leaves the SVG at 0x0,
+        // so switching back shows an empty blocks area. Re-apply the SVG size
+        // from the (now visible) container before laying out.
+        if (typeof this.ScratchBlocks.svgResize === 'function') {
+            const svg = this.workspace.getParentSvg && this.workspace.getParentSvg();
+            const container = svg ? svg.parentNode : null;
+            if (container && container.offsetWidth > 0 && container.offsetHeight > 0) {
+                this.ScratchBlocks.svgResize(this.workspace);
+                return;
+            }
+        }
+        this.workspace.resize();
+    }
+    setupBlocksResizeObserver () {
+        if (!this.blocks || typeof ResizeObserver === 'undefined') return;
+        this.blocksResizeObserver = new ResizeObserver(() => {
+            this.handleBlocksResize();
+        });
+        this.blocksResizeObserver.observe(this.blocks);
+    }
+    handleBlocksResize () {
+        if (this.unmounted || !this.blocks || !this.workspace || this.workspace.isDisposed) return;
+        if (!this.props.isVisible) return;
+        // Only react to meaningful size changes to avoid wasted work during
+        // every frame of a CSS transition.
+        const rect = this.blocks.getBoundingClientRect();
+        const width = Math.round(rect.width);
+        const height = Math.round(rect.height);
+        if (this.lastBlocksWidth === width && this.lastBlocksHeight === height) return;
+        this.lastBlocksWidth = width;
+        this.lastBlocksHeight = height;
+        if (this.workspaceResizeRaf) return;
+        this.workspaceResizeRaf = window.requestAnimationFrame(() => {
+            this.workspaceResizeRaf = null;
+            if (this.unmounted || !this.workspace || this.workspace.isDisposed) return;
+            if (!this.props.isVisible) return;
+            this.resizeBlocksWorkspace();
+        });
     }
     cancelDeferredWorkspaceLoad () {
         this.deferredWorkspaceLoad = null;
