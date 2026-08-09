@@ -81,6 +81,7 @@ const setProjectIdMetadata = projectId => {
 class GUI extends React.Component {
     constructor (props) {
         super(props);
+        setIsScratchDesktop(this.props.isScratchDesktop);
         this.state = {
             enableStageResize: localStorage.getItem('mw:enable-stage-resize') !== 'false'
         };
@@ -88,7 +89,6 @@ class GUI extends React.Component {
     }
 
     componentDidMount () {
-        setIsScratchDesktop(this.props.isScratchDesktop);
         this.props.onStorageInit(storage);
         this.props.onVmInit(this.props.vm);
         setProjectIdMetadata(this.props.projectId);
