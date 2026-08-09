@@ -38,15 +38,17 @@ const getProjectThemeMode = () => {
     }
 };
 
-const SECTIONS = [
+const ALL_SECTIONS = [
     {key: 'theme', labelKey: 'mw.community.settings.section.theme', labelDefault: 'Theme', icon: Palette},
     {key: 'project-themes', labelKey: 'mw.community.settings.section.project-themes', labelDefault: 'Project themes', icon: Brush},
     {key: 'custom-themes', labelKey: 'mw.community.settings.section.custom-themes', labelDefault: 'Custom themes', icon: SwatchBook},
-    ...(!isScratchDesktop() ? [{key: 'biluptheme', labelKey: 'mw.community.settings.section.biluptheme', labelDefault: 'BilupTheme', icon: Store}] : []),
+    {key: 'biluptheme', labelKey: 'mw.community.settings.section.biluptheme', labelDefault: 'BilupTheme', icon: Store},
     {key: 'menu-bar', labelKey: 'mw.community.settings.section.menu-bar', labelDefault: 'Menu bar', icon: Menu},
     {key: 'presence', labelKey: 'mw.community.settings.section.presence', labelDefault: 'Presence', icon: Radio},
-    ...(!isScratchDesktop() ? [{key: 'identity', labelKey: 'mw.community.settings.section.identity', labelDefault: 'Identity', icon: User}] : [])
+    {key: 'identity', labelKey: 'mw.community.settings.section.identity', labelDefault: 'Identity', icon: User}
 ];
+
+const DESKTOP_HIDDEN_SECTIONS = new Set(['biluptheme', 'identity']);
 
 const MENU_BAR_TEXT_LABEL_KEYS = {
     auto: 'mw.community.settings.menuBarText.auto',
@@ -54,17 +56,21 @@ const MENU_BAR_TEXT_LABEL_KEYS = {
     dark: 'mw.community.settings.menuBarText.dark'
 };
 
-const Settings = () => {
+const Settings = ({isScratchDesktop: desktop = isScratchDesktop()}) => {
     const intl = useIntl();
     const t = (id, defaultMessage, values) => intl.formatMessage({id, defaultMessage}, values);
     const {user, login, logout} = useUser();
+    const desktopApp = Boolean(desktop);
+    const sections = ALL_SECTIONS
+        .filter(section => !desktopApp || !DESKTOP_HIDDEN_SECTIONS.has(section.key))
+        .map(section => ({...section, label: t(section.labelKey, section.labelDefault)}));
     const [theme, setTheme] = useState(detectTheme());
     const [username, setUsername] = useState(getUsernameOverride() || '');
     const [accentMenuBar, setAccentMenuBarState] = useState(getAccentMenuBar());
     const [menuBarText, setMenuBarTextState] = useState(getMenuBarText());
     const [presence, setPresence] = useState(getRoturSettings());
     const [projectThemeMode, setProjectThemeMode] = useState(getProjectThemeMode());
-    const [activeSection, setActiveSection] = useState(SECTIONS[0].key);
+    const [activeSection, setActiveSection] = useState(sections[0].key);
     const [presenceOk, setPresenceOk] = useState(true);
 
     useEffect(() => {
@@ -131,10 +137,6 @@ const Settings = () => {
         setPresence(current => ({...current, [key]: enabled}));
     };
 
-    const sections = SECTIONS.map(section => ({
-        ...section,
-        label: t(section.labelKey, section.labelDefault)
-    }));
     const presenceLabels = {
         presenceEnabled: t('mw.community.settings.presenceEnabled', 'Share editor presence'),
         includeEditDuration: t('mw.community.settings.includeEditDuration', 'Include edit duration')
@@ -176,7 +178,7 @@ const Settings = () => {
                             <CustomThemesPage
                                 theme={theme}
                                 onChangeTheme={applyAndPersist}
-                                onOpenWarpThemeMarketplace={isScratchDesktop() ? null : () => setActiveSection('biluptheme')}
+                                onOpenWarpThemeMarketplace={desktopApp ? null : () => setActiveSection('biluptheme')}
                             />
                         </section>
                     ) : null}
@@ -311,7 +313,7 @@ const Settings = () => {
                         </section>
                     ) : null}
 
-                    {!user && !isScratchDesktop() ? (
+                    {!user && !desktopApp ? (
                         <p className={styles.note}>
                             {t('mw.community.settings.signInNote',
                                 'Sign in to sync your settings across devices through your Bilup Accounts account.')}
