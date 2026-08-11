@@ -75,7 +75,7 @@ export default function NativeSpotlight ({vm, locale, activeTabIndex, isPlayerOn
             const messages = await loadAddonMessagesForLocale(localeRef.current);
             if (didUnmount) return;
 
-            const msg = key => formatAddonMessage(messages, key.replace(/^\//, ''));
+            const msg = (key, args) => formatAddonMessage(messages, key.replace(/^\//, ''), args);
 
             let searchFrame = null;
 
@@ -87,7 +87,7 @@ export default function NativeSpotlight ({vm, locale, activeTabIndex, isPlayerOn
             const popupContainer = popupRoot.appendChild(document.createElement('div'));
             popupContainer.classList.add('sa-mcp-container');
             popupContainer.classList.add('sa-mcp-container-collapsed');
-            popupContainer.setAttribute('aria-label', 'Spotlight search');
+            popupContainer.setAttribute('aria-label', msg('/middle-click-popup/spotlight-aria-label'));
             popupContainer.setAttribute('role', 'dialog');
 
             const popupInputContainer = popupContainer.appendChild(document.createElement('div'));
@@ -103,8 +103,8 @@ export default function NativeSpotlight ({vm, locale, activeTabIndex, isPlayerOn
             const popupInput = popupInputContainer.appendChild(document.createElement('input'));
             popupInput.classList.add('sa-mcp-input');
             popupInput.setAttribute('autocomplete', 'off');
-            popupInput.setAttribute('aria-label', 'Search blocks and project assets');
-            popupInput.setAttribute('placeholder', 'Search blocks, sprites, costumes, and sounds');
+            popupInput.setAttribute('aria-label', msg('/middle-click-popup/search-aria-label'));
+            popupInput.setAttribute('placeholder', msg('/middle-click-popup/search-placeholder'));
             popupInput.setAttribute('role', 'searchbox');
 
             const popupResultBox = popupContainer.appendChild(document.createElement('div'));
@@ -118,7 +118,7 @@ export default function NativeSpotlight ({vm, locale, activeTabIndex, isPlayerOn
             popupStatusBar.classList.add('sa-mcp-status-bar');
             popupStatusBar.setAttribute('aria-live', 'polite');
             const popupStatusText = popupStatusBar.appendChild(document.createElement('span'));
-            popupStatusText.textContent = 'Type to search';
+            popupStatusText.textContent = msg('/middle-click-popup/start-typing');
 
             const popupPreviewBlocks = popupPreviewContainer.appendChild(
                 document.createElementNS('http://www.w3.org/2000/svg', 'svg')
@@ -131,61 +131,61 @@ export default function NativeSpotlight ({vm, locale, activeTabIndex, isPlayerOn
             const actions = [
                 {
                     id: 'green-flag',
-                    label: 'Green Flag',
+                    label: msg('/middle-click-popup/action-green-flag'),
                     keywords: ['run', 'start', 'play', 'flag', 'go'],
                     run: () => vm.greenFlag()
                 },
                 {
                     id: 'stop',
-                    label: 'Stop',
+                    label: msg('/middle-click-popup/action-stop'),
                     keywords: ['halt', 'end', 'stop all'],
                     run: () => vm.stopAll()
                 },
                 {
                     id: 'open-settings',
-                    label: 'Open Settings',
+                    label: msg('/middle-click-popup/action-open-settings'),
                     keywords: ['preferences', 'options', 'theme', 'appearance', 'fps'],
                     run: () => dispatchAction(openSettingsModal())
                 },
                 {
                     id: 'open-extensions',
-                    label: 'Add Extension',
+                    label: msg('/middle-click-popup/action-add-extension'),
                     keywords: ['extension', 'library', 'add', 'pen', 'music'],
                     run: () => dispatchAction(openExtensionLibrary())
                 },
                 {
                     id: 'manage-extensions',
-                    label: 'Manage Extensions',
+                    label: msg('/middle-click-popup/action-manage-extensions'),
                     keywords: ['extension', 'manager', 'remove', 'reorder'],
                     run: () => dispatchAction(openExtensionManagerModal())
                 },
                 {
                     id: 'open-help',
-                    label: 'Open Help',
+                    label: msg('/middle-click-popup/action-open-help'),
                     keywords: ['help', 'docs', 'documentation', 'guide', 'support'],
                     run: () => dispatchAction(openHelp())
                 },
                 {
                     id: 'help-blocks',
-                    label: 'Help: Block palette',
+                    label: msg('/middle-click-popup/action-help-blocks'),
                     keywords: ['help', 'blocks', 'docs', 'reference', 'palette'],
                     run: () => dispatchAction(openHelp('blocks-palette'))
                 },
                 {
                     id: 'tab-code',
-                    label: 'Go to Code',
+                    label: msg('/middle-click-popup/action-tab-code'),
                     keywords: ['tab', 'scripts', 'workspace', 'blocks'],
                     run: () => dispatchAction(activateTab(0))
                 },
                 {
                     id: 'tab-costumes',
-                    label: 'Go to Costumes',
+                    label: msg('/middle-click-popup/action-tab-costumes'),
                     keywords: ['tab', 'paint', 'draw', 'images'],
                     run: () => dispatchAction(activateTab(1))
                 },
                 {
                     id: 'tab-sounds',
-                    label: 'Go to Sounds',
+                    label: msg('/middle-click-popup/action-tab-sounds'),
                     keywords: ['tab', 'audio', 'record'],
                     run: () => dispatchAction(activateTab(2))
                 }
@@ -193,7 +193,7 @@ export default function NativeSpotlight ({vm, locale, activeTabIndex, isPlayerOn
 
             const docs = HELP_ENTRIES.map(entry => ({
                 id: `docs:${entry.id}`,
-                label: entry.title,
+                label: msg(`/middle-click-popup/help/${entry.id}`) || entry.title,
                 type: 'Docs',
                 keywords: [...(entry.keywords || []), entry.category, 'docs', 'help', 'guide'],
                 run: () => dispatchAction(openHelp(entry.id))
@@ -290,7 +290,7 @@ export default function NativeSpotlight ({vm, locale, activeTabIndex, isPlayerOn
                 popupInputSuggestion.value = '';
                 popupContainer.classList.toggle('sa-mcp-container-collapsed', searchMode !== 'everything');
                 popupStatusText.textContent = searchMode === 'everything' ?
-                    'Type to search blocks, sprites, actions...' : 'Type to search';
+                    msg('/middle-click-popup/type-to-search-everything') : msg('/middle-click-popup/start-typing');
 
                 popupRoot.style.display = '';
                 popupInput.focus();
@@ -304,7 +304,7 @@ export default function NativeSpotlight ({vm, locale, activeTabIndex, isPlayerOn
                     const toolbox = workspace.getToolbox();
                     if (!toolbox || !toolbox.flyout_ || !toolbox.flyout_.getWorkspace()) {
                         console.warn('Spotlight: Toolbox not ready yet, retrying...');
-                        popupStatusText.textContent = 'Loading blocks...';
+                        popupStatusText.textContent = msg('/middle-click-popup/loading-blocks');
 
                         setTimeout(() => {
                             loadBlockTypes(workspace);
@@ -323,7 +323,7 @@ export default function NativeSpotlight ({vm, locale, activeTabIndex, isPlayerOn
                     if (!blockTypes || blockTypes.length === 0) {
                         console.warn('Spotlight: No block types available, showing empty search');
                         blockTypes = [];
-                        popupStatusText.textContent = 'No blocks available';
+                        popupStatusText.textContent = msg('/middle-click-popup/no-blocks');
                         return;
                     }
 
@@ -337,7 +337,7 @@ export default function NativeSpotlight ({vm, locale, activeTabIndex, isPlayerOn
                     doPerformSearch();
                 } catch (error) {
                     console.error('Spotlight: Error loading blocks', error);
-                    popupStatusText.textContent = 'Error loading blocks';
+                    popupStatusText.textContent = msg('/middle-click-popup/error-loading');
                 }
             }
 
@@ -361,7 +361,7 @@ export default function NativeSpotlight ({vm, locale, activeTabIndex, isPlayerOn
 
                 popupContainer.classList.remove('sa-mcp-container-collapsed');
 
-                popupStatusText.textContent = 'Searching...';
+                popupStatusText.textContent = msg('/middle-click-popup/searching');
                 searchFrame = requestAnimationFrame(() => {
                     searchFrame = null;
                     doPerformSearch();
@@ -370,18 +370,18 @@ export default function NativeSpotlight ({vm, locale, activeTabIndex, isPlayerOn
 
             function doPerformSearch () {
                 if (!blockTypes) {
-                    popupStatusText.textContent = 'Loading blocks...';
+                    popupStatusText.textContent = msg('/middle-click-popup/loading-blocks');
                     return;
                 }
 
                 if (blockTypes.length === 0) {
-                    popupStatusText.textContent = 'No blocks available';
+                    popupStatusText.textContent = msg('/middle-click-popup/no-blocks');
                     return;
                 }
 
                 const searchResult = performSearch(
                     popupInput.value, querier, blockTypes, vm, PREVIEW_LIMIT, searchMode,
-                    {actions, docs, recents: getRecents()}
+                    {actions, docs, recents: getRecents()}, msg
                 );
                 const blockList = searchResult.blockList;
                 queryIllegalResult = searchResult.queryIllegalResult;
@@ -391,9 +391,9 @@ export default function NativeSpotlight ({vm, locale, activeTabIndex, isPlayerOn
                     const hasEmptyResults = blockList.some(result => !result.isHeader);
                     if (searchMode === 'everything') {
                         popupStatusText.textContent = hasEmptyResults ?
-                            'Recent' : 'Type to search blocks, sprites, actions...';
+                            msg('/middle-click-popup/recent') : msg('/middle-click-popup/type-to-search-everything');
                     } else {
-                        popupStatusText.textContent = 'Type to search';
+                        popupStatusText.textContent = msg('/middle-click-popup/start-typing');
                     }
                     popupResultBox.style.display = 'none';
                 } else {
@@ -415,11 +415,11 @@ export default function NativeSpotlight ({vm, locale, activeTabIndex, isPlayerOn
 
                     const hasComputed = popupResultBox.style.display !== 'none';
                     const searchCount = blockList.filter(result => !result.isHeader).length;
-                    const plural = searchCount === 1 ? '' : 's';
-                    const limitNote = limited ? ' · best matches shown' : '';
+                    const limitNote = limited ? ` · ${msg('/middle-click-popup/best-matches')}` : '';
                     popupStatusText.textContent = searchCount > 0 ?
-                        `${searchCount} result${plural}${limitNote}` :
-                        (hasComputed ? 'Calculated result' : 'No results found');
+                        msg('/middle-click-popup/result-count', {count: searchCount}) + limitNote :
+                        (hasComputed ? msg('/middle-click-popup/calculated-result') :
+                            msg('/middle-click-popup/no-results'));
                 }
 
                 while (popupPreviewBlocks.firstChild) popupPreviewBlocks.removeChild(popupPreviewBlocks.lastChild);

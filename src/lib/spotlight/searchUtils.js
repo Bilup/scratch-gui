@@ -61,7 +61,7 @@ const appendSection = (blockList, title, results) => {
 
 const SUGGESTED_ACTION_IDS = ['green-flag', 'open-settings', 'open-extensions', 'open-help'];
 
-const buildEmptyState = (blockList, querier, actions, recents) => {
+const buildEmptyState = (blockList, querier, actions, recents, msg) => {
     const recentResults = [];
     for (const entry of recents) {
         if (recentResults.length >= 8) break;
@@ -78,7 +78,7 @@ const buildEmptyState = (blockList, querier, actions, recents) => {
             }
         }
     }
-    appendSection(blockList, 'Recent', recentResults);
+    appendSection(blockList, msg('/middle-click-popup/recent'), recentResults);
 
     if (recentResults.length < 4) {
         const recentActionIds = new Set(recents.filter(e => e.kind === 'action').map(e => e.key));
@@ -86,7 +86,7 @@ const buildEmptyState = (blockList, querier, actions, recents) => {
             .map(id => actions.find(action => action.id === id))
             .filter(action => action && !recentActionIds.has(action.id))
             .map(action => ({block: null, actionData: action, isAction: true}));
-        appendSection(blockList, 'Suggested', suggested);
+        appendSection(blockList, msg('/middle-click-popup/suggested'), suggested);
     }
 };
 
@@ -99,16 +99,17 @@ const buildEmptyState = (blockList, querier, actions, recents) => {
  * @param {number} previewLimit Maximum block results
  * @param {string} searchMode 'blocks' or 'everything'
  * @param {object} extras Everything-mode extras: {actions, recents}
+ * @param {function(string): string} msg The translations used for section titles.
  * @returns {object} Search results and computed value metadata
  */
-const performSearch = (searchValue, querier, blockTypes, vm, previewLimit, searchMode = 'everything', extras = {}) => {
+const performSearch = (searchValue, querier, blockTypes, vm, previewLimit, searchMode = 'everything', extras = {}, msg = k => k) => {
     const query = normalize(searchValue);
     const blockList = [];
     const {actions = [], docs = [], recents = []} = extras;
 
     if (!query) {
         if (searchMode === 'everything') {
-            buildEmptyState(blockList, querier, actions, recents);
+            buildEmptyState(blockList, querier, actions, recents, msg);
         }
         return {
             blockList,
@@ -170,12 +171,12 @@ const performSearch = (searchValue, querier, blockTypes, vm, previewLimit, searc
 
         limited = limited || [sprites, costumes, sounds, customBlocks]
             .some(results => results.length > entityLimit);
-        appendSection(blockList, 'Sprites', sprites.slice(0, entityLimit));
-        appendSection(blockList, 'Costumes', costumes.slice(0, entityLimit));
-        appendSection(blockList, 'Sounds', sounds.slice(0, entityLimit));
-        appendSection(blockList, 'Custom Blocks', customBlocks.slice(0, entityLimit));
-        appendSection(blockList, 'Actions', actionResults.slice(0, entityLimit));
-        appendSection(blockList, 'Docs', docsResults.slice(0, entityLimit));
+        appendSection(blockList, msg('/middle-click-popup/sprites'), sprites.slice(0, entityLimit));
+        appendSection(blockList, msg('/middle-click-popup/costumes'), costumes.slice(0, entityLimit));
+        appendSection(blockList, msg('/middle-click-popup/sounds'), sounds.slice(0, entityLimit));
+        appendSection(blockList, msg('/middle-click-popup/custom-blocks'), customBlocks.slice(0, entityLimit));
+        appendSection(blockList, msg('/middle-click-popup/actions'), actionResults.slice(0, entityLimit));
+        appendSection(blockList, msg('/middle-click-popup/docs'), docsResults.slice(0, entityLimit));
     }
 
     const blocks = queryResults.map((queryResult, index) => ({
@@ -190,7 +191,7 @@ const performSearch = (searchValue, querier, blockTypes, vm, previewLimit, searc
             autocompleteFactory: endOnly => result.queryResult.toText(endOnly),
             score: result.score
         }));
-    appendSection(blockList, 'Blocks', blocks);
+    appendSection(blockList, msg('/middle-click-popup/blocks'), blocks);
 
     const mathResult = evaluateMath(searchValue);
     const conversionResult = mathResult === null ? tryUnitConversion(searchValue) : null;

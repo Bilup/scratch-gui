@@ -377,33 +377,80 @@ export class BlockTypeInfo {
      * @returns {BlockTypeInfo[]} The block types
      */
     static getBlocks (Blockly, vm, workspace, locale) {
-        const flyoutWorkspace = workspace.getToolbox()?.flyout_.getWorkspace();
+        const toolbox = workspace.getToolbox();
+        if (!toolbox) return [];
+        const flyout = toolbox.flyout_;
+        const flyoutWorkspace = flyout && flyout.getWorkspace();
         if (!flyoutWorkspace) return [];
 
         const blocks = [];
 
+        // Enumerate every category (including loaded extensions) so that extension
+        // blocks are always searchable, even if they are not currently rendered in
+        // the flyout workspace. The flyout's "show all" view may only contain the
+        // currently selected category's blocks in some configurations.
+        const categories = (toolbox.categoryMenu_ && toolbox.categoryMenu_.categories_) || [];
+
+        if (categories.length === 0) {
+            // No categories to enumerate; fall back to whatever is currently
+            // rendered in the flyout workspace.
+            BlockTypeInfo._collectFromFlyout(blocks, Blockly, vm, workspace, locale, flyoutWorkspace);
+            return blocks;
+        }
+
+        for (const category of categories) {
+            const contents = category.getContents();
+            if (!contents || (typeof contents !== 'string' && contents.length === 0)) continue;
+            try {
+                flyout.show(contents);
+            } catch (error) {
+                console.warn('Spotlight: Failed to render category blocks', error);
+                continue;
+            }
+            BlockTypeInfo._collectFromFlyout(blocks, Blockly, vm, workspace, locale, flyoutWorkspace);
+        }
+
+        // Restore the flyout to its original (show-all) state.
+        try {
+            toolbox.refreshSelection();
+        } catch (error) {
+            // Ignore restore failures.
+        }
+
+        return blocks;
+    }
+
+    /**
+     * Collects {@link BlockTypeInfo} instances from every top-level block currently
+     * rendered in the given flyout workspace. Individual blocks that fail to parse
+     * are skipped instead of aborting the whole enumeration.
+     * @param {Array} blocks The array to append the collected block types to.
+     * @param {Blockly} Blockly The Blockly instance
+     * @param {*} vm The VM instance
+     * @param {*} workspace The workspace to enumerate
+     * @param {function(string): string} locale The translations used for converting icons into text
+     * @param {*} flyoutWorkspace The flyout workspace whose rendered blocks are collected.
+     */
+    static _collectFromFlyout (blocks, Blockly, vm, workspace, locale, flyoutWorkspace) {
         const flyoutDom = Blockly.Xml.workspaceToDom(flyoutWorkspace);
         const flyoutDomBlockMap = {};
         for (const blockDom of flyoutDom.children) {
             if (blockDom.tagName === 'BLOCK') {
                 const id = blockDom.getAttribute('id');
-                flyoutDomBlockMap[id] = blockDom;
+                if (id) flyoutDomBlockMap[id] = blockDom;
             }
         }
         for (const workspaceBlock of flyoutWorkspace.getTopBlocks()) {
-            blocks.push(
-                ...BlockTypeInfo._createBlocks(
-                    workspace,
-                    vm,
-                    Blockly,
-                    locale,
-                    workspaceBlock,
-                    flyoutDomBlockMap[workspaceBlock.id]
-                )
-            );
+            const domForm = flyoutDomBlockMap[workspaceBlock.id];
+            if (!domForm) continue;
+            try {
+                blocks.push(
+                    ...BlockTypeInfo._createBlocks(workspace, vm, Blockly, locale, workspaceBlock, domForm)
+                );
+            } catch (error) {
+                console.warn(`Spotlight: Skipping block '${workspaceBlock.type}'`, error);
+            }
         }
-
-        return blocks;
     }
 
     static _createBlocks (workspace, vm, Blockly, locale, workspaceForm, domForm) {
