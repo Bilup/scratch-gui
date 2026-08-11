@@ -1,7 +1,7 @@
 import WindowManager from '../../window-system/window-manager.js';
 import JSONEditor from 'jsoneditor';
 
-export default async function ({ addon, console }) {
+export default async function ({ addon, msg, console }) {
   const Blockly = await addon.tab.traps.getBlockly();
   const vm = addon.tab.traps.vm;
 
@@ -18,10 +18,18 @@ export default async function ({ addon, console }) {
   let navIndex = -1;
 
   const INPUT_TYPE_NAMES = {
-    1: 'value',
-    2: 'statement',
-    3: 'dummy',
-    5: 'end-row'
+    1: msg('input-value'),
+    2: msg('input-statement'),
+    3: msg('input-dummy'),
+    5: msg('input-end-row')
+  };
+
+  const SHAPE_NAMES = {
+    boolean: msg('shape-boolean'),
+    reporter: msg('shape-reporter'),
+    hat: msg('shape-hat'),
+    cap: msg('shape-cap'),
+    stack: msg('shape-stack')
   };
 
   // ── helpers ──────────────────────────────────────────────────────────────
@@ -385,7 +393,7 @@ export default async function ({ addon, console }) {
 
     const target = findTargetForBlock(block.id);
     const targetName = target
-      ? (target.isStage ? 'Stage' : (target.getName ? target.getName() : target.sprite?.name))
+      ? (target.isStage ? msg('stage') : (target.getName ? target.getName() : target.sprite?.name))
       : null;
     const targetId = target ? target.id : null;
 
@@ -455,7 +463,7 @@ export default async function ({ addon, console }) {
       id: block.id,
       type: block.type,
       opcode: (vmBlock && vmBlock.opcode) || block.type,
-      shape: getShape(block),
+      shape: SHAPE_NAMES[getShape(block)] || getShape(block),
       category: block.category_ || null,
       colour: block.getColour ? block.getColour() : null,
 
@@ -542,7 +550,7 @@ export default async function ({ addon, console }) {
       : ` <span class="dev-inspector-block-link-id">(${escapeHtml(shortId(id))})</span>`;
     return (
       `<button type="button" class="dev-inspector-block-link" data-block-id="${escapeHtml(id)}" ` +
-      `title="Inspect ${escapeHtml(type || '')} ${escapeHtml(id)}">` +
+      `title="${escapeHtml(msg('inspect-title', {type: type || '', id}))}">` +
       `${escapeHtml(label)}${idPart}</button>`
     );
   };
@@ -570,9 +578,20 @@ export default async function ({ addon, console }) {
   const propsTable = rows => {
     // rows: [{key, value, plain?, html?}]
     if (!rows || !rows.length) {
-      return `<div class="dev-inspector-empty">No data</div>`;
+      return `<div class="dev-inspector-empty">${escapeHtml(msg('no-data'))}</div>`;
     }
     return `<div class="dev-inspector-props">${rows.map(r => propRow(r.key, r.value, r)).join('')}</div>`;
+  };
+
+  const FLAG_NAMES = {
+    shadow: msg('flag-shadow'),
+    'top-level': msg('flag-top-level'),
+    collapsed: msg('flag-collapsed'),
+    disabled: msg('flag-disabled'),
+    movable: msg('flag-movable'),
+    deletable: msg('flag-deletable'),
+    editable: msg('flag-editable'),
+    insertion: msg('flag-insertion')
   };
 
   const flagsHtml = flags => {
@@ -590,7 +609,7 @@ export default async function ({ addon, console }) {
     return `
       <div class="dev-inspector-flags">
         ${entries.map(([name, on]) =>
-    `<span class="dev-inspector-flag${on ? ' dev-inspector-flag-on' : ''}">${escapeHtml(name)}</span>`
+    `<span class="dev-inspector-flag${on ? ' dev-inspector-flag-on' : ''}">${escapeHtml(FLAG_NAMES[name] || name)}</span>`
   ).join('')}
       </div>
     `;
@@ -632,14 +651,16 @@ export default async function ({ addon, console }) {
     }
 
     if (rows.length <= 1 && !info.children.length) {
-      return `<div class="dev-inspector-empty">No linked blocks to browse</div>`;
+      return `<div class="dev-inspector-empty">${escapeHtml(msg('no-linked-blocks'))}</div>`;
     }
 
     return `
       <div class="dev-inspector-tree" role="tree">
         ${rows.map(r => {
     const indent = r.depth > 0 ? `${'  '.repeat(r.depth - 1)}└ ` : '';
-    const meta = r.role === 'parent' ? 'up' : r.role === 'child' ? 'in' : 'here';
+    const meta = r.role === 'parent'
+      ? msg('up')
+      : r.role === 'child' ? msg('in') : msg('here');
     if (r.current) {
       return `
             <div class="dev-inspector-tree-row dev-inspector-tree-row-current" role="treeitem" aria-current="true">
@@ -652,7 +673,7 @@ export default async function ({ addon, console }) {
     return `
           <button type="button" class="dev-inspector-tree-row" role="treeitem"
             data-block-id="${escapeHtml(r.id)}"
-            title="Inspect ${escapeHtml(r.type)}">
+            title="${escapeHtml(msg('inspect-title', {type: r.type, id: r.id}))}">
             <span class="dev-inspector-tree-indent">${escapeHtml(indent)}</span>
             <span class="dev-inspector-tree-label">${escapeHtml(r.type)}</span>
             <span class="dev-inspector-tree-meta">${meta}</span>
@@ -667,55 +688,55 @@ export default async function ({ addon, console }) {
     const el = document.createElement('div');
     el.className = 'dev-inspector-panel-scroll';
     el.innerHTML = `
-      <h2 class="dev-inspector-section-title">Overview</h2>
+      <h2 class="dev-inspector-section-title">${escapeHtml(msg('overview'))}</h2>
       <p class="dev-inspector-section-sub">${escapeHtml(info.opcode)}${info.procedureName ? ` · ${escapeHtml(info.procedureName)}` : ''}</p>
 
       <div class="dev-inspector-block">
-        <div class="dev-inspector-block-label">Identity</div>
+        <div class="dev-inspector-block-label">${escapeHtml(msg('identity'))}</div>
         ${propsTable([
-    {key: 'Opcode', value: info.opcode},
-    {key: 'Type', value: info.type},
-    {key: 'Block ID', value: info.id},
-    {key: 'Shape', value: info.shape, plain: true},
-    {key: 'Category', value: info.category},
-    {key: 'Procedure', value: info.procedureName}
+    {key: msg('opcode'), value: info.opcode},
+    {key: msg('type'), value: info.type},
+    {key: msg('block-id'), value: info.id},
+    {key: msg('shape'), value: info.shape, plain: true},
+    {key: msg('category'), value: info.category},
+    {key: msg('procedure'), value: info.procedureName}
   ])}
       </div>
 
       <div class="dev-inspector-block">
-        <div class="dev-inspector-block-label">Location</div>
+        <div class="dev-inspector-block-label">${escapeHtml(msg('location'))}</div>
         ${propsTable([
-    {key: 'Target', value: info.targetName, plain: true},
-    {key: 'Target ID', value: info.targetId},
-    {key: 'Position', value: `(${info.position.x}, ${info.position.y})`},
-    {key: 'Top of stack', value: refLink(info.root), html: true},
-    {key: 'Stack index', value: `${info.stack.index} / ${Math.max(info.stack.length - 1, 0)}`}
+    {key: msg('target'), value: info.targetName, plain: true},
+    {key: msg('target-id'), value: info.targetId},
+    {key: msg('position'), value: `(${info.position.x}, ${info.position.y})`},
+    {key: msg('top-of-stack'), value: refLink(info.root), html: true},
+    {key: msg('stack-index'), value: `${info.stack.index} / ${Math.max(info.stack.length - 1, 0)}`}
   ])}
       </div>
 
       <div class="dev-inspector-block">
-        <div class="dev-inspector-block-label">Browse</div>
-        <p class="dev-inspector-section-sub" style="margin:0 0 8px">Click a block to inspect it (parent / children).</p>
+        <div class="dev-inspector-block-label">${escapeHtml(msg('browse'))}</div>
+        <p class="dev-inspector-section-sub" style="margin:0 0 8px">${escapeHtml(msg('browse-subtext'))}</p>
         ${renderLocalTree(info)}
       </div>
 
       <div class="dev-inspector-block">
-        <div class="dev-inspector-block-label">Flags</div>
+        <div class="dev-inspector-block-label">${escapeHtml(msg('flags'))}</div>
         ${flagsHtml(info.flags)}
       </div>
 
       ${info.comment ? `
         <div class="dev-inspector-block">
-          <div class="dev-inspector-block-label">Comment</div>
-          ${propsTable([{key: 'Text', value: info.comment, plain: true}])}
+          <div class="dev-inspector-block-label">${escapeHtml(msg('comment'))}</div>
+          ${propsTable([{key: msg('text'), value: info.comment, plain: true}])}
         </div>
       ` : ''}
 
       ${info.mutation ? `
         <div class="dev-inspector-block">
-          <div class="dev-inspector-block-label">Mutation</div>
+          <div class="dev-inspector-block-label">${escapeHtml(msg('mutation'))}</div>
           ${propsTable([{
-    key: 'Data',
+    key: msg('data'),
     value: typeof info.mutation === 'string' ? info.mutation : JSON.stringify(info.mutation)
   }])}
         </div>
@@ -730,17 +751,17 @@ export default async function ({ addon, console }) {
 
     const outputConn = info.connections.output;
     const connRows = [
-      {key: 'Parent', value: refLink(info.parent), html: true},
-      {key: 'Previous', value: refLink(info.previous), html: true},
-      {key: 'Next', value: refLink(info.next), html: true},
-      {key: 'Surround', value: refLink(info.surround), html: true},
-      {key: 'Root', value: refLink(info.root), html: true},
+      {key: msg('parent'), value: refLink(info.parent), html: true},
+      {key: msg('previous'), value: refLink(info.previous), html: true},
+      {key: msg('next'), value: refLink(info.next), html: true},
+      {key: msg('surround'), value: refLink(info.surround), html: true},
+      {key: msg('root'), value: refLink(info.root), html: true},
       {
-        key: 'Output',
+        key: msg('output'),
         value: outputConn
           ? (outputConn.connected
             ? blockLink(outputConn.targetId, outputConn.targetType)
-            : 'disconnected')
+            : msg('disconnected'))
           : null,
         html: !!(outputConn && outputConn.connected)
       }
@@ -748,15 +769,15 @@ export default async function ({ addon, console }) {
 
     let childrenHtml;
     if (!info.children.length) {
-      childrenHtml = `<div class="dev-inspector-empty">No child blocks</div>`;
+      childrenHtml = `<div class="dev-inspector-empty">${escapeHtml(msg('no-child-blocks'))}</div>`;
     } else {
       childrenHtml = `
         <div class="dev-inspector-table-wrap">
           <table class="dev-inspector-table">
-            <thead><tr><th>#</th><th>Type</th><th>ID</th></tr></thead>
+            <thead><tr><th>#</th><th>${escapeHtml(msg('type'))}</th><th>${escapeHtml(msg('id'))}</th></tr></thead>
             <tbody>
               ${info.children.map((c, i) => `
-                <tr class="dev-inspector-row-link" data-block-id="${escapeHtml(c.id)}" title="Inspect ${escapeHtml(c.type)}">
+                <tr class="dev-inspector-row-link" data-block-id="${escapeHtml(c.id)}" title="${escapeHtml(msg('inspect-title', {type: c.type, id: c.id}))}">
                   <td>${i}</td>
                   <td>${blockLink(c.id, c.type, {hideId: true})}</td>
                   <td>${escapeHtml(c.id)}</td>
@@ -769,21 +790,21 @@ export default async function ({ addon, console }) {
     }
 
     el.innerHTML = `
-      <h2 class="dev-inspector-section-title">Connections</h2>
-      <p class="dev-inspector-section-sub">Click any linked block to inspect it.</p>
+      <h2 class="dev-inspector-section-title">${escapeHtml(msg('connections'))}</h2>
+      <p class="dev-inspector-section-sub">${escapeHtml(msg('connections-subtext'))}</p>
 
       <div class="dev-inspector-block">
-        <div class="dev-inspector-block-label">Tree</div>
+        <div class="dev-inspector-block-label">${escapeHtml(msg('tree'))}</div>
         ${renderLocalTree(info)}
       </div>
 
       <div class="dev-inspector-block">
-        <div class="dev-inspector-block-label">Linked blocks</div>
+        <div class="dev-inspector-block-label">${escapeHtml(msg('linked-blocks'))}</div>
         ${propsTable(connRows)}
       </div>
 
       <div class="dev-inspector-block">
-        <div class="dev-inspector-block-label">Children (${info.children.length})</div>
+        <div class="dev-inspector-block-label">${escapeHtml(msg('children-count', {count: info.children.length}))}</div>
         ${childrenHtml}
       </div>
     `;
@@ -796,12 +817,12 @@ export default async function ({ addon, console }) {
 
     let fieldsHtml;
     if (!info.fields.length) {
-      fieldsHtml = `<div class="dev-inspector-empty">No fields</div>`;
+      fieldsHtml = `<div class="dev-inspector-empty">${escapeHtml(msg('no-fields'))}</div>`;
     } else {
       fieldsHtml = `
         <div class="dev-inspector-table-wrap">
           <table class="dev-inspector-table">
-            <thead><tr><th>Name</th><th>Value</th><th>Text</th><th>Type</th></tr></thead>
+            <thead><tr><th>${escapeHtml(msg('name'))}</th><th>${escapeHtml(msg('value'))}</th><th>${escapeHtml(msg('text'))}</th><th>${escapeHtml(msg('type'))}</th></tr></thead>
             <tbody>
               ${info.fields.map(f => `
                 <tr>
@@ -819,17 +840,17 @@ export default async function ({ addon, console }) {
 
     let inputsHtml;
     if (!info.inputs.length) {
-      inputsHtml = `<div class="dev-inspector-empty">No inputs</div>`;
+      inputsHtml = `<div class="dev-inspector-empty">${escapeHtml(msg('no-inputs'))}</div>`;
     } else {
       inputsHtml = `
         <div class="dev-inspector-table-wrap">
           <table class="dev-inspector-table">
-            <thead><tr><th>Name</th><th>Kind</th><th>Connected</th><th>Target / value</th></tr></thead>
+            <thead><tr><th>${escapeHtml(msg('name'))}</th><th>${escapeHtml(msg('kind'))}</th><th>${escapeHtml(msg('connected'))}</th><th>${escapeHtml(msg('target-value'))}</th></tr></thead>
             <tbody>
               ${info.inputs.map(inp => {
     let target = '<span class="dev-inspector-muted">-</span>';
     const rowAttrs = inp.connected && inp.targetId
-      ? ` class="dev-inspector-row-link" data-block-id="${escapeHtml(inp.targetId)}" title="Inspect ${escapeHtml(inp.targetType || '')}"`
+      ? ` class="dev-inspector-row-link" data-block-id="${escapeHtml(inp.targetId)}" title="${escapeHtml(msg('inspect-title', {type: inp.targetType || '', id: inp.targetId}))}"`
       : '';
     if (inp.connected && inp.targetId) {
       const valueHint = inp.shadowValue != null
@@ -841,7 +862,7 @@ export default async function ({ addon, console }) {
                   <tr${rowAttrs}>
                     <td>${escapeHtml(inp.name)}</td>
                     <td>${escapeHtml(inp.type)}</td>
-                    <td>${inp.connected ? 'yes' : 'no'}</td>
+                    <td>${inp.connected ? msg('yes') : msg('no')}</td>
                     <td>${target}</td>
                   </tr>
                 `;
@@ -859,40 +880,40 @@ export default async function ({ addon, console }) {
       const vmInputEntries = Object.entries(info.scratchData.inputs || {});
       vmHtml = `
         <div class="dev-inspector-block">
-          <div class="dev-inspector-block-label">VM fields</div>
+          <div class="dev-inspector-block-label">${escapeHtml(msg('vm-fields'))}</div>
           ${vmFieldEntries.length ? propsTable(vmFieldEntries.map(([k, v]) => ({
     key: k,
     value: v && typeof v === 'object' && 'value' in v ? v.value : v
-  }))) : `<div class="dev-inspector-empty">None</div>`}
+  }))) : `<div class="dev-inspector-empty">${escapeHtml(msg('none'))}</div>`}
         </div>
         <div class="dev-inspector-block">
-          <div class="dev-inspector-block-label">VM inputs</div>
+          <div class="dev-inspector-block-label">${escapeHtml(msg('vm-inputs'))}</div>
           ${vmInputEntries.length ? propsTable(vmInputEntries.map(([k, v]) => {
     if (!v) return {key: k, value: '-'};
     const parts = [];
-    if (v.block) parts.push(blockLink(v.block, 'block'));
-    if (v.shadow && v.shadow !== v.block) parts.push(`shadow: ${blockLink(v.shadow, 'shadow')}`);
+    if (v.block) parts.push(blockLink(v.block, msg('type-block')));
+    if (v.shadow && v.shadow !== v.block) parts.push(`${msg('shadow-prefix')}${blockLink(v.shadow, msg('type-shadow'))}`);
     return {
       key: k,
       value: parts.length ? parts.join(' ') : '-',
       html: true
     };
-  })) : `<div class="dev-inspector-empty">None</div>`}
+  })) : `<div class="dev-inspector-empty">${escapeHtml(msg('none'))}</div>`}
         </div>
       `;
     }
 
     el.innerHTML = `
-      <h2 class="dev-inspector-section-title">Inputs &amp; fields</h2>
-      <p class="dev-inspector-section-sub">Click a connected block to inspect it.</p>
+      <h2 class="dev-inspector-section-title">${escapeHtml(msg('inputs-fields'))}</h2>
+      <p class="dev-inspector-section-sub">${escapeHtml(msg('inputs-subtext'))}</p>
 
       <div class="dev-inspector-block">
-        <div class="dev-inspector-block-label">Fields (${info.fields.length})</div>
+        <div class="dev-inspector-block-label">${escapeHtml(msg('fields-count', {count: info.fields.length}))}</div>
         ${fieldsHtml}
       </div>
 
       <div class="dev-inspector-block">
-        <div class="dev-inspector-block-label">Inputs (${info.inputs.length})</div>
+        <div class="dev-inspector-block-label">${escapeHtml(msg('inputs-count', {count: info.inputs.length}))}</div>
         ${inputsHtml}
       </div>
 
@@ -908,16 +929,16 @@ export default async function ({ addon, console }) {
     const stack = info.stack;
     let stackHtml;
     if (!stack.blocks.length) {
-      stackHtml = `<div class="dev-inspector-empty">Empty stack</div>`;
+      stackHtml = `<div class="dev-inspector-empty">${escapeHtml(msg('empty-stack'))}</div>`;
     } else {
       stackHtml = `
         <div class="dev-inspector-table-wrap">
           <table class="dev-inspector-table">
-            <thead><tr><th>#</th><th>Type</th><th>ID</th></tr></thead>
+            <thead><tr><th>#</th><th>${escapeHtml(msg('type'))}</th><th>${escapeHtml(msg('id'))}</th></tr></thead>
             <tbody>
               ${stack.blocks.map(b => `
                 <tr class="${b.isCurrent ? 'dev-inspector-row-current' : 'dev-inspector-row-link'}"
-                  ${b.isCurrent ? '' : `data-block-id="${escapeHtml(b.id)}" title="Inspect ${escapeHtml(b.type)}"`}>
+                  ${b.isCurrent ? '' : `data-block-id="${escapeHtml(b.id)}" title="${escapeHtml(msg('inspect-title', {type: b.type, id: b.id}))}"`}>
                   <td>${b.index}</td>
                   <td>${b.isCurrent
     ? `${escapeHtml(b.type)}  &lt;-`
@@ -933,22 +954,22 @@ export default async function ({ addon, console }) {
 
     let threadsHtml;
     if (!info.threads.length) {
-      threadsHtml = `<div class="dev-inspector-empty">No running threads reference this block</div>`;
+      threadsHtml = `<div class="dev-inspector-empty">${escapeHtml(msg('no-running-threads'))}</div>`;
     } else {
       threadsHtml = `
         <div class="dev-inspector-table-wrap">
           <table class="dev-inspector-table">
-            <thead><tr><th>Target</th><th>Status</th><th>Stack depth</th><th>Top block</th><th>Flags</th></tr></thead>
+            <thead><tr><th>${escapeHtml(msg('target'))}</th><th>${escapeHtml(msg('status'))}</th><th>${escapeHtml(msg('stack-depth'))}</th><th>${escapeHtml(msg('top-block'))}</th><th>${escapeHtml(msg('flags'))}</th></tr></thead>
             <tbody>
               ${info.threads.map(t => `
                 <tr>
                   <td>${escapeHtml(t.targetName || shortId(t.targetId))}</td>
                   <td>${escapeHtml(String(t.status))}</td>
                   <td>${t.stack.length}</td>
-                  <td>${t.topBlock ? blockLink(t.topBlock, 'top') : '-'}</td>
+                  <td>${t.topBlock ? blockLink(t.topBlock, msg('type-top')) : '-'}</td>
                   <td>${[
-    t.stackClick ? 'click' : null,
-    t.updateMonitor ? 'monitor' : null
+    t.stackClick ? msg('click') : null,
+    t.updateMonitor ? msg('monitor') : null
   ].filter(Boolean).join(', ') || '-'}</td>
                 </tr>
               `).join('')}
@@ -959,27 +980,27 @@ export default async function ({ addon, console }) {
     }
 
     el.innerHTML = `
-      <h2 class="dev-inspector-section-title">Stack</h2>
-      <p class="dev-inspector-section-sub">Linear stack from the root hat/top block through next-links.</p>
+      <h2 class="dev-inspector-section-title">${escapeHtml(msg('stack'))}</h2>
+      <p class="dev-inspector-section-sub">${escapeHtml(msg('stack-subtext'))}</p>
 
       <div class="dev-inspector-block">
-        <div class="dev-inspector-block-label">Summary</div>
+        <div class="dev-inspector-block-label">${escapeHtml(msg('summary'))}</div>
         ${propsTable([
-    {key: 'Root', value: blockLink(stack.rootId, stack.rootType), html: true},
-    {key: 'Length', value: String(stack.length), plain: true},
-    {key: 'This block', value: `index ${stack.index}`, plain: true},
-    {key: 'Surround', value: refLink(info.surround), html: true}
+    {key: msg('root'), value: blockLink(stack.rootId, stack.rootType), html: true},
+    {key: msg('length'), value: String(stack.length), plain: true},
+    {key: msg('this-block'), value: msg('index', {n: stack.index}), plain: true},
+    {key: msg('surround'), value: refLink(info.surround), html: true}
   ])}
       </div>
 
       <div class="dev-inspector-block">
-        <div class="dev-inspector-block-label">Stack outline</div>
-        <p class="dev-inspector-section-sub" style="margin:0 0 8px">Click a row to jump to that block in the stack.</p>
+        <div class="dev-inspector-block-label">${escapeHtml(msg('stack-outline'))}</div>
+        <p class="dev-inspector-section-sub" style="margin:0 0 8px">${escapeHtml(msg('stack-outline-subtext'))}</p>
         ${stackHtml}
       </div>
 
       <div class="dev-inspector-block">
-        <div class="dev-inspector-block-label">Running threads (${info.threads.length})</div>
+        <div class="dev-inspector-block-label">${escapeHtml(msg('running-threads-count', {count: info.threads.length}))}</div>
         ${threadsHtml}
       </div>
     `;
@@ -997,27 +1018,27 @@ export default async function ({ addon, console }) {
     container.style.height = '100%';
     container.innerHTML = `
       <aside class="dev-inspector-sidebar">
-        <nav class="dev-inspector-sidebar-nav" aria-label="Inspector sections">
+        <nav class="dev-inspector-sidebar-nav" aria-label="${escapeHtml(msg('inspector-sections'))}">
           <div class="dev-inspector-group">
-            <div class="dev-inspector-group-header">Inspect</div>
-            <button type="button" class="dev-inspector-nav-item dev-inspector-nav-item-active" data-panel="overview">Overview</button>
-            <button type="button" class="dev-inspector-nav-item" data-panel="connections">Connections</button>
-            <button type="button" class="dev-inspector-nav-item" data-panel="inputs">Inputs</button>
-            <button type="button" class="dev-inspector-nav-item" data-panel="stack">Stack</button>
+            <div class="dev-inspector-group-header">${escapeHtml(msg('inspect'))}</div>
+            <button type="button" class="dev-inspector-nav-item dev-inspector-nav-item-active" data-panel="overview">${escapeHtml(msg('overview'))}</button>
+            <button type="button" class="dev-inspector-nav-item" data-panel="connections">${escapeHtml(msg('connections'))}</button>
+            <button type="button" class="dev-inspector-nav-item" data-panel="inputs">${escapeHtml(msg('inputs'))}</button>
+            <button type="button" class="dev-inspector-nav-item" data-panel="stack">${escapeHtml(msg('stack'))}</button>
           </div>
           <div class="dev-inspector-group">
-            <div class="dev-inspector-group-header">Data</div>
-            <button type="button" class="dev-inspector-nav-item" data-panel="block-json">Block JSON</button>
-            <button type="button" class="dev-inspector-nav-item" data-panel="project-json">Project JSON</button>
+            <div class="dev-inspector-group-header">${escapeHtml(msg('data'))}</div>
+            <button type="button" class="dev-inspector-nav-item" data-panel="block-json">${escapeHtml(msg('block-json'))}</button>
+            <button type="button" class="dev-inspector-nav-item" data-panel="project-json">${escapeHtml(msg('project-json'))}</button>
           </div>
         </nav>
       </aside>
       <div class="dev-inspector-main">
         <div class="dev-inspector-pathbar">
-          <button type="button" class="dev-inspector-path-btn dev-inspector-nav-back" title="Back" disabled>&#8592;</button>
-          <button type="button" class="dev-inspector-path-btn dev-inspector-nav-forward" title="Forward" disabled>&#8594;</button>
-          <button type="button" class="dev-inspector-path-btn dev-inspector-nav-up" title="Parent block" disabled>&#8593;</button>
-          <div class="dev-inspector-crumbs" aria-label="Navigation path"></div>
+          <button type="button" class="dev-inspector-path-btn dev-inspector-nav-back" title="${escapeHtml(msg('back'))}" disabled>&#8592;</button>
+          <button type="button" class="dev-inspector-path-btn dev-inspector-nav-forward" title="${escapeHtml(msg('forward'))}" disabled>&#8594;</button>
+          <button type="button" class="dev-inspector-path-btn dev-inspector-nav-up" title="${escapeHtml(msg('parent-block'))}" disabled>&#8593;</button>
+          <div class="dev-inspector-crumbs" aria-label="${escapeHtml(msg('navigation-path'))}"></div>
         </div>
         <div class="dev-inspector-panel dev-inspector-panel-active" data-panel="overview"></div>
         <div class="dev-inspector-panel" data-panel="connections"></div>
@@ -1025,9 +1046,9 @@ export default async function ({ addon, console }) {
         <div class="dev-inspector-panel" data-panel="stack"></div>
         <div class="dev-inspector-panel" data-panel="block-json">
           <div class="dev-inspector-toolbar">
-            <button type="button" class="dev-inspector-copy">Copy</button>
-            <button type="button" class="dev-inspector-download">Download</button>
-            <button type="button" class="dev-inspector-save dev-inspector-btn-primary">Save &amp; reload</button>
+            <button type="button" class="dev-inspector-copy">${escapeHtml(msg('copy'))}</button>
+            <button type="button" class="dev-inspector-download">${escapeHtml(msg('download'))}</button>
+            <button type="button" class="dev-inspector-save dev-inspector-btn-primary">${escapeHtml(msg('save-reload'))}</button>
           </div>
           <div class="dev-inspector-editor-wrap">
             <div class="dev-inspector-json-editor"></div>
@@ -1035,10 +1056,10 @@ export default async function ({ addon, console }) {
         </div>
         <div class="dev-inspector-panel" data-panel="project-json">
           <div class="dev-inspector-toolbar">
-            <button type="button" class="dev-inspector-project-refresh">Refresh</button>
-            <button type="button" class="dev-inspector-project-copy">Copy</button>
-            <button type="button" class="dev-inspector-project-download">Download</button>
-            <button type="button" class="dev-inspector-project-reload dev-inspector-btn-danger">Reload project</button>
+            <button type="button" class="dev-inspector-project-refresh">${escapeHtml(msg('refresh'))}</button>
+            <button type="button" class="dev-inspector-project-copy">${escapeHtml(msg('copy'))}</button>
+            <button type="button" class="dev-inspector-project-download">${escapeHtml(msg('download'))}</button>
+            <button type="button" class="dev-inspector-project-reload dev-inspector-btn-danger">${escapeHtml(msg('reload-project'))}</button>
           </div>
           <div class="dev-inspector-editor-wrap">
             <div class="dev-inspector-project-editor"></div>
@@ -1062,11 +1083,11 @@ export default async function ({ addon, console }) {
     const loadProjectJSONAsync = editorContainer => {
       if (!vm || !vm.runtime) {
         ensureProjectJSONEditor(editorContainer);
-        setEditorJSON(projectJSONEditor, {$error: 'VM not available'});
+        setEditorJSON(projectJSONEditor, {$error: msg('vm-not-available')});
         return;
       }
       ensureProjectJSONEditor(editorContainer);
-      setEditorJSON(projectJSONEditor, {$status: 'Loading project JSON...'});
+      setEditorJSON(projectJSONEditor, {$status: msg('loading-project-json')});
       requestAnimationFrame(() => {
         try {
           const projectJson = vm.toJSON();
@@ -1078,12 +1099,12 @@ export default async function ({ addon, console }) {
               setEditorJSON(projectJSONEditor, parsed);
               projectLoaded = true;
             } catch (e) {
-              setEditorJSON(projectJSONEditor, {$error: 'Error parsing project JSON: ' + e.message});
+              setEditorJSON(projectJSONEditor, {$error: msg('error-parsing-project-json') + e.message});
               console.error('Error parsing project JSON:', e);
             }
           });
         } catch (e) {
-          setEditorJSON(projectJSONEditor, {$error: 'Error loading project JSON: ' + e.message});
+          setEditorJSON(projectJSONEditor, {$error: msg('error-loading-project-json') + e.message});
           console.error('Error loading project JSON:', e);
         }
       });
@@ -1125,18 +1146,18 @@ export default async function ({ addon, console }) {
     copyBtn.addEventListener('click', () => {
       ensureBlockJSONEditor(blockEditorContainer);
       if (!blockJSONEditor) {
-        flashButton(copyBtn, 'Not ready');
+        flashButton(copyBtn, msg('not-ready'));
         return;
       }
       navigator.clipboard.writeText(getEditorText(blockJSONEditor)).then(() => {
-        flashButton(copyBtn, 'Copied');
-      }).catch(() => flashButton(copyBtn, 'Failed'));
+        flashButton(copyBtn, msg('copied'));
+      }).catch(() => flashButton(copyBtn, msg('failed')));
     });
 
     downloadBtn.addEventListener('click', () => {
       ensureBlockJSONEditor(blockEditorContainer);
       if (!blockJSONEditor) {
-        flashButton(downloadBtn, 'Not ready');
+        flashButton(downloadBtn, msg('not-ready'));
         return;
       }
       const blockId = currentBlockInfo ? currentBlockInfo.id : 'block';
@@ -1152,41 +1173,41 @@ export default async function ({ addon, console }) {
     saveBtn.addEventListener('click', async () => {
       ensureBlockJSONEditor(blockEditorContainer);
       if (!blockJSONEditor) {
-        flashButton(saveBtn, 'Not ready');
+        flashButton(saveBtn, msg('not-ready'));
         return;
       }
       if (!vm || !vm.runtime || !currentBlockInfo) {
-        flashButton(saveBtn, 'No block');
+        flashButton(saveBtn, msg('no-block'));
         return;
       }
       try {
         const newBlockData = blockJSONEditor.get();
         const projectJson = getProjectJSON();
         if (!projectJson) {
-          flashButton(saveBtn, 'No project');
+          flashButton(saveBtn, msg('no-project'));
           return;
         }
         const blockResult = findBlockInProjectJSON(projectJson, currentBlockInfo.id);
         if (!blockResult) {
-          flashButton(saveBtn, 'Not found');
+          flashButton(saveBtn, msg('not-found'));
           return;
         }
         if (JSON.stringify(blockResult.block) === JSON.stringify(newBlockData)) {
-          flashButton(saveBtn, 'No changes');
+          flashButton(saveBtn, msg('no-changes'));
           return;
         }
         blockResult.target.blocks[currentBlockInfo.id] = newBlockData;
         saveBtn.disabled = true;
-        flashButton(saveBtn, 'Reloading…', 'Save & reload', 5000);
+        flashButton(saveBtn, msg('reloading'), msg('save-reload'), 5000);
         projectJSONCache = null;
         projectJSONCacheString = null;
         projectLoaded = false;
         await vm.runtime.stopAll();
         await vm.loadProject(projectJson);
-        flashButton(saveBtn, 'Saved');
+        flashButton(saveBtn, msg('saved'));
         saveBtn.disabled = false;
       } catch (e) {
-        flashButton(saveBtn, 'Invalid JSON');
+        flashButton(saveBtn, msg('invalid-json'));
         saveBtn.disabled = false;
         console.error('Error saving block JSON:', e);
       }
@@ -1197,30 +1218,30 @@ export default async function ({ addon, console }) {
       projectJSONCacheString = null;
       projectLoaded = false;
       projectRefreshBtn.disabled = true;
-      flashButton(projectRefreshBtn, 'Refreshing…');
+      flashButton(projectRefreshBtn, msg('refreshing'));
       ensureProjectJSONEditor(projectEditorContainer);
       loadProjectJSONAsync(projectEditorContainer);
       setTimeout(() => {
         projectRefreshBtn.disabled = false;
-        flashButton(projectRefreshBtn, projectLoaded ? 'Refreshed' : 'Done');
+        flashButton(projectRefreshBtn, projectLoaded ? msg('refreshed') : msg('done'));
       }, 200);
     });
 
     projectCopyBtn.addEventListener('click', () => {
       ensureProjectJSONEditor(projectEditorContainer);
       if (!projectJSONEditor) {
-        flashButton(projectCopyBtn, 'Not ready');
+        flashButton(projectCopyBtn, msg('not-ready'));
         return;
       }
       navigator.clipboard.writeText(getEditorText(projectJSONEditor)).then(() => {
-        flashButton(projectCopyBtn, 'Copied');
-      }).catch(() => flashButton(projectCopyBtn, 'Failed'));
+        flashButton(projectCopyBtn, msg('copied'));
+      }).catch(() => flashButton(projectCopyBtn, msg('failed')));
     });
 
     projectDownloadBtn.addEventListener('click', () => {
       ensureProjectJSONEditor(projectEditorContainer);
       if (!projectJSONEditor) {
-        flashButton(projectDownloadBtn, 'Not ready');
+        flashButton(projectDownloadBtn, msg('not-ready'));
         return;
       }
       const blob = new Blob([getEditorText(projectJSONEditor)], {type: 'application/json'});
@@ -1236,25 +1257,25 @@ export default async function ({ addon, console }) {
       try {
         ensureProjectJSONEditor(projectEditorContainer);
         if (!projectJSONEditor) {
-          flashButton(projectReloadBtn, 'Not ready');
+          flashButton(projectReloadBtn, msg('not-ready'));
           return;
         }
         if (!vm || !vm.runtime) {
-          flashButton(projectReloadBtn, 'No VM');
+          flashButton(projectReloadBtn, msg('no-vm'));
           return;
         }
         const newProjectData = projectJSONEditor.get();
         projectReloadBtn.disabled = true;
-        flashButton(projectReloadBtn, 'Reloading…', 'Reload project', 5000);
+        flashButton(projectReloadBtn, msg('reloading'), msg('reload-project'), 5000);
         projectJSONCache = null;
         projectJSONCacheString = null;
         projectLoaded = false;
         await vm.runtime.stopAll();
         await vm.loadProject(newProjectData);
-        flashButton(projectReloadBtn, 'Reloaded');
+        flashButton(projectReloadBtn, msg('reloaded'));
         projectReloadBtn.disabled = false;
       } catch (e) {
-        flashButton(projectReloadBtn, 'Invalid JSON');
+        flashButton(projectReloadBtn, msg('invalid-json'));
         projectReloadBtn.disabled = false;
         console.error('Error reloading project:', e);
       }
@@ -1337,7 +1358,7 @@ export default async function ({ addon, console }) {
     }
 
     if (!structural.length) {
-      crumbs.innerHTML = `<span class="dev-inspector-muted">No block selected</span>`;
+      crumbs.innerHTML = `<span class="dev-inspector-muted">${escapeHtml(msg('no-block-selected'))}</span>`;
       return;
     }
 
@@ -1380,7 +1401,7 @@ export default async function ({ addon, console }) {
   }
 
   function getBlockJSONPayload () {
-    if (!currentBlockInfo) return {$error: 'No block selected'};
+    if (!currentBlockInfo) return {$error: msg('no-block-selected')};
     try {
       const projectJson = getProjectJSON();
       const blockResult = findBlockInProjectJSON(projectJson, currentBlockInfo.id);
@@ -1485,7 +1506,7 @@ export default async function ({ addon, console }) {
 
       inspectorWindow = WindowManager.createWindow({
         id: 'dev-inspector',
-        title: 'Block Inspector',
+        title: msg('window-title'),
         width: 720,
         height: 560,
         minWidth: 420,
@@ -1507,7 +1528,7 @@ export default async function ({ addon, console }) {
     fillInfoPanels(container, blockInfo);
 
     if (typeof inspectorWindow.setTitle === 'function') {
-      inspectorWindow.setTitle(`Block Inspector - ${blockInfo.opcode}`);
+      inspectorWindow.setTitle(`${msg('window-title')} - ${blockInfo.opcode}`);
     }
 
     // Refresh JSON if that panel is active
@@ -1530,7 +1551,7 @@ export default async function ({ addon, console }) {
 
       items.splice(insertBeforeIndex, 0, {
         enabled: true,
-        text: 'Inspect Block',
+        text: msg('inspect-block'),
         callback: () => {
           showInspector(block);
         },
