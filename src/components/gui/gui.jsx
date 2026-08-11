@@ -865,6 +865,8 @@ const GUIComponent = props => {
         roturLoginModalVisible,
         onRequestCloseRoturLogin,
         vm,
+        enableStageResize: _enableStageResize, // eslint-disable-line no-unused-vars
+        customShortcuts: _customShortcuts, // eslint-disable-line no-unused-vars
         ...componentProps
     } = omit(props, 'dispatch');
     if (children) {
