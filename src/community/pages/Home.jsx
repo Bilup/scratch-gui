@@ -20,7 +20,7 @@ const formatDateTime = ms => {
     const d = new Date(ms);
     if (Number.isNaN(d.getTime())) return '';
     const pad = n => String(n).padStart(2, '0');
-    return `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    return `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())} ${pad(d.getHours())}：${pad(d.getMinutes())}`;
 };
 
 const ACTIVITY_ICONS = {
