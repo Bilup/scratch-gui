@@ -8,6 +8,7 @@ import _editor_searchable_dropdowns from "../addons/editor-searchable-dropdowns/
 import _data_category_tweaks_v2 from "../addons/data-category-tweaks-v2/_manifest_entry.js";
 import _block_palette_icons from "../addons/block-palette-icons/_manifest_entry.js";
 import _hide_flyout from "../addons/hide-flyout/_manifest_entry.js";
+import _mediarecorder from "../addons/mediarecorder/_manifest_entry.js";
 import _drag_drop from "../addons/drag-drop/_manifest_entry.js";
 import _canvas_screenshot from "../addons/canvas-screenshot/_manifest_entry.js";
 import _mute_project from "../addons/mute-project/_manifest_entry.js";
@@ -98,6 +99,7 @@ export default {
   "data-category-tweaks-v2": _data_category_tweaks_v2,
   "block-palette-icons": _block_palette_icons,
   "hide-flyout": _hide_flyout,
+  "mediarecorder": _mediarecorder,
   "drag-drop": _drag_drop,
   "canvas-screenshot": _canvas_screenshot,
   "mute-project": _mute_project,
