@@ -323,6 +323,8 @@
   "load-extensions/@settings-name-translate": "Translate",
   "mediarecorder/@description": "Adds a \"start recording\" button to the editor menu bar that allows you to record the project's stage.",
   "mediarecorder/@name": "Project video recorder",
+  "merge-operators/@description": "Places String blocks in the Operators category.",
+  "merge-operators/@name": "Merge Strings into Operators",
   "middle-click-popup/@description": "Middle or shift-click the code area, or press Ctrl+Space to bring up a block search window. Type block names (or parts of them) and drag them into the code area to add them to your project. The menu can be navigated with the arrow keys, Page Up/Down, Home/End, and Enter. It supports autocompleting with Tab. To prevent the menu from closing, hold Shift while dragging blocks out of it.",
   "middle-click-popup/@info-developer-tools": "This addon was previously part of the \"developer tools\" addon but has moved here.",
   "middle-click-popup/@info-math-and-conversions": "You can now perform math calculations directly in the search (e.g., \"10 + 5 * 2\") and see the result in a green box. Unit conversions support flexible queries like \"5cm in inches\", \"what is 100 km to miles\", \"25 c to f\". Supports distance (mm, cm, m, km, in, ft, yd, mi), temperature (c, f, k), weight (mg, g, kg, oz, lb, ton), time (ms, s, min, hr, day, week), and angles (deg, rad, grad).",
