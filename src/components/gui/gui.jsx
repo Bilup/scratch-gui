@@ -261,6 +261,10 @@ const GUIComponent = props => {
     const resizeAfterTransitionRafRef = useRef(null);
     const measureRafRef = useRef(null);
     const syncingModeRef = useRef(false);
+    // 实时反映当前是否处于全屏/嵌入模式（供 ResizeObserver 回调读取，
+    // 避免闭包中捕获过期的 props.isFullScreen）。
+    const isFullScreenRef = useRef(props.isFullScreen);
+    isFullScreenRef.current = props.isFullScreen;
     const prevStageSizeModeRef = useRef(null);
     const lastSyncedWidthRef = useRef(null);
     const skipNextMeasureRef = useRef(false);
@@ -301,6 +305,11 @@ const GUIComponent = props => {
 
     const measureStageContainerWidth = useCallback(() => {
         if (!enableStageResize) return;
+        // 全屏（或嵌入）模式下，stageAndTargetWrapper 的宽度是覆盖布局下
+        // 的值（StageWrapper 脱离文档流后仅剩 TargetPane 撑开），用它更新
+        // stageContainerWidth 会污染编辑器模式的舞台宽度:退出全屏后舞台
+        // 大小将和进入全屏前不一致（可能被拉大或逐渐缩小）。
+        if (isFullScreenRef.current) return;
         if (measureRafRef.current) return;
         if (skipNextMeasureRef.current) {
             skipNextMeasureRef.current = false;
@@ -310,6 +319,9 @@ const GUIComponent = props => {
         measureRafRef.current = requestAnimationFrame(() => {
             measureRafRef.current = null;
             
+            // rAF 排队等待执行时可能已经进入全屏，需要再次检查
+            if (isFullScreenRef.current) return;
+
             const el = stageAndTargetWrapperRef.current;
             if (!el) return;
 
