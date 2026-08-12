@@ -46,6 +46,8 @@
   "hide-flyout/@settings-select-toggle-hover": "积木区悬停",
   "mediarecorder/@description": "在编辑器菜单栏添加“开始录制”按钮，用于录制作品的舞台区。",
   "mediarecorder/@name": "作品录制工具",
+  "merge-operators/@description": "将字符串积木放入“运算”分类中。",
+  "merge-operators/@name": "将字符串积木合并到运算类",
   "drag-drop/@description": "让你将文件直接拖入角色区并导入!当然，你还能将文字文件拖入文字输入框中。",
   "drag-drop/@name": "文件拖放",
   "drag-drop/@settings-name-use-hd-upload": "使用高清图片上传",
