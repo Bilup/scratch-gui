@@ -5,6 +5,8 @@ import {
     FIXED_WIDTH
 } from '../constants/layout-constants';
 
+import getMenuBarHeight from './menu-bar-height';
+
 const maxScaleParam = typeof URLSearchParams !== 'undefined' && new URLSearchParams(location.search).get('scale');
 const isProfilePreview = typeof URLSearchParams !== 'undefined' &&
     new URLSearchParams(location.search).get('mw_profile_preview') === '1';
@@ -63,6 +65,7 @@ const getStageDimensions = (stageSize, customStageSize, isFullScreen, stageConta
         const menuBarHeight = isProfilePreview ? 0 : getMenuBarHeight();
         stageDimensions.height = window.innerHeight -
             STAGE_DIMENSION_DEFAULTS.menuHeightAdjustment -
+            menuBarHeight -
             STAGE_DIMENSION_DEFAULTS.fullScreenSpacingBorderAdjustment;
 
         stageDimensions.width = stageDimensions.height * (customStageSize.width / customStageSize.height);
