@@ -46,6 +46,7 @@ const translateGalleryItem = (extension, locale) => ({
 });
 
 let cachedGallery = null;
+let cachedSourceStatuses = {};
 let galleryUpdateListeners = [];
 
 const addGalleryUpdateListener = listener => {
@@ -67,22 +68,31 @@ const fetchLibrary = async (onProgress) => {
     const emptyBanner = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAACXBIWXMAAAsTAAALEwEAmpwYAAADGWlDQ1BQaG90b3Nob3AgSUNDIHByb2ZpbGUAAHjaY2BgnuDo4uTKJMDAUFBUUuQe5BgZERmlwH6egY2BmYGBgYGBITG5uMAxIMCHgYGBIS8/L5UBA3y7xsDIwMDAcFnX0cXJlYE0wJpcUFTCwMBwgIGBwSgltTiZgYHhCwMDQ3p5SUEJAwNjDAMDg0hSdkEJAwNjAQMDg0h2SJAzAwNjCwMDE09JakUJAwMDg3N+QWVRZnpGiYKhpaWlgmNKflKqQnBlcUlqbrGCZ15yflFBflFiSWoKAwMD1A4GBgYGXpf8EgX3xMw8BUNTVQYqg4jIKAX08EGIIUByaVEZhMXIwMDAIMCgxeDHUMmwiuEBozRjFOM8xqdMhkwNTJeYNZgbme+y2LDMY2VmzWa9yubEtoldhX0mhwBHJycrZzMXM1cbNzf3RB4pnqW8xryH+IL5nvFXCwgJrBZ0E3wk1CisKHxYJF2UV3SrWJw4p/hWiRRJYcmjUhXSutJPZObIhsoJyp2V71HwUeRVvKA0RTlKRUnltepWtUZ1Pw1Zjbea+7QmaqfqWOsK6b7SO6I/36DGMMrI0ljS+LfJPdPDZivM+y0qLBOtfKwtbFRtRexY7L7aP3e47XjB6ZjzXpetruvdVrov9VjkudBrgfdCn8W+y/xW+a8P2Bq4N+hY8PmQW6HPwr5EMEUKRilFG8e4xUbF5cW3JMxO3Jx0Nvl5KlOaXLpNRlRmVdas7D059/KY8tULfAqLi2YXHy55WyZR7lJRWDmv6mz131q9uvj6SQ3HGn83G7Skt85ru94h2Ond1d59uJehz76/bsK+if8nO05pnXpiOu+M4JmzZj2aozW3ZN6+BVwLwxYtXvxxqcOyCcsfrjRe1br65lrddU3rb2402NSx+cFWq21Tt3/Y6btr1R6Oven7jh9QP9h56PURv6Obj4ufqD355LT3mS3nZM+3X/h0Ke7yqasW15bdEL3ZeuvrnfS7N+/7PDjwyPTx6qeKz2a+EHzZ9Zr5Td3bn+9LP3z6VPD53de8b+9+5P/88Lv4z7d/Vf//AwAqvx2K829RWwAAACBjSFJNAAB6JQAAgIMAAPn/AACA6QAAdTAAAOpgAAA6mAAAF2+SX8VGAAAAEUlEQVR42mL4zwAAAAD//wMAAgEBAJlUum0AAAAASUVORK5CYII=";
 
     const allExtensions = [];
+    const sourceStatuses = {};
+
+    const report = () => {
+        if (onProgress) {
+            onProgress([...allExtensions], {...sourceStatuses});
+        }
+    };
 
     const fetchAndAdd = async (sourceName, fetchFn) => {
+        sourceStatuses[sourceName] = 'loading';
+        report();
         try {
             const extensions = await fetchFn();
             allExtensions.push(...extensions);
-            if (onProgress) {
-                onProgress([...allExtensions]);
-            }
+            sourceStatuses[sourceName] = 'loaded';
         } catch (error) {
             console.warn(`Failed to load ${sourceName} extensions:`, error);
+            sourceStatuses[sourceName] = 'error';
         }
+        report();
     };
 
     // 并行加载所有扩展源，但每个源加载完成后立即更新
     await Promise.all([
-        fetchAndAdd('TurboWarp', async () => {
+        fetchAndAdd('tw', async () => {
             const twRes = await fetch('https://extensions.turbowarp.org/generated-metadata/extensions-v0.json');
             if (!twRes.ok) {
                 console.warn(`TurboWarp extensions: HTTP status ${twRes.status}`);
@@ -126,7 +136,7 @@ const fetchLibrary = async (onProgress) => {
                 featured: true
             }));
         }),
-        fetchAndAdd('Mistium', async () => {
+        fetchAndAdd('mistium', async () => {
             const mistiumRes = await fetch('https://extensions.mistium.com/generated-metadata/extensions-v0.json');
             if (!mistiumRes.ok) {
                 console.warn(`Mistium extensions: HTTP status ${mistiumRes.status}`);
@@ -235,7 +245,7 @@ const fetchLibrary = async (onProgress) => {
                     featured: true
                 }));
         }),
-        fetchAndAdd('Bilup', async () => {
+        fetchAndAdd('bilup', async () => {
             const bilupRes = await fetch('https://extensions.bilup.org/generated-metadata/extensions-v0.json');
             if (!bilupRes.ok) {
                 console.warn(`Bilup extensions: HTTP status ${bilupRes.status}`);
@@ -278,7 +288,7 @@ const fetchLibrary = async (onProgress) => {
                 featured: true
             }));
         }),
-        fetchAndAdd('AstraEditor', async () => {
+        fetchAndAdd('ae', async () => {
             const aeRes = await fetch('https://editors.astras.top/extensions/generated-metadata/extensions-v0.json');
             if (!aeRes.ok) {
                 console.warn(`AE extensions: HTTP status ${aeRes.status}`);
@@ -332,12 +342,14 @@ class ExtensionLibrary extends React.PureComponent {
     constructor(props) {
         super(props);
         bindAll(this, [
-            'handleItemSelect'
+            'handleItemSelect',
+            'getSourceStatus'
         ]);
         this.state = {
             gallery: cachedGallery,
             galleryError: null,
-            galleryTimedOut: false
+            galleryTimedOut: false,
+            sourceStatuses: cachedSourceStatuses
         };
     }
     
@@ -365,10 +377,12 @@ class ExtensionLibrary extends React.PureComponent {
                 });
             }, 750);
 
-            fetchLibrary((progressGallery) => {
+            fetchLibrary((progressGallery, sourceStatuses) => {
                 cachedGallery = progressGallery;
+                cachedSourceStatuses = sourceStatuses || {};
                 this.setState({
-                    gallery: progressGallery
+                    gallery: progressGallery,
+                    sourceStatuses: cachedSourceStatuses
                 });
                 clearTimeout(timeout);
             })
@@ -392,6 +406,15 @@ class ExtensionLibrary extends React.PureComponent {
             vm.off('EXTENSION_REMOVED', this.handleExtensionChange);
         }
     }
+    getSourceStatus(tag) {
+        // 内置本地数据始终可用
+        if (tag === 'scratch' || tag === 'rotur') {
+            return 'loaded';
+        }
+        // 无状态时返回 'idle' 作为占位
+        return this.state.sourceStatuses[tag] || 'idle';
+    }
+
     handleItemSelect(item) {
         if (item.href) {
             window.open(item.href, '_blank', 'noopener,noreferrer');
@@ -438,11 +461,14 @@ class ExtensionLibrary extends React.PureComponent {
             } else {
                 this.props.vm.extensionManager.loadExtensionURL(url)
                     .then(() => {
+                        // 实时刷新"已加载"对钩
+                        this.forceUpdate();
                         if (typeof this.props.onCategorySelected === 'function') {
                             this.props.onCategorySelected(extensionId);
                         }
                     })
                     .catch(err => {
+                        this.forceUpdate();
                         log.error(err);
                         // eslint-disable-next-line no-alert
                         alert(err);
@@ -496,6 +522,7 @@ class ExtensionLibrary extends React.PureComponent {
                 onItemSelected={this.handleItemSelect}
                 onRequestClose={this.props.onRequestClose}
                 isLoaded={isLoaded}
+                getSourceStatus={this.getSourceStatus}
             />
         );
     }

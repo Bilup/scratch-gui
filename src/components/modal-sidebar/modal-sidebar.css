@@ -143,6 +143,16 @@
     flex-shrink: 0;
 }
 
+.status-dot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 12px;
+    height: 12px;
+    margin-right: 0.6rem;
+    flex-shrink: 0;
+}
+
 .label {
     flex: 1;
     min-width: 0;

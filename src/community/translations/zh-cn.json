@@ -264,6 +264,7 @@
         "mw.community.profile.activityTitle": "动态",
         "mw.community.profile.joined": "于 {year} 年加入",
         "mw.community.profile.accountNumber": "账户 #{index}",
+        "mw.community.profile.bilupAccountsProfile": "跳转到Bilup Accounts主页",
         "mw.community.profile.follow": "关注",
         "mw.community.profile.following": "正在关注",
         "mw.community.profile.sendCreditsTo": "向 {name} 发送积分",

@@ -435,6 +435,14 @@ const Profile = () => {
                                     <span><Calendar size={14} />{t('mw.community.profile.joined', 'Joined {year}', {year})}</span>
                                 ) : null}
                                 {typeof profile.index === 'number' ? <span>{t('mw.community.profile.accountNumber', 'Account #{index}', {index: profile.index})}</span> : null}
+                                <a
+                                    className={styles.bilupAccountsLink}
+                                    href={`https://accounts.bilup.org/profile/${encodeURIComponent(profile.username || name)}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    {t('mw.community.profile.bilupAccountsProfile', '跳转到Bilup Accounts主页')}
+                                </a>
                             </div>
                             {activities.length ? (
                                 <div className={styles.railSection}>

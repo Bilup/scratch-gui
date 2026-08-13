@@ -67,6 +67,7 @@ const ModalSidebarItem = ({
     label,
     onClick,
     selected,
+    statusDot,
     title
 }) => (
     <button
@@ -80,6 +81,9 @@ const ModalSidebarItem = ({
                 className={styles.icon}
                 size={iconSize}
             />
+        )}
+        {statusDot && (
+            <span className={styles.statusDot}>{statusDot}</span>
         )}
         <span className={styles.label}>{label}</span>
         {typeof count === 'number' && (
@@ -99,6 +103,7 @@ ModalSidebarItem.propTypes = {
     label: PropTypes.node.isRequired,
     onClick: PropTypes.func.isRequired,
     selected: PropTypes.bool,
+    statusDot: PropTypes.node,
     title: PropTypes.string
 };
 

@@ -53,6 +53,7 @@ const ExtensionManagerModal = props => {
 
     const [blockIconURIs, setBlockIconURIs] = useState({});
     const [extensionColors, setExtensionColors] = useState({});
+    const [extensionNames, setExtensionNames] = useState({});
 
     const extensionLibraryById = useMemo(() => new Map(extensionLibrary.map(i => [i.extensionId, i])), []);
 
@@ -108,8 +109,9 @@ const ExtensionManagerModal = props => {
     const getExtensionName = useCallback(extensionId => {
         const libraryItem = extensionLibraryById.get(extensionId);
         if (libraryItem) return libraryItem.name;
-        return extensionId;
-    }, [extensionLibraryById, props.vm]);
+        // 第三方扩展优先使用 getInfo() 返回的名称，没有名称时才回退到扩展 id
+        return extensionNames[extensionId] || extensionId;
+    }, [extensionLibraryById, extensionNames]);
 
     const getExtensionColor = useCallback(extensionId => {
         return extensionColors[extensionId] || null;
@@ -120,12 +122,13 @@ const ExtensionManagerModal = props => {
         if (!map) return;
 
         // Extensions already in the library have a built-in icon, so only
-        // fetch icon + color info for unknown (usually third-party) ones.
-        // Icon and color are loaded together from a single getInfo() call.
+        // fetch icon + color + name info for unknown (usually third-party) ones.
+        // All of these are loaded together from a single getInfo() call.
         const idsToFetch = extensionIds.filter(id => (
             !extensionLibraryById.has(id) &&
             !blockIconURIs[id] &&
             !extensionColors[id] &&
+            !extensionNames[id] &&
             map.has(id)
         ));
         if (idsToFetch.length === 0) return;
@@ -136,8 +139,12 @@ const ExtensionManagerModal = props => {
             centralDispatch.call(serviceName, 'getInfo')
                 .then(info => {
                     if (cancelled) return;
+                    const name = info && info.name;
                     const uri = info && info.blockIconURI;
                     const color = info && info.color1;
+                    if (name) {
+                        setExtensionNames(prev => (prev[id] ? prev : {...prev, [id]: name}));
+                    }
                     if (!uri && !color) return;
                     // Only store the icon when we actually got a URI, so a
                     // failed icon fetch can be retried on the next refresh
@@ -157,7 +164,7 @@ const ExtensionManagerModal = props => {
         return () => {
             cancelled = true;
         };
-    }, [props.vm, extensionIds, refreshCounter, blockIconURIs, extensionColors, extensionLibraryById]);
+    }, [props.vm, extensionIds, refreshCounter, blockIconURIs, extensionColors, extensionNames, extensionLibraryById]);
 
     const updateExtensionIds = useCallback(() => {
         setExtensionIds(readExtensionIds());

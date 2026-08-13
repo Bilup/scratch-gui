@@ -5,6 +5,7 @@ import chat from "../ui/Chat.module.less";
 import { Attachment, ChatMessage, ToolCall } from "../types";
 import { ToolCallViewer } from "./ToolCallViewer";
 import { MessageAttachments } from "./MessageAttachments";
+import { parseThinkTags } from "../thinkTags";
 import ChevronRightIcon from "../assets/icon-chevron-right.svg";
 import CopyIcon from "../assets/icon-copy.svg";
 import UndoIcon from "../assets/icon-undo.svg";
@@ -203,17 +204,25 @@ const collectAssistantBubbles = (messages: ChatMessage[], isGenerating: boolean)
         const currentMessage = messages[cursor];
 
         if (currentMessage.role === "assistant") {
-          const normalizedReasoning = currentMessage.reasoning?.trim() || "";
-          const normalizedContent = currentMessage.content?.trim() || "";
+          // Fallback: some providers/gateways return <think>...</think> as
+          // literal text inside `content`. Split it out here too, so messages
+          // restored from older sessions render reasoning correctly even if
+          // they were never normalized by the stream handler.
+          const thinkParsed = parseThinkTags(currentMessage.content || "");
+          const structuredReasoning = currentMessage.reasoning?.trim() || "";
+          const hasThinkTag = thinkParsed.hasThinkTag;
+          const normalizedReasoning = structuredReasoning || (hasThinkTag ? thinkParsed.reasoning.trim() : "");
+          const normalizedContent = (hasThinkTag ? thinkParsed.content : currentMessage.content || "").trim();
           const hasReasoningContent = Boolean(normalizedReasoning);
           const hasTextContent = Boolean(normalizedContent);
+          const thinkCompleted = thinkParsed.hasThinkTag ? thinkParsed.isComplete : false;
 
           if (hasReasoningContent) {
             segments.push({
               type: "reasoning",
               id: `reasoning-${cursor}`,
               content: normalizedReasoning,
-              isComplete: Boolean(normalizedContent || currentMessage.tool_calls?.length),
+              isComplete: Boolean(normalizedContent || currentMessage.tool_calls?.length) || thinkCompleted,
               startedAt: currentMessage.reasoningStartedAt,
               endedAt: currentMessage.reasoningEndedAt,
             });

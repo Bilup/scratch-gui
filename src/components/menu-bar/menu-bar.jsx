@@ -121,6 +121,7 @@ import collectMetadata from '../../lib/collect-metadata';
 import LazyScratchBlocks from '../../lib/tw-lazy-scratch-blocks';
 import {mediaRecorderSupported} from '../../addons/environment.js';
 import addonEnglish from '../../addons/addons-l10n/en.json';
+import addonChinese from '../../addons/addons-l10n/zh-cn.json';
 import initBlockCount from '../../lib/menu-bar/block-count-analysis.js';
 import {
     getSetting as getMenuBarSetting,
@@ -307,10 +308,23 @@ const formatShortcutDisplay = keyCombo => {
 };
 
 const COLLAPSE_MENU_WIDTH = 900;
-const addonMessage = (intl, addonId) => (id, values) => intl.formatMessage({
-    id: `${addonId}/${id}`,
-    defaultMessage: addonEnglish[`${addonId}/${id}`] || id
-}, values);
+// 内置功能(如 block-count)的消息翻译维护在 addons-l10n 中，但 intl 的 messages
+// 并不包含这些键，因此需要把当前 locale 的 addon 翻译作为 defaultMessage 传入，
+// 否则即使 addons-l10n 中有翻译也只会显示英文或原始 key。
+const ADDON_L10N = {
+    en: addonEnglish,
+    'zh-cn': addonChinese
+};
+const addonMessage = (intl, addonId) => (id, values) => {
+    const key = `${addonId}/${id}`;
+    const locale = intl && intl.locale ? intl.locale.toLowerCase() : 'en';
+    const localeMessages = ADDON_L10N[locale];
+    const defaultMessage = (localeMessages && localeMessages[key]) || addonEnglish[key] || id;
+    return intl.formatMessage({
+        id: key,
+        defaultMessage
+    }, values);
+};
 
 class MenuBar extends React.Component {
     constructor(props) {
