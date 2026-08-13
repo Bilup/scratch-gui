@@ -43,13 +43,25 @@ const labelOf = (tag, intl) => (
 // A real, loadable extension (not a divider or gallery-status card).
 const isExtension = item => item && typeof item === 'object' && (item.extensionId || item.href);
 
-const TagItem = ({tag, label, selected, onSelect}) => {
+const tagStatusClass = {
+    loaded: styles.tagStatusDotLoaded,
+    loading: styles.tagStatusDotLoading,
+    error: styles.tagStatusDotError,
+    idle: styles.tagStatusDotIdle
+};
+
+const TagItem = ({tag, label, selected, onSelect, status}) => {
     const handleClick = React.useCallback(() => onSelect(tag), [onSelect, tag]);
+    // 非"全部"分类始终渲染圆点（idle 为灰色占位），保证加载中不闪烁/位移
+    const statusDot = status ? (
+        <span className={classNames(styles.tagStatusDot, tagStatusClass[status])} />
+    ) : null;
     return (
         <ModalSidebarItem
             label={label}
             selected={selected}
             onClick={handleClick}
+            statusDot={statusDot}
         />
     );
 };
@@ -58,7 +70,8 @@ TagItem.propTypes = {
     tag: PropTypes.string.isRequired,
     label: PropTypes.node.isRequired,
     selected: PropTypes.bool,
-    onSelect: PropTypes.func.isRequired
+    onSelect: PropTypes.func.isRequired,
+    status: PropTypes.string
 };
 
 const ExtensionSection = ({children, title}) => (
@@ -77,6 +90,14 @@ const ExtensionCard = ({item, onSelect, isLoaded}) => {
     const handleClick = React.useCallback(() => onSelect(item), [onSelect, item]);
     const icon = item.iconURL || item.rawURL;
     const loaded = isLoaded ? isLoaded(item) : false;
+    const loadedCheck = loaded ? (
+        <span
+            className={styles.cardLoadedCheck}
+            title="Loaded"
+        >
+            <CheckCircle size={16} />
+        </span>
+    ) : null;
     const content = (
         <React.Fragment>
             {icon ? (
@@ -169,6 +190,7 @@ const ExtensionCard = ({item, onSelect, isLoaded}) => {
         ) : null;
     return (
         <div className={classNames(styles.card, {[styles.cardDisabled]: item.disabled})}>
+            {loadedCheck}
             {item.href ? (
                 <a
                     className={styles.cardSelect}
@@ -188,16 +210,6 @@ const ExtensionCard = ({item, onSelect, isLoaded}) => {
                     {content}
                 </button>
             )}
-            {loaded ? (
-                <div className={styles.cardAdded}>
-                    <CheckCircle size={14} />
-                    <FormattedMessage
-                        defaultMessage="Added"
-                        description="Badge on an extension card that has already been added"
-                        id="gui.extensionLibrary.added"
-                    />
-                </div>
-            ) : null}
             {info}
         </div>
     );
@@ -246,7 +258,7 @@ class TWExtensionLibrary extends React.Component {
     }
 
     render () {
-        const {intl, tags, title, onRequestClose, onItemSelected, isLoaded} = this.props;
+        const {intl, tags, title, onRequestClose, onItemSelected, isLoaded, getSourceStatus} = this.props;
         const data = this.props.data || [];
         const divider = data.indexOf('---');
         const builtIn = data.slice(0, divider === -1 ? data.length : divider).filter(isExtension);
@@ -294,6 +306,7 @@ class TWExtensionLibrary extends React.Component {
                                     label={labelOf(tag, intl)}
                                     selected={this.state.selectedTag === tag.tag}
                                     onSelect={this.handleSelectTag}
+                                    status={tag.tag !== ALL && getSourceStatus ? getSourceStatus(tag.tag) : null}
                                 />
                             ))}
                         </ModalSidebarGroup>
@@ -325,9 +338,9 @@ class TWExtensionLibrary extends React.Component {
                                                     onSelect={onItemSelected}
                                                     isLoaded={isLoaded}
                                                 />
-                                            ))}
-                                        </div>
-                                    ) : null}
+                                                ))}
+                                                </div>
+                                                ) : null}
                                     {sections.map(section => (
                                         <ExtensionSection
                                             key={section.title}
@@ -372,7 +385,8 @@ TWExtensionLibrary.propTypes = {
     title: PropTypes.string,
     onItemSelected: PropTypes.func.isRequired,
     onRequestClose: PropTypes.func,
-    isLoaded: PropTypes.func
+    isLoaded: PropTypes.func,
+    getSourceStatus: PropTypes.func
 };
 
 export default injectIntl(TWExtensionLibrary);

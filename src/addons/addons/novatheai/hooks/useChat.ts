@@ -4,6 +4,7 @@ import { AITools } from "../tools";
 import { scratchToolSchemas } from "../toolSchemas";
 import { getProviderAdapter, isProviderImplemented } from "../providerAdapters";
 import { callAITool } from "../toolRuntime";
+import { parseThinkTags } from "../thinkTags";
 
 interface UseChatOptions {
   messages: ChatMessage[];
@@ -47,15 +48,40 @@ const stripToolCalls = (message: ChatMessage): ChatMessage => {
   return rest;
 };
 
+/**
+ * Move literal <think>...</think> reasoning text out of `content` into
+ * `reasoning`. Structured reasoning (already in `message.reasoning`) always
+ * wins; if it exists, any <think> text found in `content` is dropped to avoid
+ * duplicates. This keeps assistant messages clean for both rendering and for
+ * re-sending history to the provider.
+ */
+const normalizeAssistantThinkContent = (message: ChatMessage): ChatMessage => {
+  if (message.role !== "assistant" || typeof message.content !== "string" || !/<think/i.test(message.content)) {
+    return message;
+  }
+
+  const parsed = parseThinkTags(message.content);
+  const structuredReasoning = message.reasoning || "";
+  const nextReasoning = structuredReasoning || parsed.reasoning;
+
+  return {
+    ...message,
+    content: parsed.content,
+    ...(nextReasoning ? { reasoning: nextReasoning } : {}),
+  };
+};
+
 const sanitizeMessagesForProvider = (messages: ChatMessage[]) => {
   const sanitized: ChatMessage[] = [];
 
   for (let index = 0; index < messages.length; index++) {
-    const message = messages[index];
+    const rawMessage = messages[index];
 
-    if (message.role === "tool") {
+    if (rawMessage.role === "tool") {
       continue;
     }
+
+    const message = rawMessage.role === "assistant" ? normalizeAssistantThinkContent(rawMessage) : rawMessage;
 
     const hasAnthropicToolUseBlocks = message.anthropic_content_blocks?.some((block) => block.type === "tool_use");
 
@@ -510,10 +536,10 @@ export function useChat({
           onTextDelta: (delta) => {
             currentMessages = currentMessages.map((message, index) =>
               index === assistantMessageIndex
-                ? {
+                ? normalizeAssistantThinkContent({
                     ...message,
                     content: `${message.content}${delta}`,
-                  }
+                  })
                 : message,
             );
             scheduleStreamMessagesUpdate();
@@ -538,7 +564,7 @@ export function useChat({
 
         currentMessages = currentMessages.map((message, index) =>
           index === assistantMessageIndex
-            ? {
+            ? normalizeAssistantThinkContent({
                 ...message,
                 ...responseMessage,
                 content: responseMessage.content || message.content,
@@ -550,7 +576,7 @@ export function useChat({
                   message.reasoningStartedAt && (responseMessage.reasoning || message.reasoning)
                     ? Date.now()
                     : message.reasoningEndedAt,
-              }
+              })
             : message,
         );
         updateSessionMessages(currentMessages, sessionId);

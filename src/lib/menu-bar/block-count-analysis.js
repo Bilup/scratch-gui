@@ -240,9 +240,11 @@ export default function (options) {
     };
 
     const categoryLabel = category => {
-        const known = new Set(['motion', 'looks', 'sound', 'event', 'control', 'sensing', 'operators', 'data',
-            'procedures', 'pen']);
-        return known.has(category) ? msg(`category-${category}`) : humanizeOpcode(category);
+        const translated = msg(`category-${category}`);
+        // 没有对应翻译时 msg 会返回原始 key（如 "block-count/category-music"），
+        // 此时回退到可读的英文名称，而不是直接暴露 id。
+        if (translated && !translated.startsWith('block-count/')) return translated;
+        return humanizeOpcode(category);
     };
 
     const showScript = async script => {

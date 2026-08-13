@@ -769,7 +769,9 @@ class AddonWindow {
         if (!wasVisible) {
             this.bringToFront();
             if (WindowManager.getAnimationsEnabled()) {
-                // Set initial hidden state
+                // Set initial hidden state. Only transform + opacity are animated,
+                // which are compositor-friendly and do not trigger layout on old devices.
+                this.element.style.willChange = 'transform, opacity';
                 this.element.style.opacity = '0';
                 this.element.style.transform = 'scale(0.92)';
                 this.element.style.transition = 'opacity 0.2s ease-out, transform 0.2s ease-out';
@@ -786,6 +788,7 @@ class AddonWindow {
                     this._animTimer = null;
                     if (this.element && this.element.style) {
                         this.element.style.transition = 'none';
+                        this.element.style.willChange = '';
                     }
                 }, 220);
             }
@@ -820,7 +823,8 @@ class AddonWindow {
         this.element.style.transition = 'none';
         // eslint-disable-next-line no-unused-expressions
         this.element.offsetHeight;
-        // Now set the animated transition
+        // Now set the animated transition (transform + opacity only, compositor-friendly)
+        this.element.style.willChange = 'transform, opacity';
         this.element.style.transition = 'opacity 0.18s ease-in, transform 0.18s ease-in';
         // eslint-disable-next-line no-unused-expressions
         this.element.offsetHeight;
@@ -832,6 +836,7 @@ class AddonWindow {
             if (this.element && this.element.style) {
                 this.element.style.display = 'none';
                 this.element.style.transition = 'none';
+                this.element.style.willChange = '';
             }
         }, 200);
 
@@ -861,6 +866,7 @@ class AddonWindow {
             this.element.style.transition = 'none';
             // eslint-disable-next-line no-unused-expressions
             this.element.offsetHeight;
+            this.element.style.willChange = 'transform, opacity';
             this.element.style.transition = 'opacity 0.18s ease-in, transform 0.18s ease-in';
             // eslint-disable-next-line no-unused-expressions
             this.element.offsetHeight;
@@ -875,6 +881,7 @@ class AddonWindow {
                     if (element.style) {
                         element.style.display = 'none';
                         element.style.transition = 'none';
+                        element.style.willChange = '';
                     }
                     element.parentNode.removeChild(element);
                 }
@@ -916,23 +923,70 @@ class AddonWindow {
         return this;
     }
     
+    /**
+     * Animate the window between two rectangles using a pure transform
+     * (translate + scale), which runs on the compositor thread and does NOT
+     * trigger layout/reflow. This keeps the running Scratch project smooth
+     * even on old devices while the maximize/restore animation plays.
+     *
+     * The element's layout geometry is set to `toRect` (the target), and a
+     * transform is applied that visually maps `toRect` onto `fromRect` (the
+     * start), then animated back to identity.
+     *
+     * @param {object} fromRect start visual rect {x, y, width, height}
+     * @param {object} toRect actual layout rect the element will occupy
+     */
+    _animateMaximizeRestore (fromRect, toRect) {
+        const sx = fromRect.width / toRect.width;
+        const sy = fromRect.height / toRect.height;
+        const tx = fromRect.x - toRect.x;
+        const ty = fromRect.y - toRect.y;
+
+        this.element.style.transformOrigin = '0 0';
+        this.element.style.willChange = 'transform';
+        this.element.style.transition = 'none';
+        this.element.style.transform = `translate(${tx}px, ${ty}px) scale(${sx}, ${sy})`;
+        // Force browser to apply the starting state before enabling the transition
+        // eslint-disable-next-line no-unused-expressions
+        this.element.offsetHeight;
+        this.element.style.transition = 'transform 0.25s cubic-bezier(0.25, 0.8, 0.25, 1)';
+        this.element.style.transform = 'translate(0, 0) scale(1, 1)';
+    }
+
+    _finishMaximizeRestoreAnimation () {
+        this._animTimer = null;
+        if (this.element && this.element.style) {
+            this.element.style.transition = 'none';
+            this.element.style.willChange = '';
+            this.element.style.transformOrigin = '';
+            this.element.style.transform = '';
+        }
+    }
+
     restore () {
         if (this.isMaximized) {
             this.isMaximized = false;
             if (this.savedState) {
+                const saved = this.savedState;
+                this.x = saved.x;
+                this.y = saved.y;
+                this.width = saved.width;
+                this.height = saved.height;
                 if (WindowManager.getAnimationsEnabled()) {
-                    this.element.style.transition = 'left 0.25s ease-in, top 0.25s ease-in, width 0.25s ease-in, height 0.25s ease-in';
-                }
-                this.x = this.savedState.x;
-                this.y = this.savedState.y;
-                this.width = this.savedState.width;
-                this.height = this.savedState.height;
-                this.element.style.left = `${this.x}px`;
-                this.element.style.top = `${this.y}px`;
-                this.element.style.width = `${this.width}px`;
-                this.element.style.height = `${this.height}px`;
-                if (WindowManager.getAnimationsEnabled()) {
-                    setTimeout(() => { this.element.style.transition = 'none'; }, 250);
+                    // Visual start is the fullscreen rect, target is the saved rect.
+                    const from = {x: 0, y: 0, width: window.innerWidth, height: window.innerHeight};
+                    const to = {x: saved.x, y: saved.y, width: saved.width, height: saved.height};
+                    this.element.style.left = `${saved.x}px`;
+                    this.element.style.top = `${saved.y}px`;
+                    this.element.style.width = `${saved.width}px`;
+                    this.element.style.height = `${saved.height}px`;
+                    this._animateMaximizeRestore(from, to);
+                    this._animTimer = setTimeout(() => this._finishMaximizeRestoreAnimation(), 260);
+                } else {
+                    this.element.style.left = `${saved.x}px`;
+                    this.element.style.top = `${saved.y}px`;
+                    this.element.style.width = `${saved.width}px`;
+                    this.element.style.height = `${saved.height}px`;
                 }
             }
             this.updateMaximizeButton();
@@ -957,24 +1011,32 @@ class AddonWindow {
             width: this.width,
             height: this.height
         };
-        
-        if (WindowManager.getAnimationsEnabled()) {
-            this.element.style.transition = 'left 0.25s ease-out, top 0.25s ease-out, width 0.25s ease-out, height 0.25s ease-out';
-        }
 
-        this.isMaximized = true;
-        this.x = 0;
-        this.y = 0;
-        this.width = window.innerWidth;
-        this.height = window.innerHeight;
-        
-        this.element.style.left = '0px';
-        this.element.style.top = '0px';
-        this.element.style.width = '100vw';
-        this.element.style.height = '100vh';
-        
         if (WindowManager.getAnimationsEnabled()) {
-            setTimeout(() => { this.element.style.transition = 'none'; }, 250);
+            // Visual start is the saved rect, target is fullscreen.
+            const from = {x: this.x, y: this.y, width: this.width, height: this.height};
+            const to = {x: 0, y: 0, width: window.innerWidth, height: window.innerHeight};
+            this.isMaximized = true;
+            this.x = 0;
+            this.y = 0;
+            this.width = window.innerWidth;
+            this.height = window.innerHeight;
+            this.element.style.left = '0px';
+            this.element.style.top = '0px';
+            this.element.style.width = '100vw';
+            this.element.style.height = '100vh';
+            this._animateMaximizeRestore(from, to);
+            this._animTimer = setTimeout(() => this._finishMaximizeRestoreAnimation(), 260);
+        } else {
+            this.isMaximized = true;
+            this.x = 0;
+            this.y = 0;
+            this.width = window.innerWidth;
+            this.height = window.innerHeight;
+            this.element.style.left = '0px';
+            this.element.style.top = '0px';
+            this.element.style.width = '100vw';
+            this.element.style.height = '100vh';
         }
 
         this.updateMaximizeButton();

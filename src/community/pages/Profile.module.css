@@ -235,6 +235,19 @@
     gap: 5px;
 }
 
+.bilupAccountsLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--accent-strong);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.bilupAccountsLink:hover {
+    text-decoration: underline;
+}
+
 .activityList {
     display: flex;
     flex-direction: column;
