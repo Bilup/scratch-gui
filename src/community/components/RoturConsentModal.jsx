@@ -33,6 +33,7 @@ const RoturConsentModal = ({type, data, onAllow, onDeny, onShareThis, onShareAll
         `mw.roturCategory.${categoryOf(scope)}`,
         defaultCategoryLabel(scope)
     );
+    const payment = type === 'confirm' && data.confirmation && data.confirmation.type === 'payment';
     if (type === 'share') {
         return (
             <Modal
@@ -64,7 +65,9 @@ const RoturConsentModal = ({type, data, onAllow, onDeny, onShareThis, onShareAll
         <Modal
             icon={ShieldCheck}
             title={type === 'confirm' ?
-                t('mw.roturConsent.confirmTitle', 'Confirm Bilup Accounts action') :
+                (payment ?
+                    t('mw.roturConsent.paymentTitle', 'Confirm payment') :
+                    t('mw.roturConsent.confirmTitle', 'Confirm Bilup Accounts action')) :
                 t('mw.roturConsent.connectTitle', 'Connect to Bilup Accounts')}
             onDismiss={onDeny}
             actions={
@@ -79,19 +82,31 @@ const RoturConsentModal = ({type, data, onAllow, onDeny, onShareThis, onShareAll
                         onClick={onAllow}
                     >
                         {type === 'confirm' ?
-                            t('mw.roturConsent.allow', 'Allow') :
+                            (payment ?
+                                t('mw.roturConsent.allowPayment', 'Allow payment') :
+                                t('mw.roturConsent.allow', 'Allow')) :
                             t('mw.roturConsent.connect', 'Connect')}
                     </Button>
                 </React.Fragment>
             }
         >
             {type === 'confirm' ? (
-                <p className={styles.lead}>
-                    {t('mw.roturConsent.confirmBody', 'This project wants to ')}
-                    <b>{data.label}</b>
-                    {data.username ? ` as @${data.username}.` : t('mw.roturConsent.period', '.')}
-                    {' '}{t('mw.roturConsent.confirmTrust', 'Only allow it if you trust this project.')}
-                </p>
+                payment ? (
+                    <p className={styles.lead}>
+                        {t('mw.roturConsent.paymentBody', 'Allow payment of {amount} credits to ', {
+                            amount: data.confirmation.amount
+                        })}
+                        <b>{`@${data.confirmation.recipient}`}</b>
+                        {'?'}
+                    </p>
+                ) : (
+                    <p className={styles.lead}>
+                        {t('mw.roturConsent.confirmBody', 'This project wants to ')}
+                        <b>{data.label}</b>
+                        {data.username ? ` as @${data.username}.` : t('mw.roturConsent.period', '.')}
+                        {' '}{t('mw.roturConsent.confirmTrust', 'Only allow it if you trust this project.')}
+                    </p>
+                )
             ) : (
                 <React.Fragment>
                     <p className={styles.lead}>
