@@ -766,6 +766,24 @@ class AddonWindow {
         this.element.style.display = 'flex';
         this.element.style.pointerEvents = 'auto';
 
+        // A show() while the window is maximized can happen after the
+        // maximize/restore animation was interrupted (its _animTimer was
+        // cleared above). End any residual transform and re-assert the
+        // maximized layout so the window still fills the whole screen.
+        if (this.isMaximized) {
+            this._finishMaximizeRestoreAnimation();
+            // Re-apply the fullscreen overrides, including clearing any external
+            // CSS max-width/max-height/margin, so the maximized window always
+            // fills the whole screen.
+            this.element.style.maxWidth = 'none';
+            this.element.style.maxHeight = 'none';
+            this.element.style.margin = '0';
+            this.element.style.left = '0px';
+            this.element.style.top = '0px';
+            this.element.style.width = '100vw';
+            this.element.style.height = '100vh';
+        }
+
         if (!wasVisible) {
             this.bringToFront();
             if (WindowManager.getAnimationsEnabled()) {
@@ -964,6 +982,22 @@ class AddonWindow {
     }
 
     restore () {
+        // Cancel any pending animation timer, like show()/hide()/destroy() do,
+        // so an interrupted maximize/restore animation cannot leave a stale
+        // transform that makes the window look like it is not filling the screen.
+        if (this._animTimer) {
+            clearTimeout(this._animTimer);
+            this._animTimer = null;
+        }
+        this._finishMaximizeRestoreAnimation();
+
+        // Let external CSS size/margin constraints (e.g. a modal's .modal-content
+        // rule with max-width/max-height) apply again, so the window returns to
+        // the same appearance it had before it was maximized.
+        this.element.style.maxWidth = '';
+        this.element.style.maxHeight = '';
+        this.element.style.margin = '';
+
         if (this.isMaximized) {
             this.isMaximized = false;
             if (this.savedState) {
@@ -1003,7 +1037,16 @@ class AddonWindow {
     
     maximize () {
         if (this.isMaximized) return this;
-        
+
+        // Cancel any pending animation timer and clear a stale transform, same
+        // as restore(). This guarantees the window ends up at the fullscreen
+        // rect even if a previous animation was interrupted.
+        if (this._animTimer) {
+            clearTimeout(this._animTimer);
+            this._animTimer = null;
+        }
+        this._finishMaximizeRestoreAnimation();
+
         // Save current state
         this.savedState = {
             x: this.x,
@@ -1011,6 +1054,13 @@ class AddonWindow {
             width: this.width,
             height: this.height
         };
+
+        // Override any external CSS size/margin constraints on the window element
+        // (e.g. a modal's .modal-content rule with max-width/max-height). Without
+        // this, setting width/height to 100vw/100vh alone cannot fill the screen.
+        this.element.style.maxWidth = 'none';
+        this.element.style.maxHeight = 'none';
+        this.element.style.margin = '0';
 
         if (WindowManager.getAnimationsEnabled()) {
             // Visual start is the saved rect, target is fullscreen.
