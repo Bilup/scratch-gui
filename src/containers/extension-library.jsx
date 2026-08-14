@@ -47,7 +47,9 @@ const translateGalleryItem = (extension, locale) => ({
 
 let cachedGallery = null;
 let cachedSourceStatuses = {};
+let cachedCustomSources = []; // [{id, name, url}]
 let galleryUpdateListeners = [];
+let customSourceCounter = 0;
 
 const addGalleryUpdateListener = listener => {
     galleryUpdateListeners.push(listener);
@@ -59,21 +61,133 @@ const addGalleryUpdateListener = listener => {
     };
 };
 
-const updateGallery = newGallery => {
-    cachedGallery = newGallery;
-    galleryUpdateListeners.forEach(listener => listener(newGallery));
+// 广播快照给所有已挂载的扩展库弹窗；每次生成新引用，
+// 确保 PureComponent 的浅比较能识别到变化并重新渲染
+const notifyListeners = () => {
+    const snapshot = {
+        gallery: cachedGallery ? [...cachedGallery] : cachedGallery,
+        sourceStatuses: {...cachedSourceStatuses},
+        customSources: [...cachedCustomSources]
+    };
+    galleryUpdateListeners.forEach(listener => listener(snapshot));
 };
 
-const fetchLibrary = async (onProgress) => {
+const updateGallery = newGallery => {
+    cachedGallery = newGallery;
+    notifyListeners();
+};
+
+// 安全地解析相对/绝对 URL，解析失败时原样返回
+const safeResolveURL = (value, base) => {
+    if (!value) {
+        return null;
+    }
+    try {
+        return new URL(value, base).href;
+    } catch (error) {
+        return value;
+    }
+};
+
+// 把自定义库返回的元数据规范化为扩展库内部格式
+// 兼容 {extensions: [...]} 与数组两种形态；图标/JS/文档相对路径按库 URL 解析
+// 字段缺失时做降级，保证扩展一定能被 isExtension 保留并正常展示
+const normalizeCustomExtension = (extension, source, index) => {
+    const baseURL = new URL(source.url);
+    const js = extension.extensionURL || extension.extensionUrl || extension.js || extension.url;
+    const image = extension.iconURL || extension.icon || extension.image || extension.banner;
+    const id = extension.id || extension.slug || extension.name || `extension-${index + 1}`;
+    return {
+        name: extension.name || extension.id || extension.slug || `Extension ${index + 1}`,
+        nameTranslations: extension.nameTranslations || {},
+        description: extension.description || extension.desc || '',
+        descriptionTranslations: extension.descriptionTranslations || {},
+        extensionId: id,
+        extensionURL: safeResolveURL(js, baseURL) ||
+            safeResolveURL(extension.slug ? `${extension.slug}.js` : null, baseURL),
+        iconURL: image ? safeResolveURL(image, baseURL) : 'https://extensions.bilup.org/images/unknown.svg',
+        tags: [source.id],
+        source: source.id,
+        credits: extension.credits || [],
+        docsURI: extension.docs ? safeResolveURL(extension.docs, baseURL) : null,
+        incompatibleWithScratch: true,
+        featured: true
+    };
+};
+
+// 独立加载一个自定义拓展库：解析元数据 → 合并进 gallery → 更新状态灯。
+// 不依赖整体 fetchLibrary 重拉，因此不受内置源网络时序影响，能立即显示扩展。
+const fetchCustomSource = async id => {
+    const source = cachedCustomSources.find(cs => cs.id === id);
+    if (!source) {
+        return;
+    }
+    try {
+        const res = await fetch(source.url);
+        if (!res.ok) {
+            throw new Error(`HTTP status ${res.status}`);
+        }
+        const data = await res.json();
+        const rawExtensions = Array.isArray(data) ? data : (data.extensions || []);
+        const extensions = rawExtensions.map((extension, index) =>
+            normalizeCustomExtension(extension, source, index));
+        // 先移除该源旧扩展，再加入新扩展，避免重复
+        cachedGallery = [...(cachedGallery || []).filter(item => item.source !== id), ...extensions];
+        cachedSourceStatuses[id] = 'loaded';
+    } catch (error) {
+        console.warn(`Failed to load custom gallery "${source.name}":`, error);
+        cachedSourceStatuses[id] = 'error';
+    }
+    notifyListeners();
+};
+
+// 注册一个自定义拓展库；相同 URL 复用已有 id，避免重复添加
+// 1) 立即广播快照（新引用），侧边栏标签马上出现（黄灯 loading）
+// 2) 独立加载该库，完成后广播（绿灯 + 扩展卡片 / 红灯 + 失败提示）
+const addCustomSource = source => {
+    const existing = cachedCustomSources.find(cs => cs.url === source.url);
+    const id = existing ? existing.id : `custom_${++customSourceCounter}`;
+    if (existing) {
+        existing.name = source.name;
+    } else {
+        cachedCustomSources.push({id, name: source.name, url: source.url});
+    }
+    cachedSourceStatuses[id] = 'loading';
+    notifyListeners();
+    fetchCustomSource(id).catch(error => log.error(error));
+    return id;
+};
+
+// 删除一个自定义拓展库：移除注册、清掉状态与对应扩展，
+// 立即广播（标签消失），再重拉一次所有源收尾
+const removeCustomSource = id => {
+    const index = cachedCustomSources.findIndex(cs => cs.id === id);
+    if (index === -1) {
+        return;
+    }
+    cachedCustomSources.splice(index, 1);
+    delete cachedSourceStatuses[id];
+    if (cachedGallery) {
+        cachedGallery = cachedGallery.filter(item => item.source !== id);
+    }
+    notifyListeners();
+    fetchLibrary().catch(error => log.error(error));
+};
+
+const fetchLibrary = async () => {
     const emptyBanner = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAACXBIWXMAAAsTAAALEwEAmpwYAAADGWlDQ1BQaG90b3Nob3AgSUNDIHByb2ZpbGUAAHjaY2BgnuDo4uTKJMDAUFBUUuQe5BgZERmlwH6egY2BmYGBgYGBITG5uMAxIMCHgYGBIS8/L5UBA3y7xsDIwMDAcFnX0cXJlYE0wJpcUFTCwMBwgIGBwSgltTiZgYHhCwMDQ3p5SUEJAwNjDAMDg0hSdkEJAwNjAQMDg0h2SJAzAwNjCwMDE09JakUJAwMDg3N+QWVRZnpGiYKhpaWlgmNKflKqQnBlcUlqbrGCZ15yflFBflFiSWoKAwMD1A4GBgYGXpf8EgX3xMw8BUNTVQYqg4jIKAX08EGIIUByaVEZhMXIwMDAIMCgxeDHUMmwiuEBozRjFOM8xqdMhkwNTJeYNZgbme+y2LDMY2VmzWa9yubEtoldhX0mhwBHJycrZzMXM1cbNzf3RB4pnqW8xryH+IL5nvFXCwgJrBZ0E3wk1CisKHxYJF2UV3SrWJw4p/hWiRRJYcmjUhXSutJPZObIhsoJyp2V71HwUeRVvKA0RTlKRUnltepWtUZ1Pw1Zjbea+7QmaqfqWOsK6b7SO6I/36DGMMrI0ljS+LfJPdPDZivM+y0qLBOtfKwtbFRtRexY7L7aP3e47XjB6ZjzXpetruvdVrov9VjkudBrgfdCn8W+y/xW+a8P2Bq4N+hY8PmQW6HPwr5EMEUKRilFG8e4xUbF5cW3JMxO3Jx0Nvl5KlOaXLpNRlRmVdas7D059/KY8tULfAqLi2YXHy55WyZR7lJRWDmv6mz131q9uvj6SQ3HGn83G7Skt85ru94h2Ond1d59uJehz76/bsK+if8nO05pnXpiOu+M4JmzZj2aozW3ZN6+BVwLwxYtXvxxqcOyCcsfrjRe1br65lrddU3rb2402NSx+cFWq21Tt3/Y6btr1R6Oven7jh9QP9h56PURv6Obj4ufqD355LT3mS3nZM+3X/h0Ke7yqasW15bdEL3ZeuvrnfS7N+/7PDjwyPTx6qeKz2a+EHzZ9Zr5Td3bn+9LP3z6VPD53de8b+9+5P/88Lv4z7d/Vf//AwAqvx2K829RWwAAACBjSFJNAAB6JQAAgIMAAPn/AACA6QAAdTAAAOpgAAA6mAAAF2+SX8VGAAAAEUlEQVR42mL4zwAAAAD//wMAAgEBAJlUum0AAAAASUVORK5CYII=";
 
     const allExtensions = [];
     const sourceStatuses = {};
 
     const report = () => {
-        if (onProgress) {
-            onProgress([...allExtensions], {...sourceStatuses});
-        }
+        // 只管理网络源；自定义库由 fetchCustomSource 独立加载，
+        // 这里保留已加载的自定义扩展，避免整体重拉覆盖/清空它们
+        const customExtensions = (cachedGallery || [])
+            .filter(item => item.source && item.source.indexOf('custom_') === 0);
+        cachedGallery = [...allExtensions, ...customExtensions];
+        cachedSourceStatuses = {...cachedSourceStatuses, ...sourceStatuses};
+        notifyListeners();
     };
 
     const fetchAndAdd = async (sourceName, fetchFn) => {
@@ -182,7 +296,7 @@ const fetchLibrary = async (onProgress) => {
                     featured: true
                 }));
         }),
-        fetchAndAdd('SharkPools', async () => {
+        fetchAndAdd('sharkpool', async () => {
             const sharkpoolRes = await fetch('https://sharkpools-extensions.vercel.app/Gallery%20Files/Extension-Keys.json');
             if (!sharkpoolRes.ok) {
                 console.warn(`SharkPool extensions: HTTP status ${sharkpoolRes.status}`);
@@ -349,13 +463,19 @@ class ExtensionLibrary extends React.PureComponent {
             gallery: cachedGallery,
             galleryError: null,
             galleryTimedOut: false,
-            sourceStatuses: cachedSourceStatuses
+            sourceStatuses: cachedSourceStatuses,
+            customSources: cachedCustomSources
         };
     }
     
     componentDidMount() {
-        this.unsubscribeGalleryUpdate = addGalleryUpdateListener(newGallery => {
-            this.setState({ gallery: newGallery });
+        // 接收模块级快照广播：添加自定义库 / fetchLibrary 进度都会触发
+        this.unsubscribeGalleryUpdate = addGalleryUpdateListener(payload => {
+            this.setState({
+                gallery: payload.gallery,
+                sourceStatuses: payload.sourceStatuses,
+                customSources: payload.customSources
+            });
         });
         
         // Keep the "loaded" indicator in sync while this modal is open:
@@ -370,6 +490,7 @@ class ExtensionLibrary extends React.PureComponent {
             vm.on('EXTENSION_REMOVED', this.handleExtensionChange);
         }
         
+        // 首次打开时拉取网络源；已注册的自定义库独立加载（互不阻塞）
         if (!this.state.gallery) {
             const timeout = setTimeout(() => {
                 this.setState({
@@ -377,15 +498,8 @@ class ExtensionLibrary extends React.PureComponent {
                 });
             }, 750);
 
-            fetchLibrary((progressGallery, sourceStatuses) => {
-                cachedGallery = progressGallery;
-                cachedSourceStatuses = sourceStatuses || {};
-                this.setState({
-                    gallery: progressGallery,
-                    sourceStatuses: cachedSourceStatuses
-                });
-                clearTimeout(timeout);
-            })
+            fetchLibrary()
+                .then(() => clearTimeout(timeout))
                 .catch(error => {
                     log.error(error);
                     this.setState({
@@ -393,6 +507,12 @@ class ExtensionLibrary extends React.PureComponent {
                     });
                     clearTimeout(timeout);
                 });
+
+            cachedCustomSources.forEach(source => {
+                if (!cachedSourceStatuses[source.id]) {
+                    fetchCustomSource(source.id).catch(error => log.error(error));
+                }
+            });
         }
     }
     
@@ -407,9 +527,9 @@ class ExtensionLibrary extends React.PureComponent {
         }
     }
     getSourceStatus(tag) {
-        // 内置本地数据始终可用
+        // 内置本地数据始终可用（桌面端本地加载成功 → 蓝色）
         if (tag === 'scratch' || tag === 'rotur') {
-            return 'loaded';
+            return 'local';
         }
         // 无状态时返回 'idle' 作为占位
         return this.state.sourceStatuses[tag] || 'idle';
@@ -510,19 +630,38 @@ class ExtensionLibrary extends React.PureComponent {
             return vm.extensionManager.isExtensionLoaded(item.extensionId);
         };
 
+        // 已注册的自定义拓展库像内置源一样出现在左侧栏与分组中
+        const customTags = this.state.customSources.map(source => ({
+            tag: source.id,
+            intlLabel: source.name
+        }));
+        const tags = [...extensionTags, ...customTags];
+        const sources = [
+            ['scratch', 'Scratch'],
+            ['tw', 'TurboWarp'],
+            ['mistium', 'Mistium'],
+            ['rotur', 'Bilup Accounts'],
+            ...this.state.customSources.map(source => [source.id, source.name])
+        ];
+        // 可删除（自定义）的标签 id 集合，用于侧边栏渲染删除按钮
+        const removableTags = this.state.customSources.map(source => source.id);
+
         return (
             <LibraryComponent
                 data={library}
                 filterable
                 persistableKey="extensionId"
                 id="extensionLibrary"
-                tags={extensionTags}
+                tags={tags}
+                sources={sources}
                 title={this.props.intl.formatMessage(messages.extensionTitle)}
                 visible={this.props.visible}
                 onItemSelected={this.handleItemSelect}
                 onRequestClose={this.props.onRequestClose}
                 isLoaded={isLoaded}
                 getSourceStatus={this.getSourceStatus}
+                removableTags={removableTags}
+                onRemoveCustomSource={removeCustomSource}
             />
         );
     }
@@ -543,5 +682,7 @@ ExtensionLibrary.propTypes = {
 export default injectIntl(ExtensionLibrary);
 
 export {
+    addCustomSource,
+    removeCustomSource,
     updateGallery
 };
