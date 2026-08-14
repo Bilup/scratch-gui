@@ -1164,17 +1164,28 @@ class CustomThemeMenu extends React.Component {
             minHeight: 240,
             className: 'tw-create-theme-window',
             onClose: () => {
-                try {
-                    if (this.createThemeContainer) {
-                        try {
-                            ReactDOM.unmountComponentAtNode(this.createThemeContainer);
-                        } catch (e) {}
-                        this.createThemeContainer = null;
+                const closingContainer = this.createThemeContainer;
+                const closingWindow = this.createThemeWindow;
+                // Delay the cleanup until the window's closing animation has
+                // played out so the content stays visible while it fades out.
+                // Only touch the window that was actually closed — the user may
+                // have reopened a new one while the animation was playing.
+                setTimeout(() => {
+                    try {
+                        if (this.createThemeWindow === closingWindow) {
+                            this.createThemeWindow = null;
+                        }
+                        if (this.createThemeContainer === closingContainer) {
+                            try {
+                                if (closingContainer) {
+                                    ReactDOM.unmountComponentAtNode(closingContainer);
+                                }
+                            } catch (e) {}
+                            this.createThemeContainer = null;
+                        }
                         this.safeForceUpdate();
-                    }
-                } catch (e) {}
-                this.createThemeWindow = null;
-                this.createThemeContainer = null;
+                    } catch (e) {}
+                }, 220);
             }
         });
 
@@ -1224,23 +1235,38 @@ class CustomThemeMenu extends React.Component {
             minHeight: 500,
             className: 'tw-gradient-creator-window',
             onClose: () => {
+                // Restore the pre-preview theme immediately (this is editor
+                // state, unrelated to the window animation).
                 try {
                     const {originalThemeBeforePreview} = this.state;
                     if (originalThemeBeforePreview && this._isMounted) {
                         this.props.onChangeTheme(originalThemeBeforePreview);
                         this.safeSetState({originalThemeBeforePreview: null});
                     }
-
-                    if (this.gradientCreatorContainer) {
-                        try {
-                            ReactDOM.unmountComponentAtNode(this.gradientCreatorContainer);
-                        } catch (e) {}
-                        this.gradientCreatorContainer = null;
-                        this.safeForceUpdate();
-                    }
                 } catch (e) {}
-                this.gradientCreatorWindow = null;
-                this.gradientCreatorContainer = null;
+
+                const closingContainer = this.gradientCreatorContainer;
+                const closingWindow = this.gradientCreatorWindow;
+                // Delay the content cleanup until the window's closing
+                // animation has played out so it stays visible while fading.
+                // Only touch the window that was actually closed — the user may
+                // have reopened a new one while the animation was playing.
+                setTimeout(() => {
+                    try {
+                        if (this.gradientCreatorWindow === closingWindow) {
+                            this.gradientCreatorWindow = null;
+                        }
+                        if (this.gradientCreatorContainer === closingContainer) {
+                            try {
+                                if (closingContainer) {
+                                    ReactDOM.unmountComponentAtNode(closingContainer);
+                                }
+                            } catch (e) {}
+                            this.gradientCreatorContainer = null;
+                        }
+                        this.safeForceUpdate();
+                    } catch (e) {}
+                }, 220);
             }
         });
 

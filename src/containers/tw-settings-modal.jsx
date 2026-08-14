@@ -15,6 +15,7 @@ import {getStyleSetting, getStyleSettings, setStyleSetting} from '../lib/mw-styl
 import {applyTheme} from '../lib/themes/themePersistance';
 import {getHideOperatorArrows, setHideOperatorArrows} from '../lib/mw-operator-arrows';
 import {getVanillaPalette, setVanillaPalette} from '../lib/mw-vanilla-palette';
+import WindowManager from '../addons/window-system/window-manager';
 
 const messages = defineMessages({
     newFramerate: {
@@ -267,12 +268,6 @@ handleWindowAnimationChange (e) {
         const enabled = e.target.checked;
         this.setState({windowAnimation: enabled});
         WindowManager.setAnimationsEnabled(enabled);
-        window.dispatchEvent(new CustomEvent('mw:window-animation-change', {detail: {enabled}}));
-        try {
-            localStorage.setItem('mw:window-animation', enabled);
-        } catch (err) {
-            // ignore
-        }
     }
 
     handleHideOperatorArrowsChange (e) {
