@@ -68,32 +68,56 @@ const ModalSidebarItem = ({
     onClick,
     selected,
     statusDot,
-    title
-}) => (
-    <button
-        className={classNames(styles.item, {[styles.itemSelected]: selected})}
-        onClick={onClick}
-        title={title || label}
-        type="button"
-    >
-        {Icon && (
-            <Icon
-                className={styles.icon}
-                size={iconSize}
-            />
-        )}
-        {statusDot && (
-            <span className={styles.statusDot}>{statusDot}</span>
-        )}
-        <span className={styles.label}>{label}</span>
-        {typeof count === 'number' && (
-            <span className={styles.count}>{count}</span>
-        )}
-        {badge > 0 && (
-            <span className={styles.badge}>{badge}</span>
-        )}
-    </button>
-);
+    title,
+    trailingAction
+}) => {
+    const content = (
+        <React.Fragment>
+            {Icon && (
+                <Icon
+                    className={styles.icon}
+                    size={iconSize}
+                />
+            )}
+            {statusDot && (
+                <span className={styles.statusDot}>{statusDot}</span>
+            )}
+            <span className={styles.label}>{label}</span>
+            {typeof count === 'number' && (
+                <span className={styles.count}>{count}</span>
+            )}
+            {badge > 0 && (
+                <span className={styles.badge}>{badge}</span>
+            )}
+        </React.Fragment>
+    );
+    // button 内不能嵌套 button，带尾部操作时用包裹层承载
+    if (trailingAction) {
+        return (
+            <div className={styles.itemWrap}>
+                <button
+                    className={classNames(styles.item, styles.itemWithTrailing, {[styles.itemSelected]: selected})}
+                    onClick={onClick}
+                    title={title || label}
+                    type="button"
+                >
+                    {content}
+                </button>
+                <div className={styles.trailingAction}>{trailingAction}</div>
+            </div>
+        );
+    }
+    return (
+        <button
+            className={classNames(styles.item, {[styles.itemSelected]: selected})}
+            onClick={onClick}
+            title={title || label}
+            type="button"
+        >
+            {content}
+        </button>
+    );
+};
 
 ModalSidebarItem.propTypes = {
     badge: PropTypes.number,
@@ -104,7 +128,8 @@ ModalSidebarItem.propTypes = {
     onClick: PropTypes.func.isRequired,
     selected: PropTypes.bool,
     statusDot: PropTypes.node,
-    title: PropTypes.string
+    title: PropTypes.string,
+    trailingAction: PropTypes.node
 };
 
 const ModalSidebarGroup = ({children, className}) => (

@@ -15,6 +15,10 @@ const LEVEL_TO_TYPE = {
     [AlertLevels.WARN]: 'warning'
 };
 
+// 未配置 maxDisplaySecs 的提示（如“新建还原点中…”等进度提示）
+// 也使用默认时长自动关闭，避免 toast 一直停留在右下角
+const DEFAULT_TOAST_DURATION = 4000;
+
 const InlineMessages = ({
     alertsList,
     intl
@@ -64,7 +68,8 @@ const InlineMessages = ({
         }
 
         const type = LEVEL_TO_TYPE[level] || 'info';
-        const duration = typeof maxDisplaySecs === 'number' ? maxDisplaySecs * 1000 : 0;
+        const duration = typeof maxDisplaySecs === 'number' && maxDisplaySecs > 0 ?
+            maxDisplaySecs * 1000 : DEFAULT_TOAST_DURATION;
         currentToastIdRef.current = notificationManager.show(message, type, duration);
     }, [intl, firstInlineAlert]);
 

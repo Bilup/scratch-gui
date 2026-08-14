@@ -121,6 +121,24 @@
     transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
 }
 
+.item-wrap {
+    position: relative;
+}
+
+.item-with-trailing {
+    padding-right: 2.5rem;
+}
+
+.trailing-action {
+    position: absolute;
+    top: 50%;
+    right: 0.5rem;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
 .item:hover {
     background: $ui-tertiary;
 }
