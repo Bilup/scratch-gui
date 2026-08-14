@@ -56,7 +56,9 @@ class WindowedModal extends React.Component {
                 this.pushHistory(this.id, (history.state === null || history.state !== this.id));
             } else if (!this.props.visible && this.window) {
                 // Modal should be hidden but window exists - hide it
-                this.window.hide();
+                if (!this.window.isDestroying) {
+                    this.window.hide();
+                }
                 return;
             }
         }
@@ -64,7 +66,13 @@ class WindowedModal extends React.Component {
         // Show/hide window based on visibility
         if (this.window) {
             if (this.props.visible === false) {
-                this.window.hide();
+                // If the window is already being destroyed (its close button
+                // was clicked), the closing animation is in progress and the
+                // element will be removed by the window system — don't hide it
+                // again here or we'd cancel that removal.
+                if (!this.window.isDestroying) {
+                    this.window.hide();
+                }
             } else {
                 this.window.show();
             }
@@ -85,7 +93,12 @@ class WindowedModal extends React.Component {
             this.blocklyWidgetRepositionRaf_ = null;
         }
         if (this.window) {
-            this.window.hide();
+            // If the window is already being destroyed by the window system
+            // (e.g. its close button was clicked), don't hide it again here or
+            // we'd cancel the closing animation that is already in progress.
+            if (!this.window.isDestroying) {
+                this.window.hide();
+            }
         }
     }
 
@@ -375,21 +388,16 @@ class WindowedModal extends React.Component {
     }
     
     handleWindowClose = () => {
-        if (this.props.onRequestClose) {
-            const shouldClose = this.props.onRequestClose();
-            if (shouldClose === false) {
-                return false;
-            }
-        }
-        this.window = null;
-        this.contentContainer = null;
-        this.createdWindow = false;
-    };
-    
-    handleWindowMinimize = () => {
-        // Delay Redux update and cleanup until after the close animation completes.
-        // This ensures the portal content stays visible during the animation.
-        // Use 220ms to ensure the destroy() animation (200ms) finishes first.
+        // Delay onRequestClose until after the window's closing animation
+        // completes. Calling it synchronously would usually dispatch a Redux
+        // close action, making the parent unmount this modal and clearing the
+        // portal content while the animation is still playing - the content
+        // would vanish instantly and it would look like there is no close
+        // animation at all. Deferring it lets the whole window (content
+        // included) fade out together. If the modal is reopened before the
+        // timer fires, this.window will have been replaced by a fresh window,
+        // so don't clear that one.
+        const closingWindow = this.window;
         setTimeout(() => {
             if (this.props.onRequestClose) {
                 const shouldClose = this.props.onRequestClose();
@@ -397,9 +405,31 @@ class WindowedModal extends React.Component {
                     return;
                 }
             }
-            this.window = null;
-            this.contentContainer = null;
-            this.createdWindow = false;
+            if (this.window === closingWindow) {
+                this.window = null;
+                this.contentContainer = null;
+                this.createdWindow = false;
+            }
+        }, 220);
+    };
+    
+    handleWindowMinimize = () => {
+        // Delay Redux update and cleanup until after the close animation completes.
+        // This ensures the portal content stays visible during the animation.
+        // Use 220ms to ensure the destroy() animation (200ms) finishes first.
+        const closingWindow = this.window;
+        setTimeout(() => {
+            if (this.props.onRequestClose) {
+                const shouldClose = this.props.onRequestClose();
+                if (shouldClose === false) {
+                    return;
+                }
+            }
+            if (this.window === closingWindow) {
+                this.window = null;
+                this.contentContainer = null;
+                this.createdWindow = false;
+            }
         }, 220);
     };
     

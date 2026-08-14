@@ -198,6 +198,7 @@ class AddonWindow {
         this.isVisible = false;
         this.isMinimized = false;
         this.isMaximized = false;
+        this.isDestroying = false;
         this.zIndex = this.alwaysOnTop ? ++nextOnTopZIndex : ++nextZIndex;
         
         this.onClose = options.onClose || (() => {});
@@ -815,6 +816,14 @@ class AddonWindow {
     }
 
     hide () {
+        // A destroy is already in progress: the closing animation is playing
+        // and the element will be removed from the DOM when it finishes.
+        // Hiding again here would cancel that removal (leaking the element),
+        // so bail out and let destroy() finish its work.
+        if (this.isDestroying) {
+            return this;
+        }
+
         // Cancel any pending animation timer
         if (this._animTimer) {
             clearTimeout(this._animTimer);
@@ -862,11 +871,31 @@ class AddonWindow {
     }
     
     destroy (callOnClose = true) {
+        // A destroy is already in progress: the closing animation is playing
+        // and the element will be removed when it finishes. This second call
+        // usually comes from a componentWillUnmount that the owner's onClose
+        // callback triggered synchronously. Bail out so the pending animation
+        // isn't cancelled and the element isn't removed instantly.
+        if (this.isDestroying) {
+            return this;
+        }
+
         // Cancel any pending animation timer
         if (this._animTimer) {
             clearTimeout(this._animTimer);
             this._animTimer = null;
         }
+
+        // Ask the window's owner whether closing is allowed. If the owner
+        // vetoes the close (returns false), abort the destroy entirely so the
+        // window stays visible and can be opened again later. The onClose
+        // callback is already invoked here, so it must NOT be invoked again
+        // after the closing animation.
+        if (callOnClose && this.onClose() === false) {
+            return this;
+        }
+
+        this.isDestroying = true;
 
         const needsAnimation = WindowManager.getAnimationsEnabled() && this.isVisible;
 
@@ -892,7 +921,6 @@ class AddonWindow {
             this.element.style.transform = 'scale(0.92)';
 
             const element = this.element;
-            const shouldCallOnClose = callOnClose;
             this._animTimer = setTimeout(() => {
                 this._animTimer = null;
                 if (element && element.parentNode) {
@@ -903,24 +931,55 @@ class AddonWindow {
                     }
                     element.parentNode.removeChild(element);
                 }
-                // Call onClose after animation completes so React content
-                // stays visible during the closing animation
-                if (shouldCallOnClose) {
-                    this.onClose();
-                }
+                // onClose was already consulted (and called) at the top of
+                // this method, so it must not be called again here.
             }, 200);
         } else {
             // No animation — immediate cleanup
             this.isVisible = false;
             this.element.style.display = 'none';
             this.element.style.transition = 'none';
-            if (callOnClose) {
-                this.onClose();
-            }
             if (this.element && this.element.parentNode) {
                 this.element.parentNode.removeChild(this.element);
             }
         }
+    }
+
+    abortAnimation (enabled) {
+        if (!this.element || !this.element.style) return;
+        if (this._animTimer) {
+            clearTimeout(this._animTimer);
+            this._animTimer = null;
+        }
+        // End any in-flight maximize/restore transform animation
+        this._finishMaximizeRestoreAnimation();
+        if (enabled) {
+            // Animations re-enabled: just clear any leftover intermediate styles
+            this.element.style.transition = 'none';
+            return;
+        }
+        if (this.isDestroying) {
+            // A destroy (element removal) was in progress — finish it now so
+            // the element doesn't leak in the DOM.
+            this.isVisible = false;
+            this.element.style.display = 'none';
+            this.element.style.transition = 'none';
+            this.element.style.willChange = '';
+            if (this.element.parentNode) {
+                this.element.parentNode.removeChild(this.element);
+            }
+            return;
+        }
+        // Animations disabled: jump to the final state immediately
+        if (!this.isVisible) {
+            // A hide/destroy fade-out was in progress (or the window is hidden)
+            this.element.style.display = 'none';
+        }
+        this.element.style.opacity = '1';
+        this.element.style.transform = '';
+        this.element.style.pointerEvents = '';
+        this.element.style.willChange = '';
+        this.element.style.transition = 'none';
     }
 
     close () {
@@ -929,6 +988,12 @@ class AddonWindow {
     
     minimize () {
         if (this.destroyOnMinimize) {
+            // Like close(), give the owner a chance to veto. Otherwise the
+            // window would be destroyed while the owner still thinks it is
+            // open, making it impossible to open it again later.
+            if (this.onClose() === false) {
+                return this;
+            }
             this.onMinimize();
             this.destroy(false);
             return this;
@@ -1175,6 +1240,7 @@ class NativeAddonWindow {
         this.isVisible = false;
         this.isMinimized = false;
         this.isMaximized = false;
+        this.isDestroying = false;
         this.zIndex = ++nextZIndex;
 
         this.onClose = options.onClose || (() => {});
@@ -1332,11 +1398,14 @@ class NativeAddonWindow {
     }
 
     destroy (callOnClose = true) {
+        // Ask the owner first; abort if the close is vetoed. The onClose
+        // callback is already invoked here, so it is NOT invoked again below.
+        if (callOnClose && this.onClose() === false) {
+            return this;
+        }
+        this.isDestroying = true;
         activeWindows.delete(this.id);
         this.closePopup();
-        if (callOnClose) {
-            this.onClose();
-        }
     }
 
     close () {
@@ -1345,6 +1414,12 @@ class NativeAddonWindow {
 
     minimize () {
         if (this.destroyOnMinimize) {
+            // Like close(), give the owner a chance to veto. Otherwise the
+            // window would be destroyed while the owner still thinks it is
+            // open, making it impossible to open it again later.
+            if (this.onClose() === false) {
+                return this;
+            }
             this.onMinimize();
             this.destroy(false);
             return this;
@@ -1437,6 +1512,23 @@ class NativeAddonWindow {
 const WindowManager = {
     getAnimationsEnabled () {
         return localStorage.getItem('mw:window-animation') !== 'false';
+    },
+
+    setAnimationsEnabled (enabled) {
+        try {
+            localStorage.setItem('mw:window-animation', enabled);
+        } catch (err) {
+            // ignore
+        }
+        if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('mw:window-animation-change', {detail: {enabled}}));
+        }
+        // Immediately apply the new setting to all open windows
+        for (const win of activeWindows.values()) {
+            if (win && typeof win.abortAnimation === 'function') {
+                win.abortAnimation(enabled);
+            }
+        }
     },
     
     createWindow (options = {}) {
