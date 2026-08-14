@@ -48,7 +48,7 @@ const messages = defineMessages({
 });
 
 const ALL = 'all';
-// 顶部区域入口：内置 TW Blocks、自定义拓展、自定义拓展库、Gallery 链接
+// 顶部区域入口：内置 TW Blocks、自定义扩展、自定义扩展库、Gallery 链接
 const topExtensionIds = new Set(['tw', 'custom_extension', 'custom_extension_gallery', 'gallery']);
 
 const labelOf = (tag, intl) => (

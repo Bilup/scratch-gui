@@ -84,6 +84,17 @@ const messages = defineMessages({
         description: 'Button to load the custom gallery',
         id: 'tw.customExtensionGallery.load'
     },
+    unsandboxed: {
+        defaultMessage: 'Run extensions in this gallery without the sandbox',
+        description: 'Checkbox label for running custom gallery extensions unsandboxed',
+        id: 'tw.customExtensionGallery.unsandboxed'
+    },
+    unsandboxedWarning: {
+        // eslint-disable-next-line max-len
+        defaultMessage: 'Loading extensions without the sandbox is dangerous and should not be enabled if you don\'t know what you\'re doing. Official extensions are always loaded without the sandbox regardless of this option.',
+        description: 'Warning shown when the unsandboxed option is enabled',
+        id: 'tw.customExtensionGallery.unsandboxedWarning'
+    },
     cancel: {
         defaultMessage: 'Cancel',
         description: 'Button to cancel',
@@ -102,9 +113,16 @@ class CustomGalleryModalComponent extends React.Component {
             fileName: '',
             status: null, // 'loading' | 'loaded' | 'error'
             errorMessage: null,
-            count: null
+            count: null,
+            // 非沙盒运行开关：默认关闭（沙盒开启）。
+            // 官方域名扩展不受此开关影响，始终自动非沙盒运行。
+            unsandboxed: false
         };
     }
+
+    handleChangeUnsandboxed = e => {
+        this.setState({unsandboxed: e.target.checked});
+    };
 
     handleChange = field => e => {
         this.setState({[field]: e.target.value});
@@ -178,7 +196,8 @@ class CustomGalleryModalComponent extends React.Component {
         }
         this.props.onOk({
             name: this.state.galleryName.trim() || 'Custom',
-            url: this.getSourceValue()
+            url: this.getSourceValue(),
+            unsandboxed: this.state.unsandboxed
         });
     };
 
@@ -272,6 +291,21 @@ class CustomGalleryModalComponent extends React.Component {
                     <p className={styles.hint}>
                         <FormattedMessage {...messages.hint} />
                     </p>
+
+                    <label className={styles.unsandboxedContainer}>
+                        <input
+                            className={styles.unsandboxedCheckbox}
+                            type="checkbox"
+                            checked={this.state.unsandboxed}
+                            onChange={this.handleChangeUnsandboxed}
+                        />
+                        <FormattedMessage {...messages.unsandboxed} />
+                    </label>
+                    {this.state.unsandboxed && (
+                        <p className={styles.unsandboxedWarning}>
+                            <FormattedMessage {...messages.unsandboxedWarning} />
+                        </p>
+                    )}
 
                     {status === 'loading' ? (
                         <div className={classNames(styles.status, styles.statusLoading)}>

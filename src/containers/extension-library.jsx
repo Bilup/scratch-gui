@@ -12,6 +12,7 @@ import extensionLibraryContent, {
 } from '../lib/libraries/extensions/index.jsx';
 import extensionTags from '../lib/libraries/tw-extension-tags';
 import {getVanillaPalette} from '../lib/mw-vanilla-palette';
+import {manuallyTrustExtension} from './tw-security-manager.jsx';
 
 import LibraryComponent from '../components/tw-extension-library/extension-library.jsx';
 import extensionIcon from '../components/action-menu/icon--sprite.svg';
@@ -115,7 +116,7 @@ const normalizeCustomExtension = (extension, source, index) => {
     };
 };
 
-// 独立加载一个自定义拓展库：解析元数据 → 合并进 gallery → 更新状态灯。
+// 独立加载一个自定义扩展库：解析元数据 → 合并进 gallery → 更新状态灯。
 // 不依赖整体 fetchLibrary 重拉，因此不受内置源网络时序影响，能立即显示扩展。
 const fetchCustomSource = async id => {
     const source = cachedCustomSources.find(cs => cs.id === id);
@@ -131,6 +132,15 @@ const fetchCustomSource = async id => {
         const rawExtensions = Array.isArray(data) ? data : (data.extensions || []);
         const extensions = rawExtensions.map((extension, index) =>
             normalizeCustomExtension(extension, source, index));
+        // 该库开启"非沙盒运行"时，手动信任其扩展 URL，使其绕过沙盒
+        // （官方域名扩展无论是否开启都会自动非沙盒，由 isTrustedExtensionUrl 处理）
+        if (source.unsandboxed) {
+            extensions.forEach(extension => {
+                if (extension.extensionURL) {
+                    manuallyTrustExtension(extension.extensionURL);
+                }
+            });
+        }
         // 先移除该源旧扩展，再加入新扩展，避免重复
         cachedGallery = [...(cachedGallery || []).filter(item => item.source !== id), ...extensions];
         cachedSourceStatuses[id] = 'loaded';
@@ -141,7 +151,7 @@ const fetchCustomSource = async id => {
     notifyListeners();
 };
 
-// 注册一个自定义拓展库；相同 URL 复用已有 id，避免重复添加
+// 注册一个自定义扩展库；相同 URL 复用已有 id，避免重复添加
 // 1) 立即广播快照（新引用），侧边栏标签马上出现（黄灯 loading）
 // 2) 独立加载该库，完成后广播（绿灯 + 扩展卡片 / 红灯 + 失败提示）
 const addCustomSource = source => {
@@ -149,8 +159,14 @@ const addCustomSource = source => {
     const id = existing ? existing.id : `custom_${++customSourceCounter}`;
     if (existing) {
         existing.name = source.name;
+        existing.unsandboxed = source.unsandboxed === true;
     } else {
-        cachedCustomSources.push({id, name: source.name, url: source.url});
+        cachedCustomSources.push({
+            id,
+            name: source.name,
+            url: source.url,
+            unsandboxed: source.unsandboxed === true
+        });
     }
     cachedSourceStatuses[id] = 'loading';
     notifyListeners();
@@ -158,7 +174,7 @@ const addCustomSource = source => {
     return id;
 };
 
-// 删除一个自定义拓展库：移除注册、清掉状态与对应扩展，
+// 删除一个自定义扩展库：移除注册、清掉状态与对应扩展，
 // 立即广播（标签消失），再重拉一次所有源收尾
 const removeCustomSource = id => {
     const index = cachedCustomSources.findIndex(cs => cs.id === id);
@@ -574,6 +590,12 @@ class ExtensionLibrary extends React.PureComponent {
 
         const url = item.extensionURL ? item.extensionURL : extensionId;
         if (!item.disabled) {
+            // 自定义拓展库开启"非沙盒运行"时，加载扩展前确保其 URL 被信任；
+            // 项目重载会清空信任集合，这里按库设置重新信任
+            const customSource = cachedCustomSources.find(cs => cs.id === item.source);
+            if (customSource && customSource.unsandboxed && url) {
+                manuallyTrustExtension(url);
+            }
             if (this.props.vm.extensionManager.isExtensionLoaded(extensionId)) {
                 if (typeof this.props.onCategorySelected === 'function') {
                     this.props.onCategorySelected(extensionId);
@@ -630,7 +652,7 @@ class ExtensionLibrary extends React.PureComponent {
             return vm.extensionManager.isExtensionLoaded(item.extensionId);
         };
 
-        // 已注册的自定义拓展库像内置源一样出现在左侧栏与分组中
+        // 已注册的自定义扩展库像内置源一样出现在左侧栏与分组中
         const customTags = this.state.customSources.map(source => ({
             tag: source.id,
             intlLabel: source.name

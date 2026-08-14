@@ -53,6 +53,32 @@
     color: color-mix(in srgb, var(--text-primary) 65%, transparent);
 }
 
+.unsandboxed-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 0.5rem;
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+.unsandboxed-checkbox {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.unsandboxed-warning {
+    margin: 0 0 1rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    background: color-mix(in srgb, #f44336 10%, transparent);
+    color: var(--text-primary);
+    font-size: 0.8125rem;
+    line-height: 1.4;
+}
+
 .status {
     display: flex;
     align-items: center;

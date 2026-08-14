@@ -27,7 +27,8 @@ class CustomGalleryModal extends React.Component {
         // 注册后扩展库弹窗会自动重新加载该库并显示状态灯
         addCustomSource({
             name: gallery.name || 'Custom',
-            url: gallery.url
+            url: gallery.url,
+            unsandboxed: gallery.unsandboxed === true
         });
     }
 

@@ -32,6 +32,7 @@ class CustomExtensionModal extends React.Component {
             'handleSwitchToURL',
             'handleSwitchToText',
             'handleChangeText',
+            'handleChangeUnsandboxed',
             'handleDragOver',
             'handleDragLeave',
             'handleDrop'
@@ -41,7 +42,10 @@ class CustomExtensionModal extends React.Component {
             type: 'url',
             url: '',
             files: null,
-            text: ''
+            text: '',
+            // 非沙盒运行开关：默认关闭（沙盒开启）。
+            // 官方域名扩展不受此开关影响，始终自动非沙盒运行。
+            unsandboxed: false
         };
     }
 
@@ -122,7 +126,9 @@ class CustomExtensionModal extends React.Component {
         try {
             const urls = await this.getExtensionURLs();
 
-            if (this.state.type !== 'url') {
+            // 用户勾选了"非沙盒运行"时才手动信任；
+            // 官方域名扩展由 isTrustedExtensionUrl 自动信任，不受此开关影响
+            if (this.state.unsandboxed) {
                 for (const url of urls) {
                     manuallyTrustExtension(url);
                 }
@@ -136,6 +142,12 @@ class CustomExtensionModal extends React.Component {
             // eslint-disable-next-line no-alert
             alert(err);
         }
+    }
+
+    handleChangeUnsandboxed (e) {
+        this.setState({
+            unsandboxed: e.target.checked
+        });
     }
 
     handleSwitchToFile () {
@@ -203,6 +215,8 @@ class CustomExtensionModal extends React.Component {
                 text={this.state.text}
                 onChangeText={this.handleChangeText}
                 onLoadExtension={this.handleLoadExtension}
+                unsandboxed={this.state.unsandboxed}
+                onChangeUnsandboxed={this.handleChangeUnsandboxed}
                 onClose={this.handleClose}
             />
         );
