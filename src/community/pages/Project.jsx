@@ -286,11 +286,14 @@ const Project = () => {
     useEffect(() => {
         if (!project) return;
         setPageMeta({
-            title: `${project.title} by ${project.owner}`,
+            title: t('mw.community.project.pageTitle', '{title} by {owner}', {
+                title: project.title,
+                owner: project.owner
+            }),
             description: project.instructions || project.description,
             image: project.thumbUrl
         });
-    }, [project]);
+    }, [project, t]);
 
     const projectJsonUrl = project && project.projectJsonUrl;
     const projectJsonBytes = project && project.jsonBytes;
@@ -534,7 +537,8 @@ const Project = () => {
                         },
                         onDeny: () => {
                             setRoturModal(null);
-                            reply({id: data.id, ok: false, error: 'You cancelled this Bilup Accounts action'});
+                            reply({id: data.id, ok: false, error: t('mw.community.project.roturCancelled',
+                                'You cancelled this Bilup Accounts action')});
                         }
                     });
                 } else {
@@ -694,7 +698,8 @@ const Project = () => {
             setFeaturedProject(next);
             setActionError(null);
         } catch (e) {
-            setActionError(e.message || 'Could not update your featured project.');
+            setActionError(e.message || t('mw.community.project.featuredUpdateFailed',
+                'Could not update your featured project.'));
         } finally {
             setSavingFeatured(false);
         }
@@ -817,7 +822,11 @@ const Project = () => {
 
     const seeInsideHref = editorUrl({platformProject: project.id});
 
-    const commentTabs = project.repo ? ['Comments', 'History', 'Pull requests'] : ['Comments'];
+    const commentTabs = project.repo ? [
+        {id: 'Comments', labelId: 'mw.community.project.comments'},
+        {id: 'History', labelId: 'mw.community.project.history'},
+        {id: 'Pull requests', labelId: 'mw.community.project.pullRequests'}
+    ] : [{id: 'Comments', labelId: 'mw.community.project.comments'}];
     const sharedDate = formatDate(project.sharedAt || project.created);
     const visibility = project.visibility || (project.shared ? 'public' : 'private');
     const price = project.price || 0;
@@ -944,7 +953,8 @@ const Project = () => {
                                             fill={featuredProject === project.id ? 'currentColor' : 'none'}
                                         />
                                         {featuredProject === project.id ?
-                                            'Remove profile feature' : 'Feature on profile'}
+                                            t('mw.community.project.removeFeature', 'Remove profile feature') :
+                                            t('mw.community.project.featureOnProfile', 'Feature on profile')}
                                     </button>
                                 ) : null}
                                 {project.isOwner ? (
@@ -1281,12 +1291,12 @@ const Project = () => {
                     <div className={styles.commentsHead}>
                         {commentTabs.length > 1 ? (
                             <nav className={styles.tabs}>
-                                {commentTabs.map(name => (
+                                {commentTabs.map(item => (
                                     <button
-                                        key={name}
-                                        className={name === tab ? styles.tabActive : styles.tab}
-                                        onClick={() => setTab(name)}
-                                    >{t(`mw.community.project.tab.${name.toLowerCase()}`, name)}</button>
+                                        key={item.id}
+                                        className={item.id === tab ? styles.tabActive : styles.tab}
+                                        onClick={() => setTab(item.id)}
+                                    >{t(item.labelId, item.id)}</button>
                                 ))}
                             </nav>
                         ) : (
@@ -1539,7 +1549,14 @@ const PullList = ({id, canMerge, onChange}) => {
                     >
                         #{pull.index} {pull.title}
                     </button>
-                    <span className={styles.muted}> by {pull.user} · {pull.state}</span>
+                    <span className={styles.muted}>
+                        {intl.formatMessage({id: 'mw.community.project.pullByUser', defaultMessage: 'by {user}'}, {
+                            user: pull.user
+                        })}
+                        {' · '}
+                        {intl.formatMessage({id: `mw.community.project.pullState.${pull.state || 'open'}`,
+                            defaultMessage: pull.state || 'open'})}
+                    </span>
                 </li>
             ))}
         </ul>
