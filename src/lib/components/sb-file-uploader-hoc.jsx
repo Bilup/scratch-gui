@@ -269,8 +269,18 @@ const SBFileUploaderHOC = function (WrappedComponent) {
         // fileToUpload reference, so those objects can be garbage collected
         removeFileObjects () {
             if (this.inputElement) {
-                this.inputElement.value = null;
-                document.body.removeChild(this.inputElement);
+                try {
+                    // 某些 Android WebView 对 value 赋值 null 会抛 InvalidStateError，
+                    // 导致卸载流程中断。置为空字符串即可清空已选文件，且绝对安全。
+                    if (this.inputElement.value) {
+                        this.inputElement.value = '';
+                    }
+                } catch (e) {
+                    // 忽略：即使 value 赋值失败，下面也会从 DOM 移除该元素
+                }
+                if (this.inputElement.parentNode) {
+                    this.inputElement.parentNode.removeChild(this.inputElement);
+                }
             }
             this.inputElement = null;
             this.fileReader = null;

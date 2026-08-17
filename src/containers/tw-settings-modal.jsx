@@ -29,14 +29,24 @@ class UsernameModal extends React.Component {
     constructor (props) {
         super(props);
 
+        // 隐私模式/存储被禁用的 WebView 中 localStorage 访问会抛 SecurityError，
+        // 必须安全读取，否则设置弹窗组件渲染失败导致白屏。
+        const safeGetItem = key => {
+            try {
+                return localStorage.getItem(key);
+            } catch (e) {
+                return null;
+            }
+        };
+
         this.state = {
-            optimizeAnimations: localStorage.getItem('mw:optimize-animations') === 'true',
-            debugMode: localStorage.getItem('mw:debug-mode') === 'true',
-            showFPSCounter: localStorage.getItem('mw:show-fps-counter') === 'true',
-            viewCompiledMode: localStorage.getItem('mw:view-compiled-mode') === 'true',
-            storeThemeInProject: localStorage.getItem('mw:store-theme-in-project') === 'true',
-            enableStageResize: localStorage.getItem('mw:enable-stage-resize') !== 'false',
-            windowAnimation: localStorage.getItem('mw:window-animation') !== 'false',
+            optimizeAnimations: safeGetItem('mw:optimize-animations') === 'true',
+            debugMode: safeGetItem('mw:debug-mode') === 'true',
+            showFPSCounter: safeGetItem('mw:show-fps-counter') === 'true',
+            viewCompiledMode: safeGetItem('mw:view-compiled-mode') === 'true',
+            storeThemeInProject: safeGetItem('mw:store-theme-in-project') === 'true',
+            enableStageResize: safeGetItem('mw:enable-stage-resize') !== 'false',
+            windowAnimation: safeGetItem('mw:window-animation') !== 'false',
             hideOperatorArrows: getHideOperatorArrows(),
             vanillaPalette: getVanillaPalette(),
             squareStageCorners: getAppearanceSetting('square-stage-corners'),

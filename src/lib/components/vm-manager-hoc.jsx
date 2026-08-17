@@ -70,20 +70,6 @@ const vmManagerHOC = function (WrappedComponent) {
             }
         }
 
-        installGitProjectFileHooks () {
-            const vm = this.props.vm;
-            if (vm._mwGit_hooksInstalled) return;
-            vm._mwGit_hooksInstalled = true;
-
-            const originalSaveProjectZip = vm._saveProjectZip;
-            vm._saveProjectZip = (options = {}) => {
-                console.log('[VM Manager] _saveProjectZip called');
-                const zip = originalSaveProjectZip.call(vm, options);
-                const result = BrowserGit.exportGitToZip(zip);
-                console.log('[VM Manager] exportGitToZip result:', result);
-                return zip;
-            };
-        }
         loadProject () {
             console.log('[VM Manager] loadProject method called');
             // tw: stop when loading new project

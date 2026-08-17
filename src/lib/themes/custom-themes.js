@@ -834,9 +834,15 @@ class CustomThemeManager {
             console.error('Failed to save custom themes to storage:', e);
 
             if (e.name === 'QuotaExceededError') {
-                const currentData = localStorage.getItem(CUSTOM_THEMES_STORAGE_KEY);
-                if (currentData) {
-                    localStorage.setItem(`${CUSTOM_THEMES_STORAGE_KEY}_backup`, currentData);
+                // 备份现有数据时可能因隐私模式/存储被禁再次抛异常，必须兜住，
+                // 否则会把"备份失败"误当主错误抛出，且异常逃逸会导致流程中断
+                try {
+                    const currentData = localStorage.getItem(CUSTOM_THEMES_STORAGE_KEY);
+                    if (currentData) {
+                        localStorage.setItem(`${CUSTOM_THEMES_STORAGE_KEY}_backup`, currentData);
+                    }
+                } catch (_) {
+                    // 备份失败可忽略，主题仍在内存中
                 }
                 throw new Error('Storage quota exceeded - try deleting some themes');
             }
