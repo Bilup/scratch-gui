@@ -499,7 +499,23 @@ class VMApplier extends OpApplier {
         switch (type) {
         case OP.SPRITE_ADD: {
             if (runtime.getTargetById(payload.targetId)) return; // replay
-            const json = JSON.parse(JSON.stringify(payload.spriteJson));
+            let json;
+            try {
+                json = JSON.parse(JSON.stringify(payload.spriteJson));
+            } catch (e) {
+                // eslint-disable-next-line no-console
+                console.warn('[Collab] Dropping SPRITE_ADD op: malformed spriteJson payload', e);
+                return;
+            }
+            // Fail fast on structurally invalid sprite data before touching the VM,
+            // otherwise addSprite can mutate targets halfway and desync the room.
+            if (!json || typeof json !== 'object' ||
+                ('costumes' in json && !Array.isArray(json.costumes)) ||
+                ('sounds' in json && !Array.isArray(json.sounds))) {
+                // eslint-disable-next-line no-console
+                console.warn('[Collab] Dropping SPRITE_ADD op: invalid sprite structure');
+                return;
+            }
             this._attachAssets(json.costumes || []);
             this._attachAssets(json.sounds || []);
 

@@ -1,4 +1,5 @@
 import {getVanillaPalette} from './mw-vanilla-palette';
+import {getItem as getStorageItem} from './utils/safe-storage.js';
 
 let _ScratchBlocks = null;
 
@@ -22,7 +23,7 @@ const load = () => {
             try {
                 const operatorUtils = _ScratchBlocks.ScratchBlocks && _ScratchBlocks.ScratchBlocks.OperatorUtils;
                 if (operatorUtils) {
-                    operatorUtils.arrowsHidden = localStorage.getItem('mw:hide-operator-arrows') === 'true';
+                    operatorUtils.arrowsHidden = getStorageItem('mw:hide-operator-arrows') === 'true';
                 }
             } catch (e) {
                 // ignore

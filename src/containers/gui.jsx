@@ -65,6 +65,7 @@ import {initialize as initializeShortcuts, updateShortcuts} from
     '../lib/shortcuts/event-router.js';
 import startFractchLiveReload from '../lib/fractch-live';
 import smartSave from '../lib/mw/smart-save.js';
+import {getItem as getStorageItem} from '../lib/utils/safe-storage.js';
 
 const {RequestMetadata, setMetadata, unsetMetadata} = storage.scratchFetch;
 
@@ -83,7 +84,7 @@ class GUI extends React.Component {
         super(props);
         setIsScratchDesktop(this.props.isScratchDesktop);
         this.state = {
-            enableStageResize: localStorage.getItem('mw:enable-stage-resize') !== 'false'
+            enableStageResize: getStorageItem('mw:enable-stage-resize', 'true') !== 'false'
         };
         this.handleStorageChange = this.handleStorageChange.bind(this);
     }
@@ -154,7 +155,7 @@ class GUI extends React.Component {
 
     handleStorageChange () {
         try {
-            const newValue = localStorage.getItem('mw:enable-stage-resize') === 'true';
+            const newValue = getStorageItem('mw:enable-stage-resize', 'false') === 'true';
             this.setState({enableStageResize: newValue});
         } catch (e) {
             // ignore

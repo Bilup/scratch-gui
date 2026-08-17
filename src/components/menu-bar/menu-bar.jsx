@@ -1,6 +1,7 @@
 /* eslint-disable react/no-unused-prop-types */
 /* eslint-disable no-unused-vars */
 import classNames from 'classnames';
+import {getItem as getStorageItem} from '../../lib/utils/safe-storage.js';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
 import { defineMessages, FormattedMessage, injectIntl, intlShape } from 'react-intl';
@@ -727,7 +728,7 @@ class MenuBar extends React.Component {
     async gitAuth () {
         let token = '';
         try {
-            token = localStorage.getItem('mw:git-token') || '';
+            token = getStorageItem('mw:git-token') || '';
         } catch (e) {
             token = '';
         }

@@ -1,4 +1,5 @@
 import BlockItem from '../../lib/find-bar/BlockItem';
+import {getItem as getStorageItem} from '../../lib/utils/safe-storage.js';
 import {getCodeSearch, setFindBarApi} from '../../lib/find-bar/api';
 
 import Dropdown from './Dropdown';
@@ -90,7 +91,7 @@ export default class FindBarController {
         this.currentResultIndex = -1;
 
         this.isRegexMode = false;
-        this.isCaseSensitive = localStorage.getItem('sa-find-case-sensitive') === '1';
+        this.isCaseSensitive = getStorageItem('sa-find-case-sensitive') === '1';
 
         this.findBarOuter = null;
         this.findWrapper = null;

@@ -1,4 +1,5 @@
 import {getRotur, ensureScopes} from './rotur/client.js';
+import {getItem as getStorageItem} from './utils/safe-storage.js';
 
 const API = 'https://theme.bilup.org/api';
 const TOKEN_KEY = 'mw:warptheme-token';
@@ -15,7 +16,7 @@ const needsValidatorPermission = (status, data = {}) => (
 
 const readToken = () => {
     try {
-        return localStorage.getItem(TOKEN_KEY);
+        return getStorageItem(TOKEN_KEY);
     } catch (_) {
         return null;
     }

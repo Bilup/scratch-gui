@@ -1,3 +1,4 @@
+import {getItem as getStorageItem} from '../lib/utils/safe-storage.js';
 const SET_SHORTCUT = 'scratch-gui/shortcuts/SET_SHORTCUT';
 const RESET_SHORTCUT = 'scratch-gui/shortcuts/RESET_SHORTCUT';
 const RESET_ALL_SHORTCUTS = 'scratch-gui/shortcuts/RESET_ALL_SHORTCUTS';
@@ -7,7 +8,7 @@ const LOAD_SHORTCUTS = 'scratch-gui/shortcuts/LOAD_SHORTCUTS';
 const loadFromStorage = () => {
     try {
         console.log('Loading shortcuts from localStorage...');
-        const saved = localStorage.getItem('tw:shortcuts');
+        const saved = getStorageItem('tw:shortcuts');
         console.log('Saved shortcuts from localStorage:', saved);
         if (saved) {
             const parsed = JSON.parse(saved);

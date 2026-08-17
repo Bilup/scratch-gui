@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types';
+import {getItem as getStorageItem} from '../lib/utils/safe-storage.js';
 import React from 'react';
 import {connect} from 'react-redux';
 import bindAll from 'lodash.bindall';
@@ -13,7 +14,7 @@ const IGNORE_STORAGE_KEY = 'mw:ignore-project-theme-prompts';
 
 const loadIgnoreMap = () => {
     try {
-        const raw = localStorage.getItem(IGNORE_STORAGE_KEY);
+        const raw = getStorageItem(IGNORE_STORAGE_KEY);
         if (!raw) return {};
         const parsed = JSON.parse(raw);
         return parsed && typeof parsed === 'object' ? parsed : {};

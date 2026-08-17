@@ -1,3 +1,4 @@
+import {getItem as getStorageItem} from './safe-storage.js';
 const STORAGE_KEY = 'mw:is-scratch-desktop';
 
 /**
@@ -19,7 +20,7 @@ const isDesktopEnvironment = function () {
     // The desktop app shares localStorage with the editor (same origin), so if the
     // editor was opened here and detected the desktop app, remember it across pages.
     try {
-        if (window.localStorage && window.localStorage.getItem(STORAGE_KEY) === '1') {
+        if (window.localStorage && getStorageItem(STORAGE_KEY) === '1') {
             return true;
         }
     } catch (e) {

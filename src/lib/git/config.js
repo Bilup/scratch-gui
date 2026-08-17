@@ -1,11 +1,12 @@
 import {getDefaultAuthor, setDefaultAuthor} from './browser-git';
+import {getItem as getStorageItem} from '../utils/safe-storage.js';
 
 const DEFAULT_BRANCH_KEY = 'mw:git-default-branch';
 const AUTO_COMMIT_KEY = 'mw:git-autocommit';
 
 const readLocal = (key, fallback) => {
     try {
-        const value = localStorage.getItem(key);
+        const value = getStorageItem(key);
         return value === null ? fallback : value;
     } catch (e) {
         return fallback;

@@ -197,42 +197,18 @@
       "^!arraybuffer-loader!.*$": "<rootDir>/test/__mocks__/arrayBufferMock.js",
       "^!raw-loader!.*$": "<rootDir>/test/__mocks__/fileMock.js",
       "^scratch-audio$": "<rootDir>/node_modules/scratch-audio/src/index.js",
-      "^@turbowarp/scratch-svg-renderer$": "<rootDir>/node_modules/@turbowarp/scratch-svg-renderer"
+      "^@turbowarp/scratch-svg-renderer$": "<rootDir>/node_modules/@turbowarp/scratch-svg-renderer",
+      "^entities/decode$": "<rootDir>/node_modules/.pnpm/entities@6.0.1/node_modules/entities/dist/commonjs/decode.js",
+      "^entities/escape$": "<rootDir>/node_modules/.pnpm/entities@6.0.1/node_modules/entities/dist/commonjs/escape.js",
+      "^domhandler$": "<rootDir>/node_modules/.pnpm/domhandler@4.3.1/node_modules/domhandler/lib/index.js",
+      "^domhandler/lib/(.*)$": "<rootDir>/node_modules/.pnpm/domhandler@4.3.1/node_modules/domhandler/lib/$1"
     },
     "testEnvironment": "jsdom",
-    "testEnvironmentOptions": {
-      "customExportConditions": [
-        "node",
-        "require",
-        "default"
-      ]
-    },
     "transformIgnorePatterns": [
       "/node_modules/(?!(scratch-audio|scratch-parser|fractch|pify|isomorphic-git|rotur-sdk|@vernier/godirect|@chenglou/pretext)/)"
     ],
     "transform": {
-      "^.+\\.(js|jsx|mjs|cjs)$": [
-        "babel-jest",
-        {
-          "babelrc": false,
-          "configFile": false,
-          "presets": [
-            [
-              "@babel/preset-env",
-              {
-                "targets": {
-                  "node": "current"
-                }
-              }
-            ],
-            "@babel/preset-react"
-          ],
-          "plugins": [
-            "@babel/plugin-syntax-dynamic-import",
-            "@babel/plugin-transform-object-rest-spread"
-          ]
-        }
-      ]
+      "^.+\\.(js|jsx|mjs|cjs)$": "<rootDir>/test/helpers/babel7-jest-transformer.js"
     }
   },
   "pnpm": {

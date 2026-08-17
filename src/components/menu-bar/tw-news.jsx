@@ -1,4 +1,5 @@
 import React from 'react';
+import {getItem as getStorageItem} from '../../lib/utils/safe-storage.js';
 import {APP_NAME} from '../../lib/constants/brand';
 import {isScratchDesktop} from '../../lib/utils/isScratchDesktop';
 import CloseButton from '../close-button/close-button.jsx';
@@ -9,7 +10,7 @@ const NEWS_ID = 'vanilla-compatible-extendables';
 
 const getIsClosedInLocalStorage = () => {
     try {
-        return localStorage.getItem(LOCAL_STORAGE_KEY) === NEWS_ID;
+        return getStorageItem(LOCAL_STORAGE_KEY) === NEWS_ID;
     } catch (e) {
         return false;
     }

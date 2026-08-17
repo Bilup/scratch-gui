@@ -4,6 +4,7 @@
  */
 
 import {Theme, GUI_MAP} from './index.js';
+import {getItem as getStorageItem} from '../utils/safe-storage.js';
 import {mergeStoredAppearance} from './appearance.js';
 
 const CUSTOM_THEMES_STORAGE_KEY = 'tw:custom-themes';
@@ -763,7 +764,7 @@ class CustomThemeManager {
      */
     loadCustomThemes () {
         try {
-            const stored = localStorage.getItem(CUSTOM_THEMES_STORAGE_KEY);
+            const stored = getStorageItem(CUSTOM_THEMES_STORAGE_KEY);
             if (!stored) {
                 console.log('No custom themes found in storage');
                 return;
@@ -837,7 +838,7 @@ class CustomThemeManager {
                 // 备份现有数据时可能因隐私模式/存储被禁再次抛异常，必须兜住，
                 // 否则会把"备份失败"误当主错误抛出，且异常逃逸会导致流程中断
                 try {
-                    const currentData = localStorage.getItem(CUSTOM_THEMES_STORAGE_KEY);
+                    const currentData = getStorageItem(CUSTOM_THEMES_STORAGE_KEY);
                     if (currentData) {
                         localStorage.setItem(`${CUSTOM_THEMES_STORAGE_KEY}_backup`, currentData);
                     }
@@ -1404,7 +1405,7 @@ class CustomThemeManager {
      */
     getStorageInfo () {
         try {
-            const stored = localStorage.getItem(CUSTOM_THEMES_STORAGE_KEY);
+            const stored = getStorageItem(CUSTOM_THEMES_STORAGE_KEY);
             const size = stored ? new Blob([stored]).size : 0;
             const parsed = stored ? JSON.parse(stored) : [];
 
@@ -1423,7 +1424,7 @@ class CustomThemeManager {
         } catch (e) {
             return {
                 error: e.message,
-                hasData: !!localStorage.getItem(CUSTOM_THEMES_STORAGE_KEY)
+                hasData: !!getStorageItem(CUSTOM_THEMES_STORAGE_KEY)
             };
         }
     }

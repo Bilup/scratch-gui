@@ -1,3 +1,4 @@
+import {getItem as getStorageItem} from '../utils/safe-storage.js';
 /**
  * Persistent Bilup Accounts integration settings.
  * Presence text is fixed; users can toggle RPC and the edit-duration timer
@@ -22,7 +23,7 @@ const listeners = new Set();
 
 const readAll = () => {
     try {
-        const raw = localStorage.getItem(STORAGE_KEY);
+        const raw = getStorageItem(STORAGE_KEY);
         if (!raw) return {...DEFAULTS};
         const parsed = JSON.parse(raw);
         return {

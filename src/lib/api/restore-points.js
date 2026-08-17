@@ -1,4 +1,5 @@
 import {base64ToArrayBuffer} from '../utils/base64';
+import {getItem as getStorageItem} from '../utils/safe-storage.js';
 import JSZip from '@turbowarp/jszip';
 
 const TYPE_AUTOMATIC = 0;
@@ -714,7 +715,7 @@ const INTERVAL_STORAGE_KEY = 'tw:restore-point-interval';
 
 const readInterval = () => {
     try {
-        const stored = localStorage.getItem(INTERVAL_STORAGE_KEY);
+        const stored = getStorageItem(INTERVAL_STORAGE_KEY);
         if (stored) {
             const number = +stored;
             if (Number.isFinite(number)) {
@@ -723,7 +724,7 @@ const readInterval = () => {
         }
 
         // TODO: this is temporary, remove it after enough has passed for people that care to have migrated
-        const addonSettings = localStorage.getItem('tw:addons');
+        const addonSettings = getStorageItem('tw:addons');
         if (addonSettings) {
             const parsedAddonSettings = JSON.parse(addonSettings);
             const addonObject = parsedAddonSettings['tw-disable-restore-points'];

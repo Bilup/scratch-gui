@@ -1,3 +1,4 @@
+import {getItem as getStorageItem} from '../lib/utils/safe-storage.js';
 import {
     request,
     loadSession,
@@ -23,7 +24,7 @@ const editorUrl = ({clone, platformProject, projectJson, assets} = {}) => {
 
 const readStored = key => {
     try {
-        return localStorage.getItem(key);
+        return getStorageItem(key);
     } catch (e) {
         return null;
     }

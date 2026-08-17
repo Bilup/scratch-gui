@@ -1,4 +1,5 @@
 import React from 'react';
+import {getItem as getStorageItem} from '../utils/safe-storage.js';
 import PropTypes from 'prop-types';
 import {connect} from 'react-redux';
 import bindAll from 'lodash.bindall';
@@ -60,7 +61,7 @@ const setLocalStorage = (key, value) => {
 
 const getLocalStorage = key => {
     try {
-        return localStorage.getItem(key);
+        return getStorageItem(key);
     } catch (e) {
         // ignore
     }

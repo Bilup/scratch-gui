@@ -1,4 +1,5 @@
 import {getRotur, ensureScopes} from './client.js';
+import {getItem as getStorageItem} from '../utils/safe-storage.js';
 
 const GRANTS_KEY = 'mw:rotur-grants';
 
@@ -6,7 +7,7 @@ const GRANTS_KEY = 'mw:rotur-grants';
 // platform project id when known, else a name-based fallback.
 const readGrants = () => {
     try {
-        return JSON.parse(localStorage.getItem(GRANTS_KEY) || '{}') || {};
+        return JSON.parse(getStorageItem(GRANTS_KEY) || '{}') || {};
     } catch (_) {
         return {};
     }
@@ -63,7 +64,7 @@ const ACTIVITY_GRANTS_KEY = 'mw:rotur-activity-grants';
 
 const readActivityGrants = () => {
     try {
-        return JSON.parse(localStorage.getItem(ACTIVITY_GRANTS_KEY) || '{}') || {};
+        return JSON.parse(getStorageItem(ACTIVITY_GRANTS_KEY) || '{}') || {};
     } catch (_) {
         return {};
     }

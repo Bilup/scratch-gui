@@ -1,4 +1,5 @@
 import bowser from 'bowser';
+import {getItem as getStorageItem} from '../utils/safe-storage.js';
 import {getDefaultShortcuts, applyCustomShortcuts} from './registry.js';
 import WindowManager from '../../addons/window-system/window-manager.js';
 
@@ -93,7 +94,7 @@ const keyCodeToKey = {
 
 const loadCustomShortcuts = () => {
     try {
-        const saved = localStorage.getItem('tw:shortcuts');
+        const saved = getStorageItem('tw:shortcuts');
         if (saved) {
             const customShortcuts = JSON.parse(saved);
             shortcuts = applyCustomShortcuts(getDefaultShortcuts(), customShortcuts);

@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types';
+import {getItem as getStorageItem} from '../lib/utils/safe-storage.js';
 import React from 'react';
 import bindAll from 'lodash.bindall';
 import {connect} from 'react-redux';
@@ -63,7 +64,7 @@ const AUTO_COMMIT_KEY = 'mw:git-autocommit';
 
 const readLocal = (key, fallback) => {
     try {
-        const value = localStorage.getItem(key);
+        const value = getStorageItem(key);
         return value === null ? fallback : value;
     } catch (e) {
         return fallback;

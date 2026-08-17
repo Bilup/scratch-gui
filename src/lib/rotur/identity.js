@@ -1,3 +1,4 @@
+import {getItem as getStorageItem} from '../utils/safe-storage.js';
 import {
     restoreSession as roturRestore,
     login as roturLogin,
@@ -45,7 +46,7 @@ const subscribe = cb => {
 
 const readRoturToken = () => {
     try {
-        return localStorage.getItem(ROTUR_TOKEN_KEY);
+        return getStorageItem(ROTUR_TOKEN_KEY);
     } catch (_) {
         return null;
     }

@@ -1,3 +1,4 @@
+import {getItem as getStorageItem} from './utils/safe-storage.js';
 const APPEARANCE_SETTINGS = [
     {
         id: 'square-stage-corners',
@@ -36,7 +37,7 @@ const defaultValue = id => {
 
 const getAppearanceSetting = id => {
     try {
-        const stored = localStorage.getItem(storageKey(id));
+        const stored = getStorageItem(storageKey(id));
         return stored === null ? defaultValue(id) : stored === 'true';
     } catch (err) {
         return defaultValue(id);

@@ -1,4 +1,5 @@
 import classNames from 'classnames';
+import {getItem as getStorageItem} from '../../lib/utils/safe-storage.js';
 import bindAll from 'lodash.bindall';
 import PropTypes from 'prop-types';
 import React from 'react';
@@ -95,7 +96,7 @@ class LibraryComponent extends React.Component {
     readFavoritesFromStorage () {
         let data;
         try {
-            data = JSON.parse(localStorage.getItem(this.getFavoriteStorageKey()));
+            data = JSON.parse(getStorageItem(this.getFavoriteStorageKey()));
         } catch (error) {
             // ignore
         }

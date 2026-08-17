@@ -1,4 +1,5 @@
 import React, {useState, useEffect} from 'react';
+import {getItem as getStorageItem} from '../../lib/utils/safe-storage.js';
 import {useIntl} from '../../lib/tw-use-intl.jsx';
 import {Menu, Palette, Radio, Store, SwatchBook, User, Brush} from 'lucide-react';
 import {applyTheme, detectTheme} from '../../lib/themes/themePersistance.js';
@@ -32,7 +33,7 @@ const PROJECT_THEME_MODES = [
 ];
 const getProjectThemeMode = () => {
     try {
-        return localStorage.getItem(PROJECT_THEME_MODE_KEY) || 'all';
+        return getStorageItem(PROJECT_THEME_MODE_KEY) || 'all';
     } catch (e) {
         return 'all';
     }

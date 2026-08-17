@@ -5,11 +5,16 @@ import {createStore, combineReducers} from 'redux';
 import CollaborationContainer from '../../../src/containers/collaboration-container.jsx';
 import renderer from 'react-test-renderer';
 
-jest.mock('../../../src/lib/collaboration/index.js');
-jest.mock('../../../src/lib/toast-system.js');
+jest.mock('../../../src/lib/collaboration/index.js', () => ({
+    __esModule: true,
+    default: {
+        getInstance: jest.fn()
+    }
+}));
+jest.mock('../../../src/lib/notification-manager.js');
 
 import CollaborationService from '../../../src/lib/collaboration/index.js';
-import ToastSystem from '../../../src/lib/toast-system.js';
+import NotificationSystem from '../../../src/lib/notification-manager.js';
 
 const mockCollaborationService = {
     init: jest.fn(),
@@ -442,7 +447,7 @@ describe('CollaborationContainer', () => {
         expect(onSetRoomIdMock).toHaveBeenCalledWith(null);
         expect(onSetUsersMock).toHaveBeenCalledWith([]);
         expect(onSetErrorMock).toHaveBeenCalledWith('The host has left the collaboration room. The room has been closed.');
-        expect(ToastSystem.warning).toHaveBeenCalled();
+        expect(NotificationSystem.warning).toHaveBeenCalled();
     });
 
     test('handleConnectedToHost updates state when connected', () => {
@@ -552,7 +557,7 @@ describe('CollaborationContainer', () => {
         expect(onSetRoomIdMock).toHaveBeenCalledWith(null);
         expect(onSetRoomPrivacyMock).toHaveBeenCalledWith('public');
         expect(onSetUsersMock).toHaveBeenCalledWith([]);
-        expect(ToastSystem.info).toHaveBeenCalled();
+        expect(NotificationSystem.info).toHaveBeenCalled();
     });
 
     test('handleCancelConnection disconnects and clears state', () => {
