@@ -4,7 +4,9 @@ import VM from 'scratch-vm';
 import {STAGE_DISPLAY_SIZES} from '../lib/constants/layout-constants.js';
 import StageWrapperComponent from '../components/stage-wrapper/stage-wrapper.jsx';
 
-const StageWrapper = props => <StageWrapperComponent {...props} />;
+const StageWrapper = React.memo(props => <StageWrapperComponent {...props} />);
+
+StageWrapper.displayName = 'StageWrapper';
 
 StageWrapper.propTypes = {
     isRendererSupported: PropTypes.bool.isRequired,

@@ -38,6 +38,7 @@ const vmManagerHOC = function (WrappedComponent) {
             ]);
             this._loadTimeout = null;
             this._drawTimeout = null;
+            this._loadingPromise = null;
         }
         componentDidMount () {
             if (!this.props.vm.initialized) {
@@ -83,9 +84,23 @@ const vmManagerHOC = function (WrappedComponent) {
                 clearTimeout(this._drawTimeout);
                 this._drawTimeout = null;
             }
+            // Mark any in-flight load as cancelled so its .then() callbacks
+            // do not dispatch to an unmounted component.
+            this._loadingPromise = null;
         }
 
         loadProject () {
+            // Guard against concurrent loads: if a previous load is still in
+            // flight, quit the VM first (which cancels its work) and then let
+            // the new load proceed. The old promise is discarded so its
+            // callbacks won't fire on a stale VM state.
+            if (this._loadingPromise) {
+                if (process.env.DEBUG) {
+                    console.warn('[VM Manager] New project load requested while previous load is still in progress; cancelling previous load');
+                }
+                this.props.vm.quit();
+            }
+
             // tw: stop when loading new project
             if (process.env.DEBUG) {
                 // eslint-disable-next-line no-console
@@ -95,8 +110,16 @@ const vmManagerHOC = function (WrappedComponent) {
                     this.props.projectData instanceof ArrayBuffer ? this.props.projectData.byteLength : 'unknown');
             }
             this.props.vm.quit();
-            return this.props.vm.loadProject(this.props.projectData)
+            const promise = this.props.vm.loadProject(this.props.projectData)
                 .then(() => {
+                    // If a newer load has started (or the component unmounted),
+                    // discard this result — the VM is already in a different state.
+                    if (this._loadingPromise !== promise) {
+                        if (process.env.DEBUG) {
+                            console.warn('[VM Manager] Discarding stale project load result');
+                        }
+                        return;
+                    }
                     if (process.env.DEBUG) {
                         // eslint-disable-next-line no-console
                         console.log('[VM Manager] Project loaded successfully');
@@ -105,6 +128,7 @@ const vmManagerHOC = function (WrappedComponent) {
                     // Wrap in a setTimeout because skin loading in
                     // the renderer can be async.
                     this._loadTimeout = setTimeout(() => {
+                        if (this._loadingPromise !== promise) return;
                         if (process.env.DEBUG) {
                             // eslint-disable-next-line no-console
                             console.log('[VM Manager] Setting project as unchanged');
@@ -122,16 +146,22 @@ const vmManagerHOC = function (WrappedComponent) {
                         // Wrap in a setTimeout because skin loading in
                         // the renderer can be async.
                         this._drawTimeout = setTimeout(() => {
+                            if (this._loadingPromise !== promise) return;
                             this.props.vm.renderer.draw();
                             this._drawTimeout = null;
                         });
                     }
+                    this._loadingPromise = null;
                 })
                 .catch(e => {
+                    if (this._loadingPromise !== promise) return;
                     // eslint-disable-next-line no-console
                     console.error('[VM Manager] Project loading failed:', e);
                     this.props.onError(e);
+                    this._loadingPromise = null;
                 });
+            this._loadingPromise = promise;
+            return promise;
         }
         render () {
             const {

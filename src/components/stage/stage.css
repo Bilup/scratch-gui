@@ -21,7 +21,11 @@
     color-scheme: light;
     color: $text-primary-default;
 
-    transition: border-width 0.3s ease, width 0.3s ease, height 0.3s ease;
+    transition: border-width 0.3s ease;
+    /* Width and height are driven by the drag resizer and the stage-size
+       selector; CSS transitions on them add a 0.3 s lag that makes the
+       drag feel sluggish. The fullscreen border-width change is the only
+       transition we want to keep. */
 }
 
 .stage.no-animation {

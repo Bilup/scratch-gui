@@ -22,6 +22,12 @@ import {setHighQualityPenState} from '../reducers/tw';
 const colorPickerRadius = 20;
 const dragThreshold = 3; // Same as the block drag threshold
 
+// Throttle mouse position updates to ~60 Hz so the VM is not flooded with
+// input events on every single mousemove (which can fire at 200+ Hz on
+// high-refresh-rate displays). This significantly reduces CPU usage on low-end
+// devices without affecting input responsiveness.
+const MOUSE_THROTTLE_MS = 16; // ~60 fps
+
 class Stage extends React.Component {
     constructor (props) {
         super(props);
@@ -54,6 +60,7 @@ class Stage extends React.Component {
             colorInfo: null,
             question: null
         };
+        this._lastMouseMoveTime = 0;
         if (this.props.vm.renderer) {
             this.renderer = this.props.vm.renderer;
             this.canvas = this.renderer.canvas;
@@ -240,7 +247,13 @@ class Stage extends React.Component {
             canvasWidth: this.rect.width,
             canvasHeight: this.rect.height
         };
-        this.props.vm.postIOData('mouse', coordinates);
+        // Throttle mouse IO updates to ~60 Hz so the VM is not overwhelmed
+        // by the 200+ Hz mousemove events that modern browsers fire.
+        const now = Date.now();
+        if (now - this._lastMouseMoveTime >= MOUSE_THROTTLE_MS) {
+            this._lastMouseMoveTime = now;
+            this.props.vm.postIOData('mouse', coordinates);
+        }
     }
     onMouseUp (e) {
         const {x, y} = getEventXY(e);

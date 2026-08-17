@@ -65,6 +65,9 @@
     z-index: 2;
     pointer-events: auto;
     opacity: 0;
+    /* Promote to its own compositor layer so hover/active changes don't
+       trigger layout on the rest of the editor during drag. */
+    will-change: opacity;
 }
 
 .stage-pane-resizer::before {
@@ -250,7 +253,10 @@
 
     /* this will only ever be as wide as the stage */
     flex-basis: 0;
-    transition: width 0.3s ease, flex-basis 0.3s ease;
+    /* No transition on width / flex-basis during drag resizing — the resizer
+       updates position synchronously via requestAnimationFrame, so a CSS
+       transition would add a 0.3 s lag that makes the drag feel sluggish.
+       Fullscreen enter / exit is animated in stage-wrapper.css instead. */
 }
 
 .stage-and-target-wrapper.stage-hidden {

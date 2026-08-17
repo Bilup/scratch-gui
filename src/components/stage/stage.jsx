@@ -14,7 +14,7 @@ import {STAGE_DISPLAY_SIZES} from '../../lib/constants/layout-constants.js';
 import {getStageDimensions, getMinWidth} from '../../lib/utils/screen.js';
 import styles from './stage.css';
 
-const StageComponent = props => {
+const StageComponent = React.memo(props => {
     const {
         canvas,
         customStageSize,
@@ -155,7 +155,9 @@ const StageComponent = props => {
             ) : null}
         </React.Fragment>
     );
-};
+});
+
+StageComponent.displayName = 'StageComponent';
 StageComponent.propTypes = {
     canvas: PropTypes.instanceOf(Element).isRequired,
     customStageSize: PropTypes.shape({
