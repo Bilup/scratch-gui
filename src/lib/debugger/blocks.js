@@ -51,33 +51,43 @@ const patchBlockly = () => {
     const BlockSvg = ScratchBlocks.BlockSvg;
     const oldUpdateColour = BlockSvg.prototype.updateColour;
     BlockSvg.prototype.updateColour = function (...args) {
-        if (!this.isInsertionMarker() && this.type === 'procedures_call') {
-            const block = this.procCode_ && vm && vm.runtime.getAddonBlock(this.procCode_);
-            if (block) {
-                const theme = window.ReduxStore &&
-                    window.ReduxStore.getState().scratchGui.theme.theme;
-                const colors = theme && theme.getBlockColors().addons;
-                if (colors) {
-                    this.colour_ = colors.primary;
-                    this.colourSecondary_ = colors.secondary;
-                    this.colourTertiary_ = colors.tertiary;
-                    this.colourQuaternary_ = colors.quaternary;
+        try {
+            if (!this.isInsertionMarker() && this.type === 'procedures_call') {
+                const block = this.procCode_ && vm && vm.runtime.getAddonBlock(this.procCode_);
+                if (block) {
+                    const theme = window.ReduxStore &&
+                        window.ReduxStore.getState().scratchGui.theme.theme;
+                    const colors = theme && theme.getBlockColors().addons;
+                    if (colors) {
+                        this.colour_ = colors.primary;
+                        this.colourSecondary_ = colors.secondary;
+                        this.colourTertiary_ = colors.tertiary;
+                        this.colourQuaternary_ = colors.quaternary;
+                    }
+                    this.customContextMenu = null;
                 }
-                this.customContextMenu = null;
             }
+        } catch (e) {
+            // updateColour 是每次积木重绘都会调用的高频钩子，
+            // 一旦抛错会中断积木区渲染导致整个编辑器崩溃/卡死。
+            // 兜底回退到原始实现，保证积木区始终可用。
         }
         return oldUpdateColour.call(this, ...args);
     };
 
     const originalCreateAllInputs = ScratchBlocks.Blocks.procedures_call.createAllInputs_;
     ScratchBlocks.Blocks.procedures_call.createAllInputs_ = function (...args) {
-        const block = this.procCode_ && vm && vm.runtime.getAddonBlock(this.procCode_);
-        if (block && block.displayName) {
-            const originalProcCode = this.procCode_;
-            this.procCode_ = block.displayName;
-            const ret = originalCreateAllInputs.call(this, ...args);
-            this.procCode_ = originalProcCode;
-            return ret;
+        try {
+            const block = this.procCode_ && vm && vm.runtime.getAddonBlock(this.procCode_);
+            if (block && block.displayName) {
+                const originalProcCode = this.procCode_;
+                this.procCode_ = block.displayName;
+                const ret = originalCreateAllInputs.call(this, ...args);
+                this.procCode_ = originalProcCode;
+                return ret;
+            }
+        } catch (e) {
+            // 自定义块逻辑失败时回退到原始实现，避免积木区崩溃
         }
         return originalCreateAllInputs.call(this, ...args);
     };
