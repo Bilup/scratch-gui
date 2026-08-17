@@ -1,4 +1,5 @@
 import turbowarpCss from '!css-loader!../addons/addons/tab-styles/turbowarp.css';
+import {getItem as getStorageItem} from './utils/safe-storage.js';
 import scratchboxCss from '!css-loader!../addons/addons/tab-styles/scratchbox.css';
 import iconOnlyCss from '!css-loader!../addons/addons/tab-styles/icon-only.css';
 import textOnlyCss from '!css-loader!../addons/addons/tab-styles/text-only.css';
@@ -45,7 +46,7 @@ const getStyleSetting = id => {
     const group = findGroup(id);
     if (!group) return null;
     try {
-        const stored = localStorage.getItem(storageKey(id));
+        const stored = getStorageItem(storageKey(id));
         if (stored && isValidValue(group, stored)) {
             return stored;
         }
@@ -88,7 +89,7 @@ const getStyleSettings = () => Object.fromEntries(
 
 const getStoredStyleSettings = () => {
     try {
-        if (!STYLE_GROUPS.some(group => localStorage.getItem(storageKey(group.id)) !== null)) return null;
+        if (!STYLE_GROUPS.some(group => getStorageItem(storageKey(group.id)) !== null)) return null;
     } catch (err) {
         return null;
     }

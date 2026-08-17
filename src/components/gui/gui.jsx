@@ -1,4 +1,5 @@
 import classNames from 'classnames';
+import {getItem as getStorageItem} from '../../lib/utils/safe-storage.js';
 import omit from 'lodash.omit';
 import PropTypes from 'prop-types';
 import React, {useCallback, useEffect, useLayoutEffect, useRef, useState, useMemo} from 'react';
@@ -189,7 +190,7 @@ const GUIComponent = props => {
 
     const [windowAnimation, setWindowAnimation] = useState(() => {
         try {
-            return localStorage.getItem('mw:window-animation') !== 'false';
+            return getStorageItem('mw:window-animation') !== 'false';
         } catch (e) {
             return true;
         }
@@ -226,7 +227,7 @@ const GUIComponent = props => {
             return props.enableStageResize;
         }
         try {
-            return localStorage.getItem('mw:enable-stage-resize') !== 'false';
+            return getStorageItem('mw:enable-stage-resize') !== 'false';
         } catch (e) {
             return true;
         }
@@ -242,7 +243,7 @@ const GUIComponent = props => {
     useEffect(() => {
         const handleStorageChange = () => {
             try {
-                const newValue = localStorage.getItem('mw:enable-stage-resize') === 'true';
+                const newValue = getStorageItem('mw:enable-stage-resize') === 'true';
                 // 只有当props没有提供值时才从localStorage更新
                 if (props.enableStageResize === undefined) {
                     setEnableStageResize(newValue);

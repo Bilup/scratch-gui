@@ -1,3 +1,4 @@
+import {getItem as getStorageItem} from '../utils/safe-storage.js';
 // Recently chosen spotlight results, most-recent-first, bounded.
 
 const STORAGE_KEY = 'mw:spotlight-recents';
@@ -5,7 +6,7 @@ const RECENTS_MAX = 12;
 
 const getRecents = () => {
     try {
-        const value = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        const value = JSON.parse(getStorageItem(STORAGE_KEY));
         return Array.isArray(value) ? value.filter(entry => entry && entry.kind && entry.key) : [];
     } catch (e) {
         return [];

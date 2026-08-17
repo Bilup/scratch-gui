@@ -1,3 +1,4 @@
+import {getItem as getStorageItem} from './utils/safe-storage.js';
 const ZONES = [
     {
         id: 'left',
@@ -27,7 +28,7 @@ const STYLE_ID = 'mw-menu-bar-layout';
 
 const readJSON = (key, fallback) => {
     try {
-        const raw = localStorage.getItem(key);
+        const raw = getStorageItem(key);
         if (raw) return JSON.parse(raw);
     } catch (err) {
         // ignore

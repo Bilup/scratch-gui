@@ -36,6 +36,8 @@ const vmManagerHOC = function (WrappedComponent) {
             bindAll(this, [
                 'loadProject'
             ]);
+            this._loadTimeout = null;
+            this._drawTimeout = null;
         }
         componentDidMount () {
             if (!this.props.vm.initialized) {
@@ -70,22 +72,45 @@ const vmManagerHOC = function (WrappedComponent) {
             }
         }
 
+        componentWillUnmount () {
+            // Cancel pending post-load callbacks so nothing dispatches or
+            // touches the renderer after the GUI has been torn down.
+            if (this._loadTimeout) {
+                clearTimeout(this._loadTimeout);
+                this._loadTimeout = null;
+            }
+            if (this._drawTimeout) {
+                clearTimeout(this._drawTimeout);
+                this._drawTimeout = null;
+            }
+        }
+
         loadProject () {
-            console.log('[VM Manager] loadProject method called');
             // tw: stop when loading new project
-            console.log('[VM Manager] Quitting VM before loading project');
+            if (process.env.DEBUG) {
+                // eslint-disable-next-line no-console
+                console.log('[VM Manager] Quitting VM before loading project');
+                // eslint-disable-next-line no-console
+                console.log('[VM Manager] Loading project data, size:',
+                    this.props.projectData instanceof ArrayBuffer ? this.props.projectData.byteLength : 'unknown');
+            }
             this.props.vm.quit();
-            console.log('[VM Manager] Loading project data, size:', 
-                this.props.projectData instanceof ArrayBuffer ? this.props.projectData.byteLength : 'unknown');
             return this.props.vm.loadProject(this.props.projectData)
                 .then(() => {
-                    console.log('[VM Manager] Project loaded successfully');
+                    if (process.env.DEBUG) {
+                        // eslint-disable-next-line no-console
+                        console.log('[VM Manager] Project loaded successfully');
+                    }
                     this.props.onLoadedProject(this.props.loadingState, this.props.canSave);
                     // Wrap in a setTimeout because skin loading in
                     // the renderer can be async.
-                    setTimeout(() => {
-                        console.log('[VM Manager] Setting project as unchanged');
+                    this._loadTimeout = setTimeout(() => {
+                        if (process.env.DEBUG) {
+                            // eslint-disable-next-line no-console
+                            console.log('[VM Manager] Setting project as unchanged');
+                        }
                         this.props.onSetProjectUnchanged();
+                        this._loadTimeout = null;
                     });
 
                     // If the vm is not running, call draw on the renderer manually
@@ -94,13 +119,16 @@ const vmManagerHOC = function (WrappedComponent) {
                     // 2.0 runs monitors and shows updates (e.g. timer monitor)
                     // before the VM starts running other hat blocks.
                     if (!this.props.isStarted) {
-                        console.log('[VM Manager] VM not started, calling renderer.draw()');
                         // Wrap in a setTimeout because skin loading in
                         // the renderer can be async.
-                        setTimeout(() => this.props.vm.renderer.draw());
+                        this._drawTimeout = setTimeout(() => {
+                            this.props.vm.renderer.draw();
+                            this._drawTimeout = null;
+                        });
                     }
                 })
                 .catch(e => {
+                    // eslint-disable-next-line no-console
                     console.error('[VM Manager] Project loading failed:', e);
                     this.props.onError(e);
                 });

@@ -1,4 +1,5 @@
 import {BLOCKS_CUSTOM, Theme, ACCENT_DEFAULT, GUI_DEFAULT, BLOCKS_THREE, MENUBAR_ALIGN_DEFAULT} from './index.js';
+import {getItem as getStorageItem} from '../utils/safe-storage.js';
 import {customThemeManager, CustomTheme} from './custom-themes.js';
 import {applyGuiColors} from './guiHelpers.js';
 import {captureStoredAppearance, mergeStoredAppearance, applyAppearance} from './appearance.js';
@@ -71,7 +72,7 @@ const detectTheme = () => {
     };
 
     try {
-        const local = localStorage.getItem(STORAGE_KEY);
+        const local = getStorageItem(STORAGE_KEY);
         if (local === null) {
             return addStoredAppearance(systemPreferences);
         }
@@ -192,7 +193,7 @@ const persistTheme = theme => {
 
     let previous = null;
     try {
-        previous = localStorage.getItem(STORAGE_KEY);
+        previous = getStorageItem(STORAGE_KEY);
     } catch (e) {
         // ignore
     }

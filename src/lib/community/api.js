@@ -1,4 +1,5 @@
 import JSZip from '@turbowarp/jszip';
+import {getItem as getStorageItem} from '../utils/safe-storage.js';
 import {clearContentCache} from './cached-fetch.js';
 import {isGalleryExtensionUrl} from '../trusted-extension.js';
 
@@ -9,7 +10,7 @@ const ROTUR_TOKEN_KEY = 'mw:rotur-token';
 
 const loadRoturToken = () => {
     try {
-        return localStorage.getItem(ROTUR_TOKEN_KEY) || null;
+        return getStorageItem(ROTUR_TOKEN_KEY) || null;
     } catch (e) {
         return null;
     }
@@ -19,7 +20,7 @@ let exchangeInFlight = null;
 
 const loadSession = () => {
     try {
-        return localStorage.getItem(SESSION_KEY) || null;
+        return getStorageItem(SESSION_KEY) || null;
     } catch (e) {
         return null;
     }

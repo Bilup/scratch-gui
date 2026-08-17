@@ -1,4 +1,5 @@
 import React from 'react';
+import {getItem as getStorageItem} from '../lib/utils/safe-storage.js';
 import PropTypes from 'prop-types';
 import bindAll from 'lodash.bindall';
 import {defineMessages, injectIntl, intlShape} from 'react-intl';
@@ -98,7 +99,7 @@ class Backpack extends React.Component {
         const MIN_HEIGHT = DEFAULT_HEIGHT;
         let persistedHeight = null;
         try {
-            const raw = localStorage.getItem('mw:backpackHeight');
+            const raw = getStorageItem('mw:backpackHeight');
             const parsed = raw ? Number(raw) : null;
             if (Number.isFinite(parsed) && parsed >= MIN_HEIGHT) {
                 persistedHeight = parsed;

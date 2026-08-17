@@ -1,3 +1,4 @@
+import {getItem as getStorageItem} from '../utils/safe-storage.js';
 const GIT_HOST = 'https://git.bilup.org';
 const API_BASE = `${GIT_HOST}/api/v1`;
 const TOKEN_KEY = 'mw:git-token';
@@ -8,7 +9,7 @@ let cachedUsername = null;
 
 const readToken = () => {
     try {
-        return localStorage.getItem(TOKEN_KEY) || '';
+        return getStorageItem(TOKEN_KEY) || '';
     } catch (_) {
         return '';
     }

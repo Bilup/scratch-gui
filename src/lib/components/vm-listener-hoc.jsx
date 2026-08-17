@@ -1,4 +1,5 @@
 import bindAll from 'lodash.bindall';
+import {getItem as getStorageItem} from '../utils/safe-storage.js';
 import PropTypes from 'prop-types';
 import React from 'react';
 import VM from 'scratch-vm';
@@ -68,7 +69,7 @@ const PROJECT_THEME_IGNORE_STORAGE_KEY = 'mw:ignore-project-theme-prompts';
 
 const readIgnoreMap = () => {
     try {
-        const raw = localStorage.getItem(PROJECT_THEME_IGNORE_STORAGE_KEY);
+        const raw = getStorageItem(PROJECT_THEME_IGNORE_STORAGE_KEY);
         if (!raw) return {};
         const parsed = JSON.parse(raw);
         return parsed && typeof parsed === 'object' ? parsed : {};

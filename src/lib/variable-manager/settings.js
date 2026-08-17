@@ -1,4 +1,5 @@
 import EventTarget from '../../addons/event-target.js';
+import {getItem as getStorageItem} from '../utils/safe-storage.js';
 
 const STORAGE_PREFIX = 'mw:varmanager:';
 
@@ -88,7 +89,7 @@ const getSetting = id => {
     if (!definition) return null;
     let stored = null;
     try {
-        stored = localStorage.getItem(STORAGE_PREFIX + id);
+        stored = getStorageItem(STORAGE_PREFIX + id);
     } catch (e) {
         stored = null;
     }

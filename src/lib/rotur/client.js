@@ -1,4 +1,5 @@
 import {Rotur, resolvePermissions} from 'rotur-sdk';
+import {getItem as getStorageItem} from '../utils/safe-storage.js';
 import {
     getRoturSettings,
     formatActivityTitle,
@@ -35,7 +36,7 @@ const getClient = () => {
 
 const loadStoredToken = () => {
     try {
-        return localStorage.getItem(TOKEN_KEY);
+        return getStorageItem(TOKEN_KEY);
     } catch (_) {
         return null;
     }

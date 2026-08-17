@@ -1,4 +1,5 @@
 import LightningFS from '@isomorphic-git/lightning-fs';
+import {getItem as getStorageItem} from '../utils/safe-storage.js';
 import http from 'isomorphic-git/http/web';
 import git, {Errors} from 'isomorphic-git';
 import JSZip from 'jszip';
@@ -172,7 +173,7 @@ const stageAll = async (fs, dir, {onProgress} = {}) => {
 
 const getDefaultAuthor = () => {
     try {
-        const saved = JSON.parse(localStorage.getItem('mw:git-author') || 'null');
+        const saved = JSON.parse(getStorageItem('mw:git-author') || 'null');
         if (saved && typeof saved.name === 'string' && typeof saved.email === 'string') {
             return saved;
         }

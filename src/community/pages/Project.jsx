@@ -1,4 +1,5 @@
 import React, {useEffect, useState, useCallback, useMemo, useRef} from 'react';
+import {getItem as getStorageItem} from '../../lib/utils/safe-storage.js';
 import {useParams, Link, useNavigate} from 'react-router-dom';
 import {FormattedMessage} from 'react-intl';
 import {useIntl} from '../../lib/tw-use-intl.jsx';
@@ -94,7 +95,7 @@ const catColor = prefix => CATEGORY_COLORS[prefix] || 'var(--accent-strong)';
 const PROJECT_THEME_MODE_KEY = 'mw:project-theme-mode';
 const getProjectThemeMode = () => {
     try {
-        return localStorage.getItem(PROJECT_THEME_MODE_KEY) || 'all';
+        return getStorageItem(PROJECT_THEME_MODE_KEY) || 'all';
     } catch (e) {
         return 'all';
     }
@@ -567,8 +568,8 @@ const Project = () => {
             if (!frame || !frame.contentWindow) return;
             frame.contentWindow.postMessage({
                 type: 'mw:apply-theme',
-                theme: localStorage.getItem('tw:theme'),
-                customThemes: localStorage.getItem('tw:custom-themes')
+                theme: getStorageItem('tw:theme'),
+                customThemes: getStorageItem('tw:custom-themes')
             }, '*');
             if (!userLoading) {
                 frame.contentWindow.postMessage(userMessage, '*');

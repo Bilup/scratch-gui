@@ -219,7 +219,7 @@ class Blocks extends React.Component {
         const startTime = performance.now();
         this.workspace = this.ScratchBlocks.inject(this.blocks, workspaceConfig);
         const injectTime = performance.now() - startTime;
-        console.log(`🧩 Blocks workspace injected in ${injectTime.toFixed(2)}ms`);
+        if (process.env.DEBUG) console.log(`🧩 Blocks workspace injected in ${injectTime.toFixed(2)}ms`);
         AddonHooks.blocklyWorkspace = this.workspace;
 
         // Register buttons under new callback keys for creating variables,
@@ -380,18 +380,21 @@ class Blocks extends React.Component {
 
                 // Check for pending procedure returns request
                 if (this.props.vm && this.props.vm._pendingProcedureReturns) {
-                    console.log('Blocks: Detected pending procedure returns request, enabling...');
+                    if (process.env.DEBUG) {
+                        console.log('Blocks: Detected pending procedure returns request, enabling...');
+                    }
                     this.props.vm._pendingProcedureReturns = false;
 
                     // Enable procedure returns after workspace is ready
                     setTimeout(() => {
+                        if (this.unmounted) return;
                         this.handleEnableProcedureReturns();
 
                         // Also handle pending category selection
                         if (this.props.vm._pendingCategorySelection) {
                             const categoryId = this.props.vm._pendingCategorySelection;
                             this.props.vm._pendingCategorySelection = null;
-                            console.log('Blocks: Selecting pending category:', categoryId);
+                            if (process.env.DEBUG) console.log('Blocks: Selecting pending category:', categoryId);
                             this.handleCategorySelected(categoryId);
                         }
                     }, 100);
@@ -1457,13 +1460,14 @@ class Blocks extends React.Component {
     }
     handleEnableProcedureReturns () {
         if (!this.workspace || this.workspace.isDisposed) return;
-        console.log('handleEnableProcedureReturns called');
+        if (process.env.DEBUG) console.log('handleEnableProcedureReturns called');
         this.workspace.enableProcedureReturns();
         this.requestToolboxUpdate();
         
         // Force immediate toolbox refresh to show return blocks
         setTimeout(() => {
-            console.log('Executing delayed toolbox refresh');
+            if (this.unmounted || !this.workspace || this.workspace.isDisposed) return;
+            if (process.env.DEBUG) console.log('Executing delayed toolbox refresh');
             if (this.workspace.getFlyout) {
                 const flyout = this.workspace.getFlyout();
                 if (flyout && flyout.getWorkspace) {
@@ -1659,7 +1663,7 @@ const mapDispatchToProps = dispatch => ({
         dispatch(deactivateCustomProcedures(data));
     },
     onActivateBlocksTab: () => {
-        console.log('onActivateBlocksTab called');
+        if (process.env.DEBUG) console.log('onActivateBlocksTab called');
         dispatch(activateTab(BLOCKS_TAB_INDEX));
     },
     updateToolboxState: toolboxXML => {

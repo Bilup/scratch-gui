@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types';
+import {getItem as getStorageItem} from '../lib/utils/safe-storage.js';
 import React from 'react';
 import {defineMessages, injectIntl, intlShape} from 'react-intl';
 import bindAll from 'lodash.bindall';
@@ -33,7 +34,7 @@ class UsernameModal extends React.Component {
         // 必须安全读取，否则设置弹窗组件渲染失败导致白屏。
         const safeGetItem = key => {
             try {
-                return localStorage.getItem(key);
+                return getStorageItem(key);
             } catch (e) {
                 return null;
             }

@@ -1,4 +1,5 @@
 import React, {useState} from 'react';
+import {getItem as getStorageItem} from '../../lib/utils/safe-storage.js';
 import {FormattedMessage} from 'react-intl';
 import {Link} from 'react-router-dom';
 import {FlaskConical, X} from 'lucide-react';
@@ -9,7 +10,7 @@ const DISMISS_KEY = 'mw:beta-banner-dismissed';
 
 const wasDismissed = () => {
     try {
-        return localStorage.getItem(DISMISS_KEY) === 'true';
+        return getStorageItem(DISMISS_KEY) === 'true';
     } catch (e) {
         return false;
     }
