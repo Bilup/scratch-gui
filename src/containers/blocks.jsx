@@ -1129,6 +1129,38 @@ class Blocks extends React.Component {
         const useDeferredLoad = !!this.ScratchBlocks.Xml.clearWorkspaceAndLoadFromXmlDeferred &&
             (blockCount >= DEFERRED_WORKSPACE_LOAD_MIN_BLOCKS ||
                 Object.keys(this.workspace.blockDB_ || {}).length >= DEFERRED_WORKSPACE_LOAD_MIN_BLOCKS);
+        // Re-apply the workspace layout once the (possibly asynchronous) load
+        // finishes. The container may have been resized (stage zoom, tab switch,
+        // window resize) while the blocks were loading, which would otherwise
+        // leave the blocks area misaligned or clipped.
+        const relayoutAfterLoad = () => {
+            window.requestAnimationFrame(() => {
+                if (this.unmounted || !this.workspace || this.workspace.isDisposed) return;
+                if (!this.props.isVisible) return;
+                this.resizeBlocksWorkspace();
+            });
+        };
+        // A deferred (lazy) load that fails partway can leave the workspace
+        // cleared but only partially populated, which looks like the blocks
+        // area disappeared on big projects. Fall back to the synchronous
+        // full-XML loader so the blocks are always restored.
+        const fallbackToSyncLoad = () => {
+            this.deferredWorkspaceLoad = null;
+            if (this.workspace && this.workspace.cancelDeferredRender) {
+                this.workspace.cancelDeferredRender();
+            }
+            try {
+                const dom = this.ScratchBlocks.Xml.textToDom(data.xml);
+                this.ScratchBlocks.Xml.clearWorkspaceAndLoadFromXml(dom, this.workspace);
+            } catch (fallbackError) {
+                // Both load paths failed. Keep the error logged so it is
+                // debuggable, but don't crash the editor.
+                if (fallbackError.message) {
+                    fallbackError.message = `Workspace Update Fallback Error: ${fallbackError.message}`;
+                }
+                log.error(fallbackError);
+            }
+        };
         try {
             if (useDeferredLoad) {
                 const headerDom = this.ScratchBlocks.Xml.textToDom(data.headerXml || data.xml);
@@ -1138,6 +1170,7 @@ class Blocks extends React.Component {
                     {
                         onDone: () => {
                             this.deferredWorkspaceLoad = null;
+                            relayoutAfterLoad();
                         }
                     },
                     hasDescs ? data.blocks : undefined
@@ -1160,6 +1193,14 @@ class Blocks extends React.Component {
                 error.message = `Workspace Update Error: ${error.message}`;
             }
             log.error(error);
+            // The deferred loader clears the workspace up front, so an
+            // exception from it (e.g. malformed variables/comments/frames in a
+            // large project) would otherwise leave the blocks area blank. Rebuild
+            // from the full XML to restore the blocks instead of letting them
+            // disappear.
+            if (useDeferredLoad) {
+                fallbackToSyncLoad();
+            }
         }
         if (this.workspace.isDisposed) return;
         this.workspace.addChangeListener(this.props.vm.blockListener);
