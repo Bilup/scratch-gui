@@ -124,7 +124,7 @@ const fetchCustomSource = async id => {
         return;
     }
     try {
-        const res = await fetch(source.url);
+        const res = await fetchWithTimeout(source.url, {}, 10000);
         if (!res.ok) {
             throw new Error(`HTTP status ${res.status}`);
         }
@@ -190,6 +190,20 @@ const removeCustomSource = id => {
     fetchLibrary().catch(error => log.error(error));
 };
 
+/**
+ * Fetch with timeout to prevent hanging requests from blocking all extension sources
+ */
+const fetchWithTimeout = async (url, options = {}, timeoutMs = 10000) => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+        const response = await fetch(url, { ...options, signal: controller.signal });
+        return response;
+    } finally {
+        clearTimeout(timer);
+    }
+};
+
 const fetchLibrary = async () => {
     const emptyBanner = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAACXBIWXMAAAsTAAALEwEAmpwYAAADGWlDQ1BQaG90b3Nob3AgSUNDIHByb2ZpbGUAAHjaY2BgnuDo4uTKJMDAUFBUUuQe5BgZERmlwH6egY2BmYGBgYGBITG5uMAxIMCHgYGBIS8/L5UBA3y7xsDIwMDAcFnX0cXJlYE0wJpcUFTCwMBwgIGBwSgltTiZgYHhCwMDQ3p5SUEJAwNjDAMDg0hSdkEJAwNjAQMDg0h2SJAzAwNjCwMDE09JakUJAwMDg3N+QWVRZnpGiYKhpaWlgmNKflKqQnBlcUlqbrGCZ15yflFBflFiSWoKAwMD1A4GBgYGXpf8EgX3xMw8BUNTVQYqg4jIKAX08EGIIUByaVEZhMXIwMDAIMCgxeDHUMmwiuEBozRjFOM8xqdMhkwNTJeYNZgbme+y2LDMY2VmzWa9yubEtoldhX0mhwBHJycrZzMXM1cbNzf3RB4pnqW8xryH+IL5nvFXCwgJrBZ0E3wk1CisKHxYJF2UV3SrWJw4p/hWiRRJYcmjUhXSutJPZObIhsoJyp2V71HwUeRVvKA0RTlKRUnltepWtUZ1Pw1Zjbea+7QmaqfqWOsK6b7SO6I/36DGMMrI0ljS+LfJPdPDZivM+y0qLBOtfKwtbFRtRexY7L7aP3e47XjB6ZjzXpetruvdVrov9VjkudBrgfdCn8W+y/xW+a8P2Bq4N+hY8PmQW6HPwr5EMEUKRilFG8e4xUbF5cW3JMxO3Jx0Nvl5KlOaXLpNRlRmVdas7D059/KY8tULfAqLi2YXHy55WyZR7lJRWDmv6mz131q9uvj6SQ3HGn83G7Skt85ru94h2Ond1d59uJehz76/bsK+if8nO05pnXpiOu+M4JmzZj2aozW3ZN6+BVwLwxYtXvxxqcOyCcsfrjRe1br65lrddU3rb2402NSx+cFWq21Tt3/Y6btr1R6Oven7jh9QP9h56PURv6Obj4ufqD355LT3mS3nZM+3X/h0Ke7yqasW15bdEL3ZeuvrnfS7N+/7PDjwyPTx6qeKz2a+EHzZ9Zr5Td3bn+9LP3z6VPD53de8b+9+5P/88Lv4z7d/Vf//AwAqvx2K829RWwAAACBjSFJNAAB6JQAAgIMAAPn/AACA6QAAdTAAAOpgAAA6mAAAF2+SX8VGAAAAEUlEQVR42mL4zwAAAAD//wMAAgEBAJlUum0AAAAASUVORK5CYII=";
 
@@ -223,7 +237,7 @@ const fetchLibrary = async () => {
     // 并行加载所有扩展源，但每个源加载完成后立即更新
     await Promise.all([
         fetchAndAdd('tw', async () => {
-            const twRes = await fetch('https://extensions.turbowarp.org/generated-metadata/extensions-v0.json');
+            const twRes = await fetchWithTimeout('https://extensions.turbowarp.org/generated-metadata/extensions-v0.json', {}, 10000);
             if (!twRes.ok) {
                 console.warn(`TurboWarp extensions: HTTP status ${twRes.status}`);
                 return [];
@@ -267,7 +281,7 @@ const fetchLibrary = async () => {
             }));
         }),
         fetchAndAdd('mistium', async () => {
-            const mistiumRes = await fetch('https://extensions.mistium.com/generated-metadata/extensions-v0.json');
+            const mistiumRes = await fetchWithTimeout('https://extensions.mistium.com/generated-metadata/extensions-v0.json', {}, 10000);
             if (!mistiumRes.ok) {
                 console.warn(`Mistium extensions: HTTP status ${mistiumRes.status}`);
                 return [];
@@ -313,7 +327,7 @@ const fetchLibrary = async () => {
                 }));
         }),
         fetchAndAdd('sharkpool', async () => {
-            const sharkpoolRes = await fetch('https://sharkpools-extensions.vercel.app/Gallery%20Files/Extension-Keys.json');
+            const sharkpoolRes = await fetchWithTimeout('https://sharkpools-extensions.vercel.app/Gallery%20Files/Extension-Keys.json', {}, 10000);
             if (!sharkpoolRes.ok) {
                 console.warn(`SharkPool extensions: HTTP status ${sharkpoolRes.status}`);
                 return [];
@@ -376,7 +390,7 @@ const fetchLibrary = async () => {
                 }));
         }),
         fetchAndAdd('bilup', async () => {
-            const bilupRes = await fetch('https://extensions.bilup.org/generated-metadata/extensions-v0.json');
+            const bilupRes = await fetchWithTimeout('https://extensions.bilup.org/generated-metadata/extensions-v0.json', {}, 10000);
             if (!bilupRes.ok) {
                 console.warn(`Bilup extensions: HTTP status ${bilupRes.status}`);
                 return [];
@@ -419,7 +433,7 @@ const fetchLibrary = async () => {
             }));
         }),
         fetchAndAdd('ae', async () => {
-            const aeRes = await fetch('https://editors.astras.top/extensions/generated-metadata/extensions-v0.json');
+            const aeRes = await fetchWithTimeout('https://editors.astras.top/extensions/generated-metadata/extensions-v0.json', {}, 10000);
             if (!aeRes.ok) {
                 console.warn(`AE extensions: HTTP status ${aeRes.status}`);
                 return [];

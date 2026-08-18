@@ -797,12 +797,16 @@ export default async ({ addon, console, msg }) => {
     };
 
     // Also listen for project loaded events
-    vm.on('PROJECT_LOADED', () => {
+    const onProjectLoaded = () => {
         setTimeout(() => {
             renderFileList();
             if (vm.editingTarget) {
                 autoExpandCurrentFolder();
             }
         }, 500);
+    };
+    vm.on('PROJECT_LOADED', onProjectLoaded);
+    addon.self.addEventListener('disabled', () => {
+        vm.off('PROJECT_LOADED', onProjectLoaded);
     });
 };

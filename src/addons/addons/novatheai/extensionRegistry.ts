@@ -77,14 +77,18 @@ const creditToText = (credit: any) => {
   return String(credit);
 };
 
-const safeFetchJson = async <T>(url: string, fallback: T): Promise<T> => {
+const safeFetchJson = async <T>(url: string, fallback: T, timeoutMs = 10000): Promise<T> => {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, { signal: controller.signal });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     return await response.json();
   } catch (error) {
     console.warn("[Bilup Nova] Failed to fetch extension registry", url, error);
     return fallback;
+  } finally {
+    clearTimeout(timer);
   }
 };
 
