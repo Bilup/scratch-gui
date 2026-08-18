@@ -415,7 +415,7 @@ const Profile = () => {
                                 {isSelf ? (
                                     <a
                                         className={styles.followButton}
-                                        href="https://rotur.dev/me"
+                                        href="https://accounts.bilup.org/me"
                                         target="_blank"
                                         rel="noreferrer"
                                     >

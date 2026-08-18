@@ -6,21 +6,20 @@
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    flex-basis: 160px;
     position: relative;
-    height: 160px;
-    max-width: 160px;
-    margin: $space;
-    padding: 1rem 1rem 0 1rem;
+    width: 100%;
+    min-width: 0;
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     color: $text-primary;
-    background: $ui-white;
-    border-width: 2px;
+    background: $ui-primary;
+    border-width: 1px;
     border-style: solid;
     border-color: $ui-black-transparent;
-    border-radius: $space;
+    border-radius: 12px;
     text-align: center;
     cursor: pointer;
+    overflow: hidden;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
 }
 
 .library-item-extension {
@@ -33,8 +32,9 @@
 }
 
 .library-item:hover {
-    border-width: 2px;
     border-color: $looks-secondary;
+    box-shadow: 0 4px 12px color-mix(in srgb, $ui-black-transparent 60%, transparent);
+    transform: translateY(-2px);
 }
 
 .hidden {
@@ -48,18 +48,47 @@
 
 .disabled:hover {
     border-color: $ui-black-transparent;
+    box-shadow: none;
+    transform: none;
 }
 
 .library-item-image-container-wrapper {
-    height: 100px;
     width: 100%;
     position: relative;
 }
 
 .library-item-image-container {
-    position: absolute;
-    height: 100px;
+    position: relative;
     width: 100%;
+}
+
+.library-item-image {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    height: auto;
+    object-fit: cover;
+    object-position: center;
+    background: color-mix(in srgb, $text-primary 6%, $ui-primary);
+}
+
+/* Backdrop items: revert to original wider style */
+.library-item.backdrop {
+    grid-column: span 2;
+}
+.library-item.backdrop .library-item-image {
+    aspect-ratio: auto;
+    object-fit: contain;
+}
+
+/* Costume/Sprite items: show full image without cropping */
+.library-item:not(.backdrop):not(.sound) .library-item-image {
+    object-fit: contain;
+}
+
+/* Sound items: scale down to 80% */
+.library-item.sound {
+    transform: scale(1);
+    transform-origin: top center;
 }
 
 .library-item-inset-image-container {
@@ -84,19 +113,19 @@
     margin-right: 1rem;
 }
 
-.library-item-image {
-    max-width: 100%;
-    max-height: 100%;
-}
-
 .library-item-inset-image {
     width: 2.5rem;
 }
 
 .library-item-name {
-    width: 80%;
-    margin: 0.25rem 0;
-    text-align: center;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 12px 14px 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 1rem;
+    color: $text-primary;
 
     /*
         For truncating overflowing text gracefully
