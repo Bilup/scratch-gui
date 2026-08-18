@@ -66,7 +66,7 @@ export default async function ({ addon }) {
         return ogSaveJSON.call(this, ...args);
     }
     
-    vm.runtime.on("PROJECT_LOADED", () => {
+    const onProjectLoaded = () => {
         const storedOrder = findOrderingComment(true);
         if (storedOrder) {
             try {
@@ -82,6 +82,10 @@ export default async function ({ addon }) {
                 });
             }
         }
+    };
+    vm.runtime.on("PROJECT_LOADED", onProjectLoaded);
+    addon.self.addEventListener("disabled", () => {
+        vm.runtime.off("PROJECT_LOADED", onProjectLoaded);
     });
     
     function findOrderingComment(optParse) {

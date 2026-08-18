@@ -530,6 +530,10 @@ export default async function ({addon, console, msg}) {
     };
     vm.runtime.on('PROJECT_LOADED', onProjectChange);
     vm.runtime.on('TOOLBOX_EXTENSIONS_NEED_UPDATE', onProjectChange);
+    addon.self.addEventListener('disabled', () => {
+        vm.runtime.off('PROJECT_LOADED', onProjectChange);
+        vm.runtime.off('TOOLBOX_EXTENSIONS_NEED_UPDATE', onProjectChange);
+    });
 
     const originalStep = vm.runtime._step;
     vm.runtime._step = function (...args) {

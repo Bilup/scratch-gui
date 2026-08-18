@@ -117,6 +117,10 @@ export default async function ({ addon, console, msg }) {
             updateDisplay();
 
             let debounce;
+            const onProjectLoaded = () => {
+                isLoading = false;
+                updateDisplay();
+            };
             if (handler) {
                 vm.off("PROJECT_CHANGED", handler);
                 vm.runtime.off("PROJECT_LOADED", handler);
@@ -127,10 +131,7 @@ export default async function ({ addon, console, msg }) {
                 debounce = setTimeout(updateDisplay, 100);
             };
             vm.on("PROJECT_CHANGED", handler);
-            vm.runtime.on("PROJECT_LOADED", () => {
-                isLoading = false;
-                updateDisplay();
-            });
+            vm.runtime.on("PROJECT_LOADED", onProjectLoaded);
             
             if (addon.tab.redux) {
                 addon.tab.redux.addEventListener("statechanged", (e) => {
