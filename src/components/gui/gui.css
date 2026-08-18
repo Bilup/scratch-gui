@@ -255,8 +255,7 @@
     flex-basis: 0;
     /* No transition on width / flex-basis during drag resizing — the resizer
        updates position synchronously via requestAnimationFrame, so a CSS
-       transition would add a 0.3 s lag that makes the drag feel sluggish.
-       Fullscreen enter / exit is animated in stage-wrapper.css instead. */
+       transition would add a 0.3 s lag that makes the drag feel sluggish. */
 }
 
 .stage-and-target-wrapper.stage-hidden {

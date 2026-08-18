@@ -4,10 +4,7 @@
 
 .stage-wrapper {
     position: relative;
-    /* Only animate background-color changes (e.g. theme switch). The
-       fullscreen enter / exit size transition is handled by the FLIP
-       (First-Last-Invert-Play) animation in stage-wrapper.jsx —
-       transform + opacity, compositor-only, no layout work. */
+    /* Only animate background-color changes (e.g. theme switch). */
     transition: background-color 0.3s ease;
 }
 
@@ -25,7 +22,7 @@
 }
 
 /* ------------------------------------------------------------------ */
-/* Fullscreen layout (no CSS animation — FLIP handles it in JS)        */
+/* Fullscreen layout (no animation)                                    */
 /* ------------------------------------------------------------------ */
 
 .stage-wrapper.full-screen {
@@ -40,7 +37,6 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    opacity: 1;
 }
 
 /* ------------------------------------------------------------------ */
