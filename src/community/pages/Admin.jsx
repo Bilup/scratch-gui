@@ -5,7 +5,7 @@ import {Flag, User, FolderOpen, Ban, ShieldCheck, BarChart3, AlertTriangle, Puzz
 import api, {projectUrl, embedUrl} from '../api';
 import {useUser} from '../UserContext.jsx';
 import Avatar from '../components/Avatar.jsx';
-import {timeAgo, formatBytes} from '../format';
+import {formatDateTime, formatBytes} from '../format';
 import useLatest from '../use-latest.js';
 import styles from './Admin.module.css';
 
@@ -1167,9 +1167,9 @@ const Admin = () => {
                                                     )}
                                                 </span>
                                                 <span className={styles.rowMeta}>
-                                                    {t('mw.community.admin.reportedBy', 'Reported by @{reporter} · {time} ago', {
+                                                    {t('mw.community.admin.reportedBy', 'Reported by @{reporter} · {time}', {
                                                         reporter: report.reporter,
-                                                        time: timeAgo(report.created)
+                                                        time: formatDateTime(report.created)
                                                     })}
                                                     {report.context ? ` · ${t('mw.community.admin.inContext', 'in {context}', {context: report.context})}` : ''}
                                                 </span>
@@ -1250,9 +1250,9 @@ const Admin = () => {
                                             <div className={styles.rowInfo}>
                                                 <span className={styles.rowTitle}>{`@${ban.username}`}</span>
                                                 <span className={styles.rowMeta}>
-                                                    {t('mw.community.admin.bannedBy', 'Banned by @{by} · {time} ago', {
+                                                    {t('mw.community.admin.bannedBy', 'Banned by @{by} · {time}', {
                                                         by: ban.by,
-                                                        time: timeAgo(ban.created)
+                                                        time: formatDateTime(ban.created)
                                                     })}
                                                     {ban.reason ? ` · ${ban.reason}` : ''}
                                                 </span>

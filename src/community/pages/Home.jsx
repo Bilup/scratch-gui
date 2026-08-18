@@ -12,7 +12,7 @@ import NewsItem from '../components/NewsItem.jsx';
 import logo from '../assets/bilup-logo.svg';
 import styles from './Home.module.css';
 
-// Format a timestamp as "YYYY/MM/DD HH:mm" (e.g. 2026/08/07 14:30).
+// Format a timestamp as "YYYY-MM-DD HH:mm" (e.g. 2026-08-07 14:30).
 // Defined locally (rather than imported) to avoid depending on a newly-added
 // named export in a shared chunk, which browsers may cache as an older version.
 const formatDateTime = ms => {
@@ -20,7 +20,7 @@ const formatDateTime = ms => {
     const d = new Date(ms);
     if (Number.isNaN(d.getTime())) return '';
     const pad = n => String(n).padStart(2, '0');
-    return `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
 
 const ACTIVITY_ICONS = {
