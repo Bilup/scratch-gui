@@ -21,11 +21,9 @@
     color-scheme: light;
     color: $text-primary-default;
 
-    transition: border-width 0.3s ease, width 0.3s ease, height 0.3s ease;
-}
-
-.stage.no-animation {
-    transition: none !important;
+    /* Width and height are driven by the drag resizer and the stage-size
+       selector; CSS transitions on them add a 0.3 s lag that makes the
+       drag feel sluggish. */
 }
 
 .stage.full-screen {
@@ -61,8 +59,6 @@ stage doesn't "spill" out from under its rounded corners. instead, shift these o
     left: $stage-standard-border-width;
 
     pointer-events: none;
-
-    transition: top 0.3s ease, left 0.3s ease;
 }
 
 .stage-overlays.full-screen {

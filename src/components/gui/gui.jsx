@@ -34,17 +34,8 @@ import DragLayer from '../../containers/drag-layer.jsx';
 import ConnectionModal from '../../containers/connection-modal.jsx';
 import CollaborationContainer from '../../containers/collaboration-container.jsx';
 import CollabLoader from '../collab-loader/collab-loader.jsx';
-import TelemetryModal from '../telemetry-modal/telemetry-modal.jsx';
-import TWUsernameModal from '../../containers/tw-username-modal.jsx';
-import TWSettingsModal from '../../containers/tw-settings-modal.jsx';
 import TWSecurityManager from '../../containers/tw-security-manager.jsx';
-import TWCustomExtensionModal from '../../containers/tw-custom-extension-modal.jsx';
-import CustomGalleryModal from '../../containers/custom-gallery-modal.jsx';
 import TWRestorePointManager from '../../containers/tw-restore-point-manager.jsx';
-import TWFontsModal from '../../containers/tw-fonts-modal.jsx';
-import MWAssetsModal from '../../containers/mw-assets-modal.jsx';
-import MWProjectMetadataModal from '../../containers/mw-project-metadata-modal.jsx';
-import TWDebugger from '../../containers/tw-debugger.jsx';
 import TWUnknownPlatformModal from '../../containers/tw-unknown-platform-modal.jsx';
 import TWInvalidProjectModal from '../../containers/tw-invalid-project-modal.jsx';
 import MWExtensionManagerModal from '../../containers/mw-extension-manager-modal.jsx';
@@ -52,6 +43,7 @@ import MWHelpModal from '../../containers/mw-help-modal.jsx';
 import MWProjectThemeModal from '../../containers/mw-project-theme-modal.jsx';
 import RoturSession from '../../containers/rotur-session.jsx';
 import RoturExtensionHost from '../../containers/rotur-extension-host.jsx';
+import CustomGalleryModal from '../../containers/custom-gallery-modal.jsx';
 import RoturLoginModal from '../mw-rotur-login-modal/rotur-login-modal.jsx';
 import {closeRoturLoginModal} from '../../reducers/modals.js';
 import SimpleDialog from '../../containers/simple-dialog.jsx';
@@ -79,6 +71,18 @@ const FractchWorkspace = React.lazy(() => import('../mw-fractch-workspace/fractc
 // jszip). Lazy load it so it does not slow down the first editor load; it is
 // only mounted when the user actually opens the git panel.
 const TWGitModal = React.lazy(() => import('../../containers/mw-git-modal.jsx'));
+
+// Heavy modal / panel components that are not shown on the initial editor
+// load. Lazy-loading them removes their code (and transitive dependencies)
+// from the main bundle, shrinking the first-paint JavaScript payload.
+const TWSettingsModal = React.lazy(() => import('../../containers/tw-settings-modal.jsx'));
+const TWCustomExtensionModal = React.lazy(() => import('../../containers/tw-custom-extension-modal.jsx'));
+const TWFontsModal = React.lazy(() => import('../../containers/tw-fonts-modal.jsx'));
+const MWAssetsModal = React.lazy(() => import('../../containers/mw-assets-modal.jsx'));
+const MWProjectMetadataModal = React.lazy(() => import('../../containers/mw-project-metadata-modal.jsx'));
+const TWDebugger = React.lazy(() => import('../../containers/tw-debugger.jsx'));
+const TWUsernameModal = React.lazy(() => import('../../containers/tw-username-modal.jsx'));
+const TelemetryModal = React.lazy(() => import('../telemetry-modal/telemetry-modal.jsx'));
 
 const messages = defineMessages({
     addExtension: {
@@ -925,18 +929,40 @@ const GUIComponent = props => {
             <MWExtensionManagerModal />
             <MWHelpModal />
             <MWProjectThemeModal />
-            {usernameModalVisible && <TWUsernameModal visible={usernameModalVisible} />}
-            {settingsModalVisible && (
-                <TWSettingsModal
-                    isRtl={isRtl}
-                    visible={settingsModalVisible}
-                />
+            {usernameModalVisible && (
+                <React.Suspense fallback={null}>
+                    <TWUsernameModal visible={usernameModalVisible} />
+                </React.Suspense>
             )}
-            {customExtensionModalVisible && <TWCustomExtensionModal />}
+            {settingsModalVisible && (
+                <React.Suspense fallback={null}>
+                    <TWSettingsModal
+                        isRtl={isRtl}
+                        visible={settingsModalVisible}
+                    />
+                </React.Suspense>
+            )}
+            {customExtensionModalVisible && (
+                <React.Suspense fallback={null}>
+                    <TWCustomExtensionModal />
+                </React.Suspense>
+            )}
             {customGalleryModalVisible && <CustomGalleryModal />}
-            {fontsModalVisible && <TWFontsModal />}
-            {assetsModalVisible && <MWAssetsModal />}
-            {projectMetadataModalVisible && <MWProjectMetadataModal />}
+            {fontsModalVisible && (
+                <React.Suspense fallback={null}>
+                    <TWFontsModal />
+                </React.Suspense>
+            )}
+            {assetsModalVisible && (
+                <React.Suspense fallback={null}>
+                    <MWAssetsModal />
+                </React.Suspense>
+            )}
+            {projectMetadataModalVisible && (
+                <React.Suspense fallback={null}>
+                    <MWProjectMetadataModal />
+                </React.Suspense>
+            )}
             {unknownPlatformModalVisible && <TWUnknownPlatformModal />}
             {invalidProjectModalVisible && <TWInvalidProjectModal />}
             <React.Suspense fallback={null}>
@@ -1049,18 +1075,22 @@ const GUIComponent = props => {
                         // style={minDimensions}
                         {...componentProps}
                     >
-                        <TWDebugger />
+                        <React.Suspense fallback={null}>
+                            <TWDebugger />
+                        </React.Suspense>
                         {telemetryModalVisible ? (
-                    <TelemetryModal
-                        isRtl={isRtl}
-                        isTelemetryEnabled={isTelemetryEnabled}
-                        onCancel={onTelemetryModalCancel}
-                        onOptIn={onTelemetryModalOptIn}
-                        onOptOut={onTelemetryModalOptOut}
-                        onRequestClose={onRequestCloseTelemetryModal}
-                        onShowPrivacyPolicy={onShowPrivacyPolicy}
-                    />
-                ) : null}
+                            <React.Suspense fallback={null}>
+                                <TelemetryModal
+                                    isRtl={isRtl}
+                                    isTelemetryEnabled={isTelemetryEnabled}
+                                    onCancel={onTelemetryModalCancel}
+                                    onOptIn={onTelemetryModalOptIn}
+                                    onOptOut={onTelemetryModalOptOut}
+                                    onRequestClose={onRequestCloseTelemetryModal}
+                                    onShowPrivacyPolicy={onShowPrivacyPolicy}
+                                />
+                            </React.Suspense>
+                        ) : null}
                 {loading ? (
                     <Loader isFullScreen />
                 ) : null}

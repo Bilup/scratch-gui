@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
 import classNames from 'classnames';
 import VM from 'scratch-vm';
 
@@ -25,28 +25,32 @@ const StageWrapperComponent = function (props) {
         vm
     } = props;
 
-    const [isExitingFullScreen, setIsExitingFullScreen] = useState(false);
+    // Box.componentRef expects a callback, not a ref object.
+    const wrapperElRef = useRef(null);
+    const handleWrapperRef = useCallback((node) => {
+        wrapperElRef.current = node;
+    }, []);
     const wasFullScreenRef = useRef(false);
 
-    useEffect(() => {
-        if (isFullScreen) {
-            wasFullScreenRef.current = true;
-            setIsExitingFullScreen(false);
-        } else if (wasFullScreenRef.current) {
-            // Only play the exit animation when we are actually leaving fullscreen.
-            wasFullScreenRef.current = false;
-            setIsExitingFullScreen(true);
-            const timer = setTimeout(() => {
-                setIsExitingFullScreen(false);
-            }, 250);
-            return () => clearTimeout(timer);
-        } else {
-            // Initial mount while not fullscreen: do not trigger the exit animation.
-            // Otherwise the stage wrapper briefly becomes a fixed fullscreen overlay
-            // on page load, which can leave the stage stuck / flickering.
-            setIsExitingFullScreen(false);
+    // Full-screen layout class. Toggled synchronously with the `isFullScreen`
+    // prop — no enter / exit animation.
+    const [isFullScreenLayout, setIsFullScreenLayout] = useState(false);
+
+    // React to fullscreen toggles
+    useLayoutEffect(() => {
+        if (isFullScreen !== wasFullScreenRef.current) {
+            wasFullScreenRef.current = isFullScreen;
+            setIsFullScreenLayout(isFullScreen);
         }
     }, [isFullScreen]);
+
+    // Handle initial mount: sync layout state without animation.
+    useEffect(() => {
+        if (isFullScreen && !wasFullScreenRef.current) {
+            wasFullScreenRef.current = true;
+            setIsFullScreenLayout(true);
+        }
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     return (
         <Box
@@ -54,13 +58,13 @@ const StageWrapperComponent = function (props) {
                 styles.stageWrapper,
                 {
                     [styles.embedded]: isEmbedded,
-                    [styles.fullScreen]: isFullScreen || isExitingFullScreen,
-                    [styles.exitingFullScreen]: isExitingFullScreen,
+                    [styles.fullScreen]: isFullScreenLayout,
                     [styles.loading]: loading,
-                    [styles.offsetControls]: !(isEmbedded || isFullScreen || isExitingFullScreen)
+                    [styles.offsetControls]: !(isEmbedded || isFullScreenLayout)
                 }
             )}
             dir={isRtl ? 'rtl' : 'ltr'}
+            componentRef={handleWrapperRef}
         >
             <Box className={styles.stageMenuWrapper}>
                 <StageHeader
