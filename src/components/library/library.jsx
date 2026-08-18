@@ -4,6 +4,7 @@ import bindAll from 'lodash.bindall';
 import PropTypes from 'prop-types';
 import React from 'react';
 import {defineMessages, injectIntl, intlShape} from 'react-intl';
+import {Search} from 'lucide-react';
 
 import LibraryItem from '../../containers/library-item.jsx';
 import Modal from '../../containers/windowed-modal.jsx';
@@ -13,6 +14,13 @@ import TagButton from '../../containers/tag-button.jsx';
 import Spinner from '../spinner/spinner.jsx';
 import Separator from '../tw-extension-separator/separator.jsx';
 import RemovedTrademarks from '../tw-removed-trademarks/removed-trademarks.jsx';
+import {
+    ModalSidebar,
+    ModalSidebarGroup,
+    ModalSidebarGroupHeader,
+    ModalSidebarItem,
+    ModalSidebarLayout
+} from '../modal-sidebar/modal-sidebar.jsx';
 import {APP_NAME} from '../../lib/constants/brand.js';
 
 import styles from './library.css';
@@ -256,11 +264,16 @@ class LibraryComponent extends React.Component {
     setFilteredDataRef (ref) {
         this.filteredDataRef = ref;
     }
+    labelOf (tag) {
+        if (typeof tag.intlLabel === 'string') return tag.intlLabel;
+        return this.props.intl.formatMessage(tag.intlLabel);
+    }
     render () {
         const filteredData = this.state.canDisplay && this.props.data && this.getFilteredData();
+        const sidebarTags = [ALL_TAG, ...(this.props.tags || [])];
         return (
             <Modal
-                fullScreen
+                className={styles.libraryModalContent}
                 contentLabel={this.props.title}
                 id={this.props.id}
                 visible={this.props.visible}
@@ -268,103 +281,107 @@ class LibraryComponent extends React.Component {
                 width={1000}
                 height={750}
             >
-                <div className={styles.libraryModalContent}>
-                    {(this.props.filterable || this.props.tags) && (
-                        <div className={styles.filterBar}>
-                            {this.props.filterable && (
-                                <Filter
-                                    className={classNames(
-                                        styles.filterBarItem,
-                                        styles.filter
-                                    )}
-                                    filterQuery={this.state.filterQuery}
-                                    inputClassName={styles.filterInput}
-                                    placeholderText={this.props.intl.formatMessage(messages.filterPlaceholder)}
-                                    onChange={this.handleFilterChange}
-                                    onClear={this.handleFilterClear}
-                                />
-                            )}
-                            {this.props.filterable && this.props.tags && (
-                                <Divider className={classNames(styles.filterBarItem, styles.divider)} />
-                            )}
-                            {this.props.tags &&
-                                <div className={styles.tagWrapper}>
-                                    {tagListPrefix.concat(this.props.tags).map((tagProps, id) => (
-                                        <TagButton
-                                            active={this.state.selectedTag === tagProps.tag.toLowerCase()}
-                                            className={classNames(
-                                                styles.filterBarItem,
-                                                styles.tagButton,
-                                                tagProps.className
-                                            )}
-                                            key={`tag-button-${id}`}
-                                            onClick={this.handleTagClick}
-                                            {...tagProps}
-                                        />
-                                    ))}
-                                </div>
-                            }
-                        </div>
+                <ModalSidebarLayout className={styles.layout}>
+                    {this.props.tags && (
+                        <ModalSidebar
+                            ariaLabel={this.props.title}
+                            width="wide"
+                        >
+                            <ModalSidebarGroup>
+                                <ModalSidebarGroupHeader label={this.props.title} />
+                                {sidebarTags.map(tag => (
+                                    <ModalSidebarItem
+                                        key={tag.tag}
+                                        label={this.labelOf(tag)}
+                                        selected={this.state.selectedTag === tag.tag.toLowerCase()}
+                                        onClick={() => this.handleTagClick(tag.tag)}
+                                    />
+                                ))}
+                            </ModalSidebarGroup>
+                        </ModalSidebar>
                     )}
-                    <div
-                        className={classNames(styles.libraryScrollGrid, {
-                            [styles.withFilterBar]: this.props.filterable || this.props.tags
-                        })}
-                        ref={this.setFilteredDataRef}
-                    >
-                        {filteredData && this.getFilteredData().map((dataItem, index) => (
-                            dataItem === '---' ? (
-                                <Separator key={index} />
-                            ) : (
-                                <LibraryItem
-                                    bluetoothRequired={dataItem.bluetoothRequired}
-                                    collaborator={dataItem.collaborator}
-                                    description={dataItem.description}
-                                    disabled={dataItem.disabled}
-                                    extensionId={dataItem.extensionId}
-                                    href={dataItem.href}
-                                    featured={dataItem.featured}
-                                    hidden={dataItem.hidden}
-                                    iconMd5={dataItem.costumes ? dataItem.costumes[0].md5ext : dataItem.md5ext}
-                                    iconRawURL={dataItem.rawURL}
-                                    icons={dataItem.costumes}
-                                    id={index}
-                                    incompatibleWithScratch={dataItem.incompatibleWithScratch}
-                                    favorite={this.state.favorites.includes(dataItem[this.props.persistableKey])}
-                                    onFavorite={this.handleFavorite}
-                                    insetIconURL={dataItem.insetIconURL}
-                                    internetConnectionRequired={dataItem.internetConnectionRequired}
-                                    isPlaying={this.state.playingItem === index}
-                                    key={`${dataItem.key || (typeof dataItem.name === 'string' ? dataItem.name : dataItem.rawURL || 'unknown')}-${index}`}
-                                    name={dataItem.name}
-                                    credits={dataItem.credits}
-                                    samples={dataItem.samples}
-                                    docsURI={dataItem.docsURI}
-                                    showPlayButton={this.props.showPlayButton}
-                                    onMouseEnter={this.handleMouseEnter}
-                                    onMouseLeave={this.handleMouseLeave}
-                                    onSelect={this.handleSelect}
+                    <div className={styles.content}>
+                        {this.props.filterable && (
+                            <div className={styles.searchRow}>
+                                <Search
+                                    className={styles.searchIcon}
+                                    size={18}
                                 />
-                            )
-                        ))}
-                        {filteredData && this.props.removedTrademarks && (
-                            <React.Fragment>
-                                {filteredData.length > 0 && (
-                                    <Separator />
-                                )}
-                                <RemovedTrademarks />
-                            </React.Fragment>
-                        )}
-                        {!filteredData && (
-                            <div className={styles.spinnerWrapper}>
-                                <Spinner
-                                    large
-                                    level="primary"
+                                <input
+                                    className={styles.search}
+                                    placeholder={this.props.intl.formatMessage(messages.filterPlaceholder)}
+                                    value={this.state.filterQuery}
+                                    onChange={this.handleFilterChange}
+                                    autoFocus
                                 />
                             </div>
                         )}
+                        <div
+                            className={styles.libraryScroll}
+                            ref={this.setFilteredDataRef}
+                        >
+                            <div
+                                className={classNames(styles.libraryScrollGrid, {
+                                    [styles.withFilterBar]: this.props.filterable || this.props.tags
+                                })}
+                            >
+                                {filteredData && this.getFilteredData().map((dataItem, index) => (
+                                dataItem === '---' ? (
+                                    <Separator key={index} />
+                                ) : (
+                                    <LibraryItem
+                                        bluetoothRequired={dataItem.bluetoothRequired}
+                                        collaborator={dataItem.collaborator}
+                                        description={dataItem.description}
+                                        disabled={dataItem.disabled}
+                                        extensionId={dataItem.extensionId}
+                                        href={dataItem.href}
+                                        featured={dataItem.featured}
+                                        hidden={dataItem.hidden}
+                                        iconMd5={dataItem.costumes ? dataItem.costumes[0].md5ext : dataItem.md5ext}
+                                        iconRawURL={dataItem.rawURL}
+                                        icons={dataItem.costumes}
+                                        id={index}
+                                        isBackdrop={!dataItem.costumes && !dataItem.sampleCount}
+                                        isSound={!dataItem.costumes && !!dataItem.sampleCount}
+                                        incompatibleWithScratch={dataItem.incompatibleWithScratch}
+                                        favorite={this.state.favorites.includes(dataItem[this.props.persistableKey])}
+                                        onFavorite={this.handleFavorite}
+                                        insetIconURL={dataItem.insetIconURL}
+                                        internetConnectionRequired={dataItem.internetConnectionRequired}
+                                        isPlaying={this.state.playingItem === index}
+                                        key={`${dataItem.key || (typeof dataItem.name === 'string' ? dataItem.name : dataItem.rawURL || 'unknown')}-${index}`}
+                                        name={dataItem.name}
+                                        credits={dataItem.credits}
+                                        samples={dataItem.samples}
+                                        docsURI={dataItem.docsURI}
+                                        showPlayButton={this.props.showPlayButton}
+                                        onMouseEnter={this.handleMouseEnter}
+                                        onMouseLeave={this.handleMouseLeave}
+                                        onSelect={this.handleSelect}
+                                    />
+                                )
+                            ))}
+                            {filteredData && this.props.removedTrademarks && (
+                                <React.Fragment>
+                                    {filteredData.length > 0 && (
+                                        <Separator />
+                                    )}
+                                    <RemovedTrademarks />
+                                </React.Fragment>
+                            )}
+                            {!filteredData && (
+                                    <div className={styles.spinnerWrapper}>
+                                        <Spinner
+                                            large
+                                            level="primary"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
-                </div>
+                </ModalSidebarLayout>
             </Modal>
         );
     }

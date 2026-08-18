@@ -357,6 +357,7 @@ class WindowedModal extends React.Component {
                         minHeight: 0,
                         height: '100%',
                         maxHeight: '100%',
+                        width: '100%',
                         padding: '0',
                         position: 'relative',
                         display: 'flex',
