@@ -10,7 +10,7 @@ import api, {projectUrl} from '../api';
 import Avatar from '../components/Avatar.jsx';
 import Button from '../components/ui/Button.jsx';
 import {useUser} from '../UserContext.jsx';
-import {timeAgo} from '../format';
+import {formatDateTime} from '../format';
 import styles from './Notifications.module.css';
 
 const ICONS = {
@@ -190,7 +190,7 @@ const Notifications = ({hideHeading}) => {
                                             >{describe(n, intl)}</Link>
                                         ) : body}
                                     </div>
-                                    <span className={styles.time}>{timeAgo(n.created)}</span>
+                                    <span className={styles.time}>{formatDateTime(n.created)}</span>
                                 </div>
                             );
                         }
@@ -226,7 +226,7 @@ const Notifications = ({hideHeading}) => {
                                         <span className={styles.body}>{describe(n, intl)}</span>
                                     )}
                                 </div>
-                                <span className={styles.time}>{timeAgo(n.created)}</span>
+                                <span className={styles.time}>{formatDateTime(n.created)}</span>
                             </div>
                         );
                     })}

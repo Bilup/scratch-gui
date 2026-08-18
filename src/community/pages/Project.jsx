@@ -30,7 +30,7 @@ import Avatar from '../components/Avatar.jsx';
 import VisibilityMenu from '../components/VisibilityMenu.jsx';
 import ProjectInfoPanel from '../components/ProjectInfoPanel.jsx';
 import {useUser} from '../UserContext.jsx';
-import {timeAgo, sameUser} from '../format';
+import {sameUser} from '../format';
 import CommentThread from '../components/CommentThread.jsx';
 import ReportModal from '../components/ReportModal.jsx';
 import DiffView from '../components/DiffView.jsx';
@@ -40,7 +40,7 @@ import {hashExtensionUrl} from '../../lib/community/api.js';
 import {isGalleryExtensionUrl} from '../../lib/trusted-extension.js';
 import styles from './Project.module.css';
 
-// Format a timestamp as "YYYY/MM/DD HH:mm" (e.g. 2026/08/07 14:30).
+// Format a timestamp as "YYYY-MM-DD HH:mm" (e.g. 2026-08-07 14:30).
 // Defined locally (rather than imported) to avoid depending on a newly-added
 // named export in a shared chunk, which browsers may cache as an older version.
 const formatDateTime = ms => {
@@ -48,7 +48,7 @@ const formatDateTime = ms => {
     const d = new Date(ms);
     if (Number.isNaN(d.getTime())) return '';
     const pad = n => String(n).padStart(2, '0');
-    return `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
 
 const formatDate = ms => {
@@ -1389,7 +1389,7 @@ const RemixTreeNode = ({node, childrenOf, currentId}) => (
             />
             <span className={styles.treeTitle}>{node.title}</span>
             <span className={styles.treeMeta}>
-                {node.owner} · {timeAgo(node.sharedAt || node.created || node.edited)}
+                {node.owner} · {formatDateTime(node.sharedAt || node.created || node.edited)}
             </span>
         </Link>
         {childrenOf(node.id).length ? (

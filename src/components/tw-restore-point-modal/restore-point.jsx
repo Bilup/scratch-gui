@@ -5,7 +5,6 @@ import {
     FormattedMessage,
     FormattedDate,
     FormattedTime,
-    FormattedRelative,
     injectIntl,
     intlShape
 } from 'react-intl';
@@ -16,8 +15,6 @@ import RestorePointAPI from '../../lib/api/restore-points';
 import log from '../../lib/utils/log';
 
 import {Download, ImageOff, LoaderCircle, RotateCcw, Trash2} from 'lucide-react';
-
-const relativeTimeSupported = () => typeof Intl !== 'undefined' && typeof Intl.RelativeTimeFormat !== 'undefined';
 
 const messages = defineMessages({
     restore: {
@@ -145,11 +142,6 @@ export class RestorePoint extends React.Component {
                 </div>
 
                 <div className={styles.tableCell}>
-                    {relativeTimeSupported() ? (
-                        <FormattedRelative value={createdDate} />
-                    ) : (
-                        <FormattedDate value={createdDate} />
-                    )}
                     <span>
                         <FormattedDate
                             day="numeric"
