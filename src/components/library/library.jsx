@@ -342,8 +342,8 @@ class LibraryComponent extends React.Component {
                                         iconRawURL={dataItem.rawURL}
                                         icons={dataItem.costumes}
                                         id={index}
-                                        isBackdrop={!dataItem.costumes && !dataItem.sampleCount}
-                                        isSound={!dataItem.costumes && !!dataItem.sampleCount}
+                                        isBackdrop={this.props.id === 'backdropLibrary'}
+                                        isSound={this.props.id === 'soundLibrary'}
                                         incompatibleWithScratch={dataItem.incompatibleWithScratch}
                                         favorite={this.state.favorites.includes(dataItem[this.props.persistableKey])}
                                         onFavorite={this.handleFavorite}
