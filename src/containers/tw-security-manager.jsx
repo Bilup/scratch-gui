@@ -21,6 +21,61 @@ const manuallyTrustExtension = url => {
     extensionsTrustedByUser.add(url);
 };
 
+/**
+ * Set of extension URLs that are user-added custom extensions or from custom extension libraries.
+ * These extensions should always prompt the user for sandbox permission, even if their URL
+ * matches a trusted domain (e.g., gallery URLs).
+ */
+const customExtensionUrls = new Set();
+
+/**
+ * Mark an extension URL as a custom/user-added extension.
+ * Custom extensions will always show a sandbox permission modal, regardless of URL origin.
+ * @param {string} url The extension URL to mark as custom.
+ */
+const markExtensionAsCustom = url => {
+    customExtensionUrls.add(url);
+};
+
+/**
+ * Check if an extension URL is a custom/user-added extension.
+ * @param {string} url The extension URL to check.
+ * @returns {boolean} True if the extension was added by the user as a custom extension.
+ */
+const isCustomExtensionUrl = url => customExtensionUrls.has(url);
+
+/**
+ * Map of extension URL to its sandbox mode, populated when getSandboxMode is called.
+ * This allows the UI to query the sandbox status of loaded extensions.
+ * @type {Map<string, {mode: string, isCustom: boolean}>}
+ */
+const sandboxModeCache = new Map();
+
+/**
+ * Get the sandbox status label and color for a given extension URL.
+ * @param {string} url The extension URL (or extensionId for built-in extensions).
+ * @returns {{label: string, type: string}|null} The sandbox status, or null if unknown.
+ *   - type: 'trusted' (green) - trusted default extension running unsandboxed
+ *   - type: 'unsandboxed' (red) - custom extension running unsandboxed
+ *   - type: 'sandboxed' (blue) - extension running in sandbox
+ */
+const getExtensionSandboxStatus = url => {
+    const cached = sandboxModeCache.get(url);
+    const isUnsandboxed = cached && cached.mode === 'unsandboxed';
+    const isCustom = cached && cached.isCustom;
+
+    if (isUnsandboxed && !isCustom) {
+        return {label: '信任的', type: 'trusted'};
+    }
+    if (isUnsandboxed && isCustom) {
+        return {label: '非沙盒', type: 'unsandboxed'};
+    }
+    if (cached && cached.mode !== 'unsandboxed') {
+        return {label: '沙盒', type: 'sandboxed'};
+    }
+    return null;
+};
+
 const isPlatformProjectLoad = () => {
     try {
         const params = new URLSearchParams(location.search);
@@ -278,6 +333,8 @@ class TWSecurityManagerComponent extends React.Component {
         if (stage !== 'building') return;
         this.props.vm.runtime._mwProjectTrusted = false;
         extensionsTrustedByUser.clear();
+        customExtensionUrls.clear();
+        sandboxModeCache.clear();
         fetchHostsTrustedByUser.clear();
         embedHostsTrustedByUser.clear();
         allowedAudio = false;
@@ -292,11 +349,32 @@ class TWSecurityManagerComponent extends React.Component {
      * @returns {string} The VM worker mode to use
      */
     async getSandboxMode (url) {
-        if (await isPlatformTrustedExtension(url) || isTrustedExtension(url)) {
+        let mode;
+        // Custom/user-added extensions: only trust if manually trusted by user,
+        // NOT based on gallery URL matching. This ensures custom extensions
+        // always prompt the user for sandbox permission.
+        if (isCustomExtensionUrl(url)) {
+            if (extensionsTrustedByUser.has(url)) {
+                log.info(`Loading custom extension ${url} unsandboxed (manually trusted)`);
+                mode = 'unsandboxed';
+            } else {
+                log.info(`Loading custom extension ${url} sandboxed`);
+                mode = 'iframe';
+            }
+        } else if (await isPlatformTrustedExtension(url) || isTrustedExtension(url)) {
+            // Default extensions (built-in or from default gallery sources):
+            // run unsandboxed directly without asking.
             log.info(`Loading extension ${url} unsandboxed`);
-            return 'unsandboxed';
+            mode = 'unsandboxed';
+        } else {
+            mode = 'iframe';
         }
-        return 'iframe';
+        // Cache the sandbox mode for UI queries
+        sandboxModeCache.set(url, {
+            mode,
+            isCustom: isCustomExtensionUrl(url)
+        });
+        return mode;
     }
 
     async rewriteExtensionURL (url) {
@@ -328,7 +406,10 @@ class TWSecurityManagerComponent extends React.Component {
             log.info(`Loading extension ${url} automatically`);
             return true;
         }
-        if (!dangerousJs && isTrustedExtension(url)) {
+        // Custom/user-added extensions always prompt the user for permission,
+        // even if their URL matches a trusted domain (e.g., gallery URLs).
+        // This ensures users are aware of and consent to loading custom extensions.
+        if (!dangerousJs && !isCustomExtensionUrl(url) && isTrustedExtension(url)) {
             log.info(`Loading extension ${url} automatically`);
             return true;
         }
@@ -548,6 +629,9 @@ const ConnectedSecurityManagerComponent = connect(
 export {
     ConnectedSecurityManagerComponent as default,
     manuallyTrustExtension,
+    markExtensionAsCustom,
+    isCustomExtensionUrl,
+    getExtensionSandboxStatus,
     isTrustedExtension,
     isPlatformTrustedExtension,
     isOwnedPlatformProject,

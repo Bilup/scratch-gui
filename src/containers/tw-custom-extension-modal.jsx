@@ -5,7 +5,7 @@ import {connect} from 'react-redux';
 import log from '../lib/utils/log';
 import CustomExtensionModalComponent from '../components/tw-custom-extension-modal/custom-extension-modal.jsx';
 import {closeCustomExtensionModal} from '../reducers/modals';
-import {manuallyTrustExtension} from './tw-security-manager.jsx';
+import {manuallyTrustExtension, markExtensionAsCustom} from './tw-security-manager.jsx';
 
 /**
  * @param {Blob} blob Blob
@@ -125,6 +125,13 @@ class CustomExtensionModal extends React.Component {
         this.handleClose();
         try {
             const urls = await this.getExtensionURLs();
+
+            // Mark all URLs as custom extensions so the security manager
+            // will always show a sandbox permission modal, even if the URL
+            // matches a trusted domain (e.g., gallery URLs).
+            for (const url of urls) {
+                markExtensionAsCustom(url);
+            }
 
             // 用户勾选了"非沙盒运行"时才手动信任；
             // 官方域名扩展由 isTrustedExtensionUrl 自动信任，不受此开关影响

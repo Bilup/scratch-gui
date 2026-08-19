@@ -8,6 +8,7 @@ import FancyCheckbox from '../tw-fancy-checkbox/checkbox.jsx';
 
 import extensionLibrary from '../../lib/libraries/extensions/index.jsx';
 import centralDispatch from 'scratch-vm/src/dispatch/central-dispatch';
+import {getExtensionSandboxStatus} from '../../containers/tw-security-manager.jsx';
 
 import styles from './extension-manager-modal.css';
 
@@ -116,6 +117,46 @@ const ExtensionManagerModal = props => {
     const getExtensionColor = useCallback(extensionId => {
         return extensionColors[extensionId] || null;
     }, [extensionColors]);
+
+    /**
+     * Determine the sandbox status for a loaded extension.
+     * Checks the service name to determine if the extension is sandboxed or unsandboxed,
+     * and whether it's from a trusted built-in source.
+     * @param {string} extensionId The extension ID.
+     * @returns {{label: string, type: string, color: string}|null} Sandbox status info or null if unknown.
+     */
+    const getExtensionSandboxInfo = useCallback(extensionId => {
+        const map = props.vm?.extensionManager?._loadedExtensions;
+        if (!map) return null;
+        const serviceName = map.get(extensionId);
+        if (!serviceName) return null;
+
+        // Built-in extensions (music, pen, tw, etc.) are loaded internally
+        // without going through getSandboxMode, so they have no cache entry.
+        // They always run unsandboxed as trusted extensions.
+        const isBuiltin = extensionLibraryById.has(extensionId);
+        if (isBuiltin) {
+            return {label: '信任的', type: 'trusted', color: '#27AE60'};
+        }
+
+        // For non-built-in extensions, try the cached sandbox status first
+        // (populated by getSandboxMode during loading)
+        const cachedStatus = getExtensionSandboxStatus(extensionId);
+        if (cachedStatus) {
+            return {
+                ...cachedStatus,
+                color: cachedStatus.type === 'trusted' ? '#27AE60' :
+                       cachedStatus.type === 'unsandboxed' ? '#E74C3C' : '#4A90D9'
+            };
+        }
+
+        // Fallback: determine from the service name
+        const isUnsandboxed = typeof serviceName === 'string' && serviceName.startsWith('unsandboxed.');
+        if (!isUnsandboxed) {
+            return {label: '沙盒', type: 'sandboxed', color: '#4A90D9'};
+        }
+        return {label: '非沙盒', type: 'unsandboxed', color: '#E74C3C'};
+    }, [props.vm, extensionLibraryById]);
 
     useEffect(() => {
         const map = props.vm?.extensionManager?._loadedExtensions;
@@ -380,6 +421,7 @@ const ExtensionManagerModal = props => {
                             {extensionIds.map((extensionId, index) => {
                                 const extensionColor = getExtensionColor(extensionId);
                                 const count = blockCounts.get(extensionId) || 0;
+                                const sandboxInfo = getExtensionSandboxInfo(extensionId);
                                 return (
                                     <div
                                         className={`${styles.extensionRow}${dragIndex === index ? ` ${styles.dragging}` : ''}`}
@@ -408,6 +450,17 @@ const ExtensionManagerModal = props => {
                                                 ) : null}
                                             </span>
                                             <span className={styles.extensionName}>{getExtensionName(extensionId)}</span>
+                                            {sandboxInfo && (
+                                                <span
+                                                    className={styles.sandboxBadge}
+                                                    style={{
+                                                        backgroundColor: sandboxInfo.color,
+                                                        color: '#fff'
+                                                    }}
+                                                >
+                                                    {sandboxInfo.label}
+                                                </span>
+                                            )}
                                         </div>
                                         <div className={styles.blocksCell}>
                                             <strong>{count}</strong>
