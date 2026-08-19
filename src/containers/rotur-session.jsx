@@ -6,7 +6,9 @@ import bindAll from 'lodash.bindall';
 
 import {
     syncActivity,
-    clearActivity
+    clearActivity,
+    subscribeNotifications,
+    subscribeNotificationRemovals
 } from '../lib/rotur/client.js';
 import {
     subscribe as subscribeIdentity,
@@ -46,6 +48,9 @@ class RoturSession extends React.Component {
             'handleLogin',
             'handleLogout',
             'handleIdentityChange',
+            'handleNotificationPush',
+            'ensureNotificationSubscription',
+            'clearNotificationSubscription',
             'syncCurrentActivity',
             'refreshPlatformProjectLink',
             'syncProjectAuthor',
@@ -54,6 +59,7 @@ class RoturSession extends React.Component {
         ]);
         this.unsubscribeSettings = null;
         this.unsubscribeIdentity = null;
+        this.unsubscribeNotifications = null;
         this.editingSince = Date.now();
         this.platformProjectUrl = null;
         this.checkedPlatformId = null;
@@ -111,6 +117,7 @@ class RoturSession extends React.Component {
             this.unsubscribeIdentity();
             this.unsubscribeIdentity = null;
         }
+        this.clearNotificationSubscription();
         setRoturSessionApi(null);
     }
 
@@ -121,9 +128,44 @@ class RoturSession extends React.Component {
             this.editingSince = Date.now();
             this.props.onSetUser(next.user);
             this.applyCloudPreferences().then(() => this.syncCurrentActivity());
+            this.ensureNotificationSubscription();
         } else if (!next.user && hadUser) {
             clearActivity();
+            this.clearNotificationSubscription();
             this.props.onClear();
+        }
+    }
+
+    handleNotificationPush (notification) {
+        if (!notification || notification.read) {
+            return;
+        }
+        window.dispatchEvent(new CustomEvent('mw:notifications-push', {detail: notification}));
+    }
+
+    handleNotificationRemoved (payload) {
+        if (!payload || typeof payload.id !== 'string') {
+            return;
+        }
+        window.dispatchEvent(new CustomEvent('mw:notifications-removed', {detail: payload}));
+    }
+
+    ensureNotificationSubscription () {
+        if (this.unsubscribeNotifications) {
+            return;
+        }
+        this.unsubscribeNotifications = subscribeNotifications(this.handleNotificationPush);
+        this.unsubscribeNotificationRemovals = subscribeNotificationRemovals(this.handleNotificationRemoved);
+    }
+
+    clearNotificationSubscription () {
+        if (this.unsubscribeNotifications) {
+            this.unsubscribeNotifications();
+            this.unsubscribeNotifications = null;
+        }
+        if (this.unsubscribeNotificationRemovals) {
+            this.unsubscribeNotificationRemovals();
+            this.unsubscribeNotificationRemovals = null;
         }
     }
 
