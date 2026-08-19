@@ -324,6 +324,13 @@
         min-width: 0;
         max-width: none;
         border-right: none;
+        /* Override min-height: 100% from the base style — without this the
+           sidebar fills the entire column height and the content area is
+           pushed out of view (clipped by overflow: hidden on .layout).
+           Limit the sidebar to at most 45% of the modal height so the
+           content area always gets the remaining space. */
+        min-height: auto;
+        max-height: 45%;
     }
 
     .layout.mobile-content > .sidebar {

@@ -366,6 +366,19 @@ Rules:
 - For a brand-new/empty target file, you may put the full replacement file directly after *** Update File.
 - Do not wrap applyPatch content in Markdown fences.
 
+Safe costume/backdrop SVG editing:
+- Costumes and backdrops are vector SVG. Only edit them by patching the existing /sprites/<name>/costumes/*.svg file or the stage costume file; always keep the opening <svg ...> tag and the closing </svg> tag intact.
+- A costume SVG must be well-formed XML with a single <svg> root. Never leave unbalanced tags, delete the closing tag, or paste non-SVG text before the <svg> root.
+- Do not embed scripts or handlers: no <script> elements and no onclick/onload/onerror attributes. Remote URLs in href or xlink:href are forbidden; use inline data: URIs for any embedded image.
+- Do not wrap the SVG in Markdown code fences. The writeback layer strips fences only as a fallback; leaving them off prevents corruption.
+- Escape special XML characters in text content and attributes: & as &amp;, < as &lt;, > as &gt;, and double quotes as &quot;.
+- A bitmap costume (PNG/JPG) is shown as an SVG wrapper with the original image embedded as a data URI. Editing it rewrites the costume as vector SVG. If it must stay a bitmap, do not edit it; only redraw a bitmap costume when intentionally converting it.
+- Backdrops belong to the stage target. A full-stage backdrop should use width="480" height="360" viewBox="0 0 480 360" and center content around SVG point (240, 180).
+- Sprite costumes should tightly fit the artwork and keep the visual center (rotation center) at width/2,height/2. A sprite rotates around its rotation center, so keep it at the artwork center unless the user explicitly requests an off-center pivot.
+- Do not add, delete, or reorder costumes by renaming files. Use listCostumes, addCostumeWithSvg, batchAddCostumesWithSvg, deleteCostume, batchDeleteCostumes, reorderCostume, or setCostumeOrder for structural changes.
+- After any SVG edit, run getDiagnostics on that file. It rejects empty SVG, a missing <svg> root, <script>/event handlers, remote links, and XML parse errors. Fix reported errors before finishing.
+- SVG coordinates are canvas coordinates (top-left origin, y increases downward). Do not confuse them with Scratch stage coordinates (center origin, y increases upward).
+
 Patch examples:
 *** Begin Patch
 *** Update File: /sprites/Cat.js
@@ -624,6 +637,11 @@ export class AITools {
     control_incr_counter: "计数器加 1",
     control_clear_counter: "计数器归零",
     control_all_at_once: "一口气执行",
+    control_switch: "多分支切换 [VALUE](VALUE:string)",
+    control_case: "分支情况 [VALUE](VALUE:string)",
+    control_case_fallthrough: "分支情况（不跳出）[VALUE](VALUE:string)",
+    control_default: "默认分支",
+    control_break: "终止执行",
     event_whenflagclicked: "当绿旗被点击",
     event_whenkeypressed: "当按下 [KEY_OPTION] 键(KEY_OPTION:string)",
     event_whenbroadcastreceived: "当接收到广播 [BROADCAST_OPTION](BROADCAST_OPTION:broadcast)",
@@ -655,6 +673,7 @@ export class AITools {
     looks_size: "大小",
     looks_costumenumbername: "造型 [NUMBER_NAME](NUMBER_NAME:string)",
     looks_backdropnumbername: "背景 [NUMBER_NAME](NUMBER_NAME:string)",
+    looks_costumes: "造型列表",
     motion_movesteps: "移动 [STEPS] 步(STEPS:number)",
     motion_movegrids: "移动 [STEPS] 格(STEPS:number)",
     motion_gotoxy: "移到 x:[X] y:[Y](X:number, Y:number)",
@@ -697,6 +716,17 @@ export class AITools {
     operator_mod: "[NUM1] 除以 [NUM2] 的余数(NUM1:number, NUM2:number)",
     operator_round: "四舍五入 [NUM](NUM:number)",
     operator_mathop: "[OPERATOR] [NUM](OPERATOR:string, NUM:number)",
+    operator_min: "取 [NUM1] 和 [NUM2] 中的较小值(NUM1:number, NUM2:number)",
+    operator_max: "取 [NUM1] 和 [NUM2] 中的较大值(NUM1:number, NUM2:number)",
+    operator_clamp: "将 [NUM] 限制在 [MIN] 和 [MAX] 之间(NUM:number, MIN:number, MAX:number)",
+    operator_letters_of: "[STRING] 的第 [LETTER1] 到第 [LETTER2] 个字符(STRING:string, LETTER1:number, LETTER2:number)",
+    operator_index_of: "[SUBSTRING] 在 [STRING] 中的位置(SUBSTRING:string, STRING:string)",
+    operator_replace: "将 [STRING] 中的 [SUBSTRING] 替换为 [REPLACE](STRING:string, SUBSTRING:string, REPLACE:string)",
+    operator_repeat: "将 [STRING] 重复 [REPEAT] 次(STRING:string, REPEAT:number)",
+    operator_change_case: "将 [STRING] 转换为 [CASE](STRING:string, CASE:string)",
+    operator_trim: "去除 [STRING] 两端空白(STRING:string)",
+    operator_pi: "圆周率 π",
+    operator_newline: "换行符",
     sound_play: "播放声音 [SOUND_MENU](SOUND_MENU:string)",
     sound_playuntildone: "播放声音 [SOUND_MENU] 等待播放完成(SOUND_MENU:string)",
     sound_stopallsounds: "停止所有声音",
@@ -728,7 +758,10 @@ export class AITools {
     sensing_askandwait: "询问 [QUESTION] 并等待(QUESTION:string)",
     sensing_answer: "回答",
     sensing_username: "用户名",
+    sensing_online: "是否在线",
     sensing_userid: "用户 id",
+    sensing_stagewidth: "舞台宽度",
+    sensing_stageheight: "舞台高度",
     data_variable: "变量 [VARIABLE](VARIABLE:variable)",
     data_setvariableto: "将 [VARIABLE] 设为 [VALUE](VARIABLE:variable, VALUE:string)",
     data_changevariableby: "将 [VARIABLE] 增加 [VALUE](VARIABLE:variable, VALUE:number)",
@@ -749,6 +782,16 @@ export class AITools {
     procedures_definition: "自定义积木定义",
     procedures_call: "调用自定义积木 [PROCEDURE](PROCEDURE:string)",
     procedures_call_with_return: "调用自定义积木 [PROCEDURE] 并返回(PROCEDURE:string)",
+    assets_load: "加载素材 [ASSET] 作为 [KIND](ASSET:string, KIND:string)",
+    assets_unload: "卸载素材 [ASSET](ASSET:string)",
+    assets_unloadall: "卸载所有素材",
+    assets_get: "素材 [ASSET] 的 [PROPERTY](PROPERTY:string, ASSET:string)",
+    assets_byte: "素材 [ASSET] 的第 [INDEX] 个字节(INDEX:number, ASSET:string)",
+    assets_check: "素材 [ASSET] [STATE]?(ASSET:string, STATE:string)",
+    assets_set: "将素材 [ASSET] 设为 [VALUE]（格式 [FORMAT]）(ASSET:string, VALUE:string, FORMAT:string)",
+    assets_delete: "删除素材 [ASSET](ASSET:string)",
+    assets_allnames: "所有素材名称",
+    assets_infolder: "文件夹 [FOLDER] 中的素材(FOLDER:string)",
   };
 
   static BlockSearchAliases: Record<string, string[]> = {
@@ -789,6 +832,14 @@ export class AITools {
     procedures_definition: ["自定义积木定义", "定义积木", "定义函数"],
     procedures_call: ["调用自定义积木", "调用函数", "执行自定义积木"],
     procedures_call_with_return: ["调用自定义积木并返回", "返回值积木", "返回值函数"],
+    operator_min: ["最小值", "取较小值", "min"],
+    operator_max: ["最大值", "取较大值", "max"],
+    operator_clamp: ["限制范围", "夹取", "限定在区间", "clamp"],
+    assets_load: ["加载素材", "载入素材"],
+    assets_unload: ["卸载素材"],
+    assets_get: ["读取素材", "素材属性"],
+    assets_set: ["写入素材", "修改素材"],
+    assets_delete: ["删除素材"],
   };
 
   vm: any;

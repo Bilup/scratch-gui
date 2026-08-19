@@ -1310,6 +1310,8 @@
         "mw.settingsModal.desktop.richPresence": "Discord 动态状态",
         "mw.settingsModal.desktop.richPresenceHelp": "在应用打开时，在 Discord 个人资料上显示您正在使用 Bilup。",
         "mw.settingsModal.desktop.openUserData": "打开用户数据文件夹",
+        "mw.settingsModal.desktop.cloudExtensions": "从云端加载扩展",
+        "mw.settingsModal.desktop.cloudExtensionsHelp": "在可能的情况下从互联网加载扩展，离线或无法访问时回退到本地副本。",
         "mw.settings.loader.animation": "积木动画",
         "mw.settings.loader.animationHelp": "项目加载时自行组装的积木堆栈。",
         "mw.settings.loader.title": "标题",

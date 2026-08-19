@@ -73,7 +73,11 @@ class WindowedModal extends React.Component {
                 if (!this.window.isDestroying) {
                     this.window.hide();
                 }
-            } else {
+            } else if (!this.window.isDestroying) {
+                // Likewise, don't call show() while the window is being
+                // destroyed — that would cancel the closing animation, clear
+                // the _animTimer, and re-display the window, leaving an
+                // orphaned element that can never be closed again.
                 this.window.show();
             }
         }
