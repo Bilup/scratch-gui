@@ -12,7 +12,7 @@ import extensionLibraryContent, {
 } from '../lib/libraries/extensions/index.jsx';
 import extensionTags from '../lib/libraries/tw-extension-tags';
 import {getVanillaPalette} from '../lib/mw-vanilla-palette';
-import {manuallyTrustExtension} from './tw-security-manager.jsx';
+import {manuallyTrustExtension, markExtensionAsCustom} from './tw-security-manager.jsx';
 
 import LibraryComponent from '../components/tw-extension-library/extension-library.jsx';
 import extensionIcon from '../components/action-menu/icon--sprite.svg';
@@ -610,8 +610,13 @@ class ExtensionLibrary extends React.PureComponent {
             // 自定义拓展库开启"非沙盒运行"时，加载扩展前确保其 URL 被信任；
             // 项目重载会清空信任集合，这里按库设置重新信任
             const customSource = cachedCustomSources.find(cs => cs.id === item.source);
-            if (customSource && customSource.unsandboxed && url) {
-                manuallyTrustExtension(url);
+            if (customSource && url) {
+                // Mark extension from custom library as custom so the security manager
+                // will always show a sandbox permission modal.
+                markExtensionAsCustom(url);
+                if (customSource.unsandboxed) {
+                    manuallyTrustExtension(url);
+                }
             }
             if (this.props.vm.extensionManager.isExtensionLoaded(extensionId)) {
                 if (typeof this.props.onCategorySelected === 'function') {
