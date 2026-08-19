@@ -364,6 +364,7 @@ const fetchLibrary = async () => {
                     extensionId: extension.id,
                     extensionURL: `https://sharkpools-extensions.vercel.app/extension-code/${extension.url}`,
                     iconURL: extension.banner ? `https://sharkpools-extensions.vercel.app/extension-thumbs/${extension.banner}` : emptyBanner,
+                    source: 'sharkpool',
                     tags: ['sharkpool'],
                     credits: [
                         ...(extension.by || []),
@@ -404,6 +405,7 @@ const fetchLibrary = async () => {
                 extensionId: extension.id,
                 extensionURL: `https://extensions.bilup.org/${extension.slug}.js`,
                 iconURL: `https://extensions.bilup.org/${extension.image || 'images/unknown.svg'}`,
+                source: 'bilup',
                 tags: ['bilup'],
                 credits: [
                     ...(extension.by || []),
@@ -449,6 +451,7 @@ const fetchLibrary = async () => {
                 extensionId: extension.id,
                 extensionURL: `https://editors.astras.top/extensions/${extension.slug}.js`,
                 iconURL: `https://editors.astras.top/extensions/${extension.image || 'images/unknown.svg'}`,
+                source: 'ae',
                 tags: ['ae'],
                 credits: [
                     ...(extension.by || []),
@@ -677,6 +680,9 @@ class ExtensionLibrary extends React.PureComponent {
             ['tw', 'TurboWarp'],
             ['mistium', 'Mistium'],
             ['rotur', 'Bilup Accounts'],
+            ['sharkpool', 'SharkPool'],
+            ['ae', 'AstraEditor'],
+            ['bilup', 'Bilup'],
             ...this.state.customSources.map(source => [source.id, source.name])
         ];
         // 可删除（自定义）的标签 id 集合，用于侧边栏渲染删除按钮

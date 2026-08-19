@@ -1919,7 +1919,7 @@ class DesktopPage extends React.Component {
                 />), 'videoinput')}
                 <BooleanSetting
                     value={!!s.hardwareAcceleration}
-                    onChange={value => this.set('hardwareAcceleration', value)}
+                    onChange={event => this.set('hardwareAcceleration', event.target.checked)}
                     label={<FormattedMessage
                         defaultMessage="Hardware acceleration (requires restart)"
                         id="mw.settingsModal.desktop.hardwareAcceleration"
@@ -1931,7 +1931,7 @@ class DesktopPage extends React.Component {
                 />
                 <BooleanSetting
                     value={!!s.backgroundThrottling}
-                    onChange={value => this.set('backgroundThrottling', value)}
+                    onChange={event => this.set('backgroundThrottling', event.target.checked)}
                     label={<FormattedMessage
                         defaultMessage="Pause when the window is not visible"
                         id="mw.settingsModal.desktop.backgroundThrottling"
@@ -1943,7 +1943,7 @@ class DesktopPage extends React.Component {
                 />
                 <BooleanSetting
                     value={!!s.bypassCORS}
-                    onChange={value => this.set('bypassCORS', value)}
+                    onChange={event => this.set('bypassCORS', event.target.checked)}
                     label={<FormattedMessage
                         defaultMessage="Allow projects to access any website (requires restart, dangerous)"
                         id="mw.settingsModal.desktop.bypassCORS"
@@ -1955,7 +1955,7 @@ class DesktopPage extends React.Component {
                 />
                 <BooleanSetting
                     value={!!s.spellchecker}
-                    onChange={value => this.set('spellchecker', value)}
+                    onChange={event => this.set('spellchecker', event.target.checked)}
                     label={<FormattedMessage
                         defaultMessage="Spellchecker (requires restart)"
                         id="mw.settingsModal.desktop.spellchecker"
@@ -1967,7 +1967,7 @@ class DesktopPage extends React.Component {
                 />
                 <BooleanSetting
                     value={!!s.exitFullscreenOnEscape}
-                    onChange={value => this.set('exitFullscreenOnEscape', value)}
+                    onChange={event => this.set('exitFullscreenOnEscape', event.target.checked)}
                     label={<FormattedMessage
                         defaultMessage="Exit fullscreen when escape is pressed"
                         id="mw.settingsModal.desktop.exitFullscreenOnEscape"
@@ -1980,7 +1980,7 @@ class DesktopPage extends React.Component {
                 {s.richPresenceAvailable ? (
                     <BooleanSetting
                         value={!!s.richPresence}
-                        onChange={value => this.set('richPresence', value)}
+                        onChange={event => this.set('richPresence', event.target.checked)}
                         label={<FormattedMessage
                             defaultMessage="Discord rich presence"
                             id="mw.settingsModal.desktop.richPresence"
@@ -1991,6 +1991,18 @@ class DesktopPage extends React.Component {
                         />}
                     />
                 ) : null}
+                <BooleanSetting
+                    value={!!s.cloudExtensions}
+                    onChange={event => this.set('cloudExtensions', event.target.checked)}
+                    label={<FormattedMessage
+                        defaultMessage="Load extensions from the cloud"
+                        id="mw.settingsModal.desktop.cloudExtensions"
+                    />}
+                    help={<FormattedMessage
+                        defaultMessage="Loads extensions from the internet when possible, falling back to local copies when offline or unreachable."
+                        id="mw.settingsModal.desktop.cloudExtensionsHelp"
+                    />}
+                />
                 <button
                     className={styles.button}
                     onClick={() => window.EditorPreload.openUserData()}

@@ -192,6 +192,87 @@
             "opcode": "motion_direction",
             "blockType": "REPORTER",
             "text": "direction"
+          },
+          {
+            "opcode": "motion_pointtowards_xy",
+            "blockType": "COMMAND",
+            "text": "point towards x: [X] y: [Y]",
+            "arguments": {
+              "X": {
+                "type": "NUMBER",
+                "defaultValue": 0
+              },
+              "Y": {
+                "type": "NUMBER",
+                "defaultValue": 0
+              }
+            }
+          },
+          {
+            "opcode": "motion_pointtowards_xyfrom",
+            "blockType": "COMMAND",
+            "text": "point towards x: [X] y: [Y] from x: [FROMX] y: [FROMY]",
+            "arguments": {
+              "X": {
+                "type": "NUMBER",
+                "defaultValue": 0
+              },
+              "Y": {
+                "type": "NUMBER",
+                "defaultValue": 0
+              },
+              "FROMX": {
+                "type": "NUMBER",
+                "defaultValue": 0
+              },
+              "FROMY": {
+                "type": "NUMBER",
+                "defaultValue": 0
+              }
+            }
+          },
+          {
+            "opcode": "motion_scroll_right",
+            "blockType": "COMMAND",
+            "text": "scroll right [DISTANCE]",
+            "arguments": {
+              "DISTANCE": {
+                "type": "NUMBER",
+                "defaultValue": 10
+              }
+            }
+          },
+          {
+            "opcode": "motion_scroll_up",
+            "blockType": "COMMAND",
+            "text": "scroll up [DISTANCE]",
+            "arguments": {
+              "DISTANCE": {
+                "type": "NUMBER",
+                "defaultValue": 10
+              }
+            }
+          },
+          {
+            "opcode": "motion_align_scene",
+            "blockType": "COMMAND",
+            "text": "align scene [ALIGNMENT]",
+            "arguments": {
+              "ALIGNMENT": {
+                "type": "STRING",
+                "menu": "ALIGN_SCENE_MENU"
+              }
+            }
+          },
+          {
+            "opcode": "motion_xscroll",
+            "blockType": "REPORTER",
+            "text": "x scroll"
+          },
+          {
+            "opcode": "motion_yscroll",
+            "blockType": "REPORTER",
+            "text": "y scroll"
           }
         ],
         "menus": {
@@ -237,6 +318,31 @@
               {
                 "text": "all around",
                 "value": "all around"
+              }
+            ]
+          },
+          "ALIGN_SCENE_MENU": {
+            "acceptReporters": false,
+            "items": [
+              {
+                "text": "bottom-left",
+                "value": "bottom-left"
+              },
+              {
+                "text": "bottom-right",
+                "value": "bottom-right"
+              },
+              {
+                "text": "middle",
+                "value": "middle"
+              },
+              {
+                "text": "top-left",
+                "value": "top-left"
+              },
+              {
+                "text": "top-right",
+                "value": "top-right"
               }
             ]
           }
@@ -466,6 +572,38 @@
                 "menu": "BACKDROP_MENU"
               }
             }
+          },
+          {
+            "opcode": "looks_hideallsprites",
+            "blockType": "COMMAND",
+            "text": "hide all sprites"
+          },
+          {
+            "opcode": "looks_changestretchby",
+            "blockType": "COMMAND",
+            "text": "change stretch by [CHANGE]",
+            "arguments": {
+              "CHANGE": {
+                "type": "NUMBER",
+                "defaultValue": 10
+              }
+            }
+          },
+          {
+            "opcode": "looks_setstretchto",
+            "blockType": "COMMAND",
+            "text": "set stretch to [STRETCH]",
+            "arguments": {
+              "STRETCH": {
+                "type": "NUMBER",
+                "defaultValue": 100
+              }
+            }
+          },
+          {
+            "opcode": "looks_costumes",
+            "blockType": "REPORTER",
+            "text": "costumes"
           }
         ],
         "menus": {
@@ -769,6 +907,49 @@
             "opcode": "control_all_at_once",
             "blockType": "COMMAND",
             "text": "all at once"
+          },
+          {
+            "opcode": "control_switch",
+            "blockType": "COMMAND",
+            "text": "switch [VALUE] {cases}",
+            "arguments": {
+              "VALUE": {
+                "type": "STRING",
+                "defaultValue": ""
+              }
+            }
+          },
+          {
+            "opcode": "control_case",
+            "blockType": "COMMAND",
+            "text": "case [VALUE] {substack}",
+            "arguments": {
+              "VALUE": {
+                "type": "STRING",
+                "defaultValue": ""
+              }
+            }
+          },
+          {
+            "opcode": "control_case_fallthrough",
+            "blockType": "COMMAND",
+            "text": "case [VALUE] fallthrough",
+            "arguments": {
+              "VALUE": {
+                "type": "STRING",
+                "defaultValue": ""
+              }
+            }
+          },
+          {
+            "opcode": "control_default",
+            "blockType": "COMMAND",
+            "text": "default {substack}"
+          },
+          {
+            "opcode": "control_break",
+            "blockType": "COMMAND",
+            "text": "break"
           }
         ],
         "menus": {
@@ -1111,6 +1292,26 @@
             "opcode": "sensing_username",
             "blockType": "REPORTER",
             "text": "username"
+          },
+          {
+            "opcode": "sensing_online",
+            "blockType": "BOOLEAN",
+            "text": "online?"
+          },
+          {
+            "opcode": "sensing_userid",
+            "blockType": "REPORTER",
+            "text": "user id"
+          },
+          {
+            "opcode": "sensing_stagewidth",
+            "blockType": "REPORTER",
+            "text": "stage width"
+          },
+          {
+            "opcode": "sensing_stageheight",
+            "blockType": "REPORTER",
+            "text": "stage height"
           }
         ],
         "menus": {
@@ -1521,6 +1722,160 @@
                 "defaultValue": ""
               }
             }
+          },
+          {
+            "opcode": "operator_min",
+            "blockType": "REPORTER",
+            "text": "min([NUM1], [NUM2])",
+            "arguments": {
+              "NUM1": {
+                "type": "NUMBER",
+                "defaultValue": ""
+              },
+              "NUM2": {
+                "type": "NUMBER",
+                "defaultValue": ""
+              }
+            }
+          },
+          {
+            "opcode": "operator_max",
+            "blockType": "REPORTER",
+            "text": "max([NUM1], [NUM2])",
+            "arguments": {
+              "NUM1": {
+                "type": "NUMBER",
+                "defaultValue": ""
+              },
+              "NUM2": {
+                "type": "NUMBER",
+                "defaultValue": ""
+              }
+            }
+          },
+          {
+            "opcode": "operator_clamp",
+            "blockType": "REPORTER",
+            "text": "clamp [NUM] between [MIN] and [MAX]",
+            "arguments": {
+              "NUM": {
+                "type": "NUMBER",
+                "defaultValue": ""
+              },
+              "MIN": {
+                "type": "NUMBER",
+                "defaultValue": ""
+              },
+              "MAX": {
+                "type": "NUMBER",
+                "defaultValue": ""
+              }
+            }
+          },
+          {
+            "opcode": "operator_letters_of",
+            "blockType": "REPORTER",
+            "text": "letters [LETTER1] to [LETTER2] of [STRING]",
+            "arguments": {
+              "LETTER1": {
+                "type": "NUMBER",
+                "defaultValue": 1
+              },
+              "LETTER2": {
+                "type": "NUMBER",
+                "defaultValue": 1
+              },
+              "STRING": {
+                "type": "STRING",
+                "defaultValue": "world"
+              }
+            }
+          },
+          {
+            "opcode": "operator_index_of",
+            "blockType": "REPORTER",
+            "text": "index of [SUBSTRING] in [STRING]",
+            "arguments": {
+              "SUBSTRING": {
+                "type": "STRING",
+                "defaultValue": "a"
+              },
+              "STRING": {
+                "type": "STRING",
+                "defaultValue": "apple"
+              }
+            }
+          },
+          {
+            "opcode": "operator_replace",
+            "blockType": "REPORTER",
+            "text": "replace [SUBSTRING] in [STRING] with [REPLACE]",
+            "arguments": {
+              "SUBSTRING": {
+                "type": "STRING",
+                "defaultValue": "a"
+              },
+              "STRING": {
+                "type": "STRING",
+                "defaultValue": "apple"
+              },
+              "REPLACE": {
+                "type": "STRING",
+                "defaultValue": "o"
+              }
+            }
+          },
+          {
+            "opcode": "operator_repeat",
+            "blockType": "REPORTER",
+            "text": "repeat [STRING] [REPEAT] times",
+            "arguments": {
+              "STRING": {
+                "type": "STRING",
+                "defaultValue": "ha"
+              },
+              "REPEAT": {
+                "type": "NUMBER",
+                "defaultValue": 2
+              }
+            }
+          },
+          {
+            "opcode": "operator_change_case",
+            "blockType": "REPORTER",
+            "text": "convert [STRING] to [CASE]",
+            "arguments": {
+              "STRING": {
+                "type": "STRING",
+                "defaultValue": "hello"
+              },
+              "CASE": {
+                "type": "STRING",
+                "menu": "CHANGE_CASE_MENU",
+                "defaultValue": "lowercase"
+              }
+            }
+          },
+          {
+            "opcode": "operator_trim",
+            "blockType": "REPORTER",
+            "text": "trim [STRING]",
+            "arguments": {
+              "STRING": {
+                "type": "STRING",
+                "defaultValue": " hello "
+              }
+            }
+          },
+          {
+            "opcode": "operator_pi",
+            "blockType": "REPORTER",
+            "text": "pi"
+          },
+          {
+            "opcode": "operator_newline",
+            "blockType": "REPORTER",
+            "text": "newline"
           }
         ],
         "menus": {
@@ -1582,6 +1937,19 @@
               {
                 "text": "10 ^",
                 "value": "10 ^"
+              }
+            ]
+          },
+          "CHANGE_CASE_MENU": {
+            "acceptReporters": false,
+            "items": [
+              {
+                "text": "lowercase",
+                "value": "lowercase"
+              },
+              {
+                "text": "UPPERCASE",
+                "value": "uppercase"
               }
             ]
           }
@@ -1699,6 +2067,214 @@
             "text": "[VALUE]"
           }
         ]
+      },
+      "assets": {
+        "blocks": [
+          {
+            "opcode": "assets_load",
+            "blockType": "COMMAND",
+            "text": "load asset [ASSET] as [KIND]",
+            "arguments": {
+              "ASSET": {
+                "type": "STRING",
+                "defaultValue": ""
+              },
+              "KIND": {
+                "type": "STRING",
+                "menu": "ASSETS_KIND_MENU",
+                "defaultValue": "costume"
+              }
+            }
+          },
+          {
+            "opcode": "assets_unload",
+            "blockType": "COMMAND",
+            "text": "unload asset [ASSET]",
+            "arguments": {
+              "ASSET": {
+                "type": "STRING",
+                "defaultValue": ""
+              }
+            }
+          },
+          {
+            "opcode": "assets_unloadall",
+            "blockType": "COMMAND",
+            "text": "unload all assets"
+          },
+          {
+            "opcode": "assets_get",
+            "blockType": "REPORTER",
+            "text": "[PROPERTY] of asset [ASSET]",
+            "arguments": {
+              "PROPERTY": {
+                "type": "STRING",
+                "menu": "ASSETS_PROPERTY_MENU",
+                "defaultValue": "text"
+              },
+              "ASSET": {
+                "type": "STRING",
+                "defaultValue": ""
+              }
+            }
+          },
+          {
+            "opcode": "assets_byte",
+            "blockType": "REPORTER",
+            "text": "byte [INDEX] of asset [ASSET]",
+            "arguments": {
+              "INDEX": {
+                "type": "NUMBER",
+                "defaultValue": 0
+              },
+              "ASSET": {
+                "type": "STRING",
+                "defaultValue": ""
+              }
+            }
+          },
+          {
+            "opcode": "assets_check",
+            "blockType": "BOOLEAN",
+            "text": "asset [ASSET] [STATE]?",
+            "arguments": {
+              "ASSET": {
+                "type": "STRING",
+                "defaultValue": ""
+              },
+              "STATE": {
+                "type": "STRING",
+                "menu": "ASSETS_STATE_MENU",
+                "defaultValue": "exists"
+              }
+            }
+          },
+          {
+            "opcode": "assets_set",
+            "blockType": "COMMAND",
+            "text": "set asset [ASSET] to [VALUE] as [FORMAT]",
+            "arguments": {
+              "ASSET": {
+                "type": "STRING",
+                "defaultValue": ""
+              },
+              "VALUE": {
+                "type": "STRING",
+                "defaultValue": ""
+              },
+              "FORMAT": {
+                "type": "STRING",
+                "menu": "ASSETS_FORMAT_MENU",
+                "defaultValue": "text"
+              }
+            }
+          },
+          {
+            "opcode": "assets_delete",
+            "blockType": "COMMAND",
+            "text": "delete asset [ASSET]",
+            "arguments": {
+              "ASSET": {
+                "type": "STRING",
+                "defaultValue": ""
+              }
+            }
+          },
+          {
+            "opcode": "assets_allnames",
+            "blockType": "REPORTER",
+            "text": "all asset names"
+          },
+          {
+            "opcode": "assets_infolder",
+            "blockType": "REPORTER",
+            "text": "assets in folder [FOLDER]",
+            "arguments": {
+              "FOLDER": {
+                "type": "STRING",
+                "defaultValue": ""
+              }
+            }
+          }
+        ],
+        "menus": {
+          "ASSETS_KIND_MENU": {
+            "acceptReporters": false,
+            "items": [
+              {
+                "text": "costume",
+                "value": "costume"
+              },
+              {
+                "text": "sound",
+                "value": "sound"
+              }
+            ]
+          },
+          "ASSETS_PROPERTY_MENU": {
+            "acceptReporters": false,
+            "items": [
+              {
+                "text": "text",
+                "value": "text"
+              },
+              {
+                "text": "data uri",
+                "value": "data uri"
+              },
+              {
+                "text": "base64",
+                "value": "base64"
+              },
+              {
+                "text": "url",
+                "value": "url"
+              },
+              {
+                "text": "size",
+                "value": "size"
+              },
+              {
+                "text": "format",
+                "value": "format"
+              },
+              {
+                "text": "folder",
+                "value": "folder"
+              }
+            ]
+          },
+          "ASSETS_STATE_MENU": {
+            "acceptReporters": false,
+            "items": [
+              {
+                "text": "exists",
+                "value": "exists"
+              },
+              {
+                "text": "is loaded",
+                "value": "is loaded"
+              }
+            ]
+          },
+          "ASSETS_FORMAT_MENU": {
+            "acceptReporters": false,
+            "items": [
+              {
+                "text": "text",
+                "value": "text"
+              },
+              {
+                "text": "base64",
+                "value": "base64"
+              },
+              {
+                "text": "url",
+                "value": "url"
+              }
+            ]
+          }
+        }
       }
     },
     "extensions": {
