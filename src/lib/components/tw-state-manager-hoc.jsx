@@ -237,10 +237,13 @@ class WildcardRouter extends Router {
         if (projectId !== '0') {
             parts.push(projectId);
         }
-        if (isFullScreen) {
-            parts.push('fullscreen');
-        } else if (!isPlayerOnly) {
+        // In the editor, fullscreen is an in-page CSS fullscreen (the stage
+        // expands over the editor UI), so the URL stays on /editor. The
+        // /fullscreen path is only for the player's dedicated fullscreen page.
+        if (!isPlayerOnly) {
             parts.push('editor');
+        } else if (isFullScreen) {
+            parts.push('fullscreen');
         }
 
         const path = `${this.root}${parts.join('/')}`;
@@ -467,6 +470,17 @@ const TWStateManager = function (WrappedComponent) {
             window.addEventListener('popstate', this.handlePopState);
             if (this.props.isEmbedded) {
                 window.addEventListener('message', this.handleParentIdentity);
+            }
+
+            // One-shot fullscreen entry (used by /project?project_url=... which
+            // the community bundle bounces here with ?startFullscreen=1): enter
+            // fullscreen once, then drop the flag so refreshing the page later
+            // doesn't keep forcing fullscreen.
+            if (urlParams.has('startFullscreen')) {
+                this.props.onSetIsFullScreen(true);
+                const nextParams = new URLSearchParams(location.search);
+                nextParams.delete('startFullscreen');
+                setSearchParams(nextParams);
             }
         }
         componentDidUpdate (prevProps) {

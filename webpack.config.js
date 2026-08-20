@@ -1,6 +1,8 @@
 const defaultsDeep = require('lodash.defaultsdeep');
 const path = require('path');
 const fs = require('fs');
+const http = require('http');
+const https = require('https');
 const webpack = require('webpack');
 
 try {
@@ -111,6 +113,37 @@ const base = {
                 // anything else (/, /explore, /project/*, /users/*, /settings)
                 // falls through to index.html (the community app)
             ]
+        },
+        // Local stand-in for functions/api/proxy.js: same-origin endpoint that
+        // forwards to an arbitrary http(s) URL so project_url loads don't get
+        // blocked by CORS. Only the request path /api/proxy is proxied.
+        before (app) {
+            app.get('/api/proxy', (req, res) => {
+                const target = req.query.url;
+                if (!target || !/^https?:\/\//i.test(target)) {
+                    res.status(400).end('Bad request: missing or invalid url parameter');
+                    return;
+                }
+                const lib = target.startsWith('https:') ? https : http;
+                const proxyReq = lib.get(new URL(target), {
+                    headers: {'User-Agent': 'Mozilla/5.0 (compatible; BilupDevProxy/1.0)'}
+                }, upstream => {
+                    res.status(upstream.statusCode || 200);
+                    const contentType = upstream.headers['content-type'];
+                    if (contentType) {
+                        res.setHeader('content-type', contentType);
+                    }
+                    res.setHeader('cache-control', 'public, max-age=300');
+                    upstream.pipe(res);
+                });
+                proxyReq.on('error', () => {
+                    if (!res.headersSent) {
+                        res.status(502).end('Proxy error');
+                    } else {
+                        res.end();
+                    }
+                });
+            });
         }
     },
     output: {
