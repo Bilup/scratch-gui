@@ -149,7 +149,10 @@ jobs:
         # Copy build contents directly to root
         cp -r /tmp/web-build/* .
 
-        # Copy Cloudflare Pages functions into the deployed branch
+        # Copy Cloudflare Pages functions into the deployed branch.
+        # The web branch is an orphan/clean branch, so functions/ won't exist
+        # after the checkout above; create it first.
+        mkdir -p functions
         cp -r /tmp/functions/* functions/
 
         # Add all files
