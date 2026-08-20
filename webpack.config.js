@@ -143,6 +143,21 @@ const base = {
             'scratch-parser': path.resolve(__dirname, 'node_modules/scratch-parser')
         }
     },
+    // Inline loaders (e.g. `imports-loader?x!exports-loader?y!...` in
+    // scratch-blocks/shim/vertical.js) are resolved from the importing file's
+    // real location after resolve.symlinks, which for linked repos is outside
+    // this project's node_modules. Fall back to this project's node_modules so
+    // imports-loader / exports-loader resolve even when scratch-blocks is linked.
+    resolveLoader: {
+        modules: [
+            path.resolve(__dirname, 'node_modules'),
+            'node_modules'
+        ],
+        alias: {
+            'imports-loader': require.resolve('imports-loader'),
+            'exports-loader': require.resolve('exports-loader')
+        }
+    },
     module: {
         rules: [{
             test: /\.tsx?$/,
@@ -177,6 +192,11 @@ const base = {
             loader: 'babel-loader',
             include: [
                 path.resolve(__dirname, 'src'),
+                // Linked scratch-vm is resolved to its real sibling path by
+                // resolve.symlinks, so the `node_modules/scratch-*/src` regex
+                // below does not match it. Include it explicitly so its modern
+                // syntax (?. / ??) gets transpiled by babel.
+                path.resolve(__dirname, '..', 'scratch-vm', 'src'),
                 /node_modules[\\/]scratch-[^\\/]+[\\/]src/,
                 /node_modules[\\/]scratch-parser[\\/]/,
                 /node_modules[\\/]pify/,

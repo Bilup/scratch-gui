@@ -120,6 +120,19 @@ const CustomProcedures = props => (
                 onColorChange={props.onColorChange}
             />
             <Box className={styles.footer}>
+                {props.isStage ? (
+                    <label className={styles.warpLabel}>
+                        <FancyCheckbox
+                            checked={props.global}
+                            onChange={props.onToggleGlobal}
+                        />
+                        <FormattedMessage
+                            defaultMessage="[Beta]Make this block global"
+                            description="Label for checkbox to make a custom block global across sprites"
+                            id="gui.customProcedures.global"
+                        />
+                    </label>
+                ) : null}
                 <label className={styles.warpLabel}>
                     <FancyCheckbox
                         checked={props.warp}
@@ -163,13 +176,16 @@ CustomProcedures.propTypes = {
     color: PropTypes.string.isRequired,
     componentRef: PropTypes.func.isRequired,
     emptyName: PropTypes.bool,
+    global: PropTypes.bool.isRequired,
     intl: intlShape,
+    isStage: PropTypes.bool,
     onAddBoolean: PropTypes.func.isRequired,
     onAddLabel: PropTypes.func.isRequired,
     onAddTextNumber: PropTypes.func.isRequired,
     onCancel: PropTypes.func.isRequired,
     onColorChange: PropTypes.func.isRequired,
     onOk: PropTypes.func.isRequired,
+    onToggleGlobal: PropTypes.func.isRequired,
     onToggleWarp: PropTypes.func.isRequired,
     warp: PropTypes.bool.isRequired
 };

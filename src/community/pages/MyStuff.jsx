@@ -33,6 +33,7 @@ const Overview = ({stats, account, quota}) => {
     const t = (id, defaultMessage, values) => intl.formatMessage({id, defaultMessage}, values);
     const weekViews = historyRows(stats.viewHistory, 7).reduce((sum, row) => sum + row.value, 0);
     const pct = quota ? (quota.used / quota.limit) * 100 : 0;
+
     return (
         <section className={styles.dashboard}>
             <div className={styles.dashGrid}>

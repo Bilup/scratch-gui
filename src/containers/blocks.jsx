@@ -1090,6 +1090,51 @@ class Blocks extends React.Component {
             });
         }
     }
+    // Build a <mutation> DOM element from a VM procedure mutation object so it can
+    // be handed to scratch-blocks for the "我的积木" flyout category.
+    procedureMutationToDom (mutation) {
+        const el = document.createElement('mutation');
+        el.setAttribute('proccode', String(mutation.proccode || ''));
+        el.setAttribute('argumentids', String(mutation.argumentids || '[]'));
+        el.setAttribute('argumentnames', String(mutation.argumentnames || '[]'));
+        el.setAttribute('argumentdefaults', String(mutation.argumentdefaults || '[]'));
+        el.setAttribute('warp', String(mutation.warp === undefined ? 'false' : mutation.warp));
+        if (mutation.customcolor) {
+            el.setAttribute('customcolor', String(mutation.customcolor));
+        }
+        if (mutation.customFolder) {
+            el.setAttribute('customFolder', String(mutation.customFolder));
+        }
+        return el;
+    }
+    // Collect the global (cross-target) procedure definitions stored in the stage
+    // so they can be surfaced in every target's "我的积木" flyout.
+    getGlobalProcedureMutations () {
+        const stage = this.props.vm.runtime.getTargetForStage();
+        if (!stage || !stage.blocks || !stage.blocks._blocks) {
+            return [];
+        }
+        const mutations = [];
+        const blocks = stage.blocks._blocks;
+        for (const blockId in blocks) {
+            if (!Object.prototype.hasOwnProperty.call(blocks, blockId)) continue;
+            const block = blocks[blockId];
+            if (block.opcode !== 'procedures_prototype' || !block.mutation) continue;
+            const global = block.mutation.global;
+            if (global !== true && global !== 'true') continue;
+            mutations.push(this.procedureMutationToDom(block.mutation));
+        }
+        return mutations;
+    }
+    updateGlobalProcedures () {
+        if (!this.ScratchBlocks || !this.ScratchBlocks.Procedures ||
+            typeof this.ScratchBlocks.Procedures.setGlobalProcedureMutations !== 'function') {
+            return;
+        }
+        this.ScratchBlocks.Procedures.setGlobalProcedureMutations(
+            this.getGlobalProcedureMutations()
+        );
+    }
     onWorkspaceMetricsChange () {
         if (!workspaceIsAlive(this)) return;
         const target = this.props.vm.editingTarget;
@@ -1172,6 +1217,10 @@ class Blocks extends React.Component {
         }
     }
     onWorkspaceUpdate (data) {
+        // Refresh the cross-target procedure list before the toolbox rebuild so
+        // the "我的积木" flyout always shows the latest global definitions.
+        this.updateGlobalProcedures();
+
         // Batch this with target-dependent extension updates. A sprite switch
         // should describe and rebuild the toolbox once, not once per event.
         this.requestToolboxStateUpdate();
@@ -1612,6 +1661,7 @@ class Blocks extends React.Component {
 
                 {customProceduresVisible ? (
                     <CustomProcedures
+                        isStage={vm.runtime.getEditingTarget().isStage}
                         options={{
                             media: options.media
                         }}

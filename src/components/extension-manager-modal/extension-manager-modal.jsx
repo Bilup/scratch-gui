@@ -307,7 +307,7 @@ const ExtensionManagerModal = props => {
                             />
                         )}
                     </div>
-                ))}
+                );})}
 
                 {loadedExtensions.length !== 0 && !multiSelect && (
                     <Box className={styles.multiSelectRow}>

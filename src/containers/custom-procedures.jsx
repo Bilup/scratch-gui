@@ -16,6 +16,7 @@ class CustomProcedures extends React.Component {
             'handleAddBoolean',
             'handleAddTextNumber',
             'handleToggleWarp',
+            'handleToggleGlobal',
             'handleColorChange',
             'handleCancel',
             'handleKeyDown',
@@ -26,6 +27,7 @@ class CustomProcedures extends React.Component {
         this.state = {
             rtlOffset: 0,
             warp: false,
+            global: false,
             color: DEFAULT_COLOR,
             emptyName: false
         };
@@ -88,6 +90,9 @@ class CustomProcedures extends React.Component {
 
         if (typeof this.mutationRoot.getWarp === 'function') {
             this.setState({warp: this.mutationRoot.getWarp()});
+        }
+        if (typeof this.mutationRoot.getGlobal === 'function') {
+            this.setState({global: this.mutationRoot.getGlobal()});
         }
         const customColor = typeof this.mutationRoot.getCustomColor === 'function' &&
             this.mutationRoot.getCustomColor();
@@ -153,6 +158,9 @@ class CustomProcedures extends React.Component {
     handleOk () {
         if (this.state.emptyName) return;
         const newMutation = this.mutationRoot ? this.mutationRoot.mutationToDom(true) : null;
+        if (newMutation && this.state.global) {
+            newMutation.setAttribute('global', 'true');
+        }
         if (newMutation && this.state.color.toLowerCase() === DEFAULT_COLOR.toLowerCase()) {
             newMutation.removeAttribute('customcolor');
         }
@@ -182,6 +190,15 @@ class CustomProcedures extends React.Component {
             this.setState({warp: newWarp});
         }
     }
+    handleToggleGlobal () {
+        if (this.mutationRoot &&
+            typeof this.mutationRoot.getGlobal === 'function' &&
+            typeof this.mutationRoot.setGlobal === 'function') {
+            const newGlobal = !this.mutationRoot.getGlobal();
+            this.mutationRoot.setGlobal(newGlobal);
+            this.setState({global: newGlobal});
+        }
+    }
     handleColorChange (event) {
         const newColor = event.target.value;
         this.setState({color: newColor});
@@ -194,6 +211,8 @@ class CustomProcedures extends React.Component {
             <CustomProceduresComponent
                 componentRef={this.setBlocks}
                 emptyName={this.state.emptyName}
+                global={this.state.global}
+                isStage={this.props.isStage}
                 warp={this.state.warp}
                 color={this.state.color}
                 onAddBoolean={this.handleAddBoolean}
@@ -202,6 +221,7 @@ class CustomProcedures extends React.Component {
                 onCancel={this.handleCancel}
                 onColorChange={this.handleColorChange}
                 onOk={this.handleOk}
+                onToggleGlobal={this.handleToggleGlobal}
                 onToggleWarp={this.handleToggleWarp}
             />
         );
@@ -210,6 +230,7 @@ class CustomProcedures extends React.Component {
 
 CustomProcedures.propTypes = {
     isRtl: PropTypes.bool,
+    isStage: PropTypes.bool,
     mutator: PropTypes.instanceOf(Element),
     onRequestClose: PropTypes.func.isRequired,
     options: PropTypes.shape({
