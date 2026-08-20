@@ -72,15 +72,14 @@ export const onRequest = async context => {
     const url = new URL(request.url);
 
     // The bare /project path (no id) is the "direct project link" entry
-    // (e.g. /project?project_url=...). It has no community route, so make
-    // sure it always serves the community bundle (index.html), which bounces
-    // it to the editor with a one-shot fullscreen flag.
+    // (e.g. /project?project_url=...). It has no community route, so let the
+    // site's SPA fallback serve the community bundle (index.html), which
+    // bounces it to the editor with a one-shot fullscreen flag.
+    // Note: we must NOT use context.env.ASSETS.fetch('/index.html') here —
+    // Cloudflare Pages 308-redirects /index.html to /, which would bounce the
+    // visitor to the homepage instead of the community app.
     if (url.pathname === '/project' || url.pathname === '/project/') {
-        try {
-            return await context.env.ASSETS.fetch(new Request(new URL('/index.html', url.origin), request));
-        } catch (e) {
-            // fall through to the default SPA handling
-        }
+        return next();
     }
 
     const projectMatch = url.pathname.match(/^\/project\/([^/]+)\/?$/);
