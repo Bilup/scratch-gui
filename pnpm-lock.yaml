@@ -115,7 +115,7 @@ importers:
         version: 2.2.0
       isomorphic-git:
         specifier: ^1.34.0
-        version: 1.41.4
+        version: 1.41.7
       js-base64:
         specifier: 2.4.9
         version: 2.4.9
@@ -124,7 +124,7 @@ importers:
         version: 10.4.2
       just-bash:
         specifier: ^3.1.0
-        version: 3.3.0
+        version: 3.4.1
       keymirror:
         specifier: 0.1.1
         version: 0.1.1
@@ -217,7 +217,7 @@ importers:
         version: 5.0.0(react@16.14.0)
       react-router-dom:
         specifier: ^6.30.4
-        version: 6.30.4(react-dom@16.14.0(react@16.14.0))(react@16.14.0)
+        version: 6.30.6(react-dom@16.14.0(react@16.14.0))(react@16.14.0)
       react-string-replace:
         specifier: ^0.4.4
         version: 0.4.4
@@ -250,7 +250,7 @@ importers:
         version: https://codeload.github.com/Bilup/scratch-audio/tar.gz/6b71026b568d63998b647409ffe360cc6d772c32
       scratch-blocks:
         specifier: github:Bilup/new-scratch-blocks#develop-builds
-        version: https://codeload.github.com/Bilup/new-scratch-blocks/tar.gz/b7149d2060f2eee48004969dcf158f38f26788c2
+        version: https://codeload.github.com/Bilup/new-scratch-blocks/tar.gz/be4ec3469eca7b8ec63f9a95a57ece61f743cdfd
       scratch-paint:
         specifier: github:Bilup/scratch-paint#develop
         version: https://codeload.github.com/Bilup/scratch-paint/tar.gz/bcb75a7760e8448c6e7bd69d9d4a126a07f47c14(react-dom@16.14.0(react@16.14.0))(react-intl-redux@0.7.0(react-intl@2.9.0(prop-types@15.8.1)(react@16.14.0))(react-redux@5.0.7(react@16.14.0)(redux@3.7.2)))(react-intl@2.9.0(prop-types@15.8.1)(react@16.14.0))(react-popover@0.5.10)(react-redux@5.0.7(react@16.14.0)(redux@3.7.2))(react-responsive@5.0.0(react@16.14.0))(react-style-proptype@3.2.2)(react-tooltip@3.8.0(react-dom@16.14.0(react@16.14.0))(react@16.14.0))(react@16.14.0)(redux@3.7.2)(scratch-render-fonts@https://codeload.github.com/Bilup/scratch-render-fonts/tar.gz/d09642667e6b3ca7cf9420cd92350ce177694ad5)
@@ -262,7 +262,7 @@ importers:
         version: https://codeload.github.com/Bilup/scratch-render/tar.gz/a2f262093a8d8dc83409942f2068b3e762634a77(webpack@4.47.0)
       scratch-vm:
         specifier: github:Bilup/scratch-vm#develop-builds
-        version: https://codeload.github.com/Bilup/scratch-vm/tar.gz/68aaa45e655875d1e4a2ca722b148af63b41046d(@bilup/scratch-svg-renderer@https://codeload.github.com/Bilup/scratch-svg-renderer/tar.gz/cb48d4ab124c86cd355f500a4abdb41b3a560af8(scratch-render-fonts@https://codeload.github.com/Bilup/scratch-render-fonts/tar.gz/d09642667e6b3ca7cf9420cd92350ce177694ad5))(eslint@8.55.0)(webpack@4.47.0)
+        version: https://codeload.github.com/Bilup/scratch-vm/tar.gz/db0c7360aed0a8d016c033360fd87462b1c9f1e7(@bilup/scratch-svg-renderer@https://codeload.github.com/Bilup/scratch-svg-renderer/tar.gz/cb48d4ab124c86cd355f500a4abdb41b3a560af8(scratch-render-fonts@https://codeload.github.com/Bilup/scratch-render-fonts/tar.gz/d09642667e6b3ca7cf9420cd92350ce177694ad5))(eslint@8.55.0)(webpack@4.47.0)
       socks-proxy-agent:
         specifier: ^10.0.0
         version: 10.1.0
@@ -1163,8 +1163,8 @@ packages:
     engines: {node: '>=10'}
     deprecated: This functionality has been moved to @npmcli/fs
 
-  '@remix-run/router@1.23.3':
-    resolution: {integrity: sha512-4An71tdz9X8+3sI4Qqqd2LWd9vS39J7sqd9EU4Scw7TJE/qB10Flv/UuqbPVgfQV9XoK8Np6jNquZitnZq5i+Q==}
+  '@remix-run/router@1.23.4':
+    resolution: {integrity: sha512-q7j5geK7xs3UJSdm9/iytUNclBnLmYx1EnSeCFXHPeutdqgIMeFeHtUZgS3EhlKxdBEAu8OwtJCwmLrEzpSs7Q==}
     engines: {node: '>=14.0.0'}
 
   '@sphinxxxx/color-conversion@2.2.2':
@@ -1831,8 +1831,8 @@ packages:
     resolution: {integrity: sha512-5T6P4xPgpp0YDFvSWwEZ4NoE3aM4QBQXDzmVbraCkFj8zHM+mba8SyqB5DbZWyR7mYHo6Y7BdQo3MoA4m0TeQg==}
     engines: {node: '>=0.10.0'}
 
-  baseline-browser-mapping@2.11.14:
-    resolution: {integrity: sha512-JyJ954WzuIR8/FFzX0o5krdSTrBAkcCSRfWSleRsIHSWV+cZe2FI1PKggVkFke1hBldRs+LRxUczzE9iPmgZww==}
+  baseline-browser-mapping@2.11.15:
+    resolution: {integrity: sha512-FwMjJJ7HnyZpWe+oWxegG0fezZyBZUagI5LZEoO3GCbtbKNwRfMH9Ue5d5v01PNePBy1QSfPSDTTeVL0Hb9EzA==}
     engines: {node: '>=6.0.0'}
     hasBin: true
 
@@ -2625,8 +2625,8 @@ packages:
     resolution: {integrity: sha512-cgwlv/1iFQiFnU96XXgROh8xTeetsnJiDsTc7TYCLFd9+/WNkIqPTxiM/8pSd8VIrhXGTf1Ny1q1hquVqDJB5w==}
     engines: {node: '>= 4'}
 
-  dompurify@3.4.13:
-    resolution: {integrity: sha512-2vmYIoqjze2d+kakP8S/nS5shfsl587kzwEjcGlTdiksUVgFHnFCsLYDVj/JNqJVOQZGSYBTmuycv0PodwmnMQ==}
+  dompurify@3.4.14:
+    resolution: {integrity: sha512-dVoH9z+MY+C9IilgGCk3YfFqjLi3fChm2OiKJMzh6axrJ5qwxqWaZamgmHrpv22CN/KdbZJuGEGgfQoL00LTdg==}
 
   domutils@1.7.0:
     resolution: {integrity: sha512-Lgd2XcJ/NjEw+7tFvfKxOzCYKZsdct5lczQ2ZaQY8Djz7pfAD3Gbp8ySJWtreII/vDlMVmxwa6pHmdxIYgttDg==}
@@ -2659,8 +2659,8 @@ packages:
   ee-first@1.1.1:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
 
-  electron-to-chromium@1.5.408:
-    resolution: {integrity: sha512-SLoprcYpJ/OH2v2ps0+N5biv9H4/KBT3+YmmDew64TwK5y9j2wv7pMOFY7IorVkyMtEyLSCRlXKLsNlakeAlPw==}
+  electron-to-chromium@1.5.411:
+    resolution: {integrity: sha512-gglkxzokjHfawpGxq75XdBV2/l3BAPzrsMs70qgaZdTW5rpV1tC4MdgJVP9fN126bODA4ZJQkn1wryEzJyQXIg==}
 
   elliptic@6.6.1:
     resolution: {integrity: sha512-RaddvvMatK2LJHqFJ+YA4WysVN5Ita9E35botqIYspQ4TkRAlCicdzKOjlyv/1Za5RyTNn7di//eEV0uTAfe3g==}
@@ -4042,8 +4042,8 @@ packages:
   is-typedarray@1.0.0:
     resolution: {integrity: sha512-cyA56iCMHAh5CdzjJIa4aohJyeO1YbwLi3Jc35MmRU6poroFjIGZzUzupGiRPOjgHg9TLu43xbpwXk523fMxKA==}
 
-  is-unsafe@2.0.0:
-    resolution: {integrity: sha512-2LdV822R+wmI86unXA93WCFpL6g+av8ynWk0nrHyJqGop5VoocYsSLFgN8jrfalT6iGeLNM4KXuVSsULP53kEA==}
+  is-unsafe@2.0.2:
+    resolution: {integrity: sha512-HgbIHPBH0KHHCcjLfGsCvhtPTVxjaAZlXjwdz7/GQC40SjSe4sfQsar8J5VFo8JOSbarkpV0OLG95bbaNd9aAQ==}
 
   is-url@1.2.4:
     resolution: {integrity: sha512-ITvGim8FhRiYe4IQ5uHSkj7pVaPDrCTkNd3yq3cV7iZAcJdHTUMPMEHcqSOy9xZ9qFenQCvi+2wjH9a1nXqHww==}
@@ -4100,8 +4100,8 @@ packages:
     resolution: {integrity: sha512-WhB9zCku7EGTj/HQQRz5aUQEUeoQZH2bWcltRErOpymJ4boYE6wL9Tbr23krRPSZ+C5zqNSrSw+Cc7sZZ4b7vg==}
     engines: {node: '>=0.10.0'}
 
-  isomorphic-git@1.41.4:
-    resolution: {integrity: sha512-XfZteQRhteAdzOlKcWAeC+Zkx0ZtAh0yIO0EyURAO+mDcIBg5kzKg4UtnYE7GcmKB6qFZc0zMCXdgod/cQXVXw==}
+  isomorphic-git@1.41.7:
+    resolution: {integrity: sha512-ZCyMNg0eLUmuhGXdVQFi56fM93kwIqqlUSVnWbgzf1oDYidrQbWfrf+hEvn2E8xyo191zRPQyDCIlwg6YJ6isQ==}
     engines: {node: '>=14.17'}
     hasBin: true
 
@@ -4332,8 +4332,8 @@ packages:
   jszip@3.10.1:
     resolution: {integrity: sha512-xXDvecyTpGLrqFrvkrUSoxxfJI5AH7U8zxxtVclpsUtMCq4JQ290LY8AW5c7Ggnr/Y/oK+bQMbqK2qmtk3pN4g==}
 
-  just-bash@3.3.0:
-    resolution: {integrity: sha512-jh+qnThmOZ8V7+NTy6MHR0+7jJGMnsdrm6Cnhjz66cmE9FgYyB+XdMnYj0JD0cMEl+Tnl3bXfEY2lhIiEMBG2g==}
+  just-bash@3.4.1:
+    resolution: {integrity: sha512-OfrDvaJ+pDEaJQYeIri6Y36WncX+8nbfizGUHwj60MxuInYtQhfzDHRIhv3nw55ZoulXFOk9rdDb90HuydiX8w==}
     engines: {node: '>=20.18.1'}
     hasBin: true
 
@@ -5727,15 +5727,15 @@ packages:
     peerDependencies:
       react: ^16.0.0
 
-  react-router-dom@6.30.4:
-    resolution: {integrity: sha512-q4HvNl+mmDdkS0g+MqiBZNteQJCuimWoOyHMy4T/RQLAn9Z29+E91QXRaxOujeMl2HTzRSS0KFPd7lxX3PjV0Q==}
+  react-router-dom@6.30.6:
+    resolution: {integrity: sha512-0RHKZz7wwffvkU+2MFVT2NnjK44ssLEV+m0CAJaS2Ksmorrwj7WxH00jO0SOCW26/tINUnJHToXblDs33I38YQ==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
       react: '>=16.8'
       react-dom: '>=16.8'
 
-  react-router@6.30.4:
-    resolution: {integrity: sha512-SVUsDe+DybHM/WmYKIVYhZh1o5Dcuf16yM6WjG02Q9XVFMZIJyHYhwrr6bFBXZkVP6z69kNkMyBCujt8FaFLJA==}
+  react-router@6.30.6:
+    resolution: {integrity: sha512-5HfK7k5im7LTOB0EqCQmfvy4C13G92Ssj1VTmouTK3AJvyjKTnFuCV0vcMAD/JS+JC4DvDIBRrlAeJIFjh5VWg==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
       react: '>=16.8'
@@ -5774,8 +5774,8 @@ packages:
     resolution: {integrity: sha512-0X2CImDkJGApiAlcf0ODKIneSwBPhqJawOa5wCtKbu7ZECrmS26NvtSILynQ66cgkT/RJ4LidJOc3bUESwmU8g==}
     engines: {node: '>=0.10.0'}
 
-  read-cache@1.0.0:
-    resolution: {integrity: sha512-Owdv/Ft7IjOgm/i0xvNDZ1LrRANRfew4b2prF3OWMQLxLfu3bS8FVhCsrSCMK4lR56Y9ya+AThoTpDCTxCmpRA==}
+  read-cache@1.0.2:
+    resolution: {integrity: sha512-/peqiBB/n07gQGLsWaHho3WfvUyRscw0gYTsEFMhrIe/nWLkYaf5SbKYjGYqtRV3aPwykJgF2VEMo1ac4bnsGA==}
 
   read-package-json@2.1.2:
     resolution: {integrity: sha512-D1KmuLQr6ZSJS0tW8hf3WGpRlwszJOXZ3E8Yd/DNRaM5d+1wVRZdHlpGBLAuovjr28LbWvjpWkBHMxpRGGjzNA==}
@@ -6051,8 +6051,8 @@ packages:
     resolution: {tarball: https://codeload.github.com/Bilup/scratch-audio/tar.gz/6b71026b568d63998b647409ffe360cc6d772c32}
     version: 0.1.0
 
-  scratch-blocks@https://codeload.github.com/Bilup/new-scratch-blocks/tar.gz/b7149d2060f2eee48004969dcf158f38f26788c2:
-    resolution: {tarball: https://codeload.github.com/Bilup/new-scratch-blocks/tar.gz/b7149d2060f2eee48004969dcf158f38f26788c2}
+  scratch-blocks@https://codeload.github.com/Bilup/new-scratch-blocks/tar.gz/be4ec3469eca7b8ec63f9a95a57ece61f743cdfd:
+    resolution: {tarball: https://codeload.github.com/Bilup/new-scratch-blocks/tar.gz/be4ec3469eca7b8ec63f9a95a57ece61f743cdfd}
     version: 0.1.0
 
   scratch-paint@https://codeload.github.com/Bilup/scratch-paint/tar.gz/bcb75a7760e8448c6e7bd69d9d4a126a07f47c14:
@@ -6093,8 +6093,8 @@ packages:
   scratch-translate-extension-languages@0.0.20191118205314:
     resolution: {integrity: sha512-r0lvpgQjPMjbhI2wROrgoXzBhCvWJdkbAqJMfl2CdNqrwBpUXqLvNNtI3VtNLPJAcp9VfxEylkU9lVZ0gvU46Q==}
 
-  scratch-vm@https://codeload.github.com/Bilup/scratch-vm/tar.gz/68aaa45e655875d1e4a2ca722b148af63b41046d:
-    resolution: {tarball: https://codeload.github.com/Bilup/scratch-vm/tar.gz/68aaa45e655875d1e4a2ca722b148af63b41046d}
+  scratch-vm@https://codeload.github.com/Bilup/scratch-vm/tar.gz/db0c7360aed0a8d016c033360fd87462b1c9f1e7:
+    resolution: {tarball: https://codeload.github.com/Bilup/scratch-vm/tar.gz/db0c7360aed0a8d016c033360fd87462b1c9f1e7}
     version: 2.1.46
     peerDependencies:
       '@bilup/scratch-svg-renderer': github:Bilup/scratch-svg-renderer#develop-builds
@@ -8001,7 +8001,7 @@ snapshots:
       '@turbowarp/nanolog': 0.2.0
       base64-js: 1.2.1
       base64-loader: 1.0.0
-      dompurify: 3.4.13
+      dompurify: 3.4.14
       scratch-render-fonts: https://codeload.github.com/Bilup/scratch-render-fonts/tar.gz/d09642667e6b3ca7cf9420cd92350ce177694ad5
       transformation-matrix: 1.15.0
 
@@ -8154,7 +8154,7 @@ snapshots:
       mkdirp: 1.0.4
       rimraf: 3.0.2
 
-  '@remix-run/router@1.23.3': {}
+  '@remix-run/router@1.23.4': {}
 
   '@sphinxxxx/color-conversion@2.2.2': {}
 
@@ -8972,7 +8972,7 @@ snapshots:
       mixin-deep: 1.3.2
       pascalcase: 0.1.1
 
-  baseline-browser-mapping@2.11.14: {}
+  baseline-browser-mapping@2.11.15: {}
 
   batch@0.6.1: {}
 
@@ -9130,9 +9130,9 @@ snapshots:
 
   browserslist@4.28.8:
     dependencies:
-      baseline-browser-mapping: 2.11.14
+      baseline-browser-mapping: 2.11.15
       caniuse-lite: 1.0.30001809
-      electron-to-chromium: 1.5.408
+      electron-to-chromium: 1.5.411
       node-releases: 2.0.53
       update-browserslist-db: 1.3.1(browserslist@4.28.8)
 
@@ -9950,7 +9950,7 @@ snapshots:
     dependencies:
       domelementtype: 2.3.0
 
-  dompurify@3.4.13:
+  dompurify@3.4.14:
     optionalDependencies:
       '@types/trusted-types': 2.0.7
 
@@ -10004,7 +10004,7 @@ snapshots:
 
   ee-first@1.1.1: {}
 
-  electron-to-chromium@1.5.408: {}
+  electron-to-chromium@1.5.411: {}
 
   elliptic@6.6.1:
     dependencies:
@@ -10642,7 +10642,7 @@ snapshots:
     dependencies:
       '@nodable/entities': 3.0.0
       fast-xml-builder: 1.3.1
-      is-unsafe: 2.0.0
+      is-unsafe: 2.0.2
       path-expression-matcher: 1.6.2
       strnum: 2.4.2
       xml-naming: 0.3.0
@@ -11712,7 +11712,7 @@ snapshots:
 
   is-typedarray@1.0.0: {}
 
-  is-unsafe@2.0.0: {}
+  is-unsafe@2.0.2: {}
 
   is-url@1.2.4: {}
 
@@ -11757,7 +11757,7 @@ snapshots:
 
   isobject@3.0.1: {}
 
-  isomorphic-git@1.41.4:
+  isomorphic-git@1.41.7:
     dependencies:
       async-lock: 1.4.1
       clean-git-ref: 2.0.1
@@ -12179,7 +12179,7 @@ snapshots:
       readable-stream: 2.3.8
       setimmediate: 1.0.5
 
-  just-bash@3.3.0:
+  just-bash@3.4.1:
     dependencies:
       diff: 8.0.4
       fast-xml-parser: 5.11.0
@@ -13530,7 +13530,7 @@ snapshots:
     dependencies:
       postcss: 7.0.39
       postcss-value-parser: 3.3.1
-      read-cache: 1.0.0
+      read-cache: 1.0.2
       resolve: 1.22.12
 
   postcss-load-config@2.1.2:
@@ -13902,16 +13902,16 @@ snapshots:
       prop-types: 15.8.1
       react: 16.14.0
 
-  react-router-dom@6.30.4(react-dom@16.14.0(react@16.14.0))(react@16.14.0):
+  react-router-dom@6.30.6(react-dom@16.14.0(react@16.14.0))(react@16.14.0):
     dependencies:
-      '@remix-run/router': 1.23.3
+      '@remix-run/router': 1.23.4
       react: 16.14.0
       react-dom: 16.14.0(react@16.14.0)
-      react-router: 6.30.4(react@16.14.0)
+      react-router: 6.30.6(react@16.14.0)
 
-  react-router@6.30.4(react@16.14.0):
+  react-router@6.30.6(react@16.14.0):
     dependencies:
-      '@remix-run/router': 1.23.3
+      '@remix-run/router': 1.23.4
       react: 16.14.0
 
   react-string-replace@0.4.4:
@@ -13960,9 +13960,7 @@ snapshots:
       object-assign: 4.1.1
       prop-types: 15.8.1
 
-  read-cache@1.0.0:
-    dependencies:
-      pify: 2.3.0
+  read-cache@1.0.2: {}
 
   read-package-json@2.1.2:
     dependencies:
@@ -14327,7 +14325,7 @@ snapshots:
       '@turbowarp/nanolog': 0.2.0
       '@turbowarp/startaudiocontext': 1.0.0
 
-  scratch-blocks@https://codeload.github.com/Bilup/new-scratch-blocks/tar.gz/b7149d2060f2eee48004969dcf158f38f26788c2:
+  scratch-blocks@https://codeload.github.com/Bilup/new-scratch-blocks/tar.gz/be4ec3469eca7b8ec63f9a95a57ece61f743cdfd:
     dependencies:
       exports-loader: 0.7.0
       imports-loader: 0.8.0
@@ -14403,7 +14401,7 @@ snapshots:
 
   scratch-translate-extension-languages@0.0.20191118205314: {}
 
-  scratch-vm@https://codeload.github.com/Bilup/scratch-vm/tar.gz/68aaa45e655875d1e4a2ca722b148af63b41046d(@bilup/scratch-svg-renderer@https://codeload.github.com/Bilup/scratch-svg-renderer/tar.gz/cb48d4ab124c86cd355f500a4abdb41b3a560af8(scratch-render-fonts@https://codeload.github.com/Bilup/scratch-render-fonts/tar.gz/d09642667e6b3ca7cf9420cd92350ce177694ad5))(eslint@8.55.0)(webpack@4.47.0):
+  scratch-vm@https://codeload.github.com/Bilup/scratch-vm/tar.gz/db0c7360aed0a8d016c033360fd87462b1c9f1e7(@bilup/scratch-svg-renderer@https://codeload.github.com/Bilup/scratch-svg-renderer/tar.gz/cb48d4ab124c86cd355f500a4abdb41b3a560af8(scratch-render-fonts@https://codeload.github.com/Bilup/scratch-render-fonts/tar.gz/d09642667e6b3ca7cf9420cd92350ce177694ad5))(eslint@8.55.0)(webpack@4.47.0):
     dependencies:
       '@bilup/scratch-svg-renderer': https://codeload.github.com/Bilup/scratch-svg-renderer/tar.gz/cb48d4ab124c86cd355f500a4abdb41b3a560af8(scratch-render-fonts@https://codeload.github.com/Bilup/scratch-render-fonts/tar.gz/d09642667e6b3ca7cf9420cd92350ce177694ad5)
       '@turbowarp/json': 0.1.2
