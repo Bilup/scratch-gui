@@ -71,6 +71,18 @@ export const onRequest = async context => {
     const {request, next} = context;
     const url = new URL(request.url);
 
+    // The bare /project path (no id) is the "direct project link" entry
+    // (e.g. /project?project_url=...). It has no community route, so make
+    // sure it always serves the community bundle (index.html), which bounces
+    // it to the editor with a one-shot fullscreen flag.
+    if (url.pathname === '/project' || url.pathname === '/project/') {
+        try {
+            return await context.env.ASSETS.fetch(new Request(new URL('/index.html', url.origin), request));
+        } catch (e) {
+            // fall through to the default SPA handling
+        }
+    }
+
     const projectMatch = url.pathname.match(/^\/project\/([^/]+)\/?$/);
     const userMatch = url.pathname.match(/^\/users\/([^/]+)(\/followers)?\/?$/);
     if (!projectMatch && !userMatch) return next();

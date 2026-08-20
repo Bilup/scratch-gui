@@ -22,7 +22,19 @@ import '!!style-loader!css-loader!../community/styles/tokens.css';
 // everything else (e.g. p1784...) is a MistWarp community project.
 const embedMatch = typeof location !== 'undefined' &&
     location.pathname.match(/^\/(\d+|p[A-Za-z0-9]+)\/embed\/?$/);
-if (embedMatch) {
+// The bare /project path (no id) is the "direct project link" entry, e.g.
+// /project?project_url=... . It also falls through to this community bundle,
+// where there is no matching route (only /project/:id exists). Bounce it to
+// the editor with a one-shot fullscreen flag so the project opens fullscreen
+// and exiting fullscreen lands in the editor.
+const projectEntryMatch = typeof location !== 'undefined' &&
+    (location.pathname === '/project' || location.pathname === '/project/');
+if (projectEntryMatch) {
+    const params = new URLSearchParams(location.search);
+    params.set('startFullscreen', '1');
+    const query = params.toString();
+    location.replace(`/editor${query ? `?${query}` : ''}${location.hash}`);
+} else if (embedMatch) {
     const id = embedMatch[1];
     location.replace(`/embed${location.search}#${/^\d+$/.test(id) ? id : `mw-${id}`}`);
 } else {
