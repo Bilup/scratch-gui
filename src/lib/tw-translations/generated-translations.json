@@ -1508,7 +1508,8 @@
         "gui.gui.findBlocks": "查找积木",
         "gui.stageHeader.stageHidden": "隐藏舞台",
         "block-count/blocks": "{num, plural, other {# 个积木}}",
-        "block-count/open-analysis": "打开项目复杂度分析"
+        "block-count/open-analysis": "打开项目复杂度分析",
+        "gui.customProcedures.global": "[Beta]将此积木设为全局"
     },
     "en": {
         "mw.menuBar.file": "File",
