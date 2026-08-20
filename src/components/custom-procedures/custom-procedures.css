@@ -229,3 +229,11 @@
     opacity: 0.5;
     cursor: default;
 }
+
+.duplicate-name-error {
+    color: $error-primary;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-align: right;
+    flex-shrink: 0;
+}

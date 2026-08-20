@@ -29,7 +29,8 @@ class CustomProcedures extends React.Component {
             warp: false,
             global: false,
             color: DEFAULT_COLOR,
-            emptyName: false
+            emptyName: false,
+            duplicateName: false
         };
     }
     componentDidMount () {
@@ -78,6 +79,10 @@ class CustomProcedures extends React.Component {
         this.workspace.addChangeListener(() => {
             if (!this.workspace || !this.mutationRoot || !this.mutationRoot.workspace) return;
             this.mutationRoot.onChangeFn();
+            // 名字一旦被用户修改，重置上一次的重名拦截，允许重新提交
+            if (this.state.duplicateName) {
+                this.setState({duplicateName: false});
+            }
             const emptyName = !(this.mutationRoot.procCode_ || '').trim();
             if (emptyName !== this.state.emptyName) {
                 this.setState({emptyName});
@@ -164,7 +169,73 @@ class CustomProcedures extends React.Component {
         if (newMutation && this.state.color.toLowerCase() === DEFAULT_COLOR.toLowerCase()) {
             newMutation.removeAttribute('customcolor');
         }
+        // Reject names that collide with an existing procedure: a global block
+        // is visible from every target, and a regular block cannot shadow a
+        // global one either. Editing the same block keeps its own name legal.
+        if (newMutation && this.isNameTaken(newMutation)) {
+            this.setState({duplicateName: true});
+            return;
+        }
         this.props.onRequestClose(newMutation);
+    }
+    // Whether the procedure name in the given mutation is already used by
+    // another procedure in the project. Global (cross-target) procedures
+    // stored in the stage are matched against every target; regular blocks
+    // only collide with other blocks in the current target (Scratch's usual
+    // per-target namespace) plus the global procedures.
+    isNameTaken (newMutation) {
+        const newProcCode = newMutation.getAttribute('proccode');
+        if (!newProcCode) return false;
+        const vm = this.props.vm;
+        if (!vm) return false;
+        // The block currently being edited keeps its own name, so that
+        // re-saving without changes is not treated as a collision.
+        const editingProcCode = this.props.mutator ?
+            this.props.mutator.getAttribute('proccode') : null;
+        const procCodeEquals = (a, b) =>
+            typeof a === 'string' && typeof b === 'string' &&
+            a.toLowerCase() === b.toLowerCase();
+
+        const stage = vm.runtime.getTargetForStage();
+        const editingTarget = vm.editingTarget;
+        const isGlobalNew = this.state.global;
+
+        // Collect the names that must not collide with the new procedure.
+        // stage: global blocks + (when editing the stage) the stage's own blocks.
+        // editingTarget: the current sprite's own regular blocks.
+        const targets = [];
+        if (stage) targets.push(stage);
+        if (editingTarget && editingTarget !== stage) targets.push(editingTarget);
+        // A new global block collides with regular blocks on *any* target,
+        // since it becomes visible everywhere. A new regular block only
+        // collides within its own target.
+        const checkTargets = isGlobalNew ?
+            vm.runtime.targets : targets;
+
+        for (const target of checkTargets) {
+            if (!target || !target.blocks || !target.blocks._blocks) continue;
+            const blocks = target.blocks._blocks;
+            for (const blockId in blocks) {
+                if (!Object.prototype.hasOwnProperty.call(blocks, blockId)) continue;
+                const block = blocks[blockId];
+                if (block.opcode !== 'procedures_prototype' || !block.mutation) continue;
+                const procCode = block.mutation.proccode;
+                if (!procCode) continue;
+                // Skip the block being edited itself.
+                if (procCodeEquals(procCode, editingProcCode)) continue;
+                if (!procCodeEquals(procCode, newProcCode)) continue;
+                // A regular (non-global) block on a *different* sprite does not
+                // collide with a new regular block (Scratch per-target rules),
+                // but every global block is project-wide.
+                const isGlobalExisting = block.mutation.global === true ||
+                    block.mutation.global === 'true';
+                if (!isGlobalNew && !isGlobalExisting && target !== editingTarget) {
+                    continue;
+                }
+                return true;
+            }
+        }
+        return false;
     }
     handleAddLabel () {
         if (this.mutationRoot) {
@@ -223,6 +294,7 @@ class CustomProcedures extends React.Component {
                 onOk={this.handleOk}
                 onToggleGlobal={this.handleToggleGlobal}
                 onToggleWarp={this.handleToggleWarp}
+                duplicateName={this.state.duplicateName}
             />
         );
     }
@@ -242,7 +314,14 @@ CustomProcedures.propTypes = {
         }),
         comments: PropTypes.bool,
         collapse: PropTypes.bool
-    })
+    }),
+    vm: PropTypes.shape({
+        runtime: PropTypes.shape({
+            getTargetForStage: PropTypes.func,
+            targets: PropTypes.array
+        }),
+        editingTarget: PropTypes.object
+    }).isRequired
 };
 
 CustomProcedures.defaultOptions = {

@@ -17,6 +17,11 @@ const messages = defineMessages({
         defaultMessage: 'Make a Block',
         description: 'Title for the modal where you create a custom block.',
         id: 'gui.customProcedures.myblockModalTitle'
+    },
+    duplicateName: {
+        defaultMessage: 'A block with this name already exists',
+        description: 'Error shown when the custom block name collides with an existing block',
+        id: 'gui.customProcedures.duplicateName'
     }
 });
 
@@ -120,19 +125,17 @@ const CustomProcedures = props => (
                 onColorChange={props.onColorChange}
             />
             <Box className={styles.footer}>
-                {props.isStage ? (
-                    <label className={styles.warpLabel}>
-                        <FancyCheckbox
-                            checked={props.global}
-                            onChange={props.onToggleGlobal}
-                        />
-                        <FormattedMessage
-                            defaultMessage="[Beta]Make this block global"
-                            description="Label for checkbox to make a custom block global across sprites"
-                            id="gui.customProcedures.global"
-                        />
-                    </label>
-                ) : null}
+                <label className={styles.warpLabel}>
+                    <FancyCheckbox
+                        checked={props.global}
+                        onChange={props.onToggleGlobal}
+                    />
+                    <FormattedMessage
+                        defaultMessage="[Beta]Make this block global"
+                        description="Label for checkbox to make a custom block global across sprites"
+                        id="gui.customProcedures.global"
+                    />
+                </label>
                 <label className={styles.warpLabel}>
                     <FancyCheckbox
                         checked={props.warp}
@@ -157,7 +160,7 @@ const CustomProcedures = props => (
                     </button>
                     <button
                         className={styles.okButton}
-                        disabled={props.emptyName}
+                        disabled={props.emptyName || props.duplicateName}
                         onClick={props.onOk}
                     >
                         <FormattedMessage
@@ -168,6 +171,11 @@ const CustomProcedures = props => (
                     </button>
                 </Box>
             </Box>
+            {props.duplicateName ? (
+                <Box className={styles.duplicateNameError}>
+                    <FormattedMessage {...messages.duplicateName} />
+                </Box>
+            ) : null}
         </Box>
     </Modal>
 );
@@ -175,6 +183,7 @@ const CustomProcedures = props => (
 CustomProcedures.propTypes = {
     color: PropTypes.string.isRequired,
     componentRef: PropTypes.func.isRequired,
+    duplicateName: PropTypes.bool,
     emptyName: PropTypes.bool,
     global: PropTypes.bool.isRequired,
     intl: intlShape,
