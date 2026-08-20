@@ -1099,6 +1099,9 @@ class Blocks extends React.Component {
         el.setAttribute('argumentnames', String(mutation.argumentnames || '[]'));
         el.setAttribute('argumentdefaults', String(mutation.argumentdefaults || '[]'));
         el.setAttribute('warp', String(mutation.warp === undefined ? 'false' : mutation.warp));
+        if (mutation.global) {
+            el.setAttribute('global', 'true');
+        }
         if (mutation.customcolor) {
             el.setAttribute('customcolor', String(mutation.customcolor));
         }
@@ -1665,6 +1668,7 @@ class Blocks extends React.Component {
                         options={{
                             media: options.media
                         }}
+                        vm={vm}
                         onRequestClose={this.handleCustomProceduresClose}
                     />
                 ) : null}
