@@ -124,10 +124,14 @@ jobs:
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-        # Backup build folder
-        rm -rf /tmp/web-build
+        # Backup build folder and Cloudflare Pages functions.
+        # The web branch is what com.bilup.org is served from (via Cloudflare
+        # Pages), so the functions/ directory must live at the repo root there
+        # for /api/proxy and _middleware.js to actually execute.
+        rm -rf /tmp/web-build /tmp/functions
         mkdir -p /tmp/web-build
         cp -r /tmp/build/* /tmp/web-build/
+        cp -r functions /tmp/functions
 
         # Fetch web branch if exists
         git fetch origin web 2>/dev/null || true
@@ -144,6 +148,9 @@ jobs:
 
         # Copy build contents directly to root
         cp -r /tmp/web-build/* .
+
+        # Copy Cloudflare Pages functions into the deployed branch
+        cp -r /tmp/functions/* functions/
 
         # Add all files
         git add -A
