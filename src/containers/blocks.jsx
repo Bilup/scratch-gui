@@ -197,6 +197,15 @@ class Blocks extends React.Component {
 
         this.ScratchBlocks.FieldColourSlider.activateEyedropper_ = this.props.onActivateColorPicker;
         this.ScratchBlocks.Procedures.externalProcedureDefCallback = this.props.onActivateCustomProcedures;
+        // Global (cross-target) procedures are defined in the stage. When one
+        // is edited from any target, the new mutation must be pushed back into
+        // the VM's stage blocks and broadcast so every flyout/workspace picks
+        // it up (the prototype lives in the stage, not the current workspace).
+        this.ScratchBlocks.Procedures.externalGlobalProcedureEditCallback =
+            (procCode, mutation) => {
+                const xml = this.ScratchBlocks.Xml.domToText(mutation);
+                this.props.vm.updateGlobalProcedure(procCode, xml);
+            };
         this.ScratchBlocks.ScratchMsgs.setLocale(this.props.locale);
 
         const Msg = this.ScratchBlocks.Msg;
