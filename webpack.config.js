@@ -192,6 +192,13 @@ const base = {
         }
     },
     module: {
+        // peerjs ships a self-contained browserify bundle whose internal
+        // requires use its own parcelRequire polyfill (not webpack's require).
+        // webpack 5 still scans it and emits a spurious
+        // "Critical dependency: the request of a dependency is an expression"
+        // warning at peerjs.min.js 1:292. Skipping parsing for peerjs removes
+        // the warning and is safe because the bundle resolves its own modules.
+        noParse: /peerjs/,
         rules: [{
             test: /\.tsx?$/,
             use: [

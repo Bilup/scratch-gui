@@ -36,6 +36,21 @@ class CustomProcedures extends React.Component {
     componentDidMount () {
         document.addEventListener('keydown', this.handleKeyDown);
     }
+    componentDidUpdate (prevProps) {
+        // Blockly measures text width against the loaded font family. The GUI
+        // loads fonts asynchronously, so the first time the dialog opens the
+        // custom font may not be ready yet, which misplaces the name/argument
+        // text boxes. Re-render once the fonts have finished loading.
+        if (!prevProps.fontsLoaded && this.props.fontsLoaded &&
+                this.workspace && this.mutationRoot) {
+            this.mutationRoot.render();
+            this.workspace.resize();
+            this.recenterBlock();
+            if (this.mutationRoot && this.mutationRoot.workspace) {
+                this.mutationRoot.focusLastEditor_();
+            }
+        }
+    }
     componentWillUnmount () {
         document.removeEventListener('keydown', this.handleKeyDown);
         if (this.workspace) {
@@ -79,9 +94,12 @@ class CustomProcedures extends React.Component {
         this.workspace.addChangeListener(() => {
             if (!this.workspace || !this.mutationRoot || !this.mutationRoot.workspace) return;
             this.mutationRoot.onChangeFn();
-            // 名字一旦被用户修改，重置上一次的重名拦截，允许重新提交
-            if (this.state.duplicateName) {
-                this.setState({duplicateName: false});
+            // 实时检查积木名是否与其他积木重复：重复时禁用 OK 按钮并提示，
+            // 名字修改后自动解除
+            const newMutation = this.mutationRoot.mutationToDom(true);
+            const duplicateName = !!newMutation && this.isNameTaken(newMutation);
+            if (duplicateName !== this.state.duplicateName) {
+                this.setState({duplicateName});
             }
             const emptyName = !(this.mutationRoot.procCode_ || '').trim();
             if (emptyName !== this.state.emptyName) {
@@ -105,12 +123,18 @@ class CustomProcedures extends React.Component {
             this.setState({color: customColor});
         }
 
-        setTimeout(() => {
-            if (this.mutationRoot && this.mutationRoot.workspace) {
-                this.mutationRoot.focusLastEditor_();
-            }
-        });
-
+        // Focus the last editor once the block is laid out. When the custom
+        // fonts have not finished loading yet (first dialog open), skip the
+        // focus here; componentDidUpdate re-renders and focuses once the
+        // fonts are ready so the text boxes are measured against the real
+        // font instead of the fallback one.
+        if (this.props.fontsLoaded) {
+            setTimeout(() => {
+                if (this.mutationRoot && this.mutationRoot.workspace) {
+                    this.mutationRoot.focusLastEditor_();
+                }
+            });
+        }
         if (window.ResizeObserver) {
             this.resizeObserver = new ResizeObserver(() => {
                 if (!this.workspace) return;
@@ -183,7 +207,10 @@ class CustomProcedures extends React.Component {
     // stored in the stage are matched against every target; regular blocks
     // only collide with other blocks in the current target (Scratch's usual
     // per-target namespace) plus the global procedures.
-    isNameTaken (newMutation) {
+    // @param {?boolean} optGlobal Override the global flag used for the check;
+    //     defaults to the current state (useful when toggling the checkbox
+    //     before the state has settled).
+    isNameTaken (newMutation, optGlobal) {
         const newProcCode = newMutation.getAttribute('proccode');
         if (!newProcCode) return false;
         const vm = this.props.vm;
@@ -198,7 +225,8 @@ class CustomProcedures extends React.Component {
 
         const stage = vm.runtime.getTargetForStage();
         const editingTarget = vm.editingTarget;
-        const isGlobalNew = this.state.global;
+        const isGlobalNew = typeof optGlobal === 'boolean' ?
+            optGlobal : this.state.global;
 
         // Collect the names that must not collide with the new procedure.
         // stage: global blocks + (when editing the stage) the stage's own blocks.
@@ -268,6 +296,14 @@ class CustomProcedures extends React.Component {
             const newGlobal = !this.mutationRoot.getGlobal();
             this.mutationRoot.setGlobal(newGlobal);
             this.setState({global: newGlobal});
+            // setGlobal 不触发 Blockly change 事件，而全局/非全局会改变重名
+            // 判定范围，这里手动重新检查
+            const newMutation = this.mutationRoot.mutationToDom(true);
+            const duplicateName = !!newMutation &&
+                this.isNameTaken(newMutation, newGlobal);
+            if (duplicateName !== this.state.duplicateName) {
+                this.setState({duplicateName});
+            }
         }
     }
     handleColorChange (event) {
@@ -301,6 +337,7 @@ class CustomProcedures extends React.Component {
 }
 
 CustomProcedures.propTypes = {
+    fontsLoaded: PropTypes.bool,
     isRtl: PropTypes.bool,
     isStage: PropTypes.bool,
     mutator: PropTypes.instanceOf(Element),
@@ -352,7 +389,8 @@ CustomProcedures.defaultProps = {
 
 const mapStateToProps = state => ({
     isRtl: state.locales.isRtl,
-    mutator: state.scratchGui.customProcedures.mutator
+    mutator: state.scratchGui.customProcedures.mutator,
+    fontsLoaded: state.scratchGui.fontsLoaded
 });
 
 export default connect(
