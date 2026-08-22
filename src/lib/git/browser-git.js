@@ -27,6 +27,43 @@ const getFs = () => {
     return fsSingleton;
 };
 
+// ---------------------------------------------------------------------------
+// 项目变更检测缓存
+//
+// getRepoChanges 在 git 面板轮询（每次编辑防抖后）都会调用
+// writeProjectToFractchTree：全量序列化项目 + 清空并重建整个工作树，
+// 对中大型工程是 O(工程大小) 的重活，频繁触发会卡死主线程。
+//
+// 这里缓存"上次写入工作树时的项目哈希"，仅当项目内容真正变化时才重建；
+// 未变化时直接对现有工作树执行 statusMatrix（结果同样准确，因为工作树
+// 内容与项目一致）。最坏情况（哈希因序列化顺序不稳定而误判）只是退化为
+// 每次都重建，与优化前行为相同，不会出错。
+// ---------------------------------------------------------------------------
+let lastProjectHash = null;
+let worktreeInitialized = false;
+
+const computeProjectHash = async vm => {
+    if (!vm || typeof vm.toJSON !== 'function') {
+        return null;
+    }
+    try {
+        // 只用 project.json 内容做哈希（轻量），不序列化资产字节。
+        // 资产的任何变化都会通过引用它的 project.json（md5ext 等）反映出来，
+        // 因此 project.json 的哈希足以代表"项目是否变化"。
+        const projectJson = vm.toJSON();
+        let hash = 0;
+        for (let i = 0; i < projectJson.length; i++) {
+            const c = projectJson.charCodeAt(i);
+            hash = ((hash << 5) - hash) + c;
+            hash = hash & hash;
+        }
+        return hash.toString(16);
+    } catch (e) {
+        // 序列化失败时返回 null，调用方按"需要重建"处理
+        return null;
+    }
+};
+
 const pathJoin = (...parts) => parts
     .filter(Boolean)
     .join('/')
@@ -392,7 +429,16 @@ const getRepoChanges = async vm => {
     const fs = getFs();
     const pfs = fs.promises;
     const dir = REPO_DIR;
-    await writeProjectToFractchTree({vm, fs: pfs, dir});
+
+    // 项目哈希未变时跳过昂贵的全量工作树重建（见模块顶部注释）。
+    // 只有首次或项目内容真正变化时才重建，避免编辑过程中每次 poll 都卡顿。
+    const projectHash = await computeProjectHash(vm);
+    if (!worktreeInitialized || projectHash !== lastProjectHash) {
+        await writeProjectToFractchTree({vm, fs: pfs, dir});
+        worktreeInitialized = true;
+        lastProjectHash = projectHash;
+    }
+
     const status = await git.statusMatrix({
         fs,
         dir
