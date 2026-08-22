@@ -60,7 +60,10 @@ class TWRestorePointManager extends React.Component {
             'handleChangeInterval',
             'handleClickExport',
             'handleClickLoad',
-            'isExportingRestorePoint'
+            'isExportingRestorePoint',
+            'showConfirmDialog',
+            'handleConfirmDialog',
+            'handleCancelDialog'
         ]);
         this.state = {
             loading: true,
@@ -68,7 +71,10 @@ class TWRestorePointManager extends React.Component {
             restorePoints: [],
             error: null,
             interval: RestorePointAPI.readInterval(),
-            exportingRestorePoints: []
+            exportingRestorePoints: [],
+            // 自定义确认对话框状态：{message, onConfirm}
+            // 替代原生 confirm()，样式与扩展管理弹窗保持一致
+            confirmDialog: null
         };
         this.timeout = null;
         this._lastSaveDuration = 0;
@@ -81,6 +87,12 @@ class TWRestorePointManager extends React.Component {
         // compensate for time already passed.
         if (this.props.projectChanged && this.props.hasEverEnteredEditor) {
             this.queueRestorePoint();
+        }
+
+        // 防御：组件挂载时若还原点窗口已经处于打开状态，立即刷新一次，
+        // 确保首次打开窗口就显示最新的还原点列表
+        if (this.props.isModalVisible) {
+            this.refreshState();
         }
 
         RestorePointAPI.deleteLegacyRestorePoint();
@@ -123,48 +135,79 @@ class TWRestorePointManager extends React.Component {
 
     handleClickDelete (id) {
         const projectTitle = this.state.restorePoints.find(i => i.id === id).title;
-        if (!confirm(this.props.intl.formatMessage(messages.confirmDelete, {projectTitle}))) {
-            return;
-        }
-
-        this.setState({
-            loading: true
-        });
-        RestorePointAPI.deleteRestorePoint(id)
-            .then(() => {
-                this.refreshState();
-            })
-            .catch(error => {
-                this.handleModalError(error);
-            });
+        this.showConfirmDialog(
+            this.props.intl.formatMessage(messages.confirmDelete, {projectTitle}),
+            () => {
+                this.setState({
+                    loading: true
+                });
+                RestorePointAPI.deleteRestorePoint(id)
+                    .then(() => {
+                        this.refreshState();
+                    })
+                    .catch(error => {
+                        this.handleModalError(error);
+                    });
+            }
+        );
     }
 
     handleClickDeleteAll () {
-        if (!confirm(this.props.intl.formatMessage(messages.confirmDeleteAll))) {
-            return;
-        }
-
-        this.setState({
-            loading: true
-        });
-        RestorePointAPI.deleteAllRestorePoints()
-            .then(() => {
-                this.refreshState();
-            })
-            .catch(error => {
-                this.handleModalError(error);
-            });
+        this.showConfirmDialog(
+            this.props.intl.formatMessage(messages.confirmDeleteAll),
+            () => {
+                this.setState({
+                    loading: true
+                });
+                RestorePointAPI.deleteAllRestorePoints()
+                    .then(() => {
+                        this.refreshState();
+                    })
+                    .catch(error => {
+                        this.handleModalError(error);
+                    });
+            }
+        );
     }
 
-    canLoadProject () {
+    // 加载还原点：若项目有未保存修改，先弹出确认对话框
+    handleClickLoad (id) {
         if (!this.props.isShowingProject) {
             // Loading a project now will break the state machine
-            return false;
+            return;
         }
-        if (this.props.projectChanged && !confirm(this.props.intl.formatMessage(messages.confirmLoad))) {
-            return false;
+        if (this.props.projectChanged) {
+            this.showConfirmDialog(
+                this.props.intl.formatMessage(messages.confirmLoad),
+                () => this.loadRestorePoint(id)
+            );
+            return;
         }
-        return true;
+        this.loadRestorePoint(id);
+    }
+
+    loadRestorePoint (id) {
+        this.props.onCloseModal();
+        this.props.onStartLoadingRestorePoint(this.props.loadingState);
+
+        const backup = this.props.projectChanged ?
+            RestorePointAPI.createSafetyRestorePoint(this.props.vm, this.props.projectTitle) :
+            Promise.resolve();
+        backup
+            .then(() => RestorePointAPI.loadRestorePoint(this.props.vm, id))
+            .then(() => {
+                this.props.onFinishLoadingRestorePoint(true, this.props.loadingState);
+                setTimeout(() => {
+                    this.props.vm.renderer.draw();
+                });
+            })
+            .catch(error => {
+                log.error(error);
+                alert(this.props.intl.formatMessage(messages.loadError, {
+                    error
+                }));
+                this.props.onFinishLoadingRestorePoint(false, this.props.loadingState);
+            });
     }
 
     handleClickExport (id) {
@@ -203,34 +246,6 @@ class TWRestorePointManager extends React.Component {
 
     isExportingRestorePoint (id) {
         return this.state.exportingRestorePoints.includes(id);
-    }
-
-    handleClickLoad (id) {
-        if (!this.canLoadProject()) {
-            return;
-        }
-
-        this.props.onCloseModal();
-        this.props.onStartLoadingRestorePoint(this.props.loadingState);
-
-        const backup = this.props.projectChanged ?
-            RestorePointAPI.createSafetyRestorePoint(this.props.vm, this.props.projectTitle) :
-            Promise.resolve();
-        backup
-            .then(() => RestorePointAPI.loadRestorePoint(this.props.vm, id))
-            .then(() => {
-                this.props.onFinishLoadingRestorePoint(true, this.props.loadingState);
-                setTimeout(() => {
-                    this.props.vm.renderer.draw();
-                });
-            })
-            .catch(error => {
-                log.error(error);
-                alert(this.props.intl.formatMessage(messages.loadError, {
-                    error
-                }));
-                this.props.onFinishLoadingRestorePoint(false, this.props.loadingState);
-            });
     }
 
     handleChangeInterval (e) {
@@ -339,6 +354,33 @@ class TWRestorePointManager extends React.Component {
         });
     }
 
+    // 打开自定义确认对话框（替代原生 confirm()）
+    showConfirmDialog (message, onConfirm) {
+        this.setState({
+            confirmDialog: {
+                message,
+                onConfirm
+            }
+        });
+    }
+
+    handleConfirmDialog () {
+        const dialog = this.state.confirmDialog;
+        this.setState({
+            confirmDialog: null
+        }, () => {
+            if (dialog && typeof dialog.onConfirm === 'function') {
+                dialog.onConfirm();
+            }
+        });
+    }
+
+    handleCancelDialog () {
+        this.setState({
+            confirmDialog: null
+        });
+    }
+
     render () {
         if (this.props.isModalVisible) {
             return (
@@ -357,6 +399,9 @@ class TWRestorePointManager extends React.Component {
                     totalSize={this.state.totalSize}
                     restorePoints={this.state.restorePoints}
                     error={this.state.error}
+                    confirmDialog={this.state.confirmDialog}
+                    onConfirmDialog={this.handleConfirmDialog}
+                    onCancelDialog={this.handleCancelDialog}
                 />
             );
         }
