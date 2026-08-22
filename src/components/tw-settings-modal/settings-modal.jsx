@@ -1833,9 +1833,11 @@ class DesktopPage extends React.Component {
         } catch (e) {
             this.setState({settings: null});
         }
-        navigator.mediaDevices.enumerateDevices()
-            .then(devices => this.setState({devices}))
-            .catch(() => {});
+        if (navigator.mediaDevices && typeof navigator.mediaDevices.enumerateDevices === 'function') {
+            navigator.mediaDevices.enumerateDevices()
+                .then(devices => this.setState({devices}))
+                .catch(() => {});
+        }
     }
 
     set (key, value) {
@@ -1845,7 +1847,10 @@ class DesktopPage extends React.Component {
                 [key]: value
             }
         }));
-        window.EditorPreload.setDesktopSetting(key, value);
+        const result = window.EditorPreload.setDesktopSetting(key, value);
+        if (result && typeof result.catch === 'function') {
+            result.catch(error => console.error('Failed to set desktop setting:', key, error));
+        }
     }
 
     renderDeviceSelect (key, label, help, kind) {

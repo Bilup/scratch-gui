@@ -204,55 +204,107 @@ const fetchWithTimeout = async (url, options = {}, timeoutMs = 10000) => {
     }
 };
 
-const fetchLibrary = async () => {
-    const emptyBanner = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAACXBIWXMAAAsTAAALEwEAmpwYAAADGWlDQ1BQaG90b3Nob3AgSUNDIHByb2ZpbGUAAHjaY2BgnuDo4uTKJMDAUFBUUuQe5BgZERmlwH6egY2BmYGBgYGBITG5uMAxIMCHgYGBIS8/L5UBA3y7xsDIwMDAcFnX0cXJlYE0wJpcUFTCwMBwgIGBwSgltTiZgYHhCwMDQ3p5SUEJAwNjDAMDg0hSdkEJAwNjAQMDg0h2SJAzAwNjCwMDE09JakUJAwMDg3N+QWVRZnpGiYKhpaWlgmNKflKqQnBlcUlqbrGCZ15yflFBflFiSWoKAwMD1A4GBgYGXpf8EgX3xMw8BUNTVQYqg4jIKAX08EGIIUByaVEZhMXIwMDAIMCgxeDHUMmwiuEBozRjFOM8xqdMhkwNTJeYNZgbme+y2LDMY2VmzWa9yubEtoldhX0mhwBHJycrZzMXM1cbNzf3RB4pnqW8xryH+IL5nvFXCwgJrBZ0E3wk1CisKHxYJF2UV3SrWJw4p/hWiRRJYcmjUhXSutJPZObIhsoJyp2V71HwUeRVvKA0RTlKRUnltepWtUZ1Pw1Zjbea+7QmaqfqWOsK6b7SO6I/36DGMMrI0ljS+LfJPdPDZivM+y0qLBOtfKwtbFRtRexY7L7aP3e47XjB6ZjzXpetruvdVrov9VjkudBrgfdCn8W+y/xW+a8P2Bq4N+hY8PmQW6HPwr5EMEUKRilFG8e4xUbF5cW3JMxO3Jx0Nvl5KlOaXLpNRlRmVdas7D059/KY8tULfAqLi2YXHy55WyZR7lJRWDmv6mz131q9uvj6SQ3HGn83G7Skt85ru94h2Ond1d59uJehz76/bsK+if8nO05pnXpiOu+M4JmzZj2aozW3ZN6+BVwLwxYtXvxxqcOyCcsfrjRe1br65lrddU3rb2402NSx+cFWq21Tt3/Y6btr1R6Oven7jh9QP9h56PURv6Obj4ufqD355LT3mS3nZM+3X/h0Ke7yqasW15bdEL3ZeuvrnfS7N+/7PDjwyPTx6qeKz2a+EHzZ9Zr5Td3bn+9LP3z6VPD53de8b+9+5P/88Lv4z7d/Vf//AwAqvx2K829RWwAAACBjSFJNAAB6JQAAgIMAAPn/AACA6QAAdTAAAOpgAAA6mAAAF2+SX8VGAAAAEUlEQVR42mL4zwAAAAD//wMAAgEBAJlUum0AAAAASUVORK5CYII=";
+// 拉取并解析某个源的元数据：HTTP 非 200、网络错误或超时都会抛错，
+// 由 fetchAndAdd 统一进入"云端失败 → 本地缓存回退"流程。
+const fetchMetadataJSON = async url => {
+    const res = await fetchWithTimeout(url, {}, 10000);
+    if (!res.ok) {
+        throw new Error(`HTTP status ${res.status}`);
+    }
+    return res.json();
+};
 
-    const allExtensions = [];
-    const sourceStatuses = {};
+const isDesktop = () => (
+    typeof window !== 'undefined' &&
+    typeof window.EditorPreload !== 'undefined'
+);
 
-    const report = () => {
-        // 只管理网络源；自定义库由 fetchCustomSource 独立加载，
-        // 这里保留已加载的自定义扩展，避免整体重拉覆盖/清空它们
-        const customExtensions = (cachedGallery || [])
-            .filter(item => item.source && item.source.indexOf('custom_') === 0);
-        cachedGallery = [...allExtensions, ...customExtensions];
-        cachedSourceStatuses = {...cachedSourceStatuses, ...sourceStatuses};
-        notifyListeners();
-    };
+// 每个网络源最后一次成功拉取得到的原始元数据，持久化到 localStorage，
+// 作为本地缓存：云端失败时兜底展示，离线时也能看到上次的扩展列表。
+// 桌面端还会优先尝试打包进应用的本地协议缓存（dist-* 里的元数据）。
+const GALLERY_CACHE_PREFIX = 'tw:extension-gallery-cache:';
 
-    const fetchAndAdd = async (sourceName, fetchFn) => {
-        sourceStatuses[sourceName] = 'loading';
-        report();
-        try {
-            const extensions = await fetchFn();
-            allExtensions.push(...extensions);
-            sourceStatuses[sourceName] = 'loaded';
-        } catch (error) {
-            console.warn(`Failed to load ${sourceName} extensions:`, error);
-            sourceStatuses[sourceName] = 'error';
-        }
-        report();
-    };
+const readCachedMetadata = sourceName => {
+    try {
+        const raw = localStorage.getItem(`${GALLERY_CACHE_PREFIX}${sourceName}`);
+        return raw ? JSON.parse(raw) : null;
+    } catch (error) {
+        return null;
+    }
+};
 
-    // 并行加载所有扩展源，但每个源加载完成后立即更新
-    await Promise.all([
-        fetchAndAdd('tw', async () => {
-            const twRes = await fetchWithTimeout('https://extensions.turbowarp.org/generated-metadata/extensions-v0.json', {}, 10000);
-            if (!twRes.ok) {
-                console.warn(`TurboWarp extensions: HTTP status ${twRes.status}`);
-                return [];
-            }
-            const twData = await twRes.json();
-            return twData.extensions.map(extension => ({
+const writeCachedMetadata = (sourceName, data) => {
+    try {
+        localStorage.setItem(`${GALLERY_CACHE_PREFIX}${sourceName}`, JSON.stringify(data));
+    } catch (error) {
+        // localStorage 不可用（隐私模式 / 配额已满）时静默忽略
+    }
+};
+
+const emptyBanner = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAACXBIWXMAAAsTAAALEwEAmpwYAAADGWlDQ1BQaG90b3Nob3AgSUNDIHByb2ZpbGUAAHjaY2BgnuDo4uTKJMDAUFBUUuQe5BgZERmlwH6egY2BmYGBgYGBITG5uMAxIMCHgYGBIS8/L5UBA3y7xsDIwMDAcFnX0cXJlYE0wJpcUFTCwMBwgIGBwSgltTiZgYHhCwMDQ3p5SUEJAwNjDAMDg0hSdkEJAwNjAQMDg0h2SJAzAwNjCwMDE09JakUJAwMDg3N+QWVRZnpGiYKhpaWlgmNKflKqQnBlcUlqbrGCZ15yflFBflFiSWoKAwMD1A4GBgYGXpf8EgX3xMw8BUNTVQYqg4jIKAX08EGIIUByaVEZhMXIwMDAIMCgxeDHUMmwiuEBozRjFOM8xqdMhkwNTJeYNZgbme+y2LDMY2VmzWa9yubEtoldhX0mhwBHJycrZzMXM1cbNzf3RB4pnqW8xryH+IL5nvFXCwgJrBZ0E3wk1CisKHxYJF2UV3SrWJw4p/hWiRRJYcmjUhXSutJPZObIhsoJyp2V71HwUeRVvKA0RTlKRUnltepWtUZ1Pw1Zjbea+7QmaqfqWOsK6b7SO6I/36DGMMrI0ljS+LfJPdPDZivM+y0qLBOtfKwtbFRtRexY7L7aP3e47XjB6ZjzXpetruvdVrov9VjkudBrgfdCn8W+y/xW+a8P2Bq4N+hY8PmQW6HPwr5EMEUKRilFG8e4xUbF5cW3JMxO3Jx0Nvl5KlOaXLpNRlRmVdas7D059/KY8tULfAqLi2YXHy55WyZR7lJRWDmv6mz131q9uvj6SQ3HGn83G7Skt85ru94h2Ond1d59uJehz76/bsK+if8nO05pnXpiOu+M4JmzZj2aozW3ZN6+BVwLwxYtXvxxqcOyCcsfrjRe1br65lrddU3rb2402NSx+cFWq21Tt3/Y6btr1R6Oven7jh9QP9h56PURv6Obj4ufqD355LT3mS3nZM+3X/h0Ke7yqasW15bdEL3ZeuvrnfS7N+/7PDjwyPTx6qeKz2a+EHzZ9Zr5Td3bn+9LP3z6VPD53de8b+9+5P/88Lv4z7d/Vf//AwAqvx2K829RWwAAACBjSFJNAAB6JQAAgIMAAPn/AACA6QAAdTAAAOpgAAA6mAAAF2+SX8VGAAAAEUlEQVR42mL4zwAAAAD//wMAAgEBAJlUum0AAAAASUVORK5CYII=";
+
+// 各网络源的加载配置：cloudURL 是云端元数据地址；
+// localURL 是桌面端打包的本地协议地址（协议层云端优先、失败自动回退
+// 本地缓存，见 desktop 仓库的 protocols.js），仅桌面端存在，供云端
+// 失败时兜底使用。
+const SOURCES = [
+    {
+        name: 'tw',
+        cloudURL: 'https://extensions.turbowarp.org/generated-metadata/extensions-v0.json',
+        localURL: 'tw-extensions://./generated-metadata/extensions-v0.json',
+        map: data => data.extensions.map(extension => ({
+            name: extension.name,
+            nameTranslations: extension.nameTranslations || {},
+            description: extension.description,
+            descriptionTranslations: extension.descriptionTranslations || {},
+            extensionId: extension.id,
+            extensionURL: `https://extensions.turbowarp.org/${extension.slug}.js`,
+            iconURL: `https://extensions.turbowarp.org/${extension.image || 'images/unknown.svg'}`,
+            source: 'tw',
+            tags: ['tw'],
+            credits: [
+                ...(extension.by || []),
+                ...(extension.original || [])
+            ].map(credit => {
+                if (credit.link) {
+                    return (
+                        <a
+                            href={credit.link}
+                            target="_blank"
+                            rel="noreferrer"
+                            key={credit.name}
+                        >
+                            {credit.name}
+                        </a>
+                    );
+                }
+                return credit.name;
+            }),
+            docsURI: extension.docs ? `https://extensions.turbowarp.org/${extension.slug}` : null,
+            samples: extension.samples ? extension.samples.map(sample => ({
+                href: `${process.env.ROOT}editor?project_url=https://extensions.turbowarp.org/samples/${encodeURIComponent(sample)}.sb3`,
+                text: sample
+            })) : null,
+            incompatibleWithScratch: true,
+            featured: true
+        }))
+    },
+    {
+        name: 'mistium',
+        cloudURL: 'https://extensions.mistium.com/generated-metadata/extensions-v0.json',
+        localURL: 'mw-extensions://./generated-metadata/extensions-v0.json',
+        map: data => data.extensions
+            .filter(ext => ext.featured)
+            .map(extension => ({
                 name: extension.name,
                 nameTranslations: extension.nameTranslations || {},
                 description: extension.description,
                 descriptionTranslations: extension.descriptionTranslations || {},
                 extensionId: extension.id,
-                extensionURL: `https://extensions.turbowarp.org/${extension.slug}.js`,
-                iconURL: `https://extensions.turbowarp.org/${extension.image || 'images/unknown.svg'}`,
-                source: 'tw',
-        tags: ['tw'],
+                extensionURL: `https://extensions.mistium.com/featured/${extension.name}.js`,
+                iconURL: extension.image ? `https://extensions.mistium.com/${extension.image}` : emptyBanner,
+                source: 'mistium',
+                tags: ['mistium'],
                 credits: [
                     ...(extension.by || []),
                     ...(extension.original || [])
@@ -271,70 +323,21 @@ const fetchLibrary = async () => {
                     }
                     return credit.name;
                 }),
-                docsURI: extension.docs ? `https://extensions.turbowarp.org/${extension.slug}` : null,
+                docsURI: null,
                 samples: extension.samples ? extension.samples.map(sample => ({
-                    href: `${process.env.ROOT}editor?project_url=https://extensions.turbowarp.org/samples/${encodeURIComponent(sample)}.sb3`,
+                    href: `${process.env.ROOT}editor?project_url=https://extensions-mistium.pages.dev/samples/${encodeURIComponent(sample)}.sb3`,
                     text: sample
                 })) : null,
                 incompatibleWithScratch: true,
                 featured: true
-            }));
-        }),
-        fetchAndAdd('mistium', async () => {
-            const mistiumRes = await fetchWithTimeout('https://extensions.mistium.com/generated-metadata/extensions-v0.json', {}, 10000);
-            if (!mistiumRes.ok) {
-                console.warn(`Mistium extensions: HTTP status ${mistiumRes.status}`);
-                return [];
-            }
-            const mistiumData = await mistiumRes.json();
-            return mistiumData.extensions
-                .filter(ext => ext.featured)
-                .map(extension => ({
-                    name: extension.name,
-                    nameTranslations: extension.nameTranslations || {},
-                    description: extension.description,
-                    descriptionTranslations: extension.descriptionTranslations || {},
-                    extensionId: extension.id,
-                    extensionURL: `https://extensions.mistium.com/featured/${extension.name}.js`,
-                    iconURL: extension.image ? `https://extensions.mistium.com/${extension.image}` : emptyBanner,
-                    source: 'mistium',
-            tags: ['mistium'],
-                    credits: [
-                        ...(extension.by || []),
-                        ...(extension.original || [])
-                    ].map(credit => {
-                        if (credit.link) {
-                            return (
-                                <a
-                                    href={credit.link}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    key={credit.name}
-                                >
-                                    {credit.name}
-                                </a>
-                            );
-                        }
-                        return credit.name;
-                    }),
-                    docsURI: null,
-                    samples: extension.samples ? extension.samples.map(sample => ({
-                        href: `${process.env.ROOT}editor?project_url=https://extensions-mistium.pages.dev/samples/${encodeURIComponent(sample)}.sb3`,
-                        text: sample
-                    })) : null,
-                    incompatibleWithScratch: true,
-                    featured: true
-                }));
-        }),
-        fetchAndAdd('sharkpool', async () => {
-            const sharkpoolRes = await fetchWithTimeout('https://sharkpools-extensions.vercel.app/Gallery%20Files/Extension-Keys.json', {}, 10000);
-            if (!sharkpoolRes.ok) {
-                console.warn(`SharkPool extensions: HTTP status ${sharkpoolRes.status}`);
-                return [];
-            }
-            const sharkpoolData = await sharkpoolRes.json();
-
-            const rawExtensions = sharkpoolData.extensions;
+            }))
+    },
+    {
+        name: 'sharkpool',
+        cloudURL: 'https://sharkpools-extensions.vercel.app/Gallery%20Files/Extension-Keys.json',
+        localURL: 'sp-extensions://./Gallery%20Files/Extension-Keys.json',
+        map: data => {
+            const rawExtensions = data.extensions;
             let normalizedExtensions = [];
 
             if (Array.isArray(rawExtensions)) {
@@ -389,61 +392,56 @@ const fetchLibrary = async () => {
                     incompatibleWithScratch: true,
                     featured: true
                 }));
-        }),
-        fetchAndAdd('bilup', async () => {
-            const bilupRes = await fetchWithTimeout('https://extensions.bilup.org/generated-metadata/extensions-v0.json', {}, 10000);
-            if (!bilupRes.ok) {
-                console.warn(`Bilup extensions: HTTP status ${bilupRes.status}`);
-                return [];
-            }
-            const bilupData = await bilupRes.json();
-            return bilupData.extensions.map(extension => ({
-                name: extension.name,
-                nameTranslations: extension.nameTranslations || {},
-                description: extension.description,
-                descriptionTranslations: extension.descriptionTranslations || {},
-                extensionId: extension.id,
-                extensionURL: `https://extensions.bilup.org/${extension.slug}.js`,
-                iconURL: `https://extensions.bilup.org/${extension.image || 'images/unknown.svg'}`,
-                source: 'bilup',
-                tags: ['bilup'],
-                credits: [
-                    ...(extension.by || []),
-                    ...(extension.original || [])
-                ].map(credit => {
-                    if (credit.link) {
-                        return (
-                            <a
-                                href={credit.link}
-                                target="_blank"
-                                rel="noreferrer"
-                                key={credit.name}
-                            >
-                                {credit.name}
-                            </a>
-                        );
-                    }
-                    return credit.name;
-                }),
-                docsURI: extension.docs ? `https://extensions.bilup.org/${extension.slug}` : null,
-                samples: extension.samples ? extension.samples.map(sample => ({
-                    href: `${process.env.ROOT}editor?project_url=https://extensions.bilup.org/samples/${encodeURIComponent(sample)}.sb3`,
-                    text: sample
-                })) : null,
-                incompatibleWithScratch: true,
-                featured: true
-            }));
-        }),
-        fetchAndAdd('ae', async () => {
-            const aeRes = await fetchWithTimeout('https://editors.astras.top/extensions/generated-metadata/extensions-v0.json', {}, 10000);
-            if (!aeRes.ok) {
-                console.warn(`AE extensions: HTTP status ${aeRes.status}`);
-                return [];
-            }
-            const aeData = await aeRes.json();
-            return aeData.extensions
-                .filter(extension => extension.id !== 'shangcloud')
-                .map(extension => ({
+        }
+    },
+    {
+        name: 'bilup',
+        cloudURL: 'https://extensions.bilup.org/generated-metadata/extensions-v0.json',
+        localURL: 'bl-extensions://./generated-metadata/extensions-v0.json',
+        map: data => data.extensions.map(extension => ({
+            name: extension.name,
+            nameTranslations: extension.nameTranslations || {},
+            description: extension.description,
+            descriptionTranslations: extension.descriptionTranslations || {},
+            extensionId: extension.id,
+            extensionURL: `https://extensions.bilup.org/${extension.slug}.js`,
+            iconURL: `https://extensions.bilup.org/${extension.image || 'images/unknown.svg'}`,
+            source: 'bilup',
+            tags: ['bilup'],
+            credits: [
+                ...(extension.by || []),
+                ...(extension.original || [])
+            ].map(credit => {
+                if (credit.link) {
+                    return (
+                        <a
+                            href={credit.link}
+                            target="_blank"
+                            rel="noreferrer"
+                            key={credit.name}
+                        >
+                            {credit.name}
+                        </a>
+                    );
+                }
+                return credit.name;
+            }),
+            docsURI: extension.docs ? `https://extensions.bilup.org/${extension.slug}` : null,
+            samples: extension.samples ? extension.samples.map(sample => ({
+                href: `${process.env.ROOT}editor?project_url=https://extensions.bilup.org/samples/${encodeURIComponent(sample)}.sb3`,
+                text: sample
+            })) : null,
+            incompatibleWithScratch: true,
+            featured: true
+        }))
+    },
+    {
+        name: 'ae',
+        cloudURL: 'https://editors.astras.top/extensions/generated-metadata/extensions-v0.json',
+        localURL: 'ae-extensions://./generated-metadata/extensions-v0.json',
+        map: data => data.extensions
+            .filter(extension => extension.id !== 'shangcloud')
+            .map(extension => ({
                 name: extension.name,
                 nameTranslations: extension.nameTranslations || {},
                 description: extension.description,
@@ -478,9 +476,79 @@ const fetchLibrary = async () => {
                 })) : null,
                 incompatibleWithScratch: true,
                 featured: true
-            }));
-        })
-    ]);
+            }))
+    }
+];
+
+const fetchLibrary = async () => {
+    const allExtensions = [];
+    const sourceStatuses = {};
+
+    const report = () => {
+        // 只管理网络源；自定义库由 fetchCustomSource 独立加载，
+        // 这里保留已加载的自定义扩展，避免整体重拉覆盖/清空它们
+        const customExtensions = (cachedGallery || [])
+            .filter(item => item.source && item.source.indexOf('custom_') === 0);
+        cachedGallery = [...allExtensions, ...customExtensions];
+        cachedSourceStatuses = {...cachedSourceStatuses, ...sourceStatuses};
+        notifyListeners();
+    };
+
+    const loadLocalFallback = async source => {
+        if (isDesktop() && source.localURL) {
+            try {
+                const data = await fetchMetadataJSON(source.localURL);
+                const extensions = source.map(data);
+                if (extensions.length) {
+                    writeCachedMetadata(source.name, data);
+                    return extensions;
+                }
+            } catch (error) {
+                console.warn(`Failed to load ${source.name} from local cache:`, error);
+            }
+        }
+        const cachedData = readCachedMetadata(source.name);
+        if (cachedData) {
+            try {
+                const extensions = source.map(cachedData);
+                if (extensions.length) {
+                    return extensions;
+                }
+            } catch (error) {
+                console.warn(`Failed to parse cached ${source.name} metadata:`, error);
+            }
+        }
+        return null;
+    };
+
+    const fetchAndAdd = async source => {
+        sourceStatuses[source.name] = 'loading';
+        report();
+        try {
+            const data = await fetchMetadataJSON(source.cloudURL);
+            const extensions = source.map(data);
+            writeCachedMetadata(source.name, data);
+            allExtensions.push(...extensions);
+            sourceStatuses[source.name] = 'loaded';
+        } catch (error) {
+            console.warn(`Failed to load ${source.name} extensions:`, error);
+            // 云端加载失败 → 回退本地缓存：
+            // 1) 桌面端先走本地协议（应用打包了各扩展库的元数据，协议层
+            //    云端优先、失败自动读本地缓存，见 desktop 的 protocols.js）
+            // 2) 其次是上次成功拉取留下的 localStorage 缓存
+            const fallback = await loadLocalFallback(source);
+            if (fallback && fallback.length) {
+                allExtensions.push(...fallback);
+                sourceStatuses[source.name] = 'loaded';
+            } else {
+                sourceStatuses[source.name] = 'error';
+            }
+        }
+        report();
+    };
+
+    // 并行加载所有扩展源，但每个源加载完成后立即更新
+    await Promise.all(SOURCES.map(fetchAndAdd));
 
     return allExtensions;
 };
