@@ -14,6 +14,27 @@ import styles from './extension-manager-modal.css';
 
 /* eslint-disable react/jsx-no-bind */
 
+// 部分第三方扩展的 getInfo() 返回的 name 是多语言对象而非字符串
+// （例如 {default: 'Foo', 'zh-cn': '...'}），这里统一提取字符串名称。
+// 提取失败返回 null，调用方回退到扩展 id。
+const extractExtensionName = rawName => {
+    if (typeof rawName === 'string' && rawName) {
+        return rawName;
+    }
+    if (rawName && typeof rawName === 'object') {
+        const preferred = rawName.default || rawName.en || rawName['zh-cn'] || rawName.zh;
+        if (typeof preferred === 'string' && preferred) {
+            return preferred;
+        }
+        for (const value of Object.values(rawName)) {
+            if (typeof value === 'string' && value) {
+                return value;
+            }
+        }
+    }
+    return null;
+};
+
 const messages = defineMessages({
     title: {
         defaultMessage: 'Extension Manager',
@@ -44,6 +65,31 @@ const messages = defineMessages({
         defaultMessage: 'Drag rows to reorder extensions',
         description: 'Hint shown in the footer',
         id: 'tw.extensionManager.dragHint'
+    },
+    confirmDeleteTitle: {
+        defaultMessage: 'Confirm delete',
+        description: 'Title of the confirmation dialog shown when deleting an extension that is in use',
+        id: 'tw.extensionManager.confirmDeleteTitle'
+    },
+    confirmDeleteSingle: {
+        defaultMessage: 'Extension "{name}" is using {count} blocks. Deleting this extension will also delete these blocks. Are you sure you want to delete it?',
+        description: 'Confirmation message shown when deleting a single extension that is in use',
+        id: 'tw.extensionManager.confirmDeleteSingle'
+    },
+    confirmDeleteMultiple: {
+        defaultMessage: '{count} selected extensions include {usingCount} that use {blockCount} blocks in total. Deleting them will also delete these blocks. Are you sure you want to delete them?',
+        description: 'Confirmation message shown when deleting multiple selected extensions that are in use',
+        id: 'tw.extensionManager.confirmDeleteMultiple'
+    },
+    confirmDeleteYes: {
+        defaultMessage: 'Yes, delete',
+        description: 'Button to confirm deleting the extension',
+        id: 'tw.extensionManager.confirmDeleteYes'
+    },
+    confirmDeleteNo: {
+        defaultMessage: 'No, keep',
+        description: 'Button to cancel deleting the extension',
+        id: 'tw.extensionManager.confirmDeleteNo'
     }
 });
 
@@ -51,6 +97,7 @@ const ExtensionManagerModal = props => {
     const [selected, setSelected] = useState([]);
     const [dragIndex, setDragIndex] = useState(null);
     const [refreshCounter, setRefreshCounter] = useState(0);
+    const [deleteConfirm, setDeleteConfirm] = useState(null);
 
     const [blockIconURIs, setBlockIconURIs] = useState({});
     const [extensionColors, setExtensionColors] = useState({});
@@ -74,8 +121,9 @@ const ExtensionManagerModal = props => {
     // Count how many blocks in the project use each loaded extension.
     // Extension block opcodes are prefixed with `${extensionId}_`, so the
     // part before the first underscore identifies the owning extension.
-    const calculateBlockCounts = useCallback(() => {
-        const counts = new Map(extensionIds.map(id => [id, 0]));
+    // 可传入 id 列表进行实时计算（默认使用当前 state 中的 extensionIds）
+    const calculateBlockCounts = useCallback((ids = extensionIds) => {
+        const counts = new Map(ids.map(id => [id, 0]));
         const targets = (props.vm && props.vm.runtime && props.vm.runtime.targets) || [];
         for (const target of targets) {
             if (!target || target.isOriginal === false) continue;
@@ -109,9 +157,10 @@ const ExtensionManagerModal = props => {
 
     const getExtensionName = useCallback(extensionId => {
         const libraryItem = extensionLibraryById.get(extensionId);
-        if (libraryItem) return libraryItem.name;
-        // 第三方扩展优先使用 getInfo() 返回的名称，没有名称时才回退到扩展 id
-        return extensionNames[extensionId] || extensionId;
+        const rawName = libraryItem ? libraryItem.name : extensionNames[extensionId];
+        // name 可能来自扩展库数据或第三方扩展 getInfo()，统一提取字符串，
+        // 无法提取时回退到扩展 id（避免把 Object 渲染成 "[object Object]"）
+        return extractExtensionName(rawName) || extensionId;
     }, [extensionLibraryById, extensionNames]);
 
     const getExtensionColor = useCallback(extensionId => {
@@ -180,7 +229,7 @@ const ExtensionManagerModal = props => {
             centralDispatch.call(serviceName, 'getInfo')
                 .then(info => {
                     if (cancelled) return;
-                    const name = info && info.name;
+                    const name = extractExtensionName(info && info.name);
                     const uri = info && info.blockIconURI;
                     const color = info && info.color1;
                     if (name) {
@@ -281,21 +330,154 @@ const ExtensionManagerModal = props => {
         e.stopPropagation();
     };
 
-    const removeExtension = extensionId => {
-        if (!props.vm || !props.vm.extensionManager) return;
-        if (typeof props.vm.extensionManager.removeExtension !== 'function') return;
+    // 删除项目中使用了指定扩展的所有积木
+    // 扩展积木的 opcode 以 `${extensionId}_` 开头，据此收集并删除。
+    // 删除时同时处理监视器积木与监视器状态，避免留下失效积木或悬空引用。
+    const deleteBlocksForExtension = extensionId => {
+        const runtime = props.vm && props.vm.runtime;
+        if (!runtime) return;
+        const prefix = `${extensionId}_`;
 
-        props.vm.extensionManager.removeExtension(extensionId);
-        setExtensionIds(old => old.filter(i => i !== extensionId));
-        setSelected(old => old.filter(i => i !== extensionId));
+        const collectBlockIds = blockContainer => {
+            const ids = [];
+            if (!blockContainer || !blockContainer._blocks) return ids;
+            for (const id of Object.keys(blockContainer._blocks)) {
+                const block = blockContainer._blocks[id];
+                if (block && block.opcode && block.opcode.indexOf(prefix) === 0) {
+                    ids.push(id);
+                }
+            }
+            return ids;
+        };
+
+        const removeBlocksFrom = blockContainer => {
+            const idsToDelete = collectBlockIds(blockContainer);
+            if (idsToDelete.length === 0) return;
+            const toDeleteSet = new Set(idsToDelete);
+
+            // 先断开父积木对扩展积木的引用，避免删除后留下悬空引用
+            for (const id of Object.keys(blockContainer._blocks)) {
+                const block = blockContainer._blocks[id];
+                if (!block) continue;
+                if (block.next !== null && toDeleteSet.has(block.next)) {
+                    block.next = null;
+                }
+                for (const inputName of Object.keys(block.inputs || {})) {
+                    const input = block.inputs[inputName];
+                    if (input && input.block !== null && toDeleteSet.has(input.block)) {
+                        input.block = null;
+                    }
+                    if (input && input.shadow !== null && toDeleteSet.has(input.shadow)) {
+                        input.shadow = null;
+                    }
+                }
+            }
+
+            // 删除扩展积木及其子堆叠（deleteBlock 会递归删除 next 链与输入积木）
+            for (const id of idsToDelete) {
+                blockContainer.deleteBlock(id);
+            }
+        };
+
+        // 删除所有角色/舞台中的扩展积木
+        const targets = runtime.targets || [];
+        for (const target of targets) {
+            if (target && target.blocks) {
+                removeBlocksFrom(target.blocks);
+            }
+        }
+
+        // 删除监视器积木并同步监视器状态
+        const monitorIdsToDelete = collectBlockIds(runtime.monitorBlocks);
+        removeBlocksFrom(runtime.monitorBlocks);
+        for (const id of monitorIdsToDelete) {
+            if (typeof runtime.requestRemoveMonitor === 'function') {
+                runtime.requestRemoveMonitor(id);
+            }
+        }
     };
 
-    const removeSelected = () => {
-        for (const extensionId of selected) {
-            removeExtension(extensionId);
+    // 实际执行删除（不经过确认拦截）：先清理扩展积木，再卸载扩展
+    const performDelete = extensionIds => {
+        if (!props.vm || !props.vm.extensionManager) return;
+        // 1. 删除项目中使用这些扩展的积木
+        for (const extensionId of extensionIds) {
+            deleteBlocksForExtension(extensionId);
         }
-        setSelected([]);
+        // 2. 刷新积木区，让 Blockly 移除已删除的积木
+        if (typeof props.vm.refreshWorkspace === 'function') {
+            props.vm.refreshWorkspace();
+        }
+        // 3. 卸载扩展
+        for (const extensionId of extensionIds) {
+            if (typeof props.vm.extensionManager.removeExtension === 'function') {
+                props.vm.extensionManager.removeExtension(extensionId);
+            }
+        }
+        setExtensionIds(old => old.filter(i => !extensionIds.includes(i)));
+        setSelected(old => old.filter(i => !extensionIds.includes(i)));
         updateExtensionIds();
+    };
+
+    // 删除单个扩展：若扩展已被使用积木，则弹出确认对话框。
+    // 删除前会先实时刷新扩展列表与积木使用数，确保提示的是最新数据
+    const requestDeleteExtension = extensionId => {
+        if (!props.vm || !props.vm.extensionManager) return;
+        const freshIds = readExtensionIds();
+        const freshCounts = calculateBlockCounts(freshIds);
+        setExtensionIds(freshIds);
+        setBlockCounts(freshCounts);
+        const count = freshCounts.get(extensionId) || 0;
+        if (count > 0) {
+            setDeleteConfirm({
+                ids: [extensionId],
+                usingCount: 1,
+                blockCount: count
+            });
+            return;
+        }
+        performDelete([extensionId]);
+    };
+
+    // 批量删除选中的扩展：任一扩展已使用积木则弹出确认对话框。
+    // 删除前同样先实时刷新扩展列表与积木使用数
+    const requestDeleteSelected = () => {
+        if (selected.length === 0) return;
+        const freshIds = readExtensionIds();
+        const freshCounts = calculateBlockCounts(freshIds);
+        setExtensionIds(freshIds);
+        setBlockCounts(freshCounts);
+        // 过滤掉已不在加载列表中的选中项
+        const idsToDelete = selected.filter(id => freshIds.includes(id));
+        if (idsToDelete.length === 0) return;
+        let blockCount = 0;
+        let usingCount = 0;
+        for (const extensionId of idsToDelete) {
+            const count = freshCounts.get(extensionId) || 0;
+            if (count > 0) {
+                blockCount += count;
+                usingCount += 1;
+            }
+        }
+        if (usingCount > 0) {
+            setDeleteConfirm({
+                ids: idsToDelete,
+                usingCount,
+                blockCount
+            });
+            return;
+        }
+        performDelete(idsToDelete);
+    };
+
+    const handleConfirmDelete = () => {
+        if (!deleteConfirm) return;
+        performDelete(deleteConfirm.ids);
+        setDeleteConfirm(null);
+    };
+
+    const handleCancelDelete = () => {
+        setDeleteConfirm(null);
     };
 
     const handleDragStart = e => {
@@ -348,6 +530,7 @@ const ExtensionManagerModal = props => {
     };
 
     return (
+        <>
         <Modal
             centered
             className={styles.modalContent}
@@ -490,7 +673,7 @@ const ExtensionManagerModal = props => {
                                             <button
                                                 aria-label={props.intl.formatMessage(messages.deleteExtension)}
                                                 className={`${styles.actionButton} ${styles.deleteButton}`}
-                                                onClick={() => removeExtension(extensionId)}
+                                                onClick={() => requestDeleteExtension(extensionId)}
                                                 onDragStart={stopDragAndClickBubbling}
                                                 onMouseDown={stopDragAndClickBubbling}
                                                 title={props.intl.formatMessage(messages.deleteExtension)}
@@ -523,7 +706,7 @@ const ExtensionManagerModal = props => {
                         <button
                             className={styles.deleteAllButton}
                             disabled={selected.length === 0}
-                            onClick={removeSelected}
+                            onClick={requestDeleteSelected}
                         >
                             <Trash2 />
                             {props.intl.formatMessage(messages.deleteSelected, {count: selected.length})}
@@ -532,6 +715,55 @@ const ExtensionManagerModal = props => {
                 ) : null}
             </div>
         </Modal>
+        {deleteConfirm && (
+            <Modal
+                centered
+                className={styles.confirmModal}
+                contentLabel={props.intl.formatMessage(messages.confirmDeleteTitle)}
+                height={200}
+                id="extensionManagerConfirmDelete"
+                minHeight={200}
+                minWidth={380}
+                onRequestClose={handleCancelDelete}
+                resizable={false}
+                width={420}
+            >
+                <div className={styles.confirmBody}>
+                    <strong className={styles.confirmTitle}>
+                        {props.intl.formatMessage(messages.confirmDeleteTitle)}
+                    </strong>
+                    <span className={styles.confirmMessage}>
+                        {deleteConfirm.ids.length === 1 ?
+                            props.intl.formatMessage(messages.confirmDeleteSingle, {
+                                name: getExtensionName(deleteConfirm.ids[0]),
+                                count: deleteConfirm.blockCount
+                            }) :
+                            props.intl.formatMessage(messages.confirmDeleteMultiple, {
+                                count: deleteConfirm.ids.length,
+                                usingCount: deleteConfirm.usingCount,
+                                blockCount: deleteConfirm.blockCount
+                            })}
+                    </span>
+                    <div className={styles.confirmActions}>
+                        <button
+                            className={`${styles.confirmButton} ${styles.confirmCancelButton}`}
+                            onClick={handleCancelDelete}
+                            type="button"
+                        >
+                            {props.intl.formatMessage(messages.confirmDeleteNo)}
+                        </button>
+                        <button
+                            className={`${styles.confirmButton} ${styles.confirmOkButton}`}
+                            onClick={handleConfirmDelete}
+                            type="button"
+                        >
+                            {props.intl.formatMessage(messages.confirmDeleteYes)}
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+        )}
+        </>
     );
 };
 

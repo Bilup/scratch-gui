@@ -13,12 +13,44 @@ export default async function ({ addon, console, msg }) {
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 
+    function getTextBytes(text) {
+        const textEncoder = new TextEncoder();
+        return textEncoder.encode(text).length;
+    }
+
+    // 统计角色造型与声音素材的原始占用字节数
+    function getAssetsSize(sprite) {
+        let totalSize = 0;
+        if (sprite.costumes && Array.isArray(sprite.costumes)) {
+            sprite.costumes.forEach(costume => {
+                if (costume.asset && costume.asset.data && costume.asset.data.byteLength) {
+                    totalSize += costume.asset.data.byteLength;
+                }
+            });
+        }
+        if (sprite.sounds && Array.isArray(sprite.sounds)) {
+            sprite.sounds.forEach(sound => {
+                if (sound.asset && sound.asset.data && sound.asset.data.byteLength) {
+                    totalSize += sound.asset.data.byteLength;
+                }
+            });
+        }
+        return totalSize;
+    }
+
     function getProjectSize() {
         try {
             const projectJSON = vm.toJSON();
             const jsonString = typeof projectJSON === 'string' ? projectJSON : JSON.stringify(projectJSON);
-            const textEncoder = new TextEncoder();
-            return textEncoder.encode(jsonString).length;
+            let totalBytes = getTextBytes(jsonString);
+
+            // 加上所有角色（含舞台）造型/声音素材的占用
+            const targets = vm.runtime.targets || [];
+            targets.forEach(target => {
+                totalBytes += getAssetsSize(target.sprite || target);
+            });
+
+            return totalBytes;
         } catch (e) {
             console.warn('[Project Size Display] Failed to calculate project size:', e);
             return 0;
@@ -41,27 +73,18 @@ export default async function ({ addon, console, msg }) {
     function getSelectedTargetStorageSize() {
         if (!vm.editingTarget) return '-';
         const target = vm.editingTarget;
-        if (target.isStage) return '-';
-        
+
         const sprite = target.sprite || target;
-        let totalSize = 0;
-        
-        if (sprite.costumes && Array.isArray(sprite.costumes)) {
-            sprite.costumes.forEach(costume => {
-                if (costume.asset && costume.asset.data && costume.asset.data.byteLength) {
-                    totalSize += costume.asset.data.byteLength;
-                }
-            });
+        let totalSize = getAssetsSize(sprite);
+
+        // 加上该角色代码与元数据在项目文件中的占用（不含素材二进制，避免重复计算）
+        try {
+            const targetJSON = vm.toJSON(target.id);
+            totalSize += getTextBytes(targetJSON);
+        } catch (e) {
+            console.warn('[Project Size Display] Failed to calculate target JSON size:', e);
         }
-        
-        if (sprite.sounds && Array.isArray(sprite.sounds)) {
-            sprite.sounds.forEach(sound => {
-                if (sound.asset && sound.asset.data && sound.asset.data.byteLength) {
-                    totalSize += sound.asset.data.byteLength;
-                }
-            });
-        }
-        
+
         return totalSize > 0 ? formatFileSize(totalSize) : '-';
     }
 
