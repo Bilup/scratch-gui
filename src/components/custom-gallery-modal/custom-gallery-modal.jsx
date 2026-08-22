@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import Box from '../box/box.jsx';
 import Modal from '../../containers/modal.jsx';
+import {loadCustomGallery} from '../../lib/custom-gallery-parser';
 import styles from './custom-gallery-modal.css';
 
 const messages = defineMessages({
@@ -172,15 +173,7 @@ class CustomGalleryModalComponent extends React.Component {
         }
         this.setState({status: 'loading', errorMessage: null, count: null});
         try {
-            const res = await fetch(source);
-            if (!res.ok) {
-                throw new Error(`HTTP ${res.status}`);
-            }
-            const data = await res.json();
-            const extensions = Array.isArray(data) ? data : (data.extensions || []);
-            if (!Array.isArray(extensions) || extensions.length === 0) {
-                throw new Error('No extensions found in gallery');
-            }
+            const extensions = await loadCustomGallery(source);
             this.setState({status: 'loaded', count: extensions.length});
         } catch (err) {
             this.setState({

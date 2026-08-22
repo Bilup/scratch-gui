@@ -10,6 +10,7 @@ import extensionLibraryContent, {
     galleryLoading,
     galleryMore
 } from '../lib/libraries/extensions/index.jsx';
+import {loadCustomGallery} from '../lib/custom-gallery-parser';
 import extensionTags from '../lib/libraries/tw-extension-tags';
 import {getVanillaPalette} from '../lib/mw-vanilla-palette';
 import {manuallyTrustExtension, markExtensionAsCustom} from './tw-security-manager.jsx';
@@ -124,12 +125,7 @@ const fetchCustomSource = async id => {
         return;
     }
     try {
-        const res = await fetchWithTimeout(source.url, {}, 10000);
-        if (!res.ok) {
-            throw new Error(`HTTP status ${res.status}`);
-        }
-        const data = await res.json();
-        const rawExtensions = Array.isArray(data) ? data : (data.extensions || []);
+        const rawExtensions = await loadCustomGallery(source.url);
         const extensions = rawExtensions.map((extension, index) =>
             normalizeCustomExtension(extension, source, index));
         // 该库开启"非沙盒运行"时，手动信任其扩展 URL，使其绕过沙盒
