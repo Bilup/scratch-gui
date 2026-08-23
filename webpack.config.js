@@ -237,6 +237,7 @@ const base = {
                 // below does not match it. Include it explicitly so its modern
                 // syntax (?. / ??) gets transpiled by babel.
                 path.resolve(__dirname, '..', 'scratch-vm', 'src'),
+                path.resolve(__dirname, '..', 'scratch-paint', 'src'),
                 /node_modules[\\/]scratch-[^\\/]+[\\/]src/,
                 /node_modules[\\/]scratch-parser[\\/]/,
                 /node_modules[\\/]pify/,
