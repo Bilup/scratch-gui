@@ -19,7 +19,7 @@ const Footer = () => (
                     <span className={styles.wordmark}>Bilup</span>
                     <p className={styles.tagline}>
                         <FormattedMessage
-                            defaultMessage="Build, share, and remix projects together."
+                            defaultMessage="Elevate your creation."
                             description="Footer tagline"
                             id="mw.community.footer.tagline"
                         />
