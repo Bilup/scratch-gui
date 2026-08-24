@@ -1,45 +1,19 @@
 /* eslint-disable max-len */
 import React, {createContext, useContext, useEffect, useMemo, useState} from 'react';
-import {IntlProvider} from 'react-intl';
+import enMessages from './i18n-messages-en.js';
+import zhMessages from './i18n-messages-zh-cn.js';
 
 const LOCALE_KEY = 'mw:community-locale';
 export const LOCALES = [
     {value: 'auto', label: 'Use browser language'},
+    {value: 'zh-cn', label: '简体中文'},
     {value: 'en', label: 'English'},
     {value: 'es', label: 'Español'}
 ];
 
 const messages = {
-    en: {
-        'a11y.skip': 'Skip to content',
-        'nav.main': 'Main navigation',
-        'nav.create': 'Create',
-        'nav.explore': 'Explore',
-        'nav.spaces': 'Spaces',
-        'nav.search': 'Search projects, people, and spaces',
-        'home.title': 'Make a project. Let someone improve it.',
-        'home.lead': 'MistWarp brings branches, project history, and contributions to visual coding without making you learn Git first.',
-        'home.start': 'Start creating',
-        'home.explore': 'Explore projects',
-        'home.signin': 'Sign in with Rotur',
-        'home.github': 'Follow on GitHub',
-        'status.title': 'Service status',
-        'status.lead': 'Checks run outside the main MistWarp deployment every five minutes.',
-        'status.retry': 'Check again',
-        'status.loading': 'Loading independent status data…',
-        'status.failed': 'Independent status data is unavailable.',
-        'status.operational': 'Operational',
-        'status.degraded': 'Degraded',
-        'status.unavailable': 'Unavailable',
-        'status.unknown': 'No data',
-        'status.incidents': 'Incident history',
-        'status.noIncidents': 'No incidents have been reported.',
-        'status.history': 'Seven-day uptime',
-        'settings.language': 'Language',
-        'settings.languageHelp': 'Changes the language used by the MistWarp community site. More pages will move into this translation system as their copy changes.',
-        'settings.analytics': 'Anonymous product analytics',
-        'settings.analyticsHelp': 'Records six creation milestones for 31 days. MistWarp does not send usernames, project IDs, page URLs, IP addresses, or browser details.'
-    },
+    en: enMessages,
+    'zh-cn': zhMessages,
     es: {
         'a11y.skip': 'Saltar al contenido',
         'nav.main': 'Navegación principal',
@@ -82,8 +56,10 @@ const getPreference = () => {
 
 const resolveLocale = preference => {
     if (preference !== 'auto') return messages[preference] ? preference : 'en';
-    const browserLocale = typeof navigator === 'undefined' ? 'en' : navigator.language.toLowerCase().split('-')[0];
-    return messages[browserLocale] ? browserLocale : 'en';
+    const browserLocale = typeof navigator === 'undefined' ? 'en' : navigator.language.toLowerCase();
+    if (browserLocale.startsWith('zh')) return 'zh-cn';
+    const short = browserLocale.split('-')[0];
+    return messages[short] ? short : 'en';
 };
 
 const CommunityI18nContext = createContext({locale: 'en', preference: 'auto', setPreference: () => {}, t: key => messages.en[key] || key});
@@ -109,7 +85,7 @@ export const CommunityIntlProvider = ({children}) => {
         setPreference,
         t: key => messages[locale][key] || messages.en[key] || key
     }), [locale, preference]);
-    return <CommunityI18nContext.Provider value={value}><IntlProvider locale={locale} messages={messages[locale]}>{children}</IntlProvider></CommunityI18nContext.Provider>;
+    return <CommunityI18nContext.Provider value={value}>{children}</CommunityI18nContext.Provider>;
 };
 
 export const useCommunityIntl = () => useContext(CommunityI18nContext);

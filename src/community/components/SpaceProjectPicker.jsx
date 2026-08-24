@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {Check, Plus, Search, X} from 'lucide-react';
 import api from '../api';
+import {useCommunityIntl} from '../i18n.jsx';
 import {useUser} from '../UserContext.jsx';
 import ProjectThumbnail from './ProjectThumbnail.jsx';
 import Button from './ui/Button.jsx';
@@ -17,6 +18,7 @@ const projectIdsForSpace = space => new Set([
 
 const SpaceProjectPicker = ({space, onAdded}) => {
     const {user, login} = useUser();
+    const {t} = useCommunityIntl();
     const [open, setOpen] = useState(false);
     const [tab, setTab] = useState('mine');
     const [mine, setMine] = useState(null);
@@ -107,7 +109,7 @@ const SpaceProjectPicker = ({space, onAdded}) => {
             if (currentContext.current === context) await onAdded();
         } catch (e) {
             if (currentContext.current === context) {
-                setError(e.message || 'Could not add this project.');
+                setError(e.message || t('spacePicker.couldNotAdd', 'Could not add this project.'));
             }
         } finally {
             actionLocks.current.delete(actionKey);
@@ -118,27 +120,27 @@ const SpaceProjectPicker = ({space, onAdded}) => {
     const projects = tab === 'mine' ? (mine || []) : results;
 
     if (!open) {
-        return <Button onClick={show}><Plus size={16} /> Add projects</Button>;
+        return <Button onClick={show}><Plus size={16} /> {t('spacePicker.addProjects', 'Add projects')}</Button>;
     }
 
     return (
         <section className={styles.projectPicker}>
             <header>
                 <div>
-                    <h2>Add projects</h2>
-                    <p>Choose one of your shared or unlisted projects, or search public projects.</p>
+                    <h2>{t('spacePicker.addProjects', 'Add projects')}</h2>
+                    <p>{t('spacePicker.lead', 'Choose one of your shared or unlisted projects, or search public projects.')}</p>
                 </div>
                 <IconButton
                     variant="secondary"
                     className={styles.iconButton}
                     disabled={Boolean(adding)}
                     onClick={() => setOpen(false)}
-                    label="Close project picker"
+                    label={t('spacePicker.closeLabel', 'Close project picker')}
                 ><X size={18} /></IconButton>
             </header>
             <div className={styles.pickerTabs}>
-                <button type="button" className={tab === 'mine' ? styles.pickerTabActive : styles.pickerTab} onClick={() => setTab('mine')}>Your projects</button>
-                {space.canManage ? <button type="button" className={tab === 'search' ? styles.pickerTabActive : styles.pickerTab} onClick={() => setTab('search')}>Search</button> : null}
+                <button type="button" className={tab === 'mine' ? styles.pickerTabActive : styles.pickerTab} onClick={() => setTab('mine')}>{t('spacePicker.yourProjects', 'Your projects')}</button>
+                {space.canManage ? <button type="button" className={tab === 'search' ? styles.pickerTabActive : styles.pickerTab} onClick={() => setTab('search')}>{t('spacePicker.search', 'Search')}</button> : null}
             </div>
             {tab === 'search' ? (
                 <form className={styles.projectSearch} onSubmit={search}>
@@ -147,16 +149,16 @@ const SpaceProjectPicker = ({space, onAdded}) => {
                         value={query}
                         disabled={searching}
                         onChange={event => setQuery(event.target.value)}
-                        placeholder="Search by title, creator, or tag"
+                        placeholder={t('spacePicker.searchPlaceholder', 'Search by title, creator, or tag')}
                     />
-                    <Button type="submit" variant="secondary" busy={searching} busyLabel="Searching…">Search</Button>
+                    <Button type="submit" variant="secondary" busy={searching} busyLabel={t('spacePicker.searching', 'Searching…')}>{t('spacePicker.search', 'Search')}</Button>
                 </form>
             ) : null}
             {error ? <p className={styles.error}>{error}</p> : null}
-            {tab === 'mine' && mine === null && !mineError ? <p className={styles.pickerEmpty}>Loading your projects…</p> : null}
-            {tab === 'mine' && mineError ? <p className={styles.pickerEmpty}>{mineError} <button type="button" onClick={() => setMineAttempt(attempt => attempt + 1)}>Try again</button></p> : null}
-            {tab === 'search' && !results.length && !searching ? <p className={styles.pickerEmpty}>Search for a public project to add.</p> : null}
-            {tab === 'mine' && mine && !mine.length && !mineError ? <p className={styles.pickerEmpty}>You do not have any shared or unlisted projects yet.</p> : null}
+            {tab === 'mine' && mine === null && !mineError ? <p className={styles.pickerEmpty}>{t('spacePicker.loadingProjects', 'Loading your projects…')}</p> : null}
+            {tab === 'mine' && mineError ? <p className={styles.pickerEmpty}>{mineError} <button type="button" onClick={() => setMineAttempt(attempt => attempt + 1)}>{t('spacePicker.tryAgain', 'Try again')}</button></p> : null}
+            {tab === 'search' && !results.length && !searching ? <p className={styles.pickerEmpty}>{t('spacePicker.searchEmpty', 'Search for a public project to add.')}</p> : null}
+            {tab === 'mine' && mine && !mine.length && !mineError ? <p className={styles.pickerEmpty}>{t('spacePicker.mineEmpty', 'You do not have any shared or unlisted projects yet.')}</p> : null}
             <div className={styles.pickerResults}>
                 {projects.map(project => {
                     const added = existingIds.has(project.id);
@@ -165,17 +167,17 @@ const SpaceProjectPicker = ({space, onAdded}) => {
                             <ProjectThumbnail project={project} className={styles.pickerThumb} fallbackClassName={styles.pickerThumbFallback} lazy />
                             <div>
                                 <strong>{project.title}</strong>
-                                <span>by {project.owner}</span>
-                                {project.visibility === 'unlisted' ? <small>Unlisted</small> : null}
+                                <span>{t('spacePicker.by', 'by ')}{project.owner}</span>
+                                {project.visibility === 'unlisted' ? <small>{t('spacePicker.unlisted', 'Unlisted')}</small> : null}
                             </div>
                             <Button
                                 variant="secondary"
                                 disabled={added || Boolean(adding)}
                                 busy={adding === project.id}
-                                busyLabel="Adding…"
+                                busyLabel={t('spacePicker.adding', 'Adding…')}
                                 onClick={() => add(project)}
                             >
-                                {added ? <><Check size={14} /> Added</> : <><Plus size={14} /> Add</>}
+                                {added ? <><Check size={14} /> {t('spacePicker.added', 'Added')}</> : <><Plus size={14} /> {t('spacePicker.add', 'Add')}</>}
                             </Button>
                         </article>
                     );

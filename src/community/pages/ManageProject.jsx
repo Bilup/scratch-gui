@@ -29,6 +29,11 @@ const ROLE_DESCRIPTIONS = {
     contributor: 'Can work through pull requests.',
     tester: 'Can open and test private drafts.'
 };
+const ROLE_DESCRIPTION_KEYS = {
+    maintainer: 'mw.community.manageProject.role.maintainer',
+    contributor: 'mw.community.manageProject.role.contributor',
+    tester: 'mw.community.manageProject.role.tester'
+};
 
 const SECTIONS = [
     {key: 'overview', labelKey: 'mw.community.manageProject.section.overview', labelDefault: 'Overview', icon: BarChart3},
@@ -135,7 +140,7 @@ const ManageProject = () => {
         setDiagnosticsError('');
         api.diagnostics(id)
             .then(fresh(setDiagnostics))
-            .catch(fresh(() => setDiagnosticsError('Could not load diagnostics.')));
+            .catch(fresh(() => setDiagnosticsError(t('mw.community.manageProject.couldNotLoadDiagnostics', 'Could not load diagnostics.'))));
     }, [beginDiagnostics, id]);
 
     const loadFeedback = useCallback(() => {
@@ -144,7 +149,7 @@ const ManageProject = () => {
         setFeedbackError('');
         api.feedback(id)
             .then(fresh(data => setFeedback(data.feedback || [])))
-            .catch(fresh(() => setFeedbackError('Could not load feedback.')));
+            .catch(fresh(() => setFeedbackError(t('mw.community.manageProject.couldNotLoadFeedback', 'Could not load feedback.'))));
     }, [beginFeedback, id]);
 
     useEffect(() => {
@@ -212,7 +217,7 @@ const ManageProject = () => {
             }
         } catch (e) {
             if (currentLoadContext.current === loadContext) {
-                setTeamStatus(e.message || 'Could not save the team.');
+                setTeamStatus(e.message || t('mw.community.manageProject.couldNotSaveTeam', 'Could not save the team.'));
             }
         } finally {
             releaseAction(actionKey);
@@ -251,7 +256,7 @@ const ManageProject = () => {
             }
         } catch (e) {
             if (currentLoadContext.current === loadContext) {
-                setFeedbackError(e.message || 'Could not update this feedback.');
+                setFeedbackError(e.message || t('mw.community.manageProject.couldNotUpdateFeedback', 'Could not update this feedback.'));
             }
         } finally {
             releaseAction(actionKey);
@@ -265,7 +270,7 @@ const ManageProject = () => {
     if (!user) {
         return (
             <main className={styles.page}>
-                <p className={styles.statusMsg}>Sign in to manage your projects. <button type="button" onClick={login}>Sign in</button></p>
+                <p className={styles.statusMsg}>{t('mw.community.manageProject.signInManage', 'Sign in to manage your projects.')} <button type="button" onClick={login}>{t('mw.community.manageProject.signIn', 'Sign in')}</button></p>
             </main>
         );
     }
@@ -395,15 +400,15 @@ const ManageProject = () => {
                                 emptyText={t('mw.community.manageProject.noViews', 'No views in the last two weeks.')}
                             />
                             <div className={styles.card}>
-                                <h2 className={styles.cardTitle}>Publish checklist</h2>
+                                <h2 className={styles.cardTitle}>{t('mw.community.manageProject.publishChecklist', 'Publish checklist')}</h2>
                                 <ul className={styles.checklist}>
                                     {[
-                                        ['Project uploaded', project.hasContent],
-                                        ['Clear title', project.title && !/^untitled$/i.test(project.title)],
-                                        ['Instructions added', Boolean(project.instructions)],
-                                        ['Description or notes added', Boolean(project.description || project.notes)],
-                                        ['Tags added', Boolean(project.tags && project.tags.length)],
-                                        ['Thumbnail ready', Boolean(project.thumbUrl)]
+                                        [t('mw.community.manageProject.check.projectUploaded', 'Project uploaded'), project.hasContent],
+                                        [t('mw.community.manageProject.check.clearTitle', 'Clear title'), project.title && !/^untitled$/i.test(project.title)],
+                                        [t('mw.community.manageProject.check.instructionsAdded', 'Instructions added'), Boolean(project.instructions)],
+                                        [t('mw.community.manageProject.check.descriptionAdded', 'Description or notes added'), Boolean(project.description || project.notes)],
+                                        [t('mw.community.manageProject.check.tagsAdded', 'Tags added'), Boolean(project.tags && project.tags.length)],
+                                        [t('mw.community.manageProject.check.thumbnailReady', 'Thumbnail ready'), Boolean(project.thumbUrl)]
                                     ].map(([label, done]) => (
                                         <li key={label} className={done ? styles.checkDone : styles.checkTodo}>
                                             <Check size={15} /> {label}
@@ -508,19 +513,19 @@ const ManageProject = () => {
                                         <SwitchRow
                                             checked={form.remixable}
                                             disabled={saving}
-                                            label="Allow others to remix this project"
+                                            label={t('mw.community.manageProject.allowRemix', 'Allow others to remix this project')}
                                             onChange={value => set('remixable', value)}
                                         />
                                         <SwitchRow
                                             checked={form.seeInside}
                                             disabled={saving}
-                                            label="Allow others to see inside this project"
+                                            label={t('mw.community.manageProject.allowSeeInside', 'Allow others to see inside this project')}
                                             onChange={value => set('seeInside', value)}
                                         />
                                         <SwitchRow
                                             checked={form.commentsOff}
                                             disabled={saving}
-                                            label="Turn off comments"
+                                            label={t('mw.community.manageProject.turnOffComments', 'Turn off comments')}
                                             onChange={value => set('commentsOff', value)}
                                         />
                                     </div>
@@ -530,7 +535,7 @@ const ManageProject = () => {
                                             variant="primary"
                                             className={styles.save}
                                             busy={saving}
-                                            busyLabel="Saving…"
+                                            busyLabel={t('mw.community.manageProject.saving', 'Saving…')}
                                             onClick={save}
                                         >
                                             <Check size={16} />
@@ -551,22 +556,22 @@ const ManageProject = () => {
                     {activeSection === 'diagnostics' ? (
                         <div className={styles.stack}>
                             <div className={styles.card}>
-                                <h2 className={styles.cardTitle}>Player diagnostics</h2>
-                                <p className={styles.empty}>Anonymous runtime events from the most recent 500 sessions.</p>
+                                <h2 className={styles.cardTitle}>{t('mw.community.manageProject.playerDiagnostics', 'Player diagnostics')}</h2>
+                                <p className={styles.empty}>{t('mw.community.manageProject.diagnosticsLead', 'Anonymous runtime events from the most recent 500 sessions.')}</p>
                                 {diagnostics ? (
                                     <div className={styles.statGrid}>
-                                        <div className={styles.stat}><span className={styles.statNumber}>{diagnostics.counts.load || 0}</span><span className={styles.statLabel}>Loads</span></div>
-                                        <div className={styles.stat}><span className={styles.statNumber}>{diagnostics.counts.start || 0}</span><span className={styles.statLabel}>Green flags</span></div>
-                                        <div className={styles.stat}><span className={styles.statNumber}>{diagnostics.counts.crash || 0}</span><span className={styles.statLabel}>Errors</span></div>
-                                        <div className={styles.stat}><span className={styles.statNumber}>{Math.round(diagnostics.averageLoadMs || 0)} ms</span><span className={styles.statLabel}>Average load</span></div>
+                                        <div className={styles.stat}><span className={styles.statNumber}>{diagnostics.counts.load || 0}</span><span className={styles.statLabel}>{t('mw.community.manageProject.diagLoads', 'Loads')}</span></div>
+                                        <div className={styles.stat}><span className={styles.statNumber}>{diagnostics.counts.start || 0}</span><span className={styles.statLabel}>{t('mw.community.manageProject.diagGreenFlags', 'Green flags')}</span></div>
+                                        <div className={styles.stat}><span className={styles.statNumber}>{diagnostics.counts.crash || 0}</span><span className={styles.statLabel}>{t('mw.community.manageProject.diagErrors', 'Errors')}</span></div>
+                                        <div className={styles.stat}><span className={styles.statNumber}>{Math.round(diagnostics.averageLoadMs || 0)} ms</span><span className={styles.statLabel}>{t('mw.community.manageProject.diagAverageLoad', 'Average load')}</span></div>
                                     </div>
                                 ) : diagnosticsError ? (
-                                    <p className={styles.empty}>{diagnosticsError}{' '}<button type="button" onClick={loadDiagnostics}>Try again</button></p>
-                                ) : <p className={styles.empty}>Loading diagnostics…</p>}
+                                    <p className={styles.empty}>{diagnosticsError}{' '}<button type="button" onClick={loadDiagnostics}>{t('mw.community.manageProject.tryAgain', 'Try again')}</button></p>
+                                ) : <p className={styles.empty}>{t('mw.community.manageProject.loadingDiagnostics', 'Loading diagnostics…')}</p>}
                             </div>
                             {diagnostics && diagnostics.recent.some(item => item.error) ? (
                                 <div className={styles.card}>
-                                    <h2 className={styles.cardTitle}>Recent errors</h2>
+                                    <h2 className={styles.cardTitle}>{t('mw.community.manageProject.recentErrors', 'Recent errors')}</h2>
                                     <ul className={styles.buyers}>
                                         {diagnostics.recent.filter(item => item.error).slice(0, 20).map(item => <li key={item._id} className={styles.buyerRow}><span>{item.error}</span><span className={styles.buyerDate}>{new Date(item.created).toLocaleString()}</span></li>)}
                                     </ul>
@@ -576,10 +581,10 @@ const ManageProject = () => {
                     ) : null}
                     {activeSection === 'feedback' ? (
                         <div className={styles.card}>
-                            <h2 className={styles.cardTitle}>Tracked feedback</h2>
-                            {!feedback && !feedbackError ? <p className={styles.empty}>Loading feedback…</p> : null}
-                            {feedbackError ? <p className={styles.empty}>{feedbackError}{' '}<button type="button" onClick={loadFeedback}>Try again</button></p> : null}
-                            {feedback && !feedback.length ? <p className={styles.empty}>No feedback yet.</p> : null}
+                            <h2 className={styles.cardTitle}>{t('mw.community.manageProject.trackedFeedback', 'Tracked feedback')}</h2>
+                            {!feedback && !feedbackError ? <p className={styles.empty}>{t('mw.community.manageProject.loadingFeedback', 'Loading feedback…')}</p> : null}
+                            {feedbackError ? <p className={styles.empty}>{feedbackError}{' '}<button type="button" onClick={loadFeedback}>{t('mw.community.manageProject.tryAgain', 'Try again')}</button></p> : null}
+                            {feedback && !feedback.length ? <p className={styles.empty}>{t('mw.community.manageProject.noFeedback', 'No feedback yet.')}</p> : null}
                             {feedback && feedback.length ? (
                                 <ul className={styles.buyers}>
                                     {feedback.map(item => (
@@ -593,10 +598,10 @@ const ManageProject = () => {
                                                     disabled={Boolean(feedbackBusy)}
                                                     onChange={event => updateFeedbackStatus(item, event.target.value)}
                                                 >
-                                                    <option value="open">Open</option>
-                                                    <option value="working">Working</option>
-                                                    <option value="done">Done</option>
-                                                    <option value="dismissed">Dismissed</option>
+                                                    <option value="open">{t('mw.community.manageProject.fbOpen', 'Open')}</option>
+                                                    <option value="working">{t('mw.community.manageProject.fbWorking', 'Working')}</option>
+                                                    <option value="done">{t('mw.community.manageProject.fbDone', 'Done')}</option>
+                                                    <option value="dismissed">{t('mw.community.manageProject.fbDismissed', 'Dismissed')}</option>
                                                 </select>
                                             </span>
                                         </li>
@@ -607,23 +612,23 @@ const ManageProject = () => {
                     ) : null}
                     {activeSection === 'preview' ? (
                         <div className={styles.card}>
-                            <h2 className={styles.cardTitle}>Draft preview</h2>
-                            <p className={styles.empty}>Create a private link that expires after 24 hours. Anyone with the link can play the current draft.</p>
+                            <h2 className={styles.cardTitle}>{t('mw.community.manageProject.draftPreview', 'Draft preview')}</h2>
+                            <p className={styles.empty}>{t('mw.community.manageProject.previewLead', 'Create a private link that expires after 24 hours. Anyone with the link can play the current draft.')}</p>
                             <Button
                                 variant="primary"
                                 className={styles.save}
                                 busy={previewBusy}
-                                busyLabel="Creating…"
+                                busyLabel={t('mw.community.manageProject.creating', 'Creating…')}
                                 onClick={createPreview}
-                            ><Link2 size={16} /> Create preview link</Button>
-                            {preview ? <div className={styles.form}><input value={preview} readOnly onFocus={event => event.target.select()} /><span className={styles.formStatus}>Expires in 24 hours.</span></div> : null}
+                            ><Link2 size={16} /> {t('mw.community.manageProject.createPreviewLink', 'Create preview link')}</Button>
+                            {preview ? <div className={styles.form}><input value={preview} readOnly onFocus={event => event.target.select()} /><span className={styles.formStatus}>{t('mw.community.manageProject.previewExpires', 'Expires in 24 hours.')}</span></div> : null}
                             {status ? <p className={styles.empty}>{status}</p> : null}
                         </div>
                     ) : null}
                     {activeSection === 'team' ? (
                         <div className={`${styles.card} ${styles.teamCard}`}>
                             <div className={styles.teamHead}>
-                                <div><h2 className={styles.cardTitle}>Project team</h2><p>Give other people access without sharing your account.</p></div>
+                                <div><h2 className={styles.cardTitle}>{t('mw.community.manageProject.projectTeam', 'Project team')}</h2><p>{t('mw.community.manageProject.teamLead', 'Give other people access without sharing your account.')}</p></div>
                                 <Button
                                     className={styles.addTeam}
                                     disabled={teamSaving}
@@ -632,7 +637,7 @@ const ManageProject = () => {
                                         {username: '', role: 'contributor'}
                                     ])}
                                 >
-                                    <Plus size={15} /> Add teammate
+                                    <Plus size={15} /> {t('mw.community.manageProject.addTeammate', 'Add teammate')}
                                 </Button>
                             </div>
                             {team.length ? (
@@ -640,7 +645,7 @@ const ManageProject = () => {
                                     {team.map((member, index) => (
                                         <div key={index} className={styles.teamMember}>
                                             <label className={styles.teamUser}>
-                                                <span>Username</span>
+                                                <span>{t('mw.community.manageProject.username', 'Username')}</span>
                                                 <input
                                                     disabled={teamSaving}
                                                     value={member.username}
@@ -652,7 +657,7 @@ const ManageProject = () => {
                                                 />
                                             </label>
                                             <label className={styles.teamRole}>
-                                                <span>Role</span>
+                                                <span>{t('mw.community.manageProject.role', 'Role')}</span>
                                                 <select
                                                     disabled={teamSaving}
                                                     value={member.role}
@@ -661,16 +666,16 @@ const ManageProject = () => {
                                                         setTeam(current => current.map((item, itemIndex) => (itemIndex === index ? {...item, role: value} : item)));
                                                     }}
                                                 >
-                                                    <option value="maintainer">Maintainer</option>
-                                                    <option value="contributor">Contributor</option>
-                                                    <option value="tester">Tester</option>
+                                                    <option value="maintainer">{t('mw.community.manageProject.roleMaintainer', 'Maintainer')}</option>
+                                                    <option value="contributor">{t('mw.community.manageProject.roleContributor', 'Contributor')}</option>
+                                                    <option value="tester">{t('mw.community.manageProject.roleTester', 'Tester')}</option>
                                                 </select>
-                                                <small>{ROLE_DESCRIPTIONS[member.role]}</small>
+                                                <small>{t(ROLE_DESCRIPTION_KEYS[member.role], ROLE_DESCRIPTIONS[member.role])}</small>
                                             </label>
                                             <IconButton
                                                 variant="danger"
                                                 className={styles.removeTeam}
-                                                label={`Remove ${member.username || 'teammate'}`}
+                                                label={t('mw.community.manageProject.removeTeammate', 'Remove {name}', {name: member.username || t('mw.community.manageProject.teammate', 'teammate')})}
                                                 disabled={teamSaving}
                                                 onClick={() => setTeam(current => current.filter(
                                                     (item, itemIndex) => itemIndex !== index
@@ -681,17 +686,17 @@ const ManageProject = () => {
                                         </div>
                                     ))}
                                 </div>
-                            ) : <div className={styles.teamEmpty}><Users size={22} /><strong>No teammates yet</strong><span>Add someone when you are ready to work together.</span></div>}
+                            ) : <div className={styles.teamEmpty}><Users size={22} /><strong>{t('mw.community.manageProject.noTeammates', 'No teammates yet')}</strong><span>{t('mw.community.manageProject.noTeammatesHint', 'Add someone when you are ready to work together.')}</span></div>}
                             <div className={styles.teamFooter}>
                                 <span>{teamStatus}</span>
                                 <Button
                                     variant="primary"
                                     className={styles.save}
                                     busy={teamSaving}
-                                    busyLabel="Saving…"
+                                    busyLabel={t('mw.community.manageProject.saving', 'Saving…')}
                                     onClick={saveTeam}
                                 >
-                                    <Check size={15} /> Save team
+                                    <Check size={15} /> {t('mw.community.manageProject.saveTeam', 'Save team')}
                                 </Button>
                             </div>
                         </div>

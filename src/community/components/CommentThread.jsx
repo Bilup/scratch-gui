@@ -427,16 +427,16 @@ const CommentThread = ({
                     <input
                         type="search"
                         value={search}
-                        placeholder="Search comments"
-                        aria-label="Search comments"
+                        placeholder={t('mw.community.comments.search', 'Search comments')}
+                        aria-label={t('mw.community.comments.search', 'Search comments')}
                         onChange={event => setSearch(event.target.value)}
                     />
                     <select
                         value={kindFilter}
-                        aria-label="Filter comments by type"
+                        aria-label={t('mw.community.comments.filterTypes', 'Filter comments by type')}
                         onChange={event => setKindFilter(event.target.value)}
                     >
-                        <option value="all">All types</option>
+                        <option value="all">{t('mw.community.comments.allTypes', 'All types')}</option>
                         {COMMENT_KINDS.map(item => (
                             <option key={item.value} value={item.value}>{item.label}</option>
                         ))}
@@ -554,7 +554,7 @@ const CommentThread = ({
             {deleteComment ? (
                 <Modal
                     icon={Trash2}
-                    title="Delete comment?"
+                    title={t('mw.community.comments.deleteConfirm', 'Delete this comment?')}
                     onClose={() => setDeleteId(null)}
                     dismissDisabled={removingId !== null}
                     actions={(
@@ -564,19 +564,19 @@ const CommentThread = ({
                                 className={styles.cancel}
                                 disabled={removingId !== null}
                                 onClick={() => setDeleteId(null)}
-                            >Cancel</button>
+                            >{t('mw.community.comments.cancel', 'Cancel')}</button>
                             <button
                                 type="button"
                                 className={styles.deleteConfirm}
                                 disabled={removingId !== null}
                                 onClick={() => remove(deleteComment.id)}
-                            >{removingId !== null ? 'Deleting…' : 'Delete comment'}</button>
+                            >{removingId !== null ? t('mw.community.comments.deleting', 'Deleting…') : t('mw.community.comments.deleteComment', 'Delete comment')}</button>
                         </React.Fragment>
                     )}
                 >
                     <p className={styles.modalText}>
-                        This comment will be deleted permanently.
-                        {deleteComment.parent ? '' : ' Its replies will also be removed.'}
+                        {t('mw.community.comments.deleteConfirmDetail', 'This comment will be deleted permanently.')}
+                        {deleteComment.parent ? '' : t('mw.community.comments.deleteReplies', ' Its replies will also be removed.')}
                     </p>
                     <p className={styles.commentPreview}>{deleteComment.content}</p>
                     {error ? <p className={styles.error}>{error}</p> : null}

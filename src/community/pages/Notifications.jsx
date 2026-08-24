@@ -16,6 +16,7 @@ import {fetchNotifications, markNotificationsRead, subscribeNotifications} from 
 import {timeAgo} from '../format';
 import styles from './Notifications.module.css';
 import {getNotificationPreferences, categoryForNotification} from '../notification-preferences';
+import {useCommunityIntl} from '../i18n.jsx';
 
 const ICONS = {
     love: Heart,
@@ -132,14 +133,20 @@ const describe = (n, intl) => {
             defaultMessage="loved {title}"
             values={{title: <strong>{n.projectTitle}</strong>}}
         /> :
-        <span>loved your project</span>;
+        <FormattedMessage
+            id="mw.community.notifications.lovedYourProject"
+            defaultMessage="loved your project"
+        />;
     case 'comment': return n.projectTitle ?
         <FormattedMessage
             id="mw.community.notifications.comment"
             defaultMessage="commented on {title}"
             values={{title: <strong>{n.projectTitle}</strong>}}
         /> :
-        <span>commented on your project</span>;
+        <FormattedMessage
+            id="mw.community.notifications.commentedYourProject"
+            defaultMessage="commented on your project"
+        />;
     case 'profile_comment': return <FormattedMessage
         id="mw.community.notifications.profileComment"
         defaultMessage="commented on your profile"
@@ -179,7 +186,10 @@ const describe = (n, intl) => {
             defaultMessage="remixed {title}"
             values={{title: <strong>{n.projectTitle}</strong>}}
         /> :
-        <span>remixed your project</span>;
+        <FormattedMessage
+            id="mw.community.notifications.remixedYourProject"
+            defaultMessage="remixed your project"
+        />;
     case 'follow': return <FormattedMessage
         id="mw.community.notifications.follow"
         defaultMessage="followed you"
@@ -285,27 +295,79 @@ const describe = (n, intl) => {
             defaultMessage: 'reviewed; no action was taken'
         })}}
     />;
-    case 'contribution': return <span>sent changes for <strong>{n.projectTitle}</strong></span>;
+    case 'contribution': return <FormattedMessage
+        id="mw.community.notifications.contribution"
+        defaultMessage="sent changes for {title}"
+        values={{title: <strong>{n.projectTitle}</strong>}}
+    />;
     case 'space_project': return (
-        <span>added <strong>{n.projectTitle}</strong> to <strong>{n.spaceTitle}</strong></span>
+        <FormattedMessage
+            id="mw.community.notifications.spaceProject"
+            defaultMessage="added {title} to {space}"
+            values={{title: <strong>{n.projectTitle}</strong>, space: <strong>{n.spaceTitle}</strong>}}
+        />
     );
-    case 'space_comment': return <span>commented on <strong>{n.spaceTitle}</strong></span>;
-    case 'space_curator_invite': return <span>invited you to curate <strong>{n.spaceTitle}</strong></span>;
+    case 'space_comment': return <FormattedMessage
+        id="mw.community.notifications.spaceComment"
+        defaultMessage="commented on {space}"
+        values={{space: <strong>{n.spaceTitle}</strong>}}
+    />;
+    case 'space_curator_invite': return <FormattedMessage
+        id="mw.community.notifications.spaceCuratorInvite"
+        defaultMessage="invited you to curate {space}"
+        values={{space: <strong>{n.spaceTitle}</strong>}}
+    />;
     case 'space_curator_accepted': return (
-        <span>accepted your invitation to curate <strong>{n.spaceTitle}</strong></span>
+        <FormattedMessage
+            id="mw.community.notifications.spaceCuratorAccepted"
+            defaultMessage="accepted your invitation to curate {space}"
+            values={{space: <strong>{n.spaceTitle}</strong>}}
+        />
     );
     case 'space_curator_declined': return (
-        <span>declined your invitation to curate <strong>{n.spaceTitle}</strong></span>
+        <FormattedMessage
+            id="mw.community.notifications.spaceCuratorDeclined"
+            defaultMessage="declined your invitation to curate {space}"
+            values={{space: <strong>{n.spaceTitle}</strong>}}
+        />
     );
-    case 'space_curator_removed': return <span>removed you as a curator of <strong>{n.spaceTitle}</strong></span>;
-    case 'challenge_judge_invite': return <span>invited you to judge <strong>{n.spaceTitle}</strong></span>;
+    case 'space_curator_removed': return <FormattedMessage
+        id="mw.community.notifications.spaceCuratorRemoved"
+        defaultMessage="removed you as a curator of {space}"
+        values={{space: <strong>{n.spaceTitle}</strong>}}
+    />;
+    case 'challenge_judge_invite': return <FormattedMessage
+        id="mw.community.notifications.challengeJudgeInvite"
+        defaultMessage="invited you to judge {space}"
+        values={{space: <strong>{n.spaceTitle}</strong>}}
+    />;
     case 'challenge_judge_accepted': return (
-        <span>accepted your invitation to judge <strong>{n.spaceTitle}</strong></span>
+        <FormattedMessage
+            id="mw.community.notifications.challengeJudgeAccepted"
+            defaultMessage="accepted your invitation to judge {space}"
+            values={{space: <strong>{n.spaceTitle}</strong>}}
+        />
     );
-    case 'challenge_join': return <span>joined <strong>{n.spaceTitle}</strong></span>;
-    case 'project_feedback': return <span>sent {n.feedbackType} feedback for <strong>{n.projectTitle}</strong></span>;
-    case 'project_review': return <span>rated <strong>{n.projectTitle}</strong> {n.rating} out of 5</span>;
-    case 'roadmap_comment': return <span>commented on <strong>{n.roadmapTitle}</strong></span>;
+    case 'challenge_join': return <FormattedMessage
+        id="mw.community.notifications.challengeJoin"
+        defaultMessage="joined {space}"
+        values={{space: <strong>{n.spaceTitle}</strong>}}
+    />;
+    case 'project_feedback': return <FormattedMessage
+        id="mw.community.notifications.projectFeedback"
+        defaultMessage="sent {type} feedback for {title}"
+        values={{type: n.feedbackType, title: <strong>{n.projectTitle}</strong>}}
+    />;
+    case 'project_review': return <FormattedMessage
+        id="mw.community.notifications.projectReview"
+        defaultMessage="rated {title} {rating} out of 5"
+        values={{title: <strong>{n.projectTitle}</strong>, rating: n.rating}}
+    />;
+    case 'roadmap_comment': return <FormattedMessage
+        id="mw.community.notifications.roadmapComment"
+        defaultMessage="commented on {title}"
+        values={{title: <strong>{n.roadmapTitle}</strong>}}
+    />;
     default: return <FormattedMessage
         id="mw.community.notifications.didSomething"
         defaultMessage="did something"
@@ -385,6 +447,7 @@ GenericNotification.propTypes = {
 
 const Notifications = ({hideHeading}) => {
     const intl = useIntl();
+    const {t: ct} = useCommunityIntl();
     const {user, loading, login} = useUser();
     const [items, setItems] = useState(null);
     const [preferences, setPreferences] = useState(getNotificationPreferences());
@@ -450,7 +513,7 @@ const Notifications = ({hideHeading}) => {
         return (
             <main className={styles.page}>
                 <p className={styles.status}>
-                    {intl.formatMessage({id: 'mw.community.notifications.signIn', defaultMessage: 'Sign in to see your notifications.'})} <Button onClick={login}>Sign in</Button>
+                    {ct('notify.signIn', 'Sign in to see your notifications.')} <Button onClick={login}>{ct('notify.signInBtn', 'Sign in')}</Button>
                 </p>
             </main>
         );
@@ -463,12 +526,12 @@ const Notifications = ({hideHeading}) => {
             {hideHeading ? null : <h1>{intl.formatMessage({id: 'mw.community.notifications.title', defaultMessage: 'Notifications'})}</h1>}
             {failed ? (
                 <p className={styles.status}>
-                    {items === null ? 'Couldn\'t load notifications.' : 'Some notifications may be missing.'}{' '}
-                    <Button onClick={() => setAttempt(a => a + 1)}>Try again</Button>
+                    {items === null ? ct('notify.couldNotLoad', 'Couldn\'t load notifications.') : ct('notify.someMissing', 'Some notifications may be missing.')}{' '}
+                    <Button onClick={() => setAttempt(a => a + 1)}>{ct('notify.tryAgain', 'Try again')}</Button>
                 </p>
             ) : null}
             {items === null ? (!failed ? (
-                <p className={styles.status}>Loading…</p>
+                <p className={styles.status}>{ct('common.loading', 'Loading…')}</p>
             ) : null) : visibleItems.length ? (
                 <div className={styles.list}>
                     {visibleItems.map(n => {
@@ -551,8 +614,8 @@ const Notifications = ({hideHeading}) => {
                 </div>
             ) : items.length ? (
                 <p className={styles.status}>
-                    Your notification preferences hide all current activity.{' '}
-                    <Link to="/settings?section=notifications">Change preferences</Link>
+                    {ct('notify.preferencesHide', 'Your notification preferences hide all current activity.')}{' '}
+                    <Link to="/settings?section=notifications">{ct('notify.changePrefs', 'Change preferences')}</Link>
                 </p>
             ) : (
                 <p className={styles.status}>{intl.formatMessage({id: 'mw.community.notifications.empty', defaultMessage: 'Nothing yet. Activity on your projects shows up here.'})}</p>

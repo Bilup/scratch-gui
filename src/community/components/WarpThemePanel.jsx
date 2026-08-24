@@ -721,7 +721,7 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
             {deletingTheme ? (
                 <Modal
                     icon={Trash2}
-                    title="Delete theme?"
+                    title={t('mw.community.biluptheme.deleteThemeTitle', 'Delete theme?')}
                     dismissDisabled={busy}
                     onClose={() => {
                         setDeletingTheme(null);
@@ -736,16 +736,16 @@ const WarpThemePanel = ({theme, onThemeChange}) => {
                                 setDeleteError('');
                             }}
                             type="button"
-                        >Cancel</button>
+                        >{t('mw.community.biluptheme.cancel', 'Cancel')}</button>
                         <button
                             className={styles.dangerButton}
                             disabled={busy}
                             onClick={confirmDeleteTheme}
                             type="button"
-                        >{busy ? 'Deleting…' : 'Delete theme'}</button>
+                        >{busy ? t('mw.community.biluptheme.deleting', 'Deleting…') : t('mw.community.biluptheme.deleteTheme', 'Delete theme')}</button>
                     </React.Fragment>}
                 >
-                    <p>This permanently deletes “{deletingTheme.name}” from WarpTheme.</p>
+                    <p>{t('mw.community.biluptheme.deleteConfirm', 'This permanently deletes “{name}” from WarpTheme.', {name: deletingTheme.name})}</p>
                     {deleteError ? <p className={styles.error}>{deleteError}</p> : null}
                 </Modal>
             ) : null}

@@ -69,18 +69,18 @@ const Status = () => {
                 {failed ? <p className={styles.error} role="alert">{t('status.failed')}</p> : null}
                 {(status?.services || []).map(service => (
                     <div className={styles.statusRow} key={service.service}>
-                        <span><strong>{service.name}</strong><small>{service.latencyMs} ms · {historyFailed ? 'History unavailable' : `${t('status.history')} ${uptimeByService[service.service]?.toFixed(2) || '0.00'}%`}</small></span>
+                        <span><strong>{service.name}</strong><small>{service.latencyMs} ms · {historyFailed ? t('status.historyUnavailable') : `${t('status.history')} ${uptimeByService[service.service]?.toFixed(2) || '0.00'}%`}</small></span>
                         <span className={statusClass(service.status)}>{label(service.status)}</span>
                     </div>
                 ))}
-                <div className={styles.actions}><Button onClick={check} busy={loading} busyLabel="Checking…">{t('status.retry')}</Button>{statusDate(status?.generatedAt) ? <time dateTime={statusDate(status.generatedAt).toISOString()}>Updated {statusDate(status.generatedAt).toLocaleString()}</time> : null}</div>
+                <div className={styles.actions}><Button onClick={check} busy={loading} busyLabel={t('status.checking')}>{t('status.retry')}</Button>{statusDate(status?.generatedAt) ? <time dateTime={statusDate(status.generatedAt).toISOString()}>{t('status.updated')} {statusDate(status.generatedAt).toLocaleString()}</time> : null}</div>
             </section>
             <section className={styles.section}>
                 <h2>{t('status.incidents')}</h2>
                 {status && !status.incidents?.length ? <p>{t('status.noIncidents')}</p> : null}
                 {(status?.incidents || []).map(incident => <article className={styles.incident} key={incident.id}><div><strong>{incident.title}</strong><span className={statusClass(incident.status === 'resolved' ? 'operational' : 'unavailable')}>{incident.status}</span></div><p>{incident.body}</p>{statusDate(incident.createdAt) ? <time dateTime={statusDate(incident.createdAt).toISOString()}>{statusDate(incident.createdAt).toLocaleString()}</time> : null}</article>)}
             </section>
-            <section className={styles.section}><h2>Still having trouble?</h2><p>This monitor cannot detect browser-specific problems. If a problem continues, use the <Link to="/support">support page</Link>.</p></section>
+            <section className={styles.section}><h2>{t('status.troubleTitle')}</h2><p>{t('status.troubleLead')} <Link to="/support">{t('status.supportPage')}</Link>.</p></section>
         </main>
     );
 };

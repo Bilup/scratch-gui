@@ -2,6 +2,7 @@
 import React, {useEffect, useMemo, useState} from 'react';
 import {Link} from 'react-router-dom';
 import api from '../api';
+import {useCommunityIntl} from '../i18n.jsx';
 import styles from './ChallengeCalendar.module.css';
 
 const DAY_MS = 86400000;
@@ -70,6 +71,7 @@ const buildChallengeCalendar = (source, now = Date.now()) => {
 };
 
 const ChallengeCalendar = ({spaces, className = ''}) => {
+    const {t} = useCommunityIntl();
     const [loadedSpaces, setLoadedSpaces] = useState(null);
     const [loadError, setLoadError] = useState(false);
     const [attempt, setAttempt] = useState(0);
@@ -92,20 +94,20 @@ const ChallengeCalendar = ({spaces, className = ''}) => {
     const source = typeof spaces === 'undefined' ? loadedSpaces : spaces;
     const calendar = useMemo(() => buildChallengeCalendar(source), [source]);
 
-    if (loadError) return <div className={`${styles.empty}${className ? ` ${className}` : ''}`} role="alert">Could not load the challenge calendar. <button type="button" onClick={() => setAttempt(value => value + 1)}>Try again</button></div>;
-    if (calendar === null) return <div className={`${styles.skeleton}${className ? ` ${className}` : ''}`} role="status" aria-label="Loading challenge calendar" />;
-    if (calendar === false) return <p className={`${styles.empty}${className ? ` ${className}` : ''}`}>No challenges are scheduled.</p>;
+    if (loadError) return <div className={`${styles.empty}${className ? ` ${className}` : ''}`} role="alert">{t('challengeCalendar.couldNotLoad', 'Could not load the challenge calendar.')} <button type="button" onClick={() => setAttempt(value => value + 1)}>{t('challengeCalendar.tryAgain', 'Try again')}</button></div>;
+    if (calendar === null) return <div className={`${styles.skeleton}${className ? ` ${className}` : ''}`} role="status" aria-label={t('challengeCalendar.loadingAria', 'Loading challenge calendar')} />;
+    if (calendar === false) return <p className={`${styles.empty}${className ? ` ${className}` : ''}`}>{t('challengeCalendar.none', 'No challenges are scheduled.')}</p>;
     const todayOffset = calendar.today - calendar.rangeStart;
     return (
         <section className={`${styles.section}${className ? ` ${className}` : ''}`}>
-            <div className={styles.head}><div><h2>Challenge calendar</h2><p>See what is running now and what starts next.</p></div><Link to="/spaces?kind=challenge">All challenges</Link></div>
+            <div className={styles.head}><div><h2>{t('challengeCalendar.title', 'Challenge calendar')}</h2><p>{t('challengeCalendar.lead', 'See what is running now and what starts next.')}</p></div><Link to="/spaces?kind=challenge">{t('challengeCalendar.allChallenges', 'All challenges')}</Link></div>
             <div className={styles.scroll}>
                 <div className={styles.calendar} style={{'--mw-calendar-days': calendar.days.length}}>
                     <div className={styles.months}>{calendar.months.map(month => <span key={month.key} style={{gridColumn: `span ${month.span}`}}>{month.label}</span>)}</div>
                     <div className={styles.days}>{calendar.days.map(({day, date}) => <span key={day} className={day === calendar.today ? styles.today : ''}><strong>{date.toLocaleDateString([], {weekday: 'short'})}</strong>{date.getDate()}</span>)}</div>
                     <div className={styles.plot} style={{gridTemplateRows: `repeat(${calendar.lanes}, 34px)`}}>{todayOffset >= 0 && todayOffset < calendar.days.length ? <i className={styles.todayBand} style={{'--mw-today-offset': todayOffset}} /> : null}{calendar.events.map(event => {
                         const submissions = (event.projects || []).length;
-                        return <Link key={event._id} to={`/spaces/${event._id}`} className={styles.event} style={{'--mw-calendar-column': event.column, '--mw-calendar-span': event.span, '--mw-calendar-row': event.lane + 1, '--mw-challenge-color': event.color}} title={`${event.title}, ${new Date(event.startsAt).toLocaleDateString()} to ${new Date(event.endsAt).toLocaleDateString()}`}><strong>{event.title}</strong><span>{event.participantCount || 0} joined, {submissions} {submissions === 1 ? 'submission' : 'submissions'}</span></Link>;
+                        return <Link key={event._id} to={`/spaces/${event._id}`} className={styles.event} style={{'--mw-calendar-column': event.column, '--mw-calendar-span': event.span, '--mw-calendar-row': event.lane + 1, '--mw-challenge-color': event.color}} title={`${event.title}, ${new Date(event.startsAt).toLocaleDateString()} to ${new Date(event.endsAt).toLocaleDateString()}`}><strong>{event.title}</strong><span>{event.participantCount || 0} {t('challengeCalendar.joined', 'joined')}, {submissions} {submissions === 1 ? t('challengeCalendar.submissionOne', 'submission') : t('challengeCalendar.submissions', 'submissions')}</span></Link>;
                     })}</div>
                 </div>
             </div>

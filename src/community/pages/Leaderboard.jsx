@@ -127,7 +127,10 @@ const Leaderboard = () => {
             ) : error ? (
                 <div className={styles.status}>
                     <p>{error}</p>
-                    <Button onClick={() => setAttempt(value => value + 1)}>Try again</Button>
+                    <Button onClick={() => setAttempt(value => value + 1)}>{intl.formatMessage({
+                        id: 'mw.community.leaderboard.tryAgain',
+                        defaultMessage: 'Try again'
+                    })}</Button>
                 </div>
             ) : !users.length ? (
                 <p className={styles.status}>{intl.formatMessage({

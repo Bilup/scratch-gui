@@ -110,14 +110,17 @@ setError(e.message || intl.formatMessage({
     const pollTotal = item.poll ? Number(item.poll.total) || 0 : 0;
     const newsLink = safeNewsLink(item.link);
     const linkUrl = newsLink ? newsLink.url : '';
-    const linkLabel = item.link && item.link.label ? item.link.label : 'Open link';
+    const linkLabel = item.link && item.link.label ? item.link.label : intl.formatMessage({
+        id: 'mw.community.newsItem.openLink',
+        defaultMessage: 'Open link'
+    });
     const externalLink = Boolean(newsLink && newsLink.external);
 
     return (<>
         {confirmingDelete ? (
             <Modal
                 icon={Trash2}
-                title="Delete update?"
+                title={intl.formatMessage({id: 'mw.community.newsItem.deleteUpdateTitle', defaultMessage: 'Delete update?'})}
                 dismissDisabled={actionBusy === 'delete'}
                 onClose={() => {
                     setConfirmingDelete(false);
@@ -130,16 +133,16 @@ setError(e.message || intl.formatMessage({
                             setConfirmingDelete(false);
                             setError('');
                         }}
-                    >Cancel</Button>
+                    >{intl.formatMessage({id: 'mw.community.newsItem.cancel', defaultMessage: 'Cancel'})}</Button>
                     <Button
                         variant="danger"
                         busy={actionBusy === 'delete'}
-                        busyLabel="Deleting…"
+                        busyLabel={intl.formatMessage({id: 'mw.community.newsItem.deleting', defaultMessage: 'Deleting…'})}
                         onClick={confirmRemove}
-                    >Delete update</Button>
+                    >{intl.formatMessage({id: 'mw.community.newsItem.deleteUpdate', defaultMessage: 'Delete update'})}</Button>
                 </>}
             >
-                <p>This permanently deletes “{item.title}”.</p>
+                <p>{intl.formatMessage({id: 'mw.community.newsItem.deleteConfirm', defaultMessage: 'This permanently deletes “{title}”.'}, {title: item.title})}</p>
                 {error ? <p className={styles.error}>{error}</p> : null}
             </Modal>
         ) : null}
@@ -160,7 +163,10 @@ title={intl.formatMessage({
                             id: 'mw.community.newsItem.deleteUpdate',
                             defaultMessage: 'Delete update'
                         })}
-                        label={`Delete ${item.title}`}
+                        label={intl.formatMessage({
+                            id: 'mw.community.newsItem.deleteProjectLabel',
+                            defaultMessage: 'Delete {title}'
+                        }, {title: item.title})}
                         disabled={Boolean(actionBusy)}
                         onClick={remove}
                     >
@@ -183,11 +189,23 @@ title={intl.formatMessage({
                             >
                                 <i style={{width: `${percent}%`}} />
                                 <span>{option.text}</span>
-                                <strong>{option.votes} {option.votes === 1 ? 'vote' : 'votes'} · {percent}%</strong>
+                                <strong>{option.votes} {option.votes === 1 ? intl.formatMessage({
+                                id: 'mw.community.newsItem.voteOne',
+                                defaultMessage: 'vote'
+                            }) : intl.formatMessage({
+                                id: 'mw.community.newsItem.votes',
+                                defaultMessage: 'votes'
+                            })} · {percent}%</strong>
                             </button>
                         );
                     })}
-                    <span className={styles.pollTotal}>{pollTotal} total {pollTotal === 1 ? 'vote' : 'votes'}</span>
+                    <span className={styles.pollTotal}>{pollTotal} {pollTotal === 1 ? intl.formatMessage({
+                        id: 'mw.community.newsItem.totalVoteOne',
+                        defaultMessage: 'total vote'
+                    }) : intl.formatMessage({
+                        id: 'mw.community.newsItem.totalVotes',
+                        defaultMessage: 'total votes'
+                    })}</span>
                 </div>
             ) : null}
             {linkUrl ? externalLink ? (
@@ -206,7 +224,13 @@ title={intl.formatMessage({
                     reactions={item.reactions}
                     onReact={react}
                     disabled={Boolean(actionBusy)}
-                    disabledTitle={!user ? 'Sign in to react' : 'Saving…'}
+                    disabledTitle={!user ? intl.formatMessage({
+                        id: 'mw.community.newsItem.signInToReact',
+                        defaultMessage: 'Sign in to react'
+                    }) : intl.formatMessage({
+                        id: 'mw.community.newsItem.saving',
+                        defaultMessage: 'Saving…'
+                    })}
                 />
                 {item.author ? (
                     <span className={styles.author}>

@@ -326,7 +326,12 @@ const ProjectInfoPanel = ({project, onSaved, embedded = false}) => {
                 {tab === 'Controls' && (
                     editing ? (
                         <div className={styles.controlEditor}>
-                            <p>Choose the controls you have tested with this project.</p>
+                            <p>
+                                <FormattedMessage
+                                    defaultMessage="Choose the controls you have tested with this project."
+                                    id="mw.community.projectInfo.controlsHint"
+                                />
+                            </p>
                             {CONTROL_TYPES.map(({key, label, detail, Icon}) => (
                                 <label key={key} className={compatibility[key] ? styles.controlOptionActive : styles.controlOption}>
                                     <input
@@ -345,7 +350,14 @@ const ProjectInfoPanel = ({project, onSaved, embedded = false}) => {
                         </div>
                     ) : Object.entries(project.compatibility || {}).some(([, supported]) => supported) ? (
                         <ProjectCompatibility compatibility={project.compatibility} />
-                    ) : <p className={styles.panelEmpty}>The creator has not listed the controls for this project.</p>
+                    ) : (
+                        <p className={styles.panelEmpty}>
+                            <FormattedMessage
+                                defaultMessage="The creator has not listed the controls for this project."
+                                id="mw.community.projectInfo.noControls"
+                            />
+                        </p>
+                    )
                 )}
 
                 {!editing && project.remixParent ? (

@@ -41,12 +41,12 @@ const ROUTE_TITLES = [
     ['/notifications', 'mw.community.route.notifications', 'Notifications'],
     ['/news', 'mw.community.route.news', 'News'],
     ['/leaderboard', 'mw.community.route.leaderboard', 'Leaderboard'],
-    ['/spaces/', 'Space'],
-    ['/spaces', 'Spaces'],
-    ['/roadmap', 'Roadmap'],
-    ['/trust', 'Trust and safety'],
-    ['/support', 'Support'],
-    ['/status', 'Service status'],
+    ['/spaces/', 'route.space'],
+    ['/spaces', 'route.spaces'],
+    ['/roadmap', 'route.roadmap'],
+    ['/trust', 'route.trust'],
+    ['/support', 'route.support'],
+    ['/status', 'route.status'],
     ['/users/', 'mw.community.route.profile', 'Profile'],
     ['/project/', 'mw.community.route.project', 'Project']
 ];
@@ -54,9 +54,16 @@ const ROUTE_TITLES = [
 const RouteMeta = () => {
     const {pathname} = useLocation();
     const intl = useIntl();
+    const {t} = useCommunityIntl();
     useEffect(() => {
         const match = ROUTE_TITLES.find(([prefix]) => pathname.startsWith(prefix));
-        setPageMeta({title: match ? intl.formatMessage({id: match[1], defaultMessage: match[2]}) : null});
+        let title = null;
+        if (match) {
+            title = (match[1] && match[1].startsWith('mw.community.route.'))
+                ? intl.formatMessage({id: match[1], defaultMessage: match[2]})
+                : t(match[1]);
+        }
+        setPageMeta({title});
         window.scrollTo(0, 0);
     }, [pathname]);
     return null;

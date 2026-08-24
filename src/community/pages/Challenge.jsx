@@ -10,14 +10,22 @@ import RichText from '../components/RichText.jsx';
 import SpaceProjectPicker from '../components/SpaceProjectPicker.jsx';
 import SectionTabs from '../components/SectionTabs.jsx';
 import Button from '../components/ui/Button.jsx';
+import {useCommunityIntl} from '../i18n.jsx';
 import styles from './Challenge.module.css';
 
-const PHASES = {
-    'upcoming': {label: 'Starts soon', detail: 'Submissions have not opened yet.'},
-    'submissions': {label: 'Submissions open', detail: 'Build your project and enter before the deadline.'},
-    'judging': {label: 'Judging', detail: 'Entries are locked while judges review them.'},
-    'awaiting-results': {label: 'Results pending', detail: 'Judging has ended. The host will publish the results.'},
-    'results': {label: 'Results published', detail: 'The final standings are ready.'}
+const PHASE_LABEL_KEYS = {
+    'upcoming': 'challenge.phaseUpcoming',
+    'submissions': 'challenge.phaseSubmissions',
+    'judging': 'challenge.phaseJudging',
+    'awaiting-results': 'challenge.phaseAwaitingResults',
+    'results': 'challenge.phaseResults'
+};
+const PHASE_DETAIL_KEYS = {
+    'upcoming': 'challenge.detailUpcoming',
+    'submissions': 'challenge.detailSubmissions',
+    'judging': 'challenge.detailJudging',
+    'awaiting-results': 'challenge.detailAwaitingResults',
+    'results': 'challenge.detailResults'
 };
 
 const timestamp = value => {
@@ -64,6 +72,7 @@ const remaining = (value, now) => {
 };
 
 const ScoreForm = ({challengeId, project, criteria, onSaved}) => {
+    const {t} = useCommunityIntl();
     const prior = project.myScore || {};
     const priorRatings = new Map((prior.ratings || []).map(rating => [rating.criterionId, rating.value]));
     const [ratings, setRatings] = useState(() => Object.fromEntries(criteria.map(criterion => [criterion.id, priorRatings.get(criterion.id) || 5])));
@@ -100,12 +109,12 @@ const ScoreForm = ({challengeId, project, criteria, onSaved}) => {
                 feedback: feedback.trim()
             });
             if (currentContext.current === actionContext) {
-                setMessage('Score saved.');
+                setMessage(t('challenge.scoreSaved'));
                 onSaved();
             }
         } catch (error) {
             if (currentContext.current === actionContext) {
-                setMessage(error.message || 'Could not save this score.');
+                setMessage(error.message || t('challenge.scoreSaveError'));
             }
         } finally {
             releaseSave();
@@ -115,7 +124,7 @@ const ScoreForm = ({challengeId, project, criteria, onSaved}) => {
 
     return (
         <form className={styles.scoreForm} onSubmit={save}>
-            <div className={styles.scoreHeading}><Gavel size={16} /><strong>Your score</strong>{prior.edited ? <span>Last saved {dateTime(prior.edited)}</span> : null}</div>
+            <div className={styles.scoreHeading}><Gavel size={16} /><strong>{t('challenge.yourScore')}</strong>{prior.edited ? <span>{t('challenge.lastSaved')} {dateTime(prior.edited)}</span> : null}</div>
             {criteria.map(criterion => (
                 <label key={criterion.id} className={styles.scoreCriterion}>
                     <span><strong>{criterion.name}</strong><small>{criterion.description}</small></span>
@@ -123,14 +132,15 @@ const ScoreForm = ({challengeId, project, criteria, onSaved}) => {
                     <em>/ 10</em>
                 </label>
             ))}
-            <label className={styles.feedbackField}><span>Private feedback for the host</span><textarea disabled={saving} maxLength={2000} value={feedback} onChange={event => setFeedback(event.target.value)} placeholder="Notes on this entry" /></label>
-            {!criteria.length ? <p>No judging criteria are configured.</p> : null}
-            <div className={styles.scoreActions}><Button variant="primary" type="submit" busy={saving} busyLabel="Saving…" disabled={!ratingsReady}>Save score</Button>{message ? <span>{message}</span> : null}</div>
+            <label className={styles.feedbackField}><span>{t('challenge.feedbackForHost')}</span><textarea disabled={saving} maxLength={2000} value={feedback} onChange={event => setFeedback(event.target.value)} placeholder={t('challenge.feedbackPlaceholder')} /></label>
+            {!criteria.length ? <p>{t('challenge.noCriteria')}</p> : null}
+            <div className={styles.scoreActions}><Button variant="primary" type="submit" busy={saving} busyLabel={t('challenge.saving')} disabled={!ratingsReady}>{t('challenge.saveScore')}</Button>{message ? <span>{message}</span> : null}</div>
         </form>
     );
 };
 
 const Entry = ({challengeId, project, challenge, user, login, load, showScore = false}) => {
+    const {t} = useCommunityIntl();
     const canVote = !showScore && challenge.phase === 'judging' && challenge.communityVoting;
     const [voting, setVoting] = useState(false);
     const [voteError, setVoteError] = useState('');
@@ -159,7 +169,7 @@ const Entry = ({challengeId, project, challenge, user, login, load, showScore = 
             if (currentContext.current === actionContext) await load();
         } catch (requestError) {
             if (currentContext.current === actionContext) {
-                setVoteError(requestError.message || 'Could not save your rating.');
+                setVoteError(requestError.message || t('challenge.voteError'));
             }
         } finally {
             releaseVote();
@@ -172,15 +182,15 @@ const Entry = ({challengeId, project, challenge, user, login, load, showScore = 
             <ProjectCard project={project} />
             {challenge.phase === 'results' ? (
                 <div className={styles.entryResults}>
-                    <span><strong>{challengeScore(project.judgeScore)}</strong> judges</span>
-                    {challenge.communityVoting ? <span><strong>{challengeScore(project.audienceScore)}</strong> audience</span> : null}
+                    <span><strong>{challengeScore(project.judgeScore)}</strong> {t('challenge.judges')}</span>
+                    {challenge.communityVoting ? <span><strong>{challengeScore(project.audienceScore)}</strong> {t('challenge.audience')}</span> : null}
                 </div>
             ) : null}
             {canVote ? (
                 <div className={styles.audienceVote}>
-                    <span>Audience rating</span>
-                    <div>{[1, 2, 3, 4, 5].map(value => <button key={value} type="button" disabled={voting} className={value <= project.myVote ? styles.starActive : ''} onClick={() => vote(value)} aria-label={`Rate ${value} out of 5`}><Star size={17} fill={value <= project.myVote ? 'currentColor' : 'none'} /></button>)}</div>
-                    <small>{project.audienceVoteCount || 0} ratings</small>
+                    <span>{t('challenge.audienceRating')}</span>
+                    <div>{[1, 2, 3, 4, 5].map(value => <button key={value} type="button" disabled={voting} className={value <= project.myVote ? styles.starActive : ''} onClick={() => vote(value)} aria-label={t('challenge.rateOutOf', 'Rate {value} out of 5').replace('{value}', value)}><Star size={17} fill={value <= project.myVote ? 'currentColor' : 'none'} /></button>)}</div>
+                    <small>{project.audienceVoteCount || 0} {t('challenge.ratings')}</small>
                     {voteError ? <small role="alert">{voteError}</small> : null}
                 </div>
             ) : null}
@@ -259,7 +269,7 @@ const Challenge = ({id, space, user, login, load}) => {
             if (currentId.current === actionId) await load();
         } catch (requestError) {
             if (currentId.current === actionId) {
-                setError(requestError.message || 'Could not update your participation.');
+                setError(requestError.message || t('challenge.participationError'));
             }
         } finally {
             releaseAction();
@@ -268,11 +278,11 @@ const Challenge = ({id, space, user, login, load}) => {
     };
 
     const tabs = [
-        {key: 'overview', label: 'Overview'},
-        {key: 'submissions', label: `Submissions ${space.projects.length}`},
-        ...(space.isJudge && currentPhase === 'judging' ? [{key: 'judging', label: 'Judge entries'}] : []),
-        ...(currentPhase === 'results' ? [{key: 'results', label: 'Results'}] : []),
-        {key: 'community', label: 'Community'}
+        {key: 'overview', label: t('challenge.tabOverview')},
+        {key: 'submissions', label: `${t('challenge.tabSubmissions')} ${space.projects.length}`},
+        ...(space.isJudge && currentPhase === 'judging' ? [{key: 'judging', label: t('challenge.tabJudge')}] : []),
+        ...(currentPhase === 'results' ? [{key: 'results', label: t('challenge.tabResults')}] : []),
+        {key: 'community', label: t('challenge.tabCommunity')}
     ];
 
     useEffect(() => {
@@ -282,61 +292,61 @@ const Challenge = ({id, space, user, login, load}) => {
 
     return (
         <main className={styles.page}>
-            <Link to="/spaces?kind=challenge" className={styles.back}><ArrowLeft size={15} /> All challenges</Link>
-            {space.judgeInvited ? <section className={styles.invite}><Gavel size={21} /><div><strong>{space.owner} invited you to judge this challenge.</strong><span>Judges score every submission against the published criteria.</span></div><Button variant="primary" busy={actionBusy === 'invite'} busyLabel="Responding…" disabled={Boolean(actionBusy)} onClick={() => respondToJudgeInvite(true)}>Accept</Button><Button disabled={Boolean(actionBusy)} onClick={() => respondToJudgeInvite(false)}>Decline</Button></section> : null}
+            <Link to="/spaces?kind=challenge" className={styles.back}><ArrowLeft size={15} /> {t('challenge.allChallenges')}</Link>
+            {space.judgeInvited ? <section className={styles.invite}><Gavel size={21} /><div><strong>{space.owner} {t('challenge.inviteJudgeLead')}</strong><span>{t('challenge.inviteJudgeDetail')}</span></div><Button variant="primary" busy={actionBusy === 'invite'} busyLabel={t('challenge.responding')} disabled={Boolean(actionBusy)} onClick={() => respondToJudgeInvite(true)}>{t('challenge.accept')}</Button><Button disabled={Boolean(actionBusy)} onClick={() => respondToJudgeInvite(false)}>{t('challenge.decline')}</Button></section> : null}
             <header className={styles.hero}>
                 <div className={styles.heroMain}>
-                    <span className={styles.phase}>{phase.label}</span>
+                    <span className={styles.phase}>{t(phaseKey)}</span>
                     <h1>{space.title}</h1>
-                    <p>{space.description || 'The host has not added a description yet.'}</p>
-                    <div className={styles.host}><Avatar username={space.owner} size={30} /><span>Hosted by <Link to={`/users/${space.owner}`}>{space.owner}</Link></span></div>
+                    <p>{space.description || t('challenge.noDescription')}</p>
+                    <div className={styles.host}><Avatar username={space.owner} size={30} /><span>{t('challenge.hostedBy')} <Link to={`/users/${space.owner}`}>{space.owner}</Link></span></div>
                 </div>
                 <div className={styles.heroSide}>
-                    {deadline && currentPhase !== 'results' && currentPhase !== 'awaiting-results' ? <div className={styles.countdown}><Clock3 size={18} /><span>{currentPhase === 'upcoming' ? 'Starts in' : currentPhase === 'submissions' ? 'Ends in' : 'Judging ends in'}</span><strong>{remaining(deadline, now)}</strong></div> : null}
-                    {(currentPhase === 'upcoming' || currentPhase === 'submissions') ? <Button variant={space.joined ? 'secondary' : 'primary'} busy={actionBusy === 'join'} busyLabel="Updating…" disabled={Boolean(actionBusy)} onClick={toggleJoined}>{space.joined ? <UserMinus size={16} /> : <UserPlus size={16} />}{space.joined ? 'Leave challenge' : 'Join challenge'}</Button> : null}
-                    {space.canManage ? <Link className={styles.manage} to={`/spaces/${id}/manage`}><Settings size={16} /> Manage challenge</Link> : null}
+                    {deadline && currentPhase !== 'results' && currentPhase !== 'awaiting-results' ? <div className={styles.countdown}><Clock3 size={18} /><span>{currentPhase === 'upcoming' ? t('challenge.startsIn') : currentPhase === 'submissions' ? t('challenge.endsIn') : t('challenge.judgingEndsIn')}</span><strong>{remaining(deadline, now)}</strong></div> : null}
+                    {(currentPhase === 'upcoming' || currentPhase === 'submissions') ? <Button variant={space.joined ? 'secondary' : 'primary'} busy={actionBusy === 'join'} busyLabel={t('challenge.updating')} disabled={Boolean(actionBusy)} onClick={toggleJoined}>{space.joined ? <UserMinus size={16} /> : <UserPlus size={16} />}{space.joined ? t('challenge.leave') : t('challenge.join')}</Button> : null}
+                    {space.canManage ? <Link className={styles.manage} to={`/spaces/${id}/manage`}><Settings size={16} /> {t('challenge.manage')}</Link> : null}
                 </div>
             </header>
             <section className={styles.timeline}>
-                <div className={currentPhase === 'upcoming' ? styles.timelineActive : ''}><CalendarDays size={17} /><span>Submissions open</span><strong>{dateTime(space.startsAt)}</strong></div>
-                <div className={currentPhase === 'submissions' ? styles.timelineActive : ''}><Trophy size={17} /><span>Submissions close</span><strong>{dateTime(space.endsAt)}</strong></div>
-                <div className={currentPhase === 'judging' || currentPhase === 'awaiting-results' ? styles.timelineActive : ''}><Gavel size={17} /><span>Judging ends</span><strong>{dateTime(space.judgingEndsAt)}</strong></div>
+                <div className={currentPhase === 'upcoming' ? styles.timelineActive : ''}><CalendarDays size={17} /><span>{t('challenge.submissionsOpen')}</span><strong>{dateTime(space.startsAt)}</strong></div>
+                <div className={currentPhase === 'submissions' ? styles.timelineActive : ''}><Trophy size={17} /><span>{t('challenge.submissionsClose')}</span><strong>{dateTime(space.endsAt)}</strong></div>
+                <div className={currentPhase === 'judging' || currentPhase === 'awaiting-results' ? styles.timelineActive : ''}><Gavel size={17} /><span>{t('challenge.judgingEnds')}</span><strong>{dateTime(space.judgingEndsAt)}</strong></div>
             </section>
-            <SectionTabs items={tabs} value={tab} onChange={setTab} className={styles.tabs} activeClassName={styles.tabActive} ariaLabel="Challenge sections" />
+            <SectionTabs items={tabs} value={tab} onChange={setTab} className={styles.tabs} activeClassName={styles.tabActive} ariaLabel={t('challenge.sectionsAria')} />
             {error ? <p className={styles.error}>{error}</p> : null}
             {tab === 'overview' ? (
                 <div className={styles.overview}>
                     <div className={styles.mainColumn}>
-                        {space.theme ? <section className={styles.theme}><span>Theme</span><strong>{space.theme}</strong></section> : null}
-                        <section className={styles.panel}><h2>About this challenge</h2><div className={styles.longText}><RichText text={space.description} /></div></section>
-                        <section className={styles.panel}><h2>Rules</h2><div className={styles.longText}><RichText text={space.rules || 'The host has not added rules yet.'} /></div></section>
+                        {space.theme ? <section className={styles.theme}><span>{t('challenge.theme')}</span><strong>{space.theme}</strong></section> : null}
+                        <section className={styles.panel}><h2>{t('challenge.about')}</h2><div className={styles.longText}><RichText text={space.description} /></div></section>
+                        <section className={styles.panel}><h2>{t('challenge.rules')}</h2><div className={styles.longText}><RichText text={space.rules || t('challenge.noRules')} /></div></section>
                     </div>
                     <aside className={styles.sidebar}>
-                        <section className={styles.panel}><h2>Judging criteria</h2><div className={styles.criteria}>{(space.criteria || []).map(criterion => <article key={criterion.id}><div><strong>{criterion.name}</strong><span>Weight {criterion.weight} of 5</span></div><p>{criterion.description}</p></article>)}</div></section>
-                        <section className={styles.panel}><h2>Judges</h2><div className={styles.people}>{(space.judges || []).map(name => <Link key={name} to={`/users/${name}`}><Avatar username={name} size={30} /><span>{name}</span></Link>)}{!space.judges?.length ? <p>No judges announced yet.</p> : null}</div></section>
-                        <section className={styles.facts}><div><strong>{space.participantCount || 0}</strong><span>joined</span></div><div><strong>{space.projects.length}</strong><span>submissions</span></div><div><strong>{space.judgeCount || 0}</strong><span>judges</span></div><div><strong>{space.communityVoting ? 'On' : 'Off'}</strong><span>audience voting</span></div></section>
+                        <section className={styles.panel}><h2>{t('challenge.judgingCriteria')}</h2><div className={styles.criteria}>{(space.criteria || []).map(criterion => <article key={criterion.id}><div><strong>{criterion.name}</strong><span>{t('challenge.weight')} {criterion.weight} {t('challenge.of5')}</span></div><p>{criterion.description}</p></article>)}</div></section>
+                        <section className={styles.panel}><h2>{t('challenge.judges')}</h2><div className={styles.people}>{(space.judges || []).map(name => <Link key={name} to={`/users/${name}`}><Avatar username={name} size={30} /><span>{name}</span></Link>)}{!space.judges?.length ? <p>{t('challenge.noJudges')}</p> : null}</div></section>
+                        <section className={styles.facts}><div><strong>{space.participantCount || 0}</strong><span>{t('challenge.joined')}</span></div><div><strong>{space.projects.length}</strong><span>{t('challenge.submissions')}</span></div><div><strong>{space.judgeCount || 0}</strong><span>{t('challenge.judges')}</span></div><div><strong>{space.communityVoting ? t('challenge.on') : t('challenge.off')}</strong><span>{t('challenge.audienceVoting')}</span></div></section>
                     </aside>
                 </div>
             ) : null}
             {tab === 'submissions' ? (
                 <section className={styles.submissions}>
-                    <header><div><h2>Submissions</h2><p>{currentPhase === 'submissions' ? 'Enter a shared or unlisted project before submissions close.' : 'Submissions are locked for this challenge.'}</p></div>{currentPhase === 'submissions' && (space.openSubmissions || space.canManage) ? <SpaceProjectPicker space={liveSpace} onAdded={load} /> : null}</header>
-                    {space.projects.length ? <div className={styles.entryGrid}>{space.projects.map(project => <Entry key={project.id} challengeId={id} project={project} challenge={liveSpace} user={user} login={login} load={load} />)}</div> : <div className={styles.empty}><Trophy size={28} /><strong>No submissions yet</strong><span>The first entry will appear here.</span></div>}
+                    <header><div><h2>{t('challenge.submissions')}</h2><p>{currentPhase === 'submissions' ? t('challenge.enterPrompt') : t('challenge.submissionsLocked')}</p></div>{currentPhase === 'submissions' && (space.openSubmissions || space.canManage) ? <SpaceProjectPicker space={liveSpace} onAdded={load} /> : null}</header>
+                    {space.projects.length ? <div className={styles.entryGrid}>{space.projects.map(project => <Entry key={project.id} challengeId={id} project={project} challenge={liveSpace} user={user} login={login} load={load} />)}</div> : <div className={styles.empty}><Trophy size={28} /><strong>{t('challenge.noSubmissions')}</strong><span>{t('challenge.firstEntry')}</span></div>}
                 </section>
             ) : null}
             {tab === 'results' ? (
                 <section className={styles.results}>
-                    <header><Medal size={24} /><div><h2>Final results</h2><p>Ranked by the judges using the criteria shown on the overview.</p></div></header>
-                    {space.projects.length ? <div className={styles.resultList}>{space.projects.map(project => <article key={project.id}><span className={project.place <= 3 ? styles.resultPlaceWinner : styles.resultPlace}>{project.place ? `#${project.place}` : '—'}</span><div><Link to={`/project/${project.id}`}>{project.title}</Link><span>by {project.owner}</span></div><strong>{challengeScore(project.judgeScore)}<small>/ 10</small></strong></article>)}</div> : <div className={styles.empty}><Medal size={28} /><strong>No results</strong><span>This challenge did not receive any submissions.</span></div>}
+                    <header><Medal size={24} /><div><h2>{t('challenge.finalResults')}</h2><p>{t('challenge.resultsLead')}</p></div></header>
+                    {space.projects.length ? <div className={styles.resultList}>{space.projects.map(project => <article key={project.id}><span className={project.place <= 3 ? styles.resultPlaceWinner : styles.resultPlace}>{project.place ? `#${project.place}` : '—'}</span><div><Link to={`/project/${project.id}`}>{project.title}</Link><span>{t('challenge.by')} {project.owner}</span></div><strong>{challengeScore(project.judgeScore)}<small>/ 10</small></strong></article>)}</div> : <div className={styles.empty}><Medal size={28} /><strong>{t('challenge.noResults')}</strong><span>{t('challenge.noResultsLead')}</span></div>}
                 </section>
             ) : null}
             {tab === 'judging' ? (
                 <section className={styles.submissions}>
-                    <header><div><h2>Judge entries</h2><p>{space.projects.filter(project => project.myScore?.edited).length} of {space.projects.length} entries scored by you.</p></div></header>
-                    {space.projects.length ? <div className={styles.entryGrid}>{space.projects.map(project => <Entry key={project.id} challengeId={id} project={project} challenge={liveSpace} user={user} login={login} load={load} showScore />)}</div> : <div className={styles.empty}><Gavel size={28} /><strong>No entries to judge</strong><span>Submissions will appear here after the deadline.</span></div>}
+                    <header><div><h2>{t('challenge.tabJudge')}</h2><p>{space.projects.filter(project => project.myScore?.edited).length} {t('challenge.of')} {space.projects.length} {t('challenge.entriesScored')}</p></div></header>
+                    {space.projects.length ? <div className={styles.entryGrid}>{space.projects.map(project => <Entry key={project.id} challengeId={id} project={project} challenge={liveSpace} user={user} login={login} load={load} showScore />)}</div> : <div className={styles.empty}><Gavel size={28} /><strong>{t('challenge.noEntries')}</strong><span>{t('challenge.noEntriesLead')}</span></div>}
                 </section>
             ) : null}
-            {tab === 'community' ? <section className={styles.comments}><header><MessageCircle size={20} /><div><h2>Community</h2><p>Questions, progress updates, and discussion about the challenge.</p></div></header><CommentThread source={commentSource} canModerate={Boolean(space.canManage)} reportContext={`challenge ${space.title}`} /></section> : null}
+            {tab === 'community' ? <section className={styles.comments}><header><MessageCircle size={20} /><div><h2>{t('challenge.community')}</h2><p>{t('challenge.communityLead')}</p></div></header><CommentThread source={commentSource} canModerate={Boolean(space.canManage)} reportContext={`challenge ${space.title}`} /></section> : null}
         </main>
     );
 };

@@ -10,23 +10,24 @@ import IconButton from '../components/ui/IconButton.jsx';
 import Modal from '../components/ui/Modal.jsx';
 import {SwitchRow} from '../components/ui/Switch.jsx';
 import {useUser} from '../UserContext.jsx';
+import {useCommunityIntl} from '../i18n.jsx';
 import useLatest from '../use-latest.js';
 import styles from './Spaces.module.css';
 
 const SECTIONS = [
-    {key: 'general', label: 'General', Icon: Settings},
-    {key: 'curators', label: 'Curators', Icon: Users},
-    {key: 'projects', label: 'Projects', Icon: LayoutGrid},
-    {key: 'danger', label: 'Danger zone', Icon: Trash2}
+    {key: 'general', labelKey: 'manageSpace.general', Icon: Settings},
+    {key: 'curators', labelKey: 'manageSpace.curators', Icon: Users},
+    {key: 'projects', labelKey: 'manageSpace.projects', Icon: LayoutGrid},
+    {key: 'danger', labelKey: 'manageSpace.dangerZone', Icon: Trash2}
 ];
 
 const CHALLENGE_SECTIONS = [
-    {key: 'general', label: 'Details', Icon: Settings},
-    {key: 'schedule', label: 'Schedule', Icon: CalendarClock},
-    {key: 'judging', label: 'Judging', Icon: Gavel},
-    {key: 'projects', label: 'Submissions', Icon: LayoutGrid},
-    {key: 'curators', label: 'Host team', Icon: Users},
-    {key: 'danger', label: 'Danger zone', Icon: Trash2}
+    {key: 'general', labelKey: 'manageSpace.details', Icon: Settings},
+    {key: 'schedule', labelKey: 'manageSpace.schedule', Icon: CalendarClock},
+    {key: 'judging', labelKey: 'manageSpace.judging', Icon: Gavel},
+    {key: 'projects', labelKey: 'manageSpace.submissions', Icon: LayoutGrid},
+    {key: 'curators', labelKey: 'manageSpace.hostTeam', Icon: Users},
+    {key: 'danger', labelKey: 'manageSpace.dangerZone', Icon: Trash2}
 ];
 
 const spaceTimestamp = value => {
@@ -46,27 +47,27 @@ const scheduleIsValid = ({startsAt, endsAt, judgingEndsAt}) => {
     return start > 0 && end > start && judgingEnd > end;
 };
 
-const spaceConfirmationDetails = (confirmation, space) => {
+const spaceConfirmationDetails = (confirmation, space, t) => {
     if (!confirmation || !space) return null;
     if (confirmation.type === 'remove-project') {
         return {
-            title: 'Remove project?',
-            body: `Remove ${confirmation.project.title} from ${space.title}? The project itself will not be deleted.`,
-            action: 'Remove project'
+            title: t('manageSpace.confirmRemoveProjectTitle'),
+            body: t('manageSpace.confirmRemoveProjectBody').replace('{project}', confirmation.project.title).replace('{space}', space.title),
+            action: t('manageSpace.confirmRemoveProjectAction')
         };
     }
     if (confirmation.type === 'publish-results') {
         return {
-            title: 'Publish final results?',
-            body: 'This reveals the final rankings to participants. You cannot hide the results again.',
-            action: 'Publish results'
+            title: t('manageSpace.confirmPublishTitle'),
+            body: t('manageSpace.confirmPublishBody'),
+            action: t('manageSpace.confirmPublishAction')
         };
     }
     if (confirmation.type === 'delete-space') {
         return {
-            title: `Delete ${space.title}?`,
-            body: 'This permanently deletes the space. Its projects will not be deleted.',
-            action: 'Delete space'
+            title: t('manageSpace.confirmDeleteTitle').replace('{space}', space.title),
+            body: t('manageSpace.confirmDeleteBody'),
+            action: t('manageSpace.confirmDeleteAction')
         };
     }
     return null;
@@ -123,6 +124,7 @@ const ManageSpace = () => {
     const {id} = useParams();
     const navigate = useNavigate();
     const {user, loading, login} = useUser();
+    const {t} = useCommunityIntl();
     const viewerName = (user && user.username) || '';
     const loadContext = `${id}\u0000${viewerName}`;
     const [space, setSpace] = useState(null);
@@ -235,7 +237,7 @@ const ManageSpace = () => {
         const file = event.target.files && event.target.files[0];
         if (!file) return;
         if (file.size > 1024 * 1024) {
-            setError('Choose an image smaller than 1 MB.');
+            setError(t('manageSpace.imageTooLarge'));
             input.value = '';
             return;
         }
@@ -269,7 +271,7 @@ const ManageSpace = () => {
     const save = async event => {
         event.preventDefault();
         if (active === 'schedule' && !scheduleIsValid(form)) {
-            setError('Submissions must open first, close later, and judging must end last.');
+            setError(t('manageSpace.scheduleInvalid'));
             return;
         }
         const actionKey = beginAction('save');
@@ -331,7 +333,7 @@ const ManageSpace = () => {
             if (currentLoadContext.current === context) await load();
         } catch (e) {
             if (currentLoadContext.current === context) {
-                setError(e.message || 'Could not remove this curator.');
+                setError(e.message || t('manageSpace.removeCuratorError'));
             }
         } finally {
             releaseAction(actionKey);
@@ -408,7 +410,7 @@ const ManageSpace = () => {
             if (currentLoadContext.current === context) await load();
         } catch (e) {
             if (currentLoadContext.current === context) {
-                setError(e.message || 'Could not cancel this invitation.');
+                setError(e.message || t('manageSpace.cancelInvitationError'));
             }
         } finally {
             releaseAction(actionKey);
@@ -483,12 +485,12 @@ const ManageSpace = () => {
     }, [active, space]);
 
     if (loading) {
-        return <main className={styles.page}><p className={styles.status}>Loading management tools…</p></main>;
+        return <main className={styles.page}><p className={styles.status}>{t('manageSpace.loadingTools')}</p></main>;
     }
     if (!user) {
         return (
             <main className={styles.page}>
-                <p className={styles.status}>Sign in to manage this space. <Button onClick={login}>Sign in</Button></p>
+                <p className={styles.status}>{t('manageSpace.signInToManage')} <Button onClick={login}>Sign in</Button></p>
             </main>
         );
     }
@@ -496,21 +498,21 @@ const ManageSpace = () => {
         return (
             <main className={styles.page}>
                 <p className={styles.status}>
-                    {(errorLoadContext === loadContext && error) || 'Loading management tools…'}{' '}
+                    {(errorLoadContext === loadContext && error) || t('manageSpace.loadingTools')}{' '}
                     {errorLoadContext === loadContext && error ? (
                         <Button
                             onClick={() => {
                                 setError('');
-                                load().catch(e => setError(e.message || 'You cannot manage this space.'));
+                                load().catch(e => setError(e.message || t('manageSpace.cannotManage')));
                             }}
-                        >Try again</Button>
+                        >{t('manageSpace.tryAgain')}</Button>
                     ) : null}
                 </p>
             </main>
         );
     }
     const criteriaLocked = space.projects.some(project => project.judgeScoreCount > 0);
-    const confirmationDetails = spaceConfirmationDetails(confirmation, space);
+    const confirmationDetails = spaceConfirmationDetails(confirmation, space, t);
 
     return (
         <main className={`${styles.page} ${styles.managePage}`}>
@@ -531,11 +533,11 @@ const ManageSpace = () => {
                                 setConfirmation(null);
                                 setConfirmationError('');
                             }}
-                        >Cancel</Button>
+                        >{t('manageSpace.cancel')}</Button>
                         <Button
                             variant="danger"
                             busy={destructiveActionInFlight.current.has(loadContext)}
-                            busyLabel="Working…"
+                            busyLabel={t('manageSpace.working')}
                             onClick={confirmDestructiveAction}
                         >{confirmationDetails.action}</Button>
                     </>}
@@ -544,14 +546,14 @@ const ManageSpace = () => {
                     {confirmationError ? <p className={styles.error}>{confirmationError}</p> : null}
                 </Modal>
             ) : null}
-            <Link to={`/spaces/${id}`} className={styles.back}><ArrowLeft size={15} /> Back to {space.title}</Link>
+            <Link to={`/spaces/${id}`} className={styles.back}><ArrowLeft size={15} /> {t('manageSpace.backTo')} {space.title}</Link>
             <header className={styles.manageHeader}>
-                <div><span>{space.kind === 'challenge' ? 'Manage challenge' : 'Manage space'}</span><h1>{space.title}</h1></div>
-                <Link to={`/spaces/${id}`}>View public page</Link>
+                <div><span>{space.kind === 'challenge' ? t('manageSpace.manageChallenge') : t('manageSpace.manageSpace')}</span><h1>{space.title}</h1></div>
+                <Link to={`/spaces/${id}`}>{t('manageSpace.viewPublicPage')}</Link>
             </header>
             <div className={styles.manageLayout}>
-                <nav className={styles.manageNav} aria-label="Space settings">
-                    {(space.kind === 'challenge' ? CHALLENGE_SECTIONS : SECTIONS).filter(section => section.key !== 'danger' || space.isOwner).map(({key, label, Icon}) => (
+                <nav className={styles.manageNav} aria-label={t('manageSpace.settingsAria')}>
+                    {(space.kind === 'challenge' ? CHALLENGE_SECTIONS : SECTIONS).filter(section => section.key !== 'danger' || space.isOwner).map(({key, labelKey, Icon}) => (
                         <button
                             key={key}
                             type="button"
@@ -561,7 +563,7 @@ const ManageSpace = () => {
                                 setError('');
                                 setStatus('');
                             }}
-                        ><Icon size={16} /> {label}</button>
+                        ><Icon size={16} /> {t(labelKey)}</button>
                     ))}
                 </nav>
                 <div className={styles.manageContent}>
@@ -569,118 +571,118 @@ const ManageSpace = () => {
                     {status ? <p className={styles.success}><Check size={15} /> {status}</p> : null}
                     {active === 'general' ? (
                         <form className={styles.manageCard} onSubmit={save}>
-                            <header><h2>{space.kind === 'challenge' ? 'Challenge details' : 'General details'}</h2><p>{space.kind === 'challenge' ? 'Give participants the context they need before they enter.' : 'Change how this space appears and who can submit projects.'}</p></header>
+                            <header><h2>{space.kind === 'challenge' ? t('manageSpace.challengeDetails') : t('manageSpace.generalDetails')}</h2><p>{space.kind === 'challenge' ? t('manageSpace.challengeDetailsLead') : t('manageSpace.generalDetailsLead')}</p></header>
                             <fieldset className={styles.manageFormFields} disabled={saving}>
-                                {space.kind === 'studio' ? <div className={styles.thumbnailEditor}>{space.thumbnailUrl ? <img src={space.thumbnailUrl} alt="" /> : <span><ImageIcon size={28} /> No thumbnail</span>}<label><strong>{thumbnailBusy ? 'Uploading…' : 'Choose image'}</strong><small>PNG, JPG, or WebP up to 1 MB. A 4:3 image works best.</small><input type="file" accept="image/png,image/jpeg,image/webp" disabled={thumbnailBusy} onChange={uploadThumbnail} /></label></div> : null}
-                                <label><span>Name</span><input value={form.title} maxLength={100} required onChange={event => updateForm('title', event.target.value)} /></label>
-                                <label><span>Description</span><textarea value={form.description || ''} maxLength={5000} onChange={event => updateForm('description', event.target.value)} /></label>
-                                {space.kind === 'challenge' ? <><label><span>Theme</span><input value={form.theme || ''} maxLength={200} placeholder="Optional theme or prompt" onChange={event => updateForm('theme', event.target.value)} /></label><label><span>Rules</span><textarea value={form.rules || ''} maxLength={10000} placeholder="Eligibility, team rules, allowed tools, and anything that could disqualify an entry" onChange={event => updateForm('rules', event.target.value)} /></label></> : null}
+                                {space.kind === 'studio' ? <div className={styles.thumbnailEditor}>{space.thumbnailUrl ? <img src={space.thumbnailUrl} alt="" /> : <span><ImageIcon size={28} /> {t('manageSpace.noThumbnail')}</span>}<label><strong>{thumbnailBusy ? t('manageSpace.uploading') : t('manageSpace.chooseImage')}</strong><small>{t('manageSpace.imageHelp')}</small><input type="file" accept="image/png,image/jpeg,image/webp" disabled={thumbnailBusy} onChange={uploadThumbnail} /></label></div> : null}
+                                <label><span>{t('manageSpace.name')}</span><input value={form.title} maxLength={100} required onChange={event => updateForm('title', event.target.value)} /></label>
+                                <label><span>{t('manageSpace.description')}</span><textarea value={form.description || ''} maxLength={5000} onChange={event => updateForm('description', event.target.value)} /></label>
+                                {space.kind === 'challenge' ? <><label><span>{t('manageSpace.theme')}</span><input value={form.theme || ''} maxLength={200} placeholder={t('manageSpace.themePlaceholder')} onChange={event => updateForm('theme', event.target.value)} /></label><label><span>{t('manageSpace.rules')}</span><textarea value={form.rules || ''} maxLength={10000} placeholder={t('manageSpace.rulesPlaceholder')} onChange={event => updateForm('rules', event.target.value)} /></label></> : null}
                                 <div className={styles.formRow}>
-                                    <label><span>Visibility</span><select value={form.visibility} onChange={event => updateForm('visibility', event.target.value)}><option value="public">Public</option><option value="unlisted">Unlisted</option><option value="private">Private</option></select></label>
+                                    <label><span>{t('manageSpace.visibility')}</span><select value={form.visibility} onChange={event => updateForm('visibility', event.target.value)}><option value="public">{t('manageSpace.visibilityPublic')}</option><option value="unlisted">{t('manageSpace.visibilityUnlisted')}</option><option value="private">{t('manageSpace.visibilityPrivate')}</option></select></label>
                                     <SwitchRow
                                         className={styles.toggleSwitch}
                                         checked={Boolean(form.openSubmissions)}
-                                        description="Let people add their own shared or unlisted projects."
-                                        label="Open submissions"
+                                        description={t('manageSpace.openSubmissionsDesc')}
+                                        label={t('manageSpace.openSubmissions')}
                                         onChange={value => updateForm('openSubmissions', value)}
                                     />
                                 </div>
-                                <div className={styles.manageCardActions}><Button type="submit" busy={saving} busyLabel="Saving…">Save changes</Button></div>
+                                <div className={styles.manageCardActions}><Button type="submit" busy={saving} busyLabel={t('manageSpace.saving')}>{t('manageSpace.saveChanges')}</Button></div>
                             </fieldset>
                         </form>
                     ) : null}
                     {active === 'schedule' && space.kind === 'challenge' ? (
                         <form className={styles.manageCard} onSubmit={save}>
-                            <header><h2>Schedule</h2><p>Each deadline changes what participants and judges can do.</p></header>
+                            <header><h2>{t('manageSpace.schedule')}</h2><p>{t('manageSpace.scheduleLead')}</p></header>
                             <fieldset className={styles.manageFormFields} disabled={saving}>
                                 <div className={styles.scheduleFields}>
-                                    <label><span>Submissions open</span><input type="datetime-local" value={dateTimeInput(form.startsAt)} onChange={event => updateForm('startsAt', event.target.value ? new Date(event.target.value).getTime() : 0)} /><small>People can start entering projects.</small></label>
-                                    <label><span>Submissions close</span><input type="datetime-local" value={dateTimeInput(form.endsAt)} onChange={event => updateForm('endsAt', event.target.value ? new Date(event.target.value).getTime() : 0)} /><small>Entries lock and judging starts.</small></label>
-                                    <label><span>Judging ends</span><input type="datetime-local" value={dateTimeInput(form.judgingEndsAt)} onChange={event => updateForm('judgingEndsAt', event.target.value ? new Date(event.target.value).getTime() : 0)} /><small>The host can publish the final results.</small></label>
+                                    <label><span>{t('manageSpace.submissionsOpen')}</span><input type="datetime-local" value={dateTimeInput(form.startsAt)} onChange={event => updateForm('startsAt', event.target.value ? new Date(event.target.value).getTime() : 0)} /><small>{t('manageSpace.submissionsOpenHint')}</small></label>
+                                    <label><span>{t('manageSpace.submissionsClose')}</span><input type="datetime-local" value={dateTimeInput(form.endsAt)} onChange={event => updateForm('endsAt', event.target.value ? new Date(event.target.value).getTime() : 0)} /><small>{t('manageSpace.submissionsCloseHint')}</small></label>
+                                    <label><span>{t('manageSpace.judgingEnds')}</span><input type="datetime-local" value={dateTimeInput(form.judgingEndsAt)} onChange={event => updateForm('judgingEndsAt', event.target.value ? new Date(event.target.value).getTime() : 0)} /><small>{t('manageSpace.judgingEndsHint')}</small></label>
                                 </div>
-                                <div className={styles.manageCardActions}><Button type="submit" busy={saving} busyLabel="Saving…">Save schedule</Button></div>
+                                <div className={styles.manageCardActions}><Button type="submit" busy={saving} busyLabel={t('manageSpace.saving')}>{t('manageSpace.saveSchedule')}</Button></div>
                             </fieldset>
                         </form>
                     ) : null}
                     {active === 'judging' && space.kind === 'challenge' ? (
                         <section className={styles.judgingStack}>
                             <form className={styles.manageCard} onSubmit={save}>
-                                <header><h2>Scoring criteria</h2><p>{criteriaLocked ? 'Scoring has started, so the criteria are locked.' : 'Judges score each entry from 1 to 10. Weights decide how much each criterion counts.'}</p></header>
+                                <header><h2>{t('manageSpace.scoringCriteria')}</h2><p>{criteriaLocked ? t('manageSpace.criteriaLocked') : t('manageSpace.criteriaLead')}</p></header>
                                 <fieldset className={styles.manageFormFields} disabled={saving}>
                                     <div className={styles.criteriaEditor}>
-                                        {(form.criteria || []).map((criterion, index) => <article key={criterion.id}><label><span>Name</span><input required disabled={criteriaLocked} maxLength={60} value={criterion.name} onChange={event => updateCriterion(index, 'name', event.target.value)} /></label><label><span>Description</span><input disabled={criteriaLocked} maxLength={300} value={criterion.description || ''} onChange={event => updateCriterion(index, 'description', event.target.value)} /></label><label className={styles.weightField}><span>Weight <strong>{criterion.weight}</strong></span><input type="range" disabled={criteriaLocked} min="1" max="5" step="1" value={criterion.weight} onChange={event => updateCriterion(index, 'weight', Number(event.target.value))} aria-label={`${criterion.name || 'Criterion'} weight, ${criterion.weight} of 5`} /></label><IconButton variant="danger" label={`Remove ${criterion.name || 'criterion'}`} onClick={() => removeCriterion(index)} disabled={criteriaLocked || form.criteria.length === 1}><X size={16} /></IconButton></article>)}
+                                        {(form.criteria || []).map((criterion, index) => <article key={criterion.id}><label><span>{t('manageSpace.criterionName')}</span><input required disabled={criteriaLocked} maxLength={60} value={criterion.name} onChange={event => updateCriterion(index, 'name', event.target.value)} /></label><label><span>{t('manageSpace.criterionDescription')}</span><input disabled={criteriaLocked} maxLength={300} value={criterion.description || ''} onChange={event => updateCriterion(index, 'description', event.target.value)} /></label><label className={styles.weightField}><span>{t('manageSpace.weight')} <strong>{criterion.weight}</strong></span><input type="range" disabled={criteriaLocked} min="1" max="5" step="1" value={criterion.weight} onChange={event => updateCriterion(index, 'weight', Number(event.target.value))} aria-label={t('manageSpace.criterionWeightAria').replace('{name}', criterion.name || t('manageSpace.criterion')).replace('{weight}', criterion.weight)} /></label><IconButton variant="danger" label={t('manageSpace.removeCriterionAria').replace('{name}', criterion.name || t('manageSpace.criterion'))} onClick={() => removeCriterion(index)} disabled={criteriaLocked || form.criteria.length === 1}><X size={16} /></IconButton></article>)}
                                     </div>
-                                    {!criteriaLocked && form.criteria.length < 8 ? <Button className={styles.addCriterion} onClick={addCriterion}><Plus size={15} /> Add criterion</Button> : null}
+                                    {!criteriaLocked && form.criteria.length < 8 ? <Button className={styles.addCriterion} onClick={addCriterion}><Plus size={15} /> {t('manageSpace.addCriterion')}</Button> : null}
                                     <SwitchRow
                                         checked={Boolean(form.communityVoting)}
-                                        description="Signed-in users can rate entries from 1 to 5 during judging. Audience ratings are shown separately and do not change the winner."
-                                        label="Audience ratings"
+                                        description={t('manageSpace.audienceRatingsDesc')}
+                                        label={t('manageSpace.audienceRatings')}
                                         onChange={value => updateForm('communityVoting', value)}
                                     />
-                                    <div className={styles.manageCardActions}><Button type="submit" busy={saving} busyLabel="Saving…">Save judging setup</Button></div>
+                                    <div className={styles.manageCardActions}><Button type="submit" busy={saving} busyLabel={t('manageSpace.saving')}>{t('manageSpace.saveJudgingSetup')}</Button></div>
                                 </fieldset>
                             </form>
                             <section className={styles.manageCard}>
-                                <header><h2>Judges</h2><p>Judges accept an invitation before they can score entries.</p></header>
+                                <header><h2>{t('manageSpace.judges')}</h2><p>{t('manageSpace.judgesLead')}</p></header>
                                 <div className={styles.curatorInvite}>
                                     <Search size={16} />
-                                    <input value={inviteQuery} disabled={Boolean(busyUser)} onChange={event => setInviteQuery(event.target.value)} placeholder="Search for a judge" />
-                                    {searching ? <span>Searching…</span> : null}
-                                    {inviteQuery.trim().length >= 2 && !searching ? <div className={styles.userSuggestions}>{suggestions.filter(person => !unavailableUsers.has(person.username.toLowerCase())).map(person => <Button key={person.username} busy={busyUser === person.username} busyLabel="Inviting…" onClick={() => inviteJudge(person.username)} disabled={Boolean(busyUser)}><Avatar username={person.username} size={32} /><span><strong>{person.username}</strong><small>MistWarp user</small></span><UserPlus size={16} /></Button>)}{!suggestions.filter(person => !unavailableUsers.has(person.username.toLowerCase())).length ? <p>No available users found.</p> : null}</div> : null}
+                                    <input value={inviteQuery} disabled={Boolean(busyUser)} onChange={event => setInviteQuery(event.target.value)} placeholder={t('manageSpace.searchJudge')} />
+                                    {searching ? <span>{t('manageSpace.searching')}</span> : null}
+                                    {inviteQuery.trim().length >= 2 && !searching ? <div className={styles.userSuggestions}>{suggestions.filter(person => !unavailableUsers.has(person.username.toLowerCase())).map(person => <Button key={person.username} busy={busyUser === person.username} busyLabel={t('manageSpace.inviting')} onClick={() => inviteJudge(person.username)} disabled={Boolean(busyUser)}><Avatar username={person.username} size={32} /><span><strong>{person.username}</strong><small>{t('manageSpace.mistwarpUser')}</small></span><UserPlus size={16} /></Button>)}{!suggestions.filter(person => !unavailableUsers.has(person.username.toLowerCase())).length ? <p>{t('manageSpace.noAvailableUsers')}</p> : null}</div> : null}
                                 </div>
-                                <div className={styles.peopleList}>{(space.judges || []).map(username => <article key={username}><Avatar username={username} size={38} /><div><strong>{username}</strong><span>Judge</span></div><Button variant="danger" busy={busyUser === username} busyLabel="Removing…" onClick={() => removeJudge(username)} disabled={Boolean(busyUser)}><X size={15} /> Remove</Button></article>)}{!space.judges?.length ? <p className={styles.pickerEmpty}>No judges have accepted yet.</p> : null}</div>
-                                {(space.judgeInvites || []).length ? <><h3 className={styles.subheading}>Pending invitations</h3><div className={styles.peopleList}>{space.judgeInvites.map(invitation => <article key={invitation.username}><Avatar username={invitation.username} size={38} /><div><strong>{invitation.username}</strong><span>Invited</span></div></article>)}</div></> : null}
+                                <div className={styles.peopleList}>{(space.judges || []).map(username => <article key={username}><Avatar username={username} size={38} /><div><strong>{username}</strong><span>{t('manageSpace.judge')}</span></div><Button variant="danger" busy={busyUser === username} busyLabel={t('manageSpace.removing')} onClick={() => removeJudge(username)} disabled={Boolean(busyUser)}><X size={15} /> {t('manageSpace.remove')}</Button></article>)}{!space.judges?.length ? <p className={styles.pickerEmpty}>{t('manageSpace.noJudgesYet')}</p> : null}</div>
+                                {(space.judgeInvites || []).length ? <><h3 className={styles.subheading}>{t('manageSpace.pendingInvitations')}</h3><div className={styles.peopleList}>{space.judgeInvites.map(invitation => <article key={invitation.username}><Avatar username={invitation.username} size={38} /><div><strong>{invitation.username}</strong><span>{t('manageSpace.invited')}</span></div></article>)}</div></> : null}
                             </section>
                             <section className={styles.manageCard}>
-                                <header><h2>Results</h2><p>Publishing reveals the ranked judge scores on the public challenge page.</p></header>
-                                <div className={styles.publishRow}><span>{space.resultsPublishedAt ? `Published ${new Date(space.resultsPublishedAt).toLocaleString()}` : `${space.projects.filter(project => project.judgeScoreCount > 0).length} of ${space.projects.length} entries scored`}</span>{!space.resultsPublishedAt ? <Button
-                                    variant="primary" busy={publishing} busyLabel="Publishing…" onClick={publishResults}
-                                >Publish results</Button> : <span className={styles.published}><Check size={15} /> Results are live</span>}</div>
+                                <header><h2>{t('manageSpace.results')}</h2><p>{t('manageSpace.resultsLead')}</p></header>
+                                <div className={styles.publishRow}><span>{space.resultsPublishedAt ? t('manageSpace.publishedDate').replace('{date}', new Date(space.resultsPublishedAt).toLocaleString()) : `${space.projects.filter(project => project.judgeScoreCount > 0).length} ${t('manageSpace.of')} ${space.projects.length} ${t('manageSpace.entriesScored')}`}</span>{!space.resultsPublishedAt ? <Button
+                                    variant="primary" busy={publishing} busyLabel={t('manageSpace.publishing')} onClick={publishResults}
+                                >{t('manageSpace.publishResults')}</Button> : <span className={styles.published}><Check size={15} /> {t('manageSpace.resultsLive')}</span>}</div>
                             </section>
                         </section>
                     ) : null}
                     {active === 'curators' ? (
                         <section className={styles.manageCard}>
-                            <header><h2>Curators</h2><p>Curators can edit this space and organise its projects. Invitations must be accepted before access is granted.</p></header>
+                            <header><h2>{t('manageSpace.curators')}</h2><p>{t('manageSpace.curatorsLead')}</p></header>
                             {space.isOwner ? (
                                 <div className={styles.curatorInvite}>
                                     <Search size={16} />
-                                    <input value={inviteQuery} disabled={Boolean(busyUser)} onChange={event => setInviteQuery(event.target.value)} placeholder="Search for someone to invite" />
-                                    {searching ? <span>Searching…</span> : null}
+                                    <input value={inviteQuery} disabled={Boolean(busyUser)} onChange={event => setInviteQuery(event.target.value)} placeholder={t('manageSpace.searchCurator')} />
+                                    {searching ? <span>{t('manageSpace.searching')}</span> : null}
                                     {inviteQuery.trim().length >= 2 && !searching ? (
                                         <div className={styles.userSuggestions}>
                                             {suggestions.filter(person => !unavailableUsers.has(person.username.toLowerCase())).map(person => (
-                                                <Button key={person.username} busy={busyUser === person.username} busyLabel="Inviting…" onClick={() => invite(person.username)} disabled={Boolean(busyUser)}><Avatar username={person.username} size={32} /><span><strong>{person.username}</strong><small>{person.bio || 'MistWarp user'}</small></span><UserPlus size={16} /></Button>
+                                                <Button key={person.username} busy={busyUser === person.username} busyLabel={t('manageSpace.inviting')} onClick={() => invite(person.username)} disabled={Boolean(busyUser)}><Avatar username={person.username} size={32} /><span><strong>{person.username}</strong><small>{person.bio || t('manageSpace.mistwarpUser')}</small></span><UserPlus size={16} /></Button>
                                             ))}
-                                            {!suggestions.filter(person => !unavailableUsers.has(person.username.toLowerCase())).length ? <p>No available users found.</p> : null}
+                                            {!suggestions.filter(person => !unavailableUsers.has(person.username.toLowerCase())).length ? <p>{t('manageSpace.noAvailableUsers')}</p> : null}
                                         </div>
                                     ) : null}
                                 </div>
                             ) : null}
                             <div className={styles.peopleList}>
-                                <article><Avatar username={space.owner} size={38} /><div><strong>{space.owner}</strong><span>Owner</span></div></article>
-                                {(space.managers || []).map(username => <article key={username}><Avatar username={username} size={38} /><div><strong>{username}</strong><span>Curator</span></div>{space.isOwner ? <Button variant="danger" busy={busyUser === username} busyLabel="Removing…" onClick={() => removeCurator(username)} disabled={Boolean(busyUser)}><X size={15} /> Remove</Button> : null}</article>)}
+                                <article><Avatar username={space.owner} size={38} /><div><strong>{space.owner}</strong><span>{t('manageSpace.owner')}</span></div></article>
+                                {(space.managers || []).map(username => <article key={username}><Avatar username={username} size={38} /><div><strong>{username}</strong><span>{t('manageSpace.curator')}</span></div>{space.isOwner ? <Button variant="danger" busy={busyUser === username} busyLabel={t('manageSpace.removing')} onClick={() => removeCurator(username)} disabled={Boolean(busyUser)}><X size={15} /> {t('manageSpace.remove')}</Button> : null}</article>)}
                             </div>
-                            {space.isOwner && (space.curatorInvites || []).length ? <><h3 className={styles.subheading}>Pending invitations</h3><div className={styles.peopleList}>{space.curatorInvites.map(pendingInvitation => <article key={pendingInvitation.username}><Avatar username={pendingInvitation.username} size={38} /><div><strong>{pendingInvitation.username}</strong><span>Invited</span></div><Button busy={busyUser === pendingInvitation.username} busyLabel="Cancelling…" onClick={() => cancelInvitation(pendingInvitation.username)} disabled={Boolean(busyUser)}><X size={15} /> Cancel</Button></article>)}</div></> : null}
+                            {space.isOwner && (space.curatorInvites || []).length ? <><h3 className={styles.subheading}>{t('manageSpace.pendingInvitations')}</h3><div className={styles.peopleList}>{space.curatorInvites.map(pendingInvitation => <article key={pendingInvitation.username}><Avatar username={pendingInvitation.username} size={38} /><div><strong>{pendingInvitation.username}</strong><span>{t('manageSpace.invited')}</span></div><Button busy={busyUser === pendingInvitation.username} busyLabel={t('manageSpace.cancelling')} onClick={() => cancelInvitation(pendingInvitation.username)} disabled={Boolean(busyUser)}><X size={15} /> {t('manageSpace.cancel')}</Button></article>)}</div></> : null}
                         </section>
                     ) : null}
                     {active === 'projects' ? (
                         <section className={styles.manageCard}>
-                            <header className={styles.manageProjectsHeader}><div><h2>{space.kind === 'challenge' ? 'Submissions' : 'Projects'}</h2><p>{space.kind === 'challenge' ? 'Review entries or remove one that breaks the rules.' : 'Add, find, and remove projects from this space.'}</p></div><SpaceProjectPicker space={space} onAdded={load} /></header>
+                            <header className={styles.manageProjectsHeader}><div><h2>{space.kind === 'challenge' ? t('manageSpace.submissions') : t('manageSpace.projects')}</h2><p>{space.kind === 'challenge' ? t('manageSpace.submissionsLead') : t('manageSpace.projectsLead')}</p></div><SpaceProjectPicker space={space} onAdded={load} /></header>
                             <div className={styles.manageProjectList}>
-                                {space.projects.map(project => <article key={project.id}><div><strong>{project.title}</strong><span>by {project.owner}</span>{space.kind === 'challenge' && (project.scoreBreakdown || []).length ? <div className={styles.submissionFeedback}>{project.scoreBreakdown.map(score => <span key={score.judge}><strong>{score.judge}</strong>{score.feedback || 'Score submitted'}</span>)}</div> : null}</div><Link to={`/project/${project.id}`}>View</Link><Button variant="danger" busy={busyProject === project.id} busyLabel="Removing…" disabled={Boolean(busyProject)} onClick={() => removeProject(project)}><Trash2 size={15} /> Remove</Button></article>)}
-                                {!space.projects.length ? <p className={styles.pickerEmpty}>No projects have been added yet.</p> : null}
+                                {space.projects.map(project => <article key={project.id}><div><strong>{project.title}</strong><span>{t('manageSpace.by')} {project.owner}</span>{space.kind === 'challenge' && (project.scoreBreakdown || []).length ? <div className={styles.submissionFeedback}>{project.scoreBreakdown.map(score => <span key={score.judge}><strong>{score.judge}</strong>{score.feedback || t('manageSpace.scoreSubmitted')}</span>)}</div> : null}</div><Link to={`/project/${project.id}`}>{t('manageSpace.view')}</Link><Button variant="danger" busy={busyProject === project.id} busyLabel={t('manageSpace.removing')} disabled={Boolean(busyProject)} onClick={() => removeProject(project)}><Trash2 size={15} /> {t('manageSpace.remove')}</Button></article>)}
+                                {!space.projects.length ? <p className={styles.pickerEmpty}>{t('manageSpace.noProjectsYet')}</p> : null}
                             </div>
                         </section>
                     ) : null}
                     {active === 'danger' && space.isOwner ? (
                         <section className={`${styles.manageCard} ${styles.dangerCard}`}>
-                            <header><h2>Delete space</h2><p>This permanently removes the space. Projects are not deleted.</p></header>
+                            <header><h2>{t('manageSpace.deleteSpace')}</h2><p>{t('manageSpace.deleteSpaceLead')}</p></header>
                             <Button
                                 variant="danger"
                                 disabled={deleting}
                                 onClick={deleteSpace}
-                            ><Trash2 size={16} /> {deleting ? 'Deleting…' : 'Delete space'}</Button>
+                            ><Trash2 size={16} /> {deleting ? t('manageSpace.deleting') : t('manageSpace.deleteSpace')}</Button>
                         </section>
                     ) : null}
                 </div>

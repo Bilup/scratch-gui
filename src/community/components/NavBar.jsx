@@ -20,7 +20,9 @@ import styles from './NavBar.module.css';
 
 const SPACE_KIND_LABELS = {studio: 'Studio', challenge: 'Challenge', collection: 'Collection'};
 
-const SearchBox = ({className, containerRef, inputRef, query, onQuery, onFocus, onKeyDown, onSubmit, open, projects, people, spaces, searching, searchReady, searchFailed, onProject, onProfile, onSpace, searchLabel, suggestionId}) => (
+const SearchBox = ({className, containerRef, inputRef, query, onQuery, onFocus, onKeyDown, onSubmit, open, projects, people, spaces, searching, searchReady, searchFailed, onProject, onProfile, onSpace, searchLabel, suggestionId}) => {
+    const {t} = useCommunityIntl();
+    return (
     <form
         className={`${styles.search} ${className}`}
         onSubmit={onSubmit}
@@ -44,34 +46,35 @@ const SearchBox = ({className, containerRef, inputRef, query, onQuery, onFocus, 
         />
         {open && query.trim().length >= 2 && (people.length || projects.length || spaces.length || searching || searchReady) ? (
             <div className={styles.suggestions} id={suggestionId} role="listbox">
-                {searching ? <p className={styles.suggestionStatus}>Searching…</p> : null}
-                {!searching && searchFailed ? <p className={styles.suggestionStatus}>Could not load quick results. Press Enter to search.</p> : null}
-                {!searching && !searchFailed && searchReady && !people.length && !projects.length && !spaces.length ? <p className={styles.suggestionStatus}>No quick matches. Press Enter to search all projects.</p> : null}
+                {searching ? <p className={styles.suggestionStatus}>{t('nav.searching')}</p> : null}
+                {!searching && searchFailed ? <p className={styles.suggestionStatus}>{t('nav.searchFailed')}</p> : null}
+                {!searching && !searchFailed && searchReady && !people.length && !projects.length && !spaces.length ? <p className={styles.suggestionStatus}>{t('nav.noMatches')}</p> : null}
                 {projects.map(project => (
                     <button key={project.id} type="button" className={styles.suggestion} onClick={() => onProject(project.id)}>
                         <ProjectThumbnail project={project} className={styles.suggestionThumb} fallbackClassName={styles.suggestionThumbFallback} />
                         <span>{project.title}</span>
-                        <span className={styles.suggestionMeta}>by {project.owner}</span>
+                        <span className={styles.suggestionMeta}>{t('nav.by')} {project.owner}</span>
                     </button>
                 ))}
                 {people.map(person => (
                     <button key={person.username} type="button" className={styles.suggestion} onClick={() => onProfile(person.username)}>
                         <Avatar username={person.username} size={26} />
                         <span>{person.username}</span>
-                        <span className={styles.suggestionMeta}>{person.followers ?? 0} followers · {person.projects} projects</span>
+                        <span className={styles.suggestionMeta}>{t('nav.followersProjects').replace('{followers}', person.followers ?? 0).replace('{projects}', person.projects)}</span>
                     </button>
                 ))}
                 {spaces.map(space => (
                     <button key={space._id} type="button" className={styles.suggestion} onClick={() => onSpace(space._id)}>
                         <span className={styles.suggestionSpaceIcon}><Layers3 size={15} /></span>
                         <span>{space.title}</span>
-                        <span className={styles.suggestionMeta}>{SPACE_KIND_LABELS[space.kind] || 'Space'} · by {space.owner}</span>
+                        <span className={styles.suggestionMeta}>{SPACE_KIND_LABELS[space.kind] || t('nav.space')} · {t('nav.by')} {space.owner}</span>
                     </button>
                 ))}
             </div>
         ) : null}
     </form>
-);
+    );
+};
 
 const NavBar = () => {
     const {user, loading, loginOrThrow, logout} = useUser();
@@ -451,12 +454,12 @@ const NavBar = () => {
                             className={styles.signIn}
                             onClick={doLogin}
                             busy={signingIn}
-                            busyLabel="Signing in…"
+                            busyLabel={t('common.signingIn')}
                             title={intl.formatMessage({id: 'mw.community.nav.signIn', defaultMessage: 'Sign in'})}
                             aria-label={intl.formatMessage({id: 'mw.community.nav.signIn', defaultMessage: 'Sign in'})}
                         >
                             <LogIn size={19} />
-                            <span className={styles.signInLabel}>Sign in</span>
+                            <span className={styles.signInLabel}>{t('common.signIn')}</span>
                         </Button>
                     )}
                 </div>

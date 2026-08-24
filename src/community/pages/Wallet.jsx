@@ -1,6 +1,7 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {Link} from 'react-router-dom';
 import {useIntl} from '../../lib/tw-use-intl.jsx';
+import {useCommunityIntl} from '../i18n.jsx';
 import {Coins, Wallet as WalletIcon, HeartHandshake, Send, ExternalLink, CalendarCheck} from 'lucide-react';
 import api, {projectUrl} from '../api';
 import {getAccountSummary, claimDaily} from '../../lib/rotur/client.js';
@@ -14,6 +15,7 @@ const fmtCredits = value => Math.round((Number(value) || 0) * 100) / 100;
 
 const Wallet = () => {
     const intl = useIntl();
+    const {t: ct} = useCommunityIntl();
     const {user, loading, login} = useUser();
     const viewerName = (user && user.username) || '';
     const walletContext = useRef(viewerName);
@@ -71,7 +73,7 @@ const Wallet = () => {
             .catch(() => !stale && setAccountLoaded(true));
         api.purchases()
             .then(data => !stale && setPurchases(data.purchases || []))
-            .catch(() => !stale && setPurchaseError('Could not load purchase history.'));
+            .catch(() => !stale && setPurchaseError(ct('wallet.purchaseHistoryFailed')));
         getBillingStatus()
             .then(data => !stale && setBilling(data))
             .catch(() => !stale && setBilling({billing_configured: false}));
@@ -86,7 +88,7 @@ const Wallet = () => {
     if (!user) {
         return (
             <main className={styles.page}>
-                <p className={styles.status}>{intl.formatMessage({id: 'mw.community.wallet.signIn', defaultMessage: 'Sign in to view your wallet.'})} <Button onClick={login}>Sign in</Button></p>
+                <p className={styles.status}>{intl.formatMessage({id: 'mw.community.wallet.signIn', defaultMessage: 'Sign in to view your wallet.'})} <Button onClick={login}>{ct('common.signIn')}</Button></p>
             </main>
         );
     }
@@ -138,8 +140,8 @@ const Wallet = () => {
         } catch (e) {
             if (walletContext.current === context) {
                 setCheckoutError(e.needsReauth ?
-                    'Your current login cannot buy credits. Log out and back in, then try again.' :
-                    (e.message || 'Could not open checkout.'));
+                    ct('wallet.reauthBuyCredits') :
+                    (e.message || ct('wallet.checkoutFailed')));
             }
         } finally {
             actionLocks.current.delete(actionKey);
@@ -158,7 +160,7 @@ const Wallet = () => {
             await openBillingPortal();
         } catch (e) {
             if (walletContext.current === context) {
-                setCheckoutError(e.message || 'Could not open billing.');
+                setCheckoutError(e.message || ct('wallet.openBillingFailed'));
             }
         } finally {
             actionLocks.current.delete(actionKey);
@@ -193,7 +195,7 @@ const Wallet = () => {
                     className={styles.claimBtn}
                     onClick={doClaimDaily}
                     busy={claiming}
-                    busyLabel="Claiming…"
+                    busyLabel={ct('wallet.claiming')}
                 >
                     <CalendarCheck size={16} />
                     {claiming ?
@@ -220,15 +222,15 @@ const Wallet = () => {
             ) : null}
 
             <section className={styles.section}>
-                <h2 className={styles.sectionTitle}>Buy credits</h2>
+                <h2 className={styles.sectionTitle}>{ct('wallet.buyCredits')}</h2>
                 <p className={styles.sectionLead}>
-                    Top up through Stripe. Credits are added to your Rotur account after checkout.
+                    {ct('wallet.buyCreditsLead')}
                 </p>
                 {billingMsg ? (
                     <p className={styles.billingMsg}>
                         {billingMsg === 'success' ?
-                            'Payment successful. Credits will appear in your balance shortly.' :
-                            'Checkout cancelled.'}
+                            ct('wallet.paymentSuccess') :
+                            ct('wallet.checkoutCancelled')}
                     </p>
                 ) : null}
                 <div className={styles.tiers}>
@@ -242,17 +244,17 @@ const Wallet = () => {
                         >
                             <span className={styles.tierCredits}>
                                 {pack.credits.toLocaleString()}
-                                <span> credits</span>
+                                <span> {ct('credits.label')}</span>
                             </span>
                             <span className={styles.tierPrice}>${pack.price.toFixed(2)}</span>
                         </button>
                     ))}
                 </div>
-                {checkoutBusy ? <p className={styles.checkoutNote}>Opening secure Stripe checkout…</p> : null}
-                {!billing ? <p className={styles.checkoutNote}>Checking billing availability…</p> : null}
+                {checkoutBusy ? <p className={styles.checkoutNote}>{ct('wallet.openingCheckout')}</p> : null}
+                {!billing ? <p className={styles.checkoutNote}>{ct('wallet.checkingBilling')}</p> : null}
                 {checkoutError ? <p className={styles.checkoutError}>{checkoutError}</p> : null}
                 {billing && !billing.billing_configured ? (
-                    <p className={styles.checkoutError}>Stripe billing is currently unavailable. Try again later.</p>
+                    <p className={styles.checkoutError}>{ct('wallet.billingUnavailable')}</p>
                 ) : null}
                 {billing && billing.stripe_portal ? (
                     <Button
@@ -260,10 +262,10 @@ const Wallet = () => {
                         className={styles.portalButton}
                         onClick={manageBilling}
                         busy={checkoutBusy}
-                        busyLabel="Opening billing…"
+                        busyLabel={ct('wallet.openingBilling')}
                     >
                         <ExternalLink size={14} />
-                        Manage billing
+                        {ct('wallet.manageBilling')}
                     </Button>
                 ) : null}
             </section>

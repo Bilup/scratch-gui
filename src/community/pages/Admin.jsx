@@ -91,6 +91,8 @@ const QuotaTile = ({quota}) => {
 const num = v => Number(v || 0).toLocaleString();
 
 const AdminActionDialog = ({dialog, busy, error, onChange, onCancel, onConfirm}) => {
+    const {formatMessage: fmtD} = useIntl();
+    const td = (id, defaultMessage, values) => fmtD({id, defaultMessage}, values);
     if (!dialog) return null;
     const Icon = dialog.icon || AlertTriangle;
     return (
@@ -100,9 +102,9 @@ const AdminActionDialog = ({dialog, busy, error, onChange, onCancel, onConfirm})
             dismissDisabled={busy}
             onClose={onCancel}
             actions={<React.Fragment>
-                <button className={styles.secondary} disabled={busy} onClick={onCancel}>Cancel</button>
+                <button className={styles.secondary} disabled={busy} onClick={onCancel}>{td('mw.community.admin.cancel', 'Cancel')}</button>
                 <button className={dialog.danger ? styles.danger : styles.primary} disabled={busy} onClick={onConfirm}>
-                    {busy ? 'Working…' : dialog.action}
+                    {busy ? td('mw.community.admin.working', 'Working…') : dialog.action}
                 </button>
             </React.Fragment>}
         >
@@ -266,7 +268,7 @@ const ProjectManager = () => {
             const data = await api.admin.searchProjects(q || '');
             fresh(setProjects)(data.projects || []);
         } catch (e) {
-            fresh(setError)(e.message || 'Could not load projects.');
+            fresh(setError)(e.message || t('mw.community.admin.couldNotLoadProjects', 'Could not load projects.'));
         }
     }, [beginSearch]);
 
@@ -286,7 +288,7 @@ const ProjectManager = () => {
             setNote(t('mw.community.admin.projectUnshared', 'Project unshared.'));
             search(query);
         } catch (e) {
-            setError(e.message || 'Could not unshare that project.');
+            setError(e.message || t('mw.community.admin.couldNotUnshareThat', 'Could not unshare that project.'));
         } finally {
             releaseAction();
         }
@@ -298,9 +300,9 @@ const ProjectManager = () => {
         setDialogError('');
         setDialog({
             id,
-            title: 'Delete project?',
-            description: `Delete ${project ? project.title : 'this project'} permanently?`,
-            action: 'Delete project',
+            title: t('mw.community.admin.deleteProjectTitle', 'Delete project?'),
+            description: t('mw.community.admin.deleteProjectDesc', 'Delete {title} permanently?', {title: project ? project.title : t('mw.community.admin.thisProject', 'this project')}),
+            action: t('mw.community.admin.deleteProject', 'Delete project'),
             danger: true,
             icon: FolderOpen
         });
@@ -317,10 +319,10 @@ const ProjectManager = () => {
             setDialogError('');
             await api.deleteProject(dialog.id);
             setDialog(null);
-            setNote('Project deleted.');
+            setNote(t('mw.community.admin.projectDeleted', 'Project deleted.'));
             search(query);
         } catch (e) {
-            setDialogError(e.message || 'Could not delete that project.');
+            setDialogError(e.message || t('mw.community.admin.couldNotDeleteThat', 'Could not delete that project.'));
         } finally {
             releaseAction();
             setDialogBusy(false);
@@ -339,7 +341,7 @@ const ProjectManager = () => {
                 }}
                 onConfirm={confirmRemove}
             />
-            <h2>Projects</h2>
+            <h2>{t('mw.community.admin.projects', 'Projects')}</h2>
             <div className={styles.addAdmin}>
                 <input
                     className={styles.input}
@@ -508,9 +510,9 @@ const UserDetailCard = ({username, onBack}) => {
         setDialogError('');
         setDialog({
             id: pid,
-            title: 'Delete project?',
-            description: `Delete ${project ? project.title : 'this project'} permanently?`,
-            action: 'Delete project',
+            title: t('mw.community.admin.deleteProjectTitle', 'Delete project?'),
+            description: t('mw.community.admin.deleteProjectDesc', 'Delete {title} permanently?', {title: project ? project.title : t('mw.community.admin.thisProject', 'this project')}),
+            action: t('mw.community.admin.deleteProject', 'Delete project'),
             danger: true,
             icon: FolderOpen
         });
@@ -527,10 +529,10 @@ const UserDetailCard = ({username, onBack}) => {
             setDialogError('');
             await api.deleteProject(dialog.id);
             setDialog(null);
-            setNote('Project deleted.');
+            setNote(t('mw.community.admin.projectDeleted', 'Project deleted.'));
             refresh();
         } catch (e) {
-            setDialogError(e.message || 'Could not delete.');
+            setDialogError(e.message || t('mw.community.admin.couldNotDelete', 'Could not delete.'));
         } finally {
             releaseDelete();
             setDialogBusy(false);
@@ -559,7 +561,7 @@ const UserDetailCard = ({username, onBack}) => {
                 }}
                 onConfirm={confirmDeleteProject}
             />
-            <button className={styles.secondary} onClick={onBack} style={{marginBottom: 10}}>← Back to list</button>
+            <button className={styles.secondary} onClick={onBack} style={{marginBottom: 10}}>{t('mw.community.admin.backToList', '← Back to list')}</button>
             <div className={styles.userCard}>
                 <div className={styles.userHead}>
                     <Avatar username={data.username} size={44} />
@@ -804,7 +806,7 @@ const EvidenceDetails = ({data}) => {
             <iframe
                 className={styles.evidenceStage}
                 src={embedUrl({projectJsonUrl: data.projectJsonUrl, assetsBase: data.assetsBase})}
-                title="Reported project copy"
+                title={t('mw.community.admin.reportedCopy', 'Reported project copy')}
                 sandbox="allow-scripts allow-pointer-lock"
             />
         </div>
@@ -898,8 +900,8 @@ const ExtensionManager = () => {
                 })
             }));
         } catch (e) {
-            if (dialog) setDialogError(e.message || 'Could not update extension policy.');
-            else setError(e.message || 'Could not update extension policy.');
+            if (dialog) setDialogError(e.message || t('mw.community.admin.couldNotUpdateExtPolicy', 'Could not update extension policy.'));
+            else setError(e.message || t('mw.community.admin.couldNotUpdateExtPolicy', 'Could not update extension policy.'));
         } finally {
             releasePolicy();
             setDialogBusy(false);
@@ -913,9 +915,9 @@ const ExtensionManager = () => {
                 kind: 'hash',
                 hash,
                 status,
-                title: 'Block extension?',
-                description: 'This makes every project using the extension private and notifies its owner.',
-                action: 'Block extension',
+                title: t('mw.community.admin.blockExtTitle', 'Block extension?'),
+                description: t('mw.community.admin.blockExtDesc', 'This makes every project using the extension private and notifies its owner.'),
+                action: t('mw.community.admin.blockExtension', 'Block extension'),
                 danger: true,
                 icon: Puzzle
             });
@@ -946,8 +948,8 @@ const ExtensionManager = () => {
                     (current.blockedUrls || []).filter(blockedEntry => blockedEntry !== url)
             }));
         } catch (e) {
-            if (dialog) setDialogError(e.message || 'Could not update URL policy.');
-            else setError(e.message || 'Could not update URL policy.');
+            if (dialog) setDialogError(e.message || t('mw.community.admin.couldNotUpdateUrlPolicy', 'Could not update URL policy.'));
+            else setError(e.message || t('mw.community.admin.couldNotUpdateUrlPolicy', 'Could not update URL policy.'));
         } finally {
             releasePolicy();
             setDialogBusy(false);
@@ -961,9 +963,9 @@ const ExtensionManager = () => {
                 kind: 'url',
                 url,
                 blocked,
-                title: 'Block extension URL?',
-                description: 'This makes every project using the URL private and notifies its owner.',
-                action: 'Block URL',
+                title: t('mw.community.admin.blockUrlTitle', 'Block extension URL?'),
+                description: t('mw.community.admin.blockUrlDesc', 'This makes every project using the URL private and notifies its owner.'),
+                action: t('mw.community.admin.blockUrl', 'Block URL'),
                 danger: true,
                 icon: Puzzle
             });
@@ -1033,7 +1035,7 @@ const ExtensionManager = () => {
                 }}
                 onConfirm={confirmPolicy}
             />
-            <h2>Extensions</h2>
+            <h2>{t('mw.community.admin.extensions', 'Extensions')}</h2>
             <input
                 type="search"
                 className={`${styles.input} ${styles.extensionSearch}`}
@@ -1235,7 +1237,7 @@ const Admin = () => {
             window.dispatchEvent(new Event('mw:reports-updated'));
             load();
         } catch (e) {
-            setError(e.message || 'Action failed.');
+            setError(e.message || t('mw.community.admin.actionFailed', 'Action failed.'));
         } finally {
             actionLocks.current.delete(actionKey);
         }
@@ -1246,10 +1248,10 @@ const Admin = () => {
         setDialog({
             kind: 'support-reply',
             report,
-            title: `Reply to @${report.reporter}`,
-            description: 'The reply is sent as a private moderation message. Sending it closes the support request.',
-            action: 'Send and close',
-            fields: [{key: 'message', label: 'Message', value: '', multiline: true, maxLength: 2000}],
+            title: t('mw.community.admin.replyToTitle', 'Reply to @{reporter}', {reporter: report.reporter}),
+            description: t('mw.community.admin.replyToDesc', 'The reply is sent as a private moderation message. Sending it closes the support request.'),
+            action: t('mw.community.admin.sendAndClose', 'Send and close'),
+            fields: [{key: 'message', label: t('mw.community.admin.message', 'Message'), value: '', multiline: true, maxLength: 2000}],
             icon: Flag
         });
     };
@@ -1259,23 +1261,23 @@ const Admin = () => {
         setDialog({
             kind: 'warn-report',
             report,
-            title: 'Warn user?',
-            description: 'The user will see this reason in their moderation notice.',
-            action: 'Send warning',
-            fields: [{key: 'reason', label: 'Reason', value: '', multiline: true, maxLength: 1000}],
+            title: t('mw.community.admin.warnUserTitle', 'Warn user?'),
+            description: t('mw.community.admin.warnUserDesc', 'The user will see this reason in their moderation notice.'),
+            action: t('mw.community.admin.sendWarning', 'Send warning'),
+            fields: [{key: 'reason', label: t('mw.community.admin.reason', 'Reason'), value: '', multiline: true, maxLength: 1000}],
             icon: AlertTriangle
         });
     };
 
     const banFromReport = report => {
-        const who = report.type === 'project' ? 'the owner of this project' : `@${report.target}`;
+        const who = report.type === 'project' ? t('mw.community.admin.theOwner', 'the owner of this project') : `@${report.target}`;
         setDialogError('');
         setDialog({
             kind: 'ban-report',
             report,
-            title: `Ban ${who}?`,
-            description: 'They will be locked out of Bilup until an admin unbans them.',
-            action: 'Ban user',
+            title: t('mw.community.admin.banWhoTitle', 'Ban {who}?', {who}),
+            description: t('mw.community.admin.banDesc', 'They will be locked out of Bilup until an admin unbans them.'),
+            action: t('mw.community.admin.banUser', 'Ban user'),
             danger: true,
             icon: Ban
         });
@@ -1285,13 +1287,13 @@ const Admin = () => {
         setDialogError('');
         setDialog({
             kind: 'ban-user',
-            title: 'Ban user',
-            description: 'The user will be locked out of Bilup until an admin unbans them.',
-            action: 'Ban user',
+            title: t('mw.community.admin.banUser', 'Ban user'),
+            description: t('mw.community.admin.banDesc', 'They will be locked out of Bilup until an admin unbans them.'),
+            action: t('mw.community.admin.banUser', 'Ban user'),
             danger: true,
             fields: [
-                {key: 'username', label: 'Username', value: '', maxLength: 80},
-                {key: 'reason', label: 'Reason', value: '', multiline: true, maxLength: 1000}
+                {key: 'username', label: t('mw.community.admin.username', 'Username'), value: '', maxLength: 80},
+                {key: 'reason', label: t('mw.community.admin.reason', 'Reason'), value: '', multiline: true, maxLength: 1000}
             ],
             icon: Ban
         });
@@ -1311,15 +1313,15 @@ const Admin = () => {
         if (actionLocks.current.has(actionKey)) return;
         const values = Object.fromEntries((dialog.fields || []).map(field => [field.key, field.value.trim()]));
         if (dialog.kind === 'support-reply' && !values.message) {
-            setDialogError('Enter a reply.');
+            setDialogError(t('mw.community.admin.enterReply', 'Enter a reply.'));
             return;
         }
         if (dialog.kind === 'warn-report' && !values.reason) {
-            setDialogError('Enter a warning reason.');
+            setDialogError(t('mw.community.admin.enterWarningReason', 'Enter a warning reason.'));
             return;
         }
         if (dialog.kind === 'ban-user' && !values.username) {
-            setDialogError('Enter a username.');
+            setDialogError(t('mw.community.admin.enterUsername', 'Enter a username.'));
             return;
         }
         actionLocks.current.add(actionKey);
@@ -1342,7 +1344,7 @@ const Admin = () => {
             setDialog(null);
             load();
         } catch (e) {
-            setDialogError(e.message || 'Action failed.');
+            setDialogError(e.message || t('mw.community.admin.actionFailed', 'Action failed.'));
         } finally {
             actionLocks.current.delete(actionKey);
             setDialogBusy(false);
@@ -1407,7 +1409,7 @@ const Admin = () => {
                 }}
                 onConfirm={confirmDialog}
             />
-            <h1>Admin</h1>
+            <h1>{t('mw.community.admin.title', 'Admin')}</h1>
             {error ? <p className={styles.error}>{error}</p> : null}
 
             <div className={styles.layout}>
@@ -1456,7 +1458,7 @@ const Admin = () => {
                                         >
                                             <div className={styles.rowInfo}>
                                                 <span className={styles.rowTitle}>
-                                                    {report.type === 'support' ? `${report.supportType || 'Support'} request from @${report.reporter}` : report.type === 'project' ? (
+                                                    {report.type === 'support' ? `${report.supportType || t('mw.community.admin.support', 'Support')} ${t('mw.community.admin.requestFrom', 'request from @{reporter}', {reporter: report.reporter})}` : report.type === 'project' ? (
                                                         <Link
                                                             to={projectUrl(report.target)}
                                                         >{t('mw.community.admin.reportProject', 'Project {id}', {id: report.target})}</Link>
@@ -1491,8 +1493,11 @@ const Admin = () => {
                                                     )}
                                                 </span>
                                                 <span className={styles.rowMeta}>
-                                                    {`Reported by @${report.reporter} · ${timeAgo(report.created)} ago`}
-                                                    {report.type !== 'support' && report.context ? ` · in ${report.context}` : ''}
+                                                    {t('mw.community.admin.reportedBy', 'Reported by @{reporter} · {time} ago', {
+                                                        reporter: report.reporter,
+                                                        time: timeAgo(report.created)
+                                                    })}
+                                                    {report.type !== 'support' && report.context ? t('mw.community.admin.inContext', ' · in {context}', {context: report.context}) : ''}
                                                 </span>
                                                 <span className={styles.reason}>{report.reason}</span>
                                                 {report.type === 'support' && report.context ? <span className={styles.reason}>{report.context}</span> : null}
@@ -1501,7 +1506,7 @@ const Admin = () => {
                                                 ) : null}
                                             </div>
                                             <div className={styles.rowActions}>
-                                                {report.type === 'support' ? <button className={styles.secondary} onClick={() => replyToSupport(report)}>Reply and close</button> : null}
+                                                {report.type === 'support' ? <button className={styles.secondary} onClick={() => replyToSupport(report)}>{t('mw.community.admin.replyAndClose', 'Reply and close')}</button> : null}
                                                 {report.type === 'project' ? (
                                                     <button
                                                         className={styles.secondary}
@@ -1511,11 +1516,11 @@ const Admin = () => {
                                                 {report.type !== 'support' ? <button
                                                     className={styles.secondary}
                                                     onClick={() => warnFromReport(report)}
-                                                >{report.type === 'project' ? 'Warn owner' : 'Warn user'}</button> : null}
+                                                >{report.type === 'project' ? t('mw.community.admin.warnOwner', 'Warn owner') : t('mw.community.admin.warnUser', 'Warn user')}</button> : null}
                                                 {report.type !== 'support' ? <button
                                                     className={styles.danger}
                                                     onClick={() => banFromReport(report)}
-                                                >{report.type === 'project' ? 'Ban owner' : 'Ban user'}</button> : null}
+                                                >{report.type === 'project' ? t('mw.community.admin.banOwner', 'Ban owner') : t('mw.community.admin.banUser', 'Ban user')}</button> : null}
                                                 <button
                                                     className={styles.secondary}
                                                     onClick={() => act(report.id, 'dismiss')}

@@ -1041,7 +1041,7 @@ const Project = () => {
             <main className={styles.page}>
                 <div className={styles.status}>
                     <p>{error}</p>
-                    {error === 'Project not found.' ? <Link className={styles.primary} to="/explore">Browse projects</Link> : <Button onClick={load}>Try again</Button>}
+                    {error === 'Project not found.' ? <Link className={styles.primary} to="/explore">{t('mw.community.project.browseProjects', 'Browse projects')}</Link> : <Button onClick={load}>{t('mw.community.project.tryAgain', 'Try again')}</Button>}
                 </div>
             </main>
         );
@@ -1132,8 +1132,8 @@ const Project = () => {
                             <button
                                 type="button"
                                 className={styles.remixButton}
-                                title="More actions"
-                                aria-label="More actions"
+                                title={t('mw.community.project.moreActions', 'More actions')}
+                                aria-label={t('mw.community.project.moreActions', 'More actions')}
                                 aria-expanded={open}
                                 aria-haspopup="menu"
                                 onClick={toggle}
@@ -1260,7 +1260,7 @@ const Project = () => {
 
             {deleteConfirm ? (
                 <Modal
-                    title="Delete project?"
+                    title={t('mw.community.project.deleteProjectTitle', 'Delete project?')}
                     onClose={() => setDeleteConfirm(false)}
                     dismissDisabled={deletingProject}
                     actions={(
@@ -1270,22 +1270,22 @@ const Project = () => {
                                 className={styles.confirmCancel}
                                 disabled={deletingProject}
                                 onClick={() => setDeleteConfirm(false)}
-                            >Cancel</Button>
+                            >{t('mw.community.project.cancel', 'Cancel')}</Button>
                             <Button
                                 variant="danger"
                                 className={`${styles.confirmButton} ${styles.deleteConfirmButton}`}
                                 busy={deletingProject}
-                                busyLabel="Deleting…"
+                                busyLabel={t('mw.community.project.deleting', 'Deleting…')}
                                 onClick={removeProject}
                             >
                                 <Trash2 size={15} />
-                                Delete project
+                                {t('mw.community.project.deleteProject', 'Delete project')}
                             </Button>
                         </React.Fragment>
                     )}
                 >
                     <p className={styles.confirmText}>
-                        <strong>{project.title}</strong> will be deleted permanently. This cannot be undone.
+                        <strong>{project.title}</strong> {t('mw.community.project.deletePermanently', 'will be deleted permanently. This cannot be undone.')}
                     </p>
                     {actionError ? <p className={styles.confirmError}>{actionError}</p> : null}
                 </Modal>
@@ -1293,7 +1293,7 @@ const Project = () => {
 
             {confirmUnsandboxed ? (
                 <Modal
-                    title="Run custom extensions without the sandbox?"
+                    title={t('mw.community.project.runUnsandboxed', 'Run custom extensions without the sandbox?')}
                     onClose={() => setConfirmUnsandboxed(false)}
                     actions={(
                         <React.Fragment>
@@ -1301,21 +1301,20 @@ const Project = () => {
                                 variant="secondary"
                                 className={styles.confirmCancel}
                                 onClick={() => setConfirmUnsandboxed(false)}
-                            >Keep sandbox</Button>
+                            >{t('mw.community.project.keepSandbox', 'Keep sandbox')}</Button>
                             <Button
                                 variant="primary"
                                 className={styles.confirmButton}
                                 onClick={confirmRunUnsandboxed}
                             >
                                 <ShieldAlert size={15} />
-                                Run anyway
+                                {t('mw.community.project.runAnyway', 'Run anyway')}
                             </Button>
                         </React.Fragment>
                     )}
                 >
                     <p className={styles.confirmText}>
-                        This gives the project full access to your MistWarp account. It could read your login
-                        session, act as you, or change your data. Continue only if you trust the creator.
+                        {t('mw.community.project.unsandboxedWarning', 'This gives the project full access to your MistWarp account. It could read your login session, act as you, or change your data. Continue only if you trust the creator.')}
                     </p>
                 </Modal>
             ) : null}
@@ -1323,16 +1322,16 @@ const Project = () => {
             {forkSetup ? (
                 <Modal
                     className={styles.forkModal}
-                    title="Set up your fork"
+                    title={t('mw.community.project.setUpFork', 'Set up your fork')}
                     onClose={() => setForkSetup(null)}
                     dismissDisabled={creatingFork}
                 >
                     <form onSubmit={createFork}>
                         <p className={styles.forkIntro}>
-                            This creates a private working copy with the full MistWarp history. You can send its changes back as a pull request.
+                            {t('mw.community.project.forkIntro', 'This creates a private working copy with the full MistWarp history. You can send its changes back as a pull request.')}
                         </p>
                         <label className={styles.forkField}>
-                            <span>Project name</span>
+                            <span>{t('mw.community.project.projectName', 'Project name')}</span>
                             <input
                                 value={forkSetup.title}
                                 disabled={creatingFork}
@@ -1343,7 +1342,7 @@ const Project = () => {
                             />
                         </label>
                         <label className={styles.forkField}>
-                            <span>Working branch</span>
+                            <span>{t('mw.community.project.workingBranch', 'Working branch')}</span>
                             <input
                                 value={forkSetup.branch}
                                 disabled={creatingFork}
@@ -1354,23 +1353,23 @@ const Project = () => {
                             />
                         </label>
                         <dl className={styles.forkSummary}>
-                            <div><dt>Forked from</dt><dd>{project.owner}/{project.title}</dd></div>
-                            <div><dt>Base commit</dt><dd><code>{project.gitHead ? project.gitHead.slice(0, 7) : 'Current version'}</code></dd></div>
-                            <div><dt>Visibility</dt><dd>Private draft</dd></div>
+                            <div><dt>{t('mw.community.project.forkedFrom', 'Forked from')}</dt><dd>{project.owner}/{project.title}</dd></div>
+                            <div><dt>{t('mw.community.project.baseCommit', 'Base commit')}</dt><dd><code>{project.gitHead ? project.gitHead.slice(0, 7) : t('mw.community.project.currentVersion', 'Current version')}</code></dd></div>
+                            <div><dt>{t('mw.community.project.visibility', 'Visibility')}</dt><dd>{t('mw.community.project.privateDraft', 'Private draft')}</dd></div>
                         </dl>
                         <div className={styles.confirmActions}>
                             <Button className={styles.confirmCancel} onClick={() => setForkSetup(null)} disabled={creatingFork}>
-                                Cancel
+                                {t('mw.community.project.cancel', 'Cancel')}
                             </Button>
                             <Button
                                 variant="primary"
                                 className={styles.confirmButton}
                                 type="submit"
                                 busy={creatingFork}
-                                busyLabel="Creating fork…"
+                                busyLabel={t('mw.community.project.creatingFork', 'Creating fork…')}
                             >
                                 <GitFork size={15} />
-                                Create fork
+                                {t('mw.community.project.createFork', 'Create fork')}
                             </Button>
                         </div>
                     </form>
@@ -1553,9 +1552,9 @@ const Project = () => {
                             ) : contentError ? (
                                 <div className={styles.paywall}>
                                     <ShieldAlert size={32} />
-                                    <h2 className={styles.paywallTitle}>Project unavailable</h2>
+                                    <h2 className={styles.paywallTitle}>{t('mw.community.project.projectUnavailable', 'Project unavailable')}</h2>
                                     <p className={styles.paywallText}>
-                                        The project file could not be loaded. The creator may need to save it again.
+                                        {t('mw.community.project.unavailableText', 'The project file could not be loaded. The creator may need to save it again.')}
                                     </p>
                                 </div>
                             ) : (
@@ -1863,7 +1862,7 @@ const RemixTree = ({id}) => {
         return map;
     }, [tree]);
     if (!tree && !failed) return <p className={styles.status}>{intl.formatMessage({id: 'mw.community.project.loading', defaultMessage: 'Loading…'})}</p>;
-    if (failed) return <p className={styles.sideEmpty}>Could not load remixes. <button type="button" onClick={() => setAttempt(value => value + 1)}>Try again</button></p>;
+    if (failed) return <p className={styles.sideEmpty}>{intl.formatMessage({id: 'mw.community.project.couldNotLoadRemixes', defaultMessage: 'Could not load remixes.'})} <button type="button" onClick={() => setAttempt(value => value + 1)}>{intl.formatMessage({id: 'mw.community.project.tryAgain', defaultMessage: 'Try again'})}</button></p>;
     const nodes = tree.nodes || [];
     if (nodes.length < 2) return <p className={styles.sideEmpty}>{intl.formatMessage({id: 'mw.community.project.noRemixes', defaultMessage: 'No remixes yet.'})}</p>;
     const childrenOf = parentId => childMap.get(parentId) || [];
@@ -1881,6 +1880,8 @@ const RemixTree = ({id}) => {
 };
 
 const HistoryList = ({id, history, canRestore, onChange}) => {
+    const {formatMessage: ssh} = useIntl();
+    const th = (id, defaultMessage, values) => ssh({id, defaultMessage}, values);
     const [restoring, setRestoring] = useState(null);
     const [restoreError, setRestoreError] = useState(null);
     const [restoreCandidate, setRestoreCandidate] = useState(null);
@@ -1920,17 +1921,17 @@ const HistoryList = ({id, history, canRestore, onChange}) => {
             if (onChange) await onChange();
         } catch (error) {
             if (idRef.current === actionId) {
-                setRestoreError(error.message || 'Could not restore this version.');
+                setRestoreError(error.message || th('mw.community.project.couldNotRestore', 'Could not restore this version.'));
             }
         } finally {
             restoreLocks.current.delete(lockId);
             if (idRef.current === actionId) setRestoring(null);
         }
     };
-    if (!history) return <p className={styles.status}>Loading…</p>;
-    if (history.error) return <p className={styles.status}>Could not load version history. <button type="button" onClick={onChange}>Try again</button></p>;
+    if (!history) return <p className={styles.status}>{th('mw.community.project.loadingVersionHistory', 'Loading…')}</p>;
+    if (history.error) return <p className={styles.status}>{th('mw.community.project.couldNotLoadHistory', 'Could not load version history.')} <button type="button" onClick={onChange}>{th('mw.community.project.tryAgain', 'Try again')}</button></p>;
     const commits = history.commits || [];
-    if (!commits.length) return <p className={styles.status}>No version history available.</p>;
+    if (!commits.length) return <p className={styles.status}>{th('mw.community.project.noHistory', 'No version history available.')}</p>;
     if (history.graph?.nodes?.length) {
         return (
             <>
@@ -1943,7 +1944,7 @@ const HistoryList = ({id, history, canRestore, onChange}) => {
                 />
                 {restoreCandidate ? (
                     <Modal
-                        title="Restore this version?"
+                        title={th('mw.community.project.restoreVersionTitle', 'Restore this version?')}
                         onClose={() => setRestoreCandidate(null)}
                         dismissDisabled={Boolean(restoring)}
                         actions={(
@@ -1953,20 +1954,20 @@ const HistoryList = ({id, history, canRestore, onChange}) => {
                                     className={styles.confirmCancel}
                                     disabled={Boolean(restoring)}
                                     onClick={() => setRestoreCandidate(null)}
-                                >Cancel</Button>
+                                >{th('mw.community.project.cancel', 'Cancel')}</Button>
                                 <Button
                                     variant="primary"
                                     className={styles.confirmButton}
                                     busy={Boolean(restoring)}
-                                    busyLabel="Restoring…"
+                                    busyLabel={th('mw.community.project.restoring', 'Restoring…')}
                                     onClick={() => restore(restoreCandidate)}
-                                >Restore version</Button>
+                                >{th('mw.community.project.restoreVersion', 'Restore version')}</Button>
                             </React.Fragment>
                         )}
                     >
                         <p className={styles.confirmText}>
-                            <strong>{(restoreCandidate.message || 'Saved version').split('\n')[0]}</strong>
-                            {' '}will become the current project. Newer versions will stay in the history.
+                            <strong>{(restoreCandidate.message || th('mw.community.project.savedVersion', 'Saved version')).split('\n')[0]}</strong>
+                            {' '}{th('mw.community.project.restoreWillBecome', 'will become the current project. Newer versions will stay in the history.')}
                         </p>
                         {restoreError ? <p className={styles.confirmError}>{restoreError}</p> : null}
                     </Modal>
@@ -1989,6 +1990,7 @@ const HistoryList = ({id, history, canRestore, onChange}) => {
 
 const PullList = ({id, canMerge, onChange}) => {
     const intl = useIntl();
+    const tp = (id, defaultMessage, values) => intl.formatMessage({id, defaultMessage}, values);
     const [pulls, setPulls] = useState(null);
     const [loadError, setLoadError] = useState(false);
     const [openPull, setOpenPull] = useState(null);
@@ -2052,7 +2054,7 @@ const PullList = ({id, canMerge, onChange}) => {
                 baseCommit: data.pull.baseCommit,
                 headCommit: data.pull.headCommit
             });
-            fresh(setDiff)(inspected.diff || 'No textual changes.');
+            fresh(setDiff)(inspected.diff || tp('mw.community.project.noTextualChanges', 'No textual changes.'));
         } catch (e) {
             fresh(setDiff)(intl.formatMessage({id: 'mw.community.project.couldNotLoadDiff', defaultMessage: 'Could not load diff.'}));
         } finally {
@@ -2151,7 +2153,7 @@ const PullList = ({id, canMerge, onChange}) => {
             await uploadMerge(session.pull, session.data, actionId);
         } catch (e) {
             if (idRef.current === actionId) {
-                setMergeError(e.message || 'The conflicts could not be resolved.');
+                setMergeError(e.message || tp('mw.community.project.conflictsNotResolved', 'The conflicts could not be resolved.'));
             }
         } finally {
             actionLocks.current.delete(mergeLock);
@@ -2197,8 +2199,8 @@ const PullList = ({id, canMerge, onChange}) => {
                 {mergeError ? <div className={styles.actionError}>{mergeError}</div> : null}
                 {mergeSession ? (
                     <div className={styles.conflictEditor}>
-                        <h4>Resolve merge conflicts</h4>
-                        <p>Remove the conflict markers and leave the exact text this file should contain.</p>
+                        <h4>{tp('mw.community.project.resolveMergeConflicts', 'Resolve merge conflicts')}</h4>
+                        <p>{tp('mw.community.project.removeConflictMarkers', 'Remove the conflict markers and leave the exact text this file should contain.')}</p>
                         {mergeSession.conflicts.map(file => (
                             <label key={file.path} className={styles.conflictFile}>
                                 <span>{file.path}</span>
@@ -2223,7 +2225,7 @@ const PullList = ({id, canMerge, onChange}) => {
                                             binaryConflicts: session.binaryConflicts.map(item =>
                                                 (item.path === file.path ? {...item, choice: 'ours'} : item))
                                         }))}
-                                    >Keep current project</button>
+                                    >{tp('mw.community.project.keepCurrentProject', 'Keep current project')}</button>
                                     <button
                                         type="button"
                                         className={file.choice === 'theirs' ? styles.binaryChoiceActive : ''}
@@ -2233,7 +2235,7 @@ const PullList = ({id, canMerge, onChange}) => {
                                             binaryConflicts: session.binaryConflicts.map(item =>
                                                 (item.path === file.path ? {...item, choice: 'theirs'} : item))
                                         }))}
-                                    >Use fork version</button>
+                                    >{tp('mw.community.project.useForkVersion', 'Use fork version')}</button>
                                 </div>
                             </div>
                         ))}
@@ -2242,8 +2244,8 @@ const PullList = ({id, canMerge, onChange}) => {
                             className={styles.primary}
                             onClick={resolveConflicts}
                             busy={merging}
-                            busyLabel="Finishing merge…"
-                        >Save resolutions and merge</Button>
+                            busyLabel={tp('mw.community.project.finishingMerge', 'Finishing merge…')}
+                        >{tp('mw.community.project.saveResolutionsAndMerge', 'Save resolutions and merge')}</Button>
                     </div>
                 ) : null}
                 {canMerge && openPull.state === 'open' ? (
@@ -2302,6 +2304,8 @@ const ReviewStars = ({rating, onChange}) => (
 );
 
 const ReviewPanel = ({id, user, login, ownsProject}) => {
+    const {formatMessage: rf} = useIntl();
+    const tr = (id, defaultMessage, values) => rf({id, defaultMessage}, values);
     const viewerName = (user && user.username) || '';
     const reviewContext = `${id}\u0000${viewerName}`;
     const reviewContextRef = useRef(reviewContext);
@@ -2351,7 +2355,7 @@ const ReviewPanel = ({id, user, login, ownsProject}) => {
             return;
         }
         if (!rating) {
-            setStatus('Choose a star rating first.');
+            setStatus(tr('mw.community.project.chooseRating', 'Choose a star rating first.'));
             return;
         }
         actionLocks.current.add(actionContext);
@@ -2360,11 +2364,11 @@ const ReviewPanel = ({id, user, login, ownsProject}) => {
         try {
             await api.saveReview(id, reviewPayload(rating, message));
             if (reviewContextRef.current !== actionContext) return;
-            setStatus('Review saved.');
+            setStatus(tr('mw.community.project.reviewSaved', 'Review saved.'));
             load();
         } catch (e) {
             if (reviewContextRef.current === actionContext) {
-                setStatus(e.message || 'Could not save your review.');
+                setStatus(e.message || tr('mw.community.project.couldNotSaveReview', 'Could not save your review.'));
             }
         } finally {
             actionLocks.current.delete(actionContext);
@@ -2383,12 +2387,12 @@ const ReviewPanel = ({id, user, login, ownsProject}) => {
             if (reviewContextRef.current !== actionContext) return;
             setRating(0);
             setMessage('');
-            setStatus('Review deleted.');
+            setStatus(tr('mw.community.project.reviewDeleted', 'Review deleted.'));
             setDeleteConfirm(false);
             load();
         } catch (e) {
             if (reviewContextRef.current === actionContext) {
-                setStatus(e.message || 'Could not delete your review.');
+                setStatus(e.message || tr('mw.community.project.couldNotDeleteReview', 'Could not delete your review.'));
             }
         } finally {
             actionLocks.current.delete(actionContext);
@@ -2402,23 +2406,23 @@ const ReviewPanel = ({id, user, login, ownsProject}) => {
                 <strong>{summary.count ? summary.average.toFixed(1) : '0.0'}</strong>
                 <div>
                     <ReviewStars rating={Math.round(summary.average)} />
-                    <span>{summary.count} {summary.count === 1 ? 'review' : 'reviews'}</span>
+                    <span>{summary.count} {summary.count === 1 ? tr('mw.community.project.reviewSingular', 'review') : tr('mw.community.project.reviews', 'reviews')}</span>
                 </div>
             </div>
             {!ownsProject ? (
                 <form className={styles.reviewForm} onSubmit={submit}>
                     <div>
-                        <h3>{hasReview ? 'Your review' : 'Review this project'}</h3>
+                        <h3>{hasReview ? tr('mw.community.project.yourReview', 'Your review') : tr('mw.community.project.reviewThisProject', 'Review this project')}</h3>
                         <ReviewStars rating={rating} onChange={busy ? null : setRating} />
                     </div>
-                    <textarea value={message} disabled={Boolean(busy)} maxLength={2000} placeholder="What worked well? What should change?" onChange={event => setMessage(event.target.value)} />
+                    <textarea value={message} disabled={Boolean(busy)} maxLength={2000} placeholder={tr('mw.community.project.reviewPlaceholder', 'What worked well? What should change?')} onChange={event => setMessage(event.target.value)} />
                     <div className={styles.reviewActions}>
                         <Button
                             type="submit"
                             disabled={busy === 'delete'}
                             busy={busy === 'save'}
-                            busyLabel="Saving…"
-                        >{user ? 'Save review' : 'Sign in to review'}</Button>
+                            busyLabel={tr('mw.community.project.saving', 'Saving…')}
+                        >{user ? tr('mw.community.project.saveReview', 'Save review') : tr('mw.community.project.signInToReview', 'Sign in to review')}</Button>
                         {hasReview ? (
                             <Button
                                 type="button"
@@ -2428,15 +2432,15 @@ const ReviewPanel = ({id, user, login, ownsProject}) => {
                                     setStatus('');
                                     setDeleteConfirm(true);
                                 }}
-                            >Delete</Button>
+                            >{tr('mw.community.project.delete', 'Delete')}</Button>
                         ) : null}
                         {status ? <span>{status}</span> : null}
                     </div>
                 </form>
-            ) : <p className={styles.reviewOwnerHint}>You cannot review your own project.</p>}
-            {!reviews && !loadError ? <p className={styles.status}>Loading reviews…</p> : null}
-            {loadError ? <p className={styles.status}>Could not load reviews. <button type="button" onClick={load}>Try again</button></p> : null}
-            {reviews && !reviews.length ? <p className={styles.reviewEmpty}>No reviews yet.</p> : null}
+            ) : <p className={styles.reviewOwnerHint}>{tr('mw.community.project.cannotReviewOwn', 'You cannot review your own project.')}</p>}
+            {!reviews && !loadError ? <p className={styles.status}>{tr('mw.community.project.loadingReviews', 'Loading reviews…')}</p> : null}
+            {loadError ? <p className={styles.status}>{tr('mw.community.project.couldNotLoadReviews', 'Could not load reviews.')} <button type="button" onClick={load}>{tr('mw.community.project.tryAgain', 'Try again')}</button></p> : null}
+            {reviews && !reviews.length ? <p className={styles.reviewEmpty}>{tr('mw.community.project.noReviews', 'No reviews yet.')}</p> : null}
             {reviews && reviews.map(review => (
                 <article key={review._id} className={styles.reviewCard}>
                     <Link to={`/users/${review.author}`}><Avatar username={review.author} size={34} /></Link>
@@ -2453,7 +2457,7 @@ const ReviewPanel = ({id, user, login, ownsProject}) => {
             ))}
             {deleteConfirm ? (
                 <Modal
-                    title="Delete your review?"
+                    title={tr('mw.community.project.deleteReviewTitle', 'Delete your review?')}
                     onClose={() => setDeleteConfirm(false)}
                     dismissDisabled={Boolean(busy)}
                     actions={(
@@ -2463,18 +2467,18 @@ const ReviewPanel = ({id, user, login, ownsProject}) => {
                                 className={styles.confirmCancel}
                                 disabled={Boolean(busy)}
                                 onClick={() => setDeleteConfirm(false)}
-                            >Cancel</Button>
+                            >{tr('mw.community.project.cancel', 'Cancel')}</Button>
                             <Button
                                 variant="danger"
                                 className={`${styles.confirmButton} ${styles.deleteConfirmButton}`}
                                 busy={busy === 'delete'}
-                                busyLabel="Deleting…"
+                                busyLabel={tr('mw.community.project.deletingReview', 'Deleting…')}
                                 onClick={remove}
-                            >Delete review</Button>
+                            >{tr('mw.community.project.deleteReview', 'Delete review')}</Button>
                         </React.Fragment>
                     )}
                 >
-                    <p className={styles.confirmText}>Your rating and review text will be removed.</p>
+                    <p className={styles.confirmText}>{tr('mw.community.project.deleteReviewText', 'Your rating and review text will be removed.')}</p>
                     {status ? <p className={styles.confirmError}>{status}</p> : null}
                 </Modal>
             ) : null}
@@ -2483,6 +2487,8 @@ const ReviewPanel = ({id, user, login, ownsProject}) => {
 };
 
 const ReleaseList = ({id, isOwner, viewerName}) => {
+    const {formatMessage: rl} = useIntl();
+    const trl = (id, defaultMessage, values) => rl({id, defaultMessage}, values);
     const actionContext = `${id}\u0000${viewerName}`;
     const actionContextRef = useRef(actionContext);
     actionContextRef.current = actionContext;
@@ -2518,7 +2524,7 @@ const ReleaseList = ({id, isOwner, viewerName}) => {
         if (actionLocks.current.has(context)) return;
         const payload = releasePayload(form);
         if (!payload.version) {
-            setError('Enter a version before publishing.');
+            setError(trl('mw.community.project.enterVersion', 'Enter a version before publishing.'));
             return;
         }
         actionLocks.current.add(context);
@@ -2531,7 +2537,7 @@ const ReleaseList = ({id, isOwner, viewerName}) => {
             load();
         } catch (e) {
             if (actionContextRef.current === context) {
-                setError(e.message || 'Could not create the release.');
+                setError(e.message || trl('mw.community.project.couldNotCreateRelease', 'Could not create the release.'));
             }
         } finally {
             actionLocks.current.delete(context);
@@ -2543,29 +2549,29 @@ const ReleaseList = ({id, isOwner, viewerName}) => {
         <div className={styles.toolPanel}>
             {isOwner ? (
                 <form className={styles.inlineForm} onSubmit={create}>
-                    <h3>Publish a release</h3>
+                    <h3>{trl('mw.community.project.publishRelease', 'Publish a release')}</h3>
                     <div className={styles.inlineFields}>
-                        <input value={form.version} disabled={busy} required maxLength={50} placeholder="Version, such as 1.2.0" onChange={event => updateForm('version', event.target.value)} />
+                        <input value={form.version} disabled={busy} required maxLength={50} placeholder={trl('mw.community.project.versionPlaceholder', 'Version, such as 1.2.0')} onChange={event => updateForm('version', event.target.value)} />
                         <select value={form.channel} disabled={busy} onChange={event => updateForm('channel', event.target.value)}>
-                            <option value="stable">Stable</option>
-                            <option value="beta">Beta</option>
-                            <option value="development">Development</option>
+                            <option value="stable">{trl('mw.community.project.channel.stable', 'Stable')}</option>
+                            <option value="beta">{trl('mw.community.project.channel.beta', 'Beta')}</option>
+                            <option value="development">{trl('mw.community.project.channel.development', 'Development')}</option>
                         </select>
                     </div>
-                    <textarea value={form.notes} disabled={busy} placeholder="What changed?" onChange={event => updateForm('notes', event.target.value)} />
-                    <Button type="submit" disabled={busy}>{busy ? 'Publishing…' : 'Publish release'}</Button>
+                    <textarea value={form.notes} disabled={busy} placeholder={trl('mw.community.project.whatChanged', 'What changed?')} onChange={event => updateForm('notes', event.target.value)} />
+                    <Button type="submit" disabled={busy}>{busy ? trl('mw.community.project.publishing', 'Publishing…') : trl('mw.community.project.publishReleaseButton', 'Publish release')}</Button>
                     {error ? <p className={styles.actionError}>{error}</p> : null}
                 </form>
             ) : null}
-            {!releases && !loadError ? <p className={styles.status}>Loading releases…</p> : null}
-            {loadError ? <p className={styles.status}>Could not load releases. <button type="button" onClick={load}>Try again</button></p> : null}
-            {releases && !releases.length ? <p className={styles.status}>No releases yet.</p> : null}
+            {!releases && !loadError ? <p className={styles.status}>{trl('mw.community.project.loadingReleases', 'Loading releases…')}</p> : null}
+            {loadError ? <p className={styles.status}>{trl('mw.community.project.couldNotLoadReleases', 'Could not load releases.')} <button type="button" onClick={load}>{trl('mw.community.project.tryAgain', 'Try again')}</button></p> : null}
+            {releases && !releases.length ? <p className={styles.status}>{trl('mw.community.project.noReleases', 'No releases yet.')}</p> : null}
             {releases && releases.map(release => (
                 <article className={styles.release} key={release._id}>
                     <div><strong>{release.version}</strong> <span className={styles.releaseChannel}>{release.channel}</span></div>
                     <span className={styles.muted}>{timeAgo(release.created)}</span>
                     {release.notes ? <RichText text={release.notes} /> : null}
-                    {release.jsonUrl ? <a className={styles.primary} href={embedUrl({id, projectJsonUrl: release.jsonUrl, assetsBase: release.assetsBase})}>Play this release</a> : null}
+                    {release.jsonUrl ? <a className={styles.primary} href={embedUrl({id, projectJsonUrl: release.jsonUrl, assetsBase: release.assetsBase})}>{trl('mw.community.project.playThisRelease', 'Play this release')}</a> : null}
                 </article>
             ))}
         </div>
@@ -2573,6 +2579,8 @@ const ReleaseList = ({id, isOwner, viewerName}) => {
 };
 
 const ContributionPanel = ({id, sourceProjectId, user, viewerName, login}) => {
+    const {formatMessage: cf} = useIntl();
+    const tc = (id, defaultMessage, values) => cf({id, defaultMessage}, values);
     const actionContext = `${id}\u0000${sourceProjectId}\u0000${viewerName}`;
     const actionContextRef = useRef(actionContext);
     actionContextRef.current = actionContext;
@@ -2602,7 +2610,7 @@ const ContributionPanel = ({id, sourceProjectId, user, viewerName, login}) => {
         }
         const payload = contributionPayload(remixProjectId, title, body);
         if (!payload.remixProjectId || !payload.title) {
-            setStatus('Add a fork project ID and title before sending.');
+            setStatus(tc('mw.community.project.needForkIdTitle', 'Add a fork project ID and title before sending.'));
             return;
         }
         actionLocks.current.add(context);
@@ -2611,12 +2619,12 @@ const ContributionPanel = ({id, sourceProjectId, user, viewerName, login}) => {
         try {
             const data = await api.contribute(id, payload);
             if (actionContextRef.current !== context) return;
-            setStatus(`Contribution #${data.pull.index} sent.`);
+            setStatus(tc('mw.community.project.contributionSent', 'Contribution #{index} sent.', {index: data.pull.index}));
             setTitle('');
             setBody('');
         } catch (e) {
             if (actionContextRef.current === context) {
-                setStatus(e.message || 'Could not send the contribution.');
+                setStatus(e.message || tc('mw.community.project.couldNotSendContribution', 'Could not send the contribution.'));
             }
         } finally {
             actionLocks.current.delete(context);
@@ -2626,24 +2634,24 @@ const ContributionPanel = ({id, sourceProjectId, user, viewerName, login}) => {
 
     return (
         <form className={styles.inlineForm} onSubmit={submit}>
-            <h3>Send changes back</h3>
+            <h3>{tc('mw.community.project.sendChangesBack', 'Send changes back')}</h3>
             <p className={styles.muted}>
                 {sourceProjectId ?
-                    'Describe the changes on this fork and send them to its parent project.' :
-                    'Fork this project, make your changes, save them, then enter the fork project ID here.'}
+                    tc('mw.community.project.describeForkChanges', 'Describe the changes on this fork and send them to its parent project.') :
+                    tc('mw.community.project.describeForkHint', 'Fork this project, make your changes, save them, then enter the fork project ID here.')}
             </p>
             {!sourceProjectId ? (
                 <input
                     value={remixProjectId}
                     disabled={busy}
                     required
-                    placeholder="Your fork project ID"
+                    placeholder={tc('mw.community.project.forkProjectId', 'Your fork project ID')}
                     onChange={event => setRemixProjectId(event.target.value)}
                 />
             ) : null}
-            <input value={title} disabled={busy} required maxLength={200} placeholder="What did you change?" onChange={event => setTitle(event.target.value)} />
-            <textarea value={body} disabled={busy} placeholder="Anything the creator should know" onChange={event => setBody(event.target.value)} />
-            <Button type="submit" disabled={busy}>{busy ? 'Sending…' : user ? 'Send contribution' : 'Sign in to contribute'}</Button>
+            <input value={title} disabled={busy} required maxLength={200} placeholder={tc('mw.community.project.whatChanged', 'What did you change?')} onChange={event => setTitle(event.target.value)} />
+            <textarea value={body} disabled={busy} placeholder={tc('mw.community.project.anythingKnow', 'Anything the creator should know')} onChange={event => setBody(event.target.value)} />
+            <Button type="submit" disabled={busy}>{busy ? tc('mw.community.project.sending', 'Sending…') : user ? tc('mw.community.project.sendContribution', 'Send contribution') : tc('mw.community.project.signInToContribute', 'Sign in to contribute')}</Button>
             {status ? <p className={styles.muted}>{status}</p> : null}
         </form>
     );

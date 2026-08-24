@@ -3,9 +3,11 @@ import React, {useEffect, useState} from 'react';
 import {Link} from 'react-router-dom';
 import api from '../api';
 import Button from '../components/ui/Button.jsx';
+import {useCommunityIntl} from '../i18n.jsx';
 import styles from './InfoPage.module.css';
 
 const Trust = () => {
+    const {t: ct} = useCommunityIntl();
     const [agreement, setAgreement] = useState(null);
     const [attempt, setAttempt] = useState(0);
     useEffect(() => {
@@ -21,38 +23,38 @@ const Trust = () => {
     return (
         <main className={styles.page}>
             <header className={styles.head}>
-                <h1>Trust, privacy, and terms</h1>
-                <p>What MistWarp stores, how community moderation works, and the controls available to you.</p>
+                <h1>{ct('trust.title')}</h1>
+                <p>{ct('trust.lead')}</p>
             </header>
             <div className={styles.grid}>
                 <section className={styles.section}>
-                    <h2>Your account</h2>
-                    <p>Rotur provides MistWarp accounts and sign-in. MistWarp receives your Rotur username and account ID when you sign in. Rotur account security, credentials, and account recovery stay with Rotur.</p>
-                    <p><a href="https://rotur.dev/me" target="_blank" rel="noreferrer">Manage your Rotur account</a></p>
+                    <h2>{ct('trust.accountH')}</h2>
+                    <p>{ct('trust.accountBody')}</p>
+                    <p><a href="https://rotur.dev/me" target="_blank" rel="noreferrer">{ct('trust.manageRotur')}</a></p>
                 </section>
                 <section className={styles.section}>
-                    <h2>Your controls</h2>
-                    <p>You can export the data tied to your MistWarp profile, delete that data, mute users, and block interactions from your settings or a user profile.</p>
-                    <p><Link to="/settings?section=data">Open data settings</Link></p>
+                    <h2>{ct('trust.controlsH')}</h2>
+                    <p>{ct('trust.controlsBody')}</p>
+                    <p><Link to="/settings?section=data">{ct('trust.openData')}</Link></p>
                 </section>
             </div>
             <section className={styles.section}>
-                <h2>Privacy</h2>
-                <p>MistWarp stores the profile details you add, projects and their assets, comments, reactions, activity, notification history, settings, moderation records, and safety preferences. Project diagnostics may include load time, input device type, and a short runtime error. They do not include scripts, variable values, or the viewer&apos;s username.</p>
-                <p>Project blobs may be stored in Cloudflare R2. Project repositories and contribution history may be stored on git.rotur.dev. MistWarp uses Rotur for identity and notifications.</p>
-                <p>Public projects, profiles, comments, and activity can be seen by other people. Unlisted content is available to anyone with its link. Do not put private information in a project or public profile.</p>
-                <p>Deleting your MistWarp data deletes your MistWarp projects and does not delete your Rotur account. Public comments are anonymized where removing them would break conversations.</p>
+                <h2>{ct('trust.privacyH')}</h2>
+                <p>{ct('trust.privacyBody1')}</p>
+                <p>{ct('trust.privacyBody2')}</p>
+                <p>{ct('trust.privacyBody3')}</p>
+                <p>{ct('trust.privacyBody4')}</p>
             </section>
             <section className={styles.section}>
-                <h2>Community terms</h2>
-                {agreement === null ? <p>Loading the current community agreement…</p> : null}
-                {agreement === false ? <p>Could not load the current agreement. <Button onClick={() => setAttempt(value => value + 1)}>Try again</Button></p> : null}
+                <h2>{ct('trust.termsH')}</h2>
+                {agreement === null ? <p>{ct('trust.loadingAgreement')}</p> : null}
+                {agreement === false ? <p>{ct('trust.loadFailed')} <Button onClick={() => setAttempt(value => value + 1)}>{ct('trust.tryAgain')}</Button></p> : null}
                 {agreement ? <div className={styles.agreement}>{agreement.text}</div> : null}
             </section>
             <section className={styles.section}>
-                <h2>Moderation and appeals</h2>
-                <p>Use the report button on a project, profile, or comment when another user or piece of content breaks the community rules. Reports go to MistWarp moderators.</p>
-                <p>If you think an account action was wrong, send a moderation appeal through <Link to="/support?topic=appeal">support</Link>. Include the affected Rotur username and explain what you want reviewed.</p>
+                <h2>{ct('trust.moderationH')}</h2>
+                <p>{ct('trust.moderationBody')}</p>
+                <p>{ct('trust.appealIntro')} <Link to="/support?topic=appeal">{ct('trust.appealLink')}</Link>{ct('trust.appealOutro')}</p>
             </section>
         </main>
     );

@@ -26,21 +26,23 @@ import styles from './MyStuff.module.css';
 const fmt = value => (Number(value) || 0).toLocaleString();
 const fmtCredits = value => Math.round((Number(value) || 0) * 100) / 100;
 
-const uploadErrorTarget = (agreementAccepted, error) => {
+const uploadErrorTarget = (agreementAccepted, error, t) => {
     const message = error && error.message;
     return agreementAccepted ? {
-        actionError: message || 'Could not upload that project.',
+        actionError: message || t('mw.community.myStuff.couldNotUpload', 'Could not upload that project.'),
         agreementError: ''
     } : {
         actionError: '',
-        agreementError: message || 'Could not accept agreement.'
+        agreementError: message || t('mw.community.myStuff.couldNotAcceptAgreement', 'Could not accept agreement.')
     };
 };
 
-const uploadProgressLabel = (loaded, total) => {
-    if (!(total > 0)) return 'Uploading…';
+const uploadProgressLabel = (loaded, total, t) => {
+    if (!(total > 0)) return t('mw.community.myStuff.uploading', 'Uploading…');
     const percent = Math.min(100, Math.max(0, Math.round((loaded / total) * 100)));
-    return percent >= 100 ? 'Processing on server…' : `Uploading ${percent}%`;
+    return percent >= 100 ?
+        t('mw.community.myStuff.processingOnServer', 'Processing on server…') :
+        t('mw.community.myStuff.uploadingPercent', 'Uploading {percent}%', {percent});
 };
 
 const shouldRefreshProjectsAfterUploadError = error =>
@@ -74,8 +76,8 @@ const intl = useIntl();
             await openCreditCheckout(CREDIT_PACKS[1]);
         } catch (e) {
             setBuyError(e.needsReauth ?
-                'Your current login cannot buy credits. Log out and back in, then try again.' :
-                (e.message || 'Could not open checkout.'));
+                t('mw.community.myStuff.buyCreditsReauth', 'Your current login cannot buy credits. Log out and back in, then try again.') :
+                (e.message || t('mw.community.myStuff.couldNotOpenCheckout', 'Could not open checkout.')));
         } finally {
             releaseBuy();
             setBuyBusy(false);
@@ -132,7 +134,7 @@ const intl = useIntl();
                             className={styles.dashBuy}
                             onClick={buyCredits}
                             busy={buyBusy}
-                            busyLabel="Opening…"
+                            busyLabel={t('mw.community.myStuff.opening', 'Opening…')}
                         >{t('mw.community.myStuff.buyCredits', 'Buy credits')}</Button>
                         {buyError ? <span className={styles.error}>{buyError}</span> : null}
                     </div>
@@ -302,7 +304,7 @@ const UploadUsage = ({quota, onRefresh}) => {
                         className={styles.uploadResetBtn}
                         onClick={handleReset}
                         busy={resetting}
-                        busyLabel="Starting…"
+                        busyLabel={t('mw.community.myStuff.starting', 'Starting…')}
                     >
                         <RefreshCw size={16} />
 {resetting ?
@@ -394,12 +396,12 @@ const AgreementTab = () => {
     if (loadError) {
         return (
             <p className={styles.status}>
-                Could not load the agreement.{' '}
+                {t('mw.community.myStuff.couldNotLoadAgreement', 'Could not load the agreement.')}{' '}
                 <button
                     type="button"
                     className={styles.secondary}
                     onClick={() => setAttempt(value => value + 1)}
-                >Try again</button>
+                >{t('mw.community.myStuff.tryAgain', 'Try again')}</button>
             </p>
         );
     }
@@ -444,7 +446,7 @@ const AgreementTab = () => {
                             className={styles.agreementAcceptBtn}
                             onClick={handleAccept}
                             busy={busy}
-                            busyLabel="Accepting…"
+                            busyLabel={t('mw.community.myStuff.accepting', 'Accepting…')}
                         >
 {busy ?
                                 t('mw.community.myStuff.accepting', 'Accepting…') :
@@ -668,7 +670,7 @@ const MyStuff = () => {
             refreshUsage();
         } catch (e) {
             if (accountContextRef.current === context) {
-                setActionError(e.message || 'Could not unshare this project.');
+                setActionError(e.message || t('mw.community.myStuff.unshareFailed', 'Could not unshare this project.'));
             }
         } finally {
             releaseAccountAction(actionKey);
@@ -689,7 +691,7 @@ const MyStuff = () => {
             refreshUsage();
         } catch (e) {
             if (accountContextRef.current === context) {
-                setActionError(e.message || 'Could not share this project.');
+                setActionError(e.message || t('mw.community.myStuff.shareFailed', 'Could not share this project.'));
             }
         } finally {
             releaseAccountAction(actionKey);
@@ -715,7 +717,7 @@ const MyStuff = () => {
             refreshUsage();
         } catch (e) {
             if (accountContextRef.current === context) {
-                setActionError(e.message || 'Could not delete this project.');
+                setActionError(e.message || t('mw.community.myStuff.deleteFailed', 'Could not delete this project.'));
             }
         } finally {
             releaseAccountAction(actionKey);
@@ -738,7 +740,7 @@ const MyStuff = () => {
             if (accountContextRef.current === context) setFeaturedProject(next);
         } catch (e) {
             if (accountContextRef.current === context) {
-                setActionError(e.message || 'Could not update the featured project.');
+                setActionError(e.message || t('mw.community.myStuff.featureFailed', 'Could not update the featured project.'));
             }
         } finally {
             releaseAccountAction(actionKey);
@@ -784,7 +786,7 @@ const MyStuff = () => {
 
         setActionError('');
         setUploading(true);
-        setUploadStatus('Uploading…');
+        setUploadStatus(t('mw.community.myStuff.uploading', 'Uploading…'));
 
         // Check agreement acceptance before allowing upload, show modal if needed
         try {
@@ -805,7 +807,7 @@ const MyStuff = () => {
             }
         } catch (e) {
             if (accountContextRef.current === context) {
-                setActionError('Could not check the community agreement. Try the upload again.');
+                setActionError(t('mw.community.myStuff.checkAgreementFailed', 'Could not check the community agreement. Try the upload again.'));
                 setUploading(false);
                 setUploadStatus('');
             }
@@ -816,7 +818,7 @@ const MyStuff = () => {
         try {
             await createFromSb3(file, (loaded, total) => {
                 if (accountContextRef.current === context) {
-                    setUploadStatus(uploadProgressLabel(loaded, total));
+                    setUploadStatus(uploadProgressLabel(loaded, total, t));
                 }
             });
             if (accountContextRef.current !== context) return;
@@ -858,11 +860,11 @@ const MyStuff = () => {
             // Run the upload
             setActionError('');
             setUploading(true);
-            setUploadStatus('Uploading…');
-            if (!file) throw new Error('Choose the project file again.');
+            setUploadStatus(t('mw.community.myStuff.uploading', 'Uploading…'));
+            if (!file) throw new Error(t('mw.community.myStuff.chooseFileAgain', 'Choose the project file again.'));
             await createFromSb3(file, (loaded, total) => {
                 if (accountContextRef.current === context) {
-                    setUploadStatus(uploadProgressLabel(loaded, total));
+                    setUploadStatus(uploadProgressLabel(loaded, total, t));
                 }
             });
             if (accountContextRef.current !== context) return;
@@ -870,7 +872,7 @@ const MyStuff = () => {
             load();
         } catch (e) {
             if (accountContextRef.current === context) {
-                const target = uploadErrorTarget(agreementAccepted, e);
+                const target = uploadErrorTarget(agreementAccepted, e, t);
                 if (target.actionError) setActionError(target.actionError);
                 if (target.agreementError) setAgreeError(target.agreementError);
                 if (agreementAccepted && shouldRefreshProjectsAfterUploadError(e)) {
@@ -905,7 +907,7 @@ const MyStuff = () => {
     if (!user) {
         return (
             <main className={styles.page}>
-                <p className={styles.status}>{t('mw.community.myStuff.signIn', 'Sign in to see your projects.')} <Button onClick={login}>Sign in</Button></p>
+                <p className={styles.status}>{t('mw.community.myStuff.signIn', 'Sign in to see your projects.')} <Button onClick={login}>{t('mw.community.myStuff.signInBtn', 'Sign in')}</Button></p>
             </main>
         );
     }
@@ -931,7 +933,7 @@ const MyStuff = () => {
                         variant="primary"
                         className={styles.uploadButton}
                         busy={uploading}
-                        busyLabel={uploadStatus || 'Uploading…'}
+                        busyLabel={uploadStatus || t('mw.community.myStuff.uploading', 'Uploading…')}
                         onClick={() => uploadInput.current && uploadInput.current.click()}
                     >
                         <Upload size={16} />
@@ -1009,7 +1011,7 @@ const MyStuff = () => {
 
             {deleteConfirmProject ? (
                 <Modal
-                    title="Delete project?"
+                    title={t('mw.community.myStuff.deleteProjectTitle', 'Delete project?')}
                     onClose={dismissDeleteConfirm}
                     dismissDisabled={Boolean(deleteBusy)}
                     actions={(
@@ -1019,20 +1021,21 @@ const MyStuff = () => {
                                 className={styles.secondary}
                                 disabled={Boolean(deleteBusy)}
                                 onClick={dismissDeleteConfirm}
-                            >Cancel</Button>
+                            >{t('mw.community.myStuff.cancel', 'Cancel')}</Button>
                             <Button
                                 variant="danger"
                                 className={`${styles.secondary} ${styles.danger}`}
                                 busy={Boolean(deleteBusy)}
-                                busyLabel="Deleting…"
+                                busyLabel={t('mw.community.myStuff.deleting', 'Deleting…')}
                                 onClick={() => deleteProject(deleteConfirmProject.id)}
-                            >Delete project</Button>
+                            >{t('mw.community.myStuff.deleteProjectBtn', 'Delete project')}</Button>
                         </React.Fragment>
                     )}
                 >
                     <p className={styles.confirmText}>
-                        <strong>{deleteConfirmProject.title}</strong> will be deleted permanently.
-                        {' '}This cannot be undone.
+                        <strong>{deleteConfirmProject.title}</strong> {t('mw.community.myStuff.deletePermanently',
+                            'will be deleted permanently.')}
+                        {' '}{t('mw.community.myStuff.cannotUndo', 'This cannot be undone.')}
                     </p>
                 </Modal>
             ) : null}
@@ -1151,10 +1154,10 @@ const MyStuff = () => {
                                                     className={styles.secondary}
                                                     disabled={Boolean(projectAction)}
                                                     busy={visibilityBusy}
-                                                    busyLabel="Updating…"
+                                                    busyLabel={t('mw.community.myStuff.updating', 'Updating…')}
                                                     onClick={() => unpublish(project.id)}
                                                 >
-                                                    Unshare
+                                                    {t('mw.community.myStuff.unshare', 'Unshare')}
                                                 </Button>
                                             ) : (
                                                 <Button
@@ -1162,10 +1165,10 @@ const MyStuff = () => {
                                                     className={styles.secondary}
                                                     disabled={Boolean(projectAction)}
                                                     busy={visibilityBusy}
-                                                    busyLabel="Updating…"
+                                                    busyLabel={t('mw.community.myStuff.updating', 'Updating…')}
                                                     onClick={() => publish(project.id)}
                                                 >
-                                                    Share
+                                                    {t('mw.community.myStuff.share', 'Share')}
                                                 </Button>
                                             )}
                                             <Dropdown
@@ -1175,7 +1178,7 @@ const MyStuff = () => {
                                                     <IconButton
                                                         variant="secondary"
                                                         className={styles.moreButton}
-                                                        label={`Actions for ${project.title}`}
+                                                        label={t('mw.community.myStuff.actionsFor', 'Actions for {title}', {title: project.title})}
                                                         aria-expanded={open}
                                                         aria-haspopup="menu"
                                                         disabled={Boolean(projectAction)}
@@ -1201,7 +1204,7 @@ const MyStuff = () => {
                                                         <div className={styles.menuSeparator} role="separator" />
                                                         <Link to={`/mystuff/project/${project.id}`} onClick={close}>
                                                             <SlidersHorizontal size={14} />
-                                                            Manage &amp; analytics
+                                                            {t('mw.community.myStuff.manageAnalytics', 'Manage & analytics')}
                                                         </Link>
                                                         <button
                                                             type="button"
@@ -1211,7 +1214,7 @@ const MyStuff = () => {
                                                             }}
                                                         >
                                                             <Library size={14} />
-                                                            Save to collection
+                                                            {t('mw.community.myStuff.saveToCollection', 'Save to collection')}
                                                         </button>
                                                         {project.shared ? (
                                                             <button

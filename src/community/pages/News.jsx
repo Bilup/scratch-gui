@@ -5,6 +5,7 @@ import {useUser} from '../UserContext.jsx';
 import NewsItem from '../components/NewsItem.jsx';
 import Button from '../components/ui/Button.jsx';
 import useLatest from '../use-latest.js';
+import {useCommunityIntl} from '../i18n.jsx';
 import styles from './News.module.css';
 
 const newsPollReady = (category, options) =>
@@ -19,6 +20,7 @@ const newsLinkReady = (label, url) => {
 
 const News = () => {
     const intl = useIntl();
+    const {t: ct} = useCommunityIntl();
     const {user} = useUser();
     const viewerName = (user && user.username) || '';
     const [items, setItems] = useState(null);
@@ -49,11 +51,11 @@ const News = () => {
         const options = pollOptions.map(option => option.trim()).filter(Boolean);
         if (!title.trim() || !body.trim() || busy) return;
         if (!newsPollReady(category, pollOptions)) {
-            setError('Add at least two poll options.');
+            setError(ct('news.minTwoPollOptions', 'Add at least two poll options.'));
             return;
         }
         if (!newsLinkReady(linkLabel, linkUrl)) {
-            setError('Add both a button label and a valid https:// or internal / link.');
+            setError(ct('news.invalidLink', 'Add both a button label and a valid https:// or internal / link.'));
             return;
         }
         setBusy(true);
@@ -120,49 +122,49 @@ const News = () => {
                     />
                     <div className={styles.composerRow}>
                         <label>
-                            <span>Post type</span>
+                            <span>{ct('news.postType', 'Post type')}</span>
                             <select
                                 value={category}
                                 disabled={busy}
                                 onChange={event => setCategory(event.target.value)}
                             >
-                                <option value="update">Update</option>
-                                <option value="release">Release</option>
-                                <option value="event">Event</option>
-                                <option value="poll">Poll</option>
-                                <option value="general">General</option>
+                                <option value="update">{ct('news.typeUpdate', 'Update')}</option>
+                                <option value="release">{ct('news.typeRelease', 'Release')}</option>
+                                <option value="event">{ct('news.typeEvent', 'Event')}</option>
+                                <option value="poll">{ct('news.typePoll', 'Poll')}</option>
+                                <option value="general">{ct('news.typeGeneral', 'General')}</option>
                             </select>
                         </label>
                         <label>
-                            <span>Button label</span>
+                            <span>{ct('news.buttonLabel', 'Button label')}</span>
                             <input
                                 value={linkLabel}
                                 disabled={busy}
                                 maxLength={60}
-                                placeholder="Read more"
+                                placeholder={ct('news.readMore', 'Read more')}
                                 onChange={event => setLinkLabel(event.target.value)}
                             />
                         </label>
                         <label>
-                            <span>Button link</span>
+                            <span>{ct('news.buttonLink', 'Button link')}</span>
                             <input
                                 value={linkUrl}
                                 disabled={busy}
                                 maxLength={500}
-                                placeholder="https:// or /project/..."
+                                placeholder={ct('news.linkPlaceholder', 'https:// or /project/...')}
                                 onChange={event => setLinkUrl(event.target.value)}
                             />
                         </label>
                     </div>
                     {category === 'poll' ? (
                         <fieldset className={styles.pollEditor} disabled={busy}>
-                            <legend>Poll options</legend>
+                            <legend>{ct('news.pollOptions', 'Poll options')}</legend>
                             {pollOptions.map((option, index) => (
                                 <div key={index}>
                                     <input
                                         value={option}
                                         maxLength={120}
-                                        placeholder={`Option ${index + 1}`}
+                                        placeholder={ct('news.optionPlaceholder', 'Option {n}').replace('{n}', index + 1)}
                                         onChange={event => setPollOptions(current => current.map(
                                             (value, optionIndex) => (optionIndex === index ? event.target.value : value)
                                         ))}
@@ -173,7 +175,7 @@ const News = () => {
                                             onClick={() => setPollOptions(current => current.filter(
                                                 (value, optionIndex) => optionIndex !== index
                                             ))}
-                                        >Remove</button>
+                                        >{ct('news.remove', 'Remove')}</button>
                                     ) : null}
                                 </div>
                             ))}
@@ -181,7 +183,7 @@ const News = () => {
                                 <button
                                     type="button"
                                     onClick={() => setPollOptions(current => [...current, ''])}
-                                >Add option</button>
+                                >{ct('news.addOption', 'Add option')}</button>
                             ) : null}
                         </fieldset>
                     ) : null}
@@ -192,7 +194,7 @@ const News = () => {
                         type="submit"
                         disabled={busy || !title.trim() || !body.trim()}
 busy={busy}
-                        busyLabel="Posting…"
+                        busyLabel={ct('news.posting', 'Posting…')}
                     >{intl.formatMessage({
                         id: 'mw.community.news.postUpdate',
                         defaultMessage: 'Post update'

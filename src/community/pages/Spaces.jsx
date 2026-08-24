@@ -8,22 +8,23 @@ import Button from '../components/ui/Button.jsx';
 import ChallengeCalendar from '../components/ChallengeCalendar.jsx';
 import SectionTabs from '../components/SectionTabs.jsx';
 import SpaceCard from '../components/SpaceCard.jsx';
+import {useCommunityIntl} from '../i18n.jsx';
 import styles from './Spaces.module.css';
 
 const KINDS = [
-    {key: '', label: 'Everything'},
-    {key: 'mine', label: 'Your spaces'},
-    {key: 'studio', label: 'Studios'},
-    {key: 'challenge', label: 'Challenges'},
-    {key: 'collection', label: 'Collections'}
+    {key: '', labelKey: 'spaces.kindAll'},
+    {key: 'mine', labelKey: 'spaces.kindMine'},
+    {key: 'studio', labelKey: 'spaces.kindStudio'},
+    {key: 'challenge', labelKey: 'spaces.kindChallenge'},
+    {key: 'collection', labelKey: 'spaces.kindCollection'}
 ];
 
 const KIND_ICONS = {studio: Layers3, challenge: Trophy, collection: Library};
-const KIND_LABELS = {studio: 'Studio', challenge: 'Challenge', collection: 'Collection'};
+const KIND_LABELS = {studio: 'spaces.typeStudio', challenge: 'spaces.typeChallenge', collection: 'spaces.typeCollection'};
 const KIND_DESCRIPTIONS = {
-    studio: 'A shared place where curators organise projects and accept submissions.',
-    challenge: 'A timed event where people make projects around a prompt.',
-    collection: 'A curated project list with submissions closed by default.'
+    studio: 'spaces.descStudio',
+    challenge: 'spaces.descChallenge',
+    collection: 'spaces.descCollection'
 };
 const withSpaceQuery = (params, query) => {
     const next = new URLSearchParams(params);
@@ -45,6 +46,7 @@ const spaceCreatePayload = form => ({
 
 const Spaces = () => {
     const {user, login} = useUser();
+    const {t: ct} = useCommunityIntl();
     const viewerName = (user && user.username) || '';
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
@@ -129,7 +131,7 @@ const Spaces = () => {
             }
         } catch (e) {
             if (currentViewer.current === actionViewer) {
-                setError(e.message || 'Could not create the space.');
+                setError(e.message || ct('spaces.createFailed', 'Could not create the space.'));
             }
         } finally {
             createLocks.current.delete(actionViewer);
@@ -141,31 +143,31 @@ const Spaces = () => {
         <main className={styles.page}>
             <header className={styles.hero}>
                 <div>
-                    <h1>Spaces</h1>
-                    <p>Collect projects, run a challenge, or build something with a group.</p>
+                    <h1>{ct('spaces.title')}</h1>
+                    <p>{ct('spaces.lead')}</p>
                 </div>
                 <Button
                     disabled={createBusy}
                     onClick={() => (user ? setCreating(value => !value) : login())}
                 >
                     <Plus size={16} />
-                    New space
+                    {ct('spaces.newSpace')}
                 </Button>
             </header>
 
             {creating ? (
                 <form className={styles.form} onSubmit={create} aria-busy={createBusy}>
-                    <h2>Create a space</h2>
+                    <h2>{ct('spaces.createTitle')}</h2>
                     <label>
-                        <span>Name</span>
+                        <span>{ct('spaces.name')}</span>
                         <input value={form.title} disabled={createBusy} maxLength={100} required onChange={event => updateForm('title', event.target.value)} />
                     </label>
                     <label>
-                        <span>What is it for?</span>
+                        <span>{ct('spaces.purpose')}</span>
                         <textarea value={form.description} disabled={createBusy} maxLength={5000} onChange={event => updateForm('description', event.target.value)} />
                     </label>
                     <fieldset className={styles.typeChoices} disabled={createBusy}>
-                        <legend>Type</legend>
+                        <legend>{ct('spaces.type')}</legend>
                         <div>
                             {Object.keys(KIND_DESCRIPTIONS).map(key => {
                                 const Icon = KIND_ICONS[key];
@@ -173,43 +175,43 @@ const Spaces = () => {
                                     <label key={key} className={form.kind === key ? styles.typeChoiceActive : styles.typeChoice}>
                                         <input type="radio" name="space-kind" value={key} checked={form.kind === key} onChange={event => updateForm('kind', event.target.value)} />
                                         <Icon size={18} />
-                                        <span><strong>{KIND_LABELS[key]}</strong><small>{KIND_DESCRIPTIONS[key]}</small></span>
+                                        <span><strong>{ct(KIND_LABELS[key])}</strong><small>{ct(KIND_DESCRIPTIONS[key])}</small></span>
                                     </label>
                                 );
                             })}
                         </div>
                     </fieldset>
                     <label>
-                        <span>Visibility</span>
+                        <span>{ct('spaces.visibility')}</span>
                         <select value={form.visibility} disabled={createBusy} onChange={event => updateForm('visibility', event.target.value)}>
-                            <option value="public">Public</option>
-                            <option value="unlisted">Unlisted</option>
-                            <option value="private">Private</option>
+                            <option value="public">{ct('spaces.visPublic')}</option>
+                            <option value="unlisted">{ct('spaces.visUnlisted')}</option>
+                            <option value="private">{ct('spaces.visPrivate')}</option>
                         </select>
                     </label>
                     {form.kind === 'challenge' ? (
                         <div className={styles.formRow}>
-                            <label><span>Submissions open</span><input type="datetime-local" disabled={createBusy} required value={form.startsAt} onChange={event => updateForm('startsAt', event.target.value)} /></label>
-                            <label><span>Submissions close</span><input type="datetime-local" disabled={createBusy} required value={form.endsAt} onChange={event => updateForm('endsAt', event.target.value)} /></label>
+                            <label><span>{ct('spaces.subOpen')}</span><input type="datetime-local" disabled={createBusy} required value={form.startsAt} onChange={event => updateForm('startsAt', event.target.value)} /></label>
+                            <label><span>{ct('spaces.subClose')}</span><input type="datetime-local" disabled={createBusy} required value={form.endsAt} onChange={event => updateForm('endsAt', event.target.value)} /></label>
                         </div>
                     ) : null}
                     {error ? <p className={styles.error}>{error}</p> : null}
                     <div className={styles.actions}>
-                        <Button type="submit" busy={createBusy} busyLabel="Creating…">Create</Button>
-                        <Button variant="secondary" type="button" disabled={createBusy} onClick={() => setCreating(false)}>Cancel</Button>
+                        <Button type="submit" busy={createBusy} busyLabel={ct('spaces.creating', 'Creating…')}>{ct('spaces.create')}</Button>
+                        <Button variant="secondary" type="button" disabled={createBusy} onClick={() => setCreating(false)}>{ct('common.cancel', 'Cancel')}</Button>
                     </div>
                 </form>
             ) : null}
 
             <div className={styles.browseTools}>
                 <SectionTabs
-                    items={KINDS}
+                    items={KINDS.map(item => ({key: item.key, label: ct(item.labelKey)}))}
                     value={kind}
                     onChange={changeKind}
                     className={styles.tabs}
                     itemClassName={styles.tab}
                     activeClassName={styles.tabActive}
-                    ariaLabel="Space types"
+                    ariaLabel={ct('spaces.typeAria', 'Space types')}
                 />
                 <form
                     className={styles.spaceSearch}
@@ -221,15 +223,15 @@ const Spaces = () => {
                     }}
                 >
                     <Search size={16} />
-                    <input value={query} onChange={event => setQuery(event.target.value)} placeholder={kind === 'mine' ? 'Search your spaces' : 'Search spaces'} />
-                    <button type="submit">Search</button>
+                    <input value={query} onChange={event => setQuery(event.target.value)} placeholder={kind === 'mine' ? ct('spaces.searchMine') : ct('spaces.search')} />
+                    <button type="submit">{ct('spaces.searchBtn', 'Search')}</button>
                 </form>
             </div>
 
-            {loading ? <p className={styles.status}>Loading spaces…</p> : null}
-            {failed ? <p className={styles.status}>Could not load spaces. <Button onClick={() => load(requestedQuery)}>Try again</Button></p> : null}
-            {!loading && !failed && kind === 'mine' && !user ? <p className={styles.status}>Sign in to see spaces you own, curate, follow, or have been invited to. <Button onClick={login}>Sign in</Button></p> : null}
-            {!loading && !failed && !(kind === 'mine' && !user) && !spaces.length ? <p className={styles.status}>No spaces here yet.</p> : null}
+            {loading ? <p className={styles.status}>{ct('spaces.loading')}</p> : null}
+            {failed ? <p className={styles.status}>{ct('spaces.loadFailed')} <Button onClick={() => load(requestedQuery)}>{ct('common.tryAgain', 'Try again')}</Button></p> : null}
+            {!loading && !failed && kind === 'mine' && !user ? <p className={styles.status}>{ct('spaces.signInMine')} <Button onClick={login}>{ct('common.signIn', 'Sign in')}</Button></p> : null}
+            {!loading && !failed && !(kind === 'mine' && !user) && !spaces.length ? <p className={styles.status}>{ct('spaces.none')}</p> : null}
             {!loading && !failed && kind === 'challenge' && spaces.length ? <ChallengeCalendar spaces={spaces} /> : null}
             <div className={styles.grid}>
                 {spaces.map(space => <SpaceCard key={space._id} space={space} to={`/spaces/${space._id}`} />)}

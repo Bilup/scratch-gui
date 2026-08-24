@@ -9,14 +9,26 @@ import Avatar from '../components/Avatar.jsx';
 import Button from '../components/ui/Button.jsx';
 import SectionTabs from '../components/SectionTabs.jsx';
 import {useUser} from '../UserContext.jsx';
+import {useCommunityIntl} from '../i18n.jsx';
 import styles from './Explore.module.css';
 
 const SORTS = [
-    {key: 'trending', label: 'Trending'},
-    {key: 'recent', label: 'Recent'},
-    {key: 'loved', label: 'Most loved'},
-    {key: 'undiscovered', label: 'Undiscovered'}
+    {key: 'trending', labelKey: 'explore.sortTrending'},
+    {key: 'recent', labelKey: 'explore.sortRecent'},
+    {key: 'loved', labelKey: 'explore.sortLoved'},
+    {key: 'undiscovered', labelKey: 'explore.sortUndiscovered'}
 ];
+
+const CATEGORY_LABELS = {
+    games: 'explore.catGames',
+    animation: 'explore.catAnimation',
+    art: 'explore.catArt',
+    music: 'explore.catMusic',
+    tools: 'explore.catTools',
+    tutorial: 'explore.catTutorial',
+    multiplayer: 'explore.catMultiplayer',
+    mobile: 'explore.catMobile'
+};
 
 const CATEGORIES = ['games', 'animation', 'art', 'music', 'tools', 'tutorial', 'multiplayer', 'mobile'];
 const PAGE_SIZE = 24;
@@ -46,6 +58,7 @@ const shouldSkipPageRestore = (expectedParams, currentParams) => (
 
 const Explore = () => {
     const {user} = useUser();
+    const {t} = useCommunityIntl();
     const viewerName = (user && user.username) || '';
     const [params, setParams] = useSearchParams();
     const requestedSort = params.get('sort') || 'trending';
@@ -139,7 +152,7 @@ const Explore = () => {
             }
             setTotal(data.total || 0);
         } catch (requestError) {
-            if (loadMoreVersion.current === version) setLoadMoreError(requestError.message || 'Could not load more projects.');
+            if (loadMoreVersion.current === version) setLoadMoreError(requestError.message || t('explore.failedLoadMore'));
         } finally {
             loadMoreLocks.current.delete(version);
             if (loadMoreVersion.current === version) setLoadingMore(false);
@@ -149,21 +162,21 @@ const Explore = () => {
     return (
         <main className={styles.page}>
             <div className={styles.head}>
-                <h1>{q ? `Results for "${q}"` : 'Explore'}</h1>
+                <h1>{q ? `${t('explore.resultsFor')} "${q}"` : t('explore.title')}</h1>
                 <SectionTabs
-                    items={SORTS}
+                    items={SORTS.map(option => ({key: option.key, label: t(option.labelKey)}))}
                     value={sort}
                     onChange={setSort}
                     className={styles.tabs}
                     itemClassName={styles.tab}
                     activeClassName={styles.tabActive}
-                    ariaLabel="Project sorting"
+                    ariaLabel={t('explore.sortAria')}
                 />
             </div>
             <div className={styles.categories}>
-                <button type="button" className={!tag ? styles.categoryActive : styles.category} onClick={() => setTag('')}>All</button>
+                <button type="button" className={!tag ? styles.categoryActive : styles.category} onClick={() => setTag('')}>{t('explore.all')}</button>
                 {CATEGORIES.map(category => (
-                    <button type="button" key={category} className={tag === category ? styles.categoryActive : styles.category} onClick={() => setTag(category)}>#{category}</button>
+                    <button type="button" key={category} className={tag === category ? styles.categoryActive : styles.category} onClick={() => setTag(category)}>#{t(CATEGORY_LABELS[category])}</button>
                 ))}
             </div>
             {people.length ? (
@@ -244,8 +257,8 @@ const Explore = () => {
             )}
             {!loading && !failed && projects.length < total ? (
                 <div className={styles.more}>
-                    <Button busy={loadingMore} busyLabel="Loading…" onClick={loadMore}>
-                        {`Load more (${total - projects.length} left)`}
+                    <Button busy={loadingMore} busyLabel={t('common.loading')} onClick={loadMore}>
+                        {`${t('explore.loadMore')} (${total - projects.length} ${t('explore.left')})`}
                     </Button>
                     {loadMoreError ? <span role="alert">{loadMoreError}</span> : null}
                 </div>

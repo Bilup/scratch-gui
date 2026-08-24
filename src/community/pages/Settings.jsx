@@ -43,10 +43,10 @@ const PROJECT_THEME_MODES = [
     {value: 'none', labelKey: 'mw.community.settings.none', labelDefault: 'Never'}
 ];
 const THEME_TABS = [
-    {key: 'appearance', label: 'Appearance'},
-    {key: 'projects', label: 'Projects'},
-    {key: 'custom', label: 'Custom'},
-    {key: 'marketplace', label: 'Marketplace'}
+    {key: 'appearance', labelKey: 'settings.themeTabAppearance', labelDefault: 'Appearance'},
+    {key: 'projects', labelKey: 'settings.themeTabProjects', labelDefault: 'Projects'},
+    {key: 'custom', labelKey: 'settings.themeTabCustom', labelDefault: 'Custom'},
+    {key: 'marketplace', labelKey: 'settings.themeTabMarketplace', labelDefault: 'Marketplace'}
 ];
 const getProjectThemeMode = () => {
     try {
@@ -78,10 +78,10 @@ const settingsThemeTab = value => {
 };
 
 const NOTIFICATION_SETTINGS = [
-    ['social', 'Comments, mentions, follows, and reactions'],
-    ['projects', 'Remixes, contributions, feedback, and spaces'],
-    ['economy', 'Purchases, donations, and items'],
-    ['system', 'Moderation, reports, and announcements']
+    ['social', 'settings.notifSocial'],
+    ['projects', 'settings.notifProjects'],
+    ['economy', 'settings.notifEconomy'],
+    ['system', 'settings.notifSystem']
 ];
 
 const Settings = ({isScratchDesktop: desktop = isScratchDesktop()}) => {
@@ -91,7 +91,7 @@ const Settings = ({isScratchDesktop: desktop = isScratchDesktop()}) => {
     const desktopApp = Boolean(desktop);
     const sections = SECTIONS.map(section => ({...section, label: t(section.labelKey, section.labelDefault)}));
     const [searchParams, setSearchParams] = useSearchParams();
-    const {preference: localePreference, setPreference: setLocalePreference} = useCommunityIntl();
+    const {preference: localePreference, setPreference: setLocalePreference, t: ct} = useCommunityIntl();
     const [theme, setTheme] = useState(detectTheme());
     const [username, setUsername] = useState(getUsernameOverride() || '');
     const [accentMenuBar, setAccentMenuBarState] = useState(getAccentMenuBar());
@@ -150,7 +150,7 @@ const Settings = ({isScratchDesktop: desktop = isScratchDesktop()}) => {
                 if (!cancelled) setSafety({blocked: data.blocked || [], muted: data.muted || []});
             })
             .catch(() => {
-                if (!cancelled) setSafetyError('Could not load your safety settings.');
+                if (!cancelled) setSafetyError(ct('settings.safetyLoadFailed'));
             });
         return () => {
             cancelled = true;
@@ -252,7 +252,7 @@ const Settings = ({isScratchDesktop: desktop = isScratchDesktop()}) => {
             }
         } catch (e) {
             if (safetyContext.current === context) {
-                setSafetyError(e.message || 'Could not update your safety settings.');
+                setSafetyError(e.message || ct('settings.safetyUpdateFailed'));
             }
         } finally {
             actionLocks.current.delete(actionKey);
@@ -266,15 +266,15 @@ const Settings = ({isScratchDesktop: desktop = isScratchDesktop()}) => {
         if (actionLocks.current.has(actionKey)) return;
         actionLocks.current.add(actionKey);
         setDataBusy('export');
-        setDataStatus('Preparing your export…');
+        setDataStatus(ct('settings.preparingExport'));
         try {
             const data = await api.exportMyData();
             if (dataContext.current !== usernameContext) return;
             const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
             downloadBlob(`mistwarp-${usernameContext}-data.json`, blob);
-            setDataStatus('Your export was downloaded.');
+            setDataStatus(ct('settings.exportDownloaded'));
         } catch (e) {
-            if (dataContext.current === usernameContext) setDataStatus(e.message || 'Could not export your data.');
+            if (dataContext.current === usernameContext) setDataStatus(e.message || ct('settings.exportFailed'));
         } finally {
             actionLocks.current.delete(actionKey);
             if (dataContext.current === usernameContext) setDataBusy('');
@@ -288,7 +288,7 @@ const Settings = ({isScratchDesktop: desktop = isScratchDesktop()}) => {
         if (actionLocks.current.has(actionKey)) return;
         actionLocks.current.add(actionKey);
         setDataBusy('delete');
-        setDataStatus('Deleting your MistWarp data…');
+        setDataStatus(ct('settings.deletingData'));
         try {
             await api.deleteMyData(confirmation);
             if (dataContext.current !== usernameContext) return;
@@ -299,7 +299,7 @@ const Settings = ({isScratchDesktop: desktop = isScratchDesktop()}) => {
             }
             window.location.assign('/');
         } catch (e) {
-            if (dataContext.current === usernameContext) setDataStatus(e.message || 'Could not delete your data.');
+            if (dataContext.current === usernameContext) setDataStatus(e.message || ct('settings.deleteFailed'));
         } finally {
             actionLocks.current.delete(actionKey);
             if (dataContext.current === usernameContext) setDataBusy('');
@@ -332,7 +332,7 @@ const Settings = ({isScratchDesktop: desktop = isScratchDesktop()}) => {
                 <div className={styles.content}>
                     {activeSection === 'theme' ? (
                         <section className={styles.card}>
-                            <SectionTabs items={THEME_TABS} value={themeTab} onChange={setThemeTab} className={styles.themeTabs} itemClassName={styles.themeTab} activeClassName={styles.themeTabActive} ariaLabel="Theme sections" />
+                            <SectionTabs items={THEME_TABS.map(tab => ({key: tab.key, label: ct(tab.labelKey)}))} value={themeTab} onChange={setThemeTab} className={styles.themeTabs} itemClassName={styles.themeTab} activeClassName={styles.themeTabActive} ariaLabel={ct('settings.themeAria')} />
                             {themeTab === 'appearance' ? <div className={styles.themeContent}>
                                 <ThemeAccentPanel theme={theme} onChangeTheme={applyAndPersist} />
                                 <div className={styles.appearanceSection}>
@@ -388,7 +388,7 @@ const Settings = ({isScratchDesktop: desktop = isScratchDesktop()}) => {
                                         <Button
                                             className={styles.riskAction}
                                             busy={presenceBusy}
-                                            busyLabel="Logging in…"
+                                            busyLabel={ct('settings.loggingIn')}
                                             onClick={reloginForPresence}
                                         >
                                             {t('mw.community.settings.loginAgain', 'Log in again')}
@@ -414,13 +414,13 @@ const Settings = ({isScratchDesktop: desktop = isScratchDesktop()}) => {
                     {activeSection === 'notifications' ? (
                         <section className={styles.card}>
                             <h2>{t('mw.community.settings.notifications', 'Notifications')}</h2>
-                            <p className={styles.lead}>Hidden categories stay out of your notification list. Account and moderation messages remain available when you turn system messages back on.</p>
+                            <p className={styles.lead}>{ct('settings.notifLead')}</p>
                             <div className={styles.settingRows}>
                                 {NOTIFICATION_SETTINGS.map(([key, label]) => (
                                     <SwitchRow
                                         key={key}
                                         checked={Boolean(notificationPreferences[key])}
-                                        label={label}
+                                        label={ct(label)}
                                         onChange={value => changeNotificationPreference(key, value)}
                                     />
                                 ))}
@@ -431,7 +431,7 @@ const Settings = ({isScratchDesktop: desktop = isScratchDesktop()}) => {
                     {activeSection === 'identity' ? (
                         <section className={styles.card}>
                             <h2>{t('mw.community.settings.identity', 'Identity')}</h2>
-                            <p className={styles.lead}>Your Rotur username identifies your account. You can use a different name inside projects without renaming your account.</p>
+                            <p className={styles.lead}>{ct('settings.identityLead')}</p>
                             <label
                                 className={styles.field}
                                 htmlFor="username-override"
@@ -445,7 +445,7 @@ const Settings = ({isScratchDesktop: desktop = isScratchDesktop()}) => {
                                     onChange={event => changeUsername(event.target.value)}
                                     placeholder={t('mw.community.settings.usernamePlaceholder', 'Use account username')}
                                 />
-                                <small>Changes the value reported by the username block in projects. Leave this blank to use your Rotur username.</small>
+                                <small>{ct('settings.usernameOverrideHelp')}</small>
                             </label>
                             <label className={styles.field} htmlFor="community-locale">
                                 <span>{t('settings.language')}</span>
@@ -460,51 +460,51 @@ const Settings = ({isScratchDesktop: desktop = isScratchDesktop()}) => {
                     {activeSection === 'safety' ? (
                         <section className={styles.card}>
                             <h2>{t('mw.community.settings.safety', 'Safety')}</h2>
-                            <p className={styles.lead}>Block or mute someone from their MistWarp profile. Blocking stops MistWarp comments and notifications between you. Muting only hides their MistWarp notifications.</p>
-                            {!user ? <p className={styles.note}>Sign in to manage blocked and muted users.</p> : null}
+                            <p className={styles.lead}>{ct('settings.safetyLead')}</p>
+                            {!user ? <p className={styles.note}>{ct('settings.safetySignIn')}</p> : null}
                             {safetyError ? <p className={styles.error}>{safetyError}</p> : null}
                             {user ? <div className={styles.safetyGroups}>
                                 <div>
-                                    <h3>Blocked users</h3>
+                                    <h3>{ct('settings.blockedUsers')}</h3>
                                     {safety.blocked.length ? safety.blocked.map(name => (
                                         <div className={styles.safetyRow} key={name}>
                                             <Link to={`/users/${name}`}>@{name}</Link>
                                             <Button
                                                 busy={safetyBusy === `blocked:${name}`}
-                                                busyLabel="Removing…"
+                                                busyLabel={ct('settings.removing')}
                                                 disabled={Boolean(safetyBusy)}
                                                 onClick={() => removeSafetyEntry('blocked', name)}
                                             >
-                                                Unblock
+                                                {ct('settings.unblock')}
                                             </Button>
                                         </div>
-                                    )) : <p className={styles.note}>You have not blocked anyone.</p>}
+                                    )) : <p className={styles.note}>{ct('settings.noBlocked')}</p>}
                                 </div>
                                 <div>
-                                    <h3>Muted users</h3>
+                                    <h3>{ct('settings.mutedUsers')}</h3>
                                     {safety.muted.length ? safety.muted.map(name => (
                                         <div className={styles.safetyRow} key={name}>
                                             <Link to={`/users/${name}`}>@{name}</Link>
                                             <Button
                                                 busy={safetyBusy === `muted:${name}`}
-                                                busyLabel="Removing…"
+                                                busyLabel={ct('settings.removing')}
                                                 disabled={Boolean(safetyBusy)}
                                                 onClick={() => removeSafetyEntry('muted', name)}
                                             >
-                                                Unmute
+                                                {ct('settings.unmute')}
                                             </Button>
                                         </div>
-                                    )) : <p className={styles.note}>You have not muted anyone.</p>}
+                                    )) : <p className={styles.note}>{ct('settings.noMuted')}</p>}
                                 </div>
                             </div> : null}
-                            <p className={styles.note}>For immediate safety concerns, <Link to="/support?topic=safety">contact MistWarp support</Link>.</p>
+                            <p className={styles.note}>{ct('settings.safetyContact')} <Link to="/support?topic=safety">{ct('settings.contactSupport')}</Link>.</p>
                         </section>
                     ) : null}
 
                     {activeSection === 'data' ? (
                         <section className={styles.card}>
                             <h2>{t('mw.community.settings.data', 'Your MistWarp data')}</h2>
-                            <p className={styles.lead}>These controls apply to MistWarp. Your Rotur account and Rotur data are managed separately on rotur.dev.</p>
+                            <p className={styles.lead}>{ct('settings.dataLead')}</p>
                             <div className={styles.dataAction}>
                                 <div>
                                     <h3>{t('settings.analytics')}</h3>
@@ -517,31 +517,28 @@ const Settings = ({isScratchDesktop: desktop = isScratchDesktop()}) => {
                                 />
                             </div>
                             {!user ? (
-                                <Button className={styles.riskAction} onClick={login}>Sign in with Rotur</Button>
+                                <Button className={styles.riskAction} onClick={login}>{t('home.signin')}</Button>
                             ) : (
                                 <React.Fragment>
                                     <div className={styles.dataAction}>
                                         <div>
-                                            <h3>Download your data</h3>
-                                            <p>Get a JSON copy of your MistWarp profile, project metadata, comments,
-                                                activity, settings, notifications, and safety list.</p>
+                                            <h3>{ct('settings.downloadData')}</h3>
+                                            <p>{ct('settings.downloadDataHelp')}</p>
                                         </div>
                                         <Button
                                             busy={dataBusy === 'export'}
-                                            busyLabel="Preparing…"
+                                            busyLabel={ct('settings.preparing')}
                                             disabled={Boolean(dataBusy)}
                                             onClick={downloadData}
                                         >
-                                            Download
+                                            {ct('common.download')}
                                         </Button>
                                     </div>
                                     <div className={styles.dangerZone}>
-                                        <h3>Delete your MistWarp data</h3>
-                                        <p>This deletes your MistWarp projects and profile data, anonymizes your public
-                                            comments, and signs you out. Your Rotur account remains active, and signing
-                                            in later creates a fresh MistWarp profile.</p>
+                                        <h3>{ct('settings.deleteData')}</h3>
+                                        <p>{ct('settings.deleteDataHelp')}</p>
                                         <label className={styles.field}>
-                                            Type <strong>{user.username}</strong> to confirm
+                                            {ct('settings.typeToConfirm')} <strong>{user.username}</strong>
                                             <input
                                                 className={styles.input}
                                                 disabled={Boolean(dataBusy)}
@@ -556,13 +553,13 @@ const Settings = ({isScratchDesktop: desktop = isScratchDesktop()}) => {
                                                 !matchesDeleteConfirmation(deleteConfirmation, user.username)}
                                             onClick={openDeleteModal}
                                         >
-                                            Delete MistWarp data
+                                            {ct('settings.deleteDataButton')}
                                         </Button>
                                     </div>
                                 </React.Fragment>
                             )}
                             {dataStatus && !deleteModalOpen ? <p className={styles.note} aria-live="polite">{dataStatus}</p> : null}
-                            <p className={styles.note}>Read the <Link to="/trust">privacy and community terms</Link>, or <a href="https://rotur.dev/me" target="_blank" rel="noreferrer">manage your Rotur account</a>.</p>
+                            <p className={styles.note}>{ct('settings.privacyTerms')} <Link to="/trust">{ct('settings.privacyTermsLink')}</Link>, {ct('settings.manageRotur')} <a href="https://rotur.dev/me" target="_blank" rel="noreferrer">{ct('settings.manageRoturLink')}</a>.</p>
                         </section>
                     ) : null}
 
@@ -577,7 +574,7 @@ const Settings = ({isScratchDesktop: desktop = isScratchDesktop()}) => {
             {deleteModalOpen && user ? (
                 <Modal
                     icon={Trash2}
-                    title="Delete MistWarp data?"
+                    title={ct('settings.deleteModalTitle')}
                     onClose={closeDeleteModal}
                     dismissDisabled={dataBusy === 'delete'}
                     actions={(
@@ -586,23 +583,23 @@ const Settings = ({isScratchDesktop: desktop = isScratchDesktop()}) => {
                                 variant="danger"
                                 className={styles.deleteButton}
                                 busy={dataBusy === 'delete'}
-                                busyLabel="Deleting…"
+                                busyLabel={ct('settings.deleting')}
                                 onClick={deleteData}
                             >
-                                Delete permanently
+                                {ct('settings.deletePermanently')}
                             </Button>
                             <Button
                                 disabled={dataBusy === 'delete'}
                                 onClick={closeDeleteModal}
                             >
-                                Cancel
+                                {ct('common.cancel')}
                             </Button>
                         </React.Fragment>
                     )}
                 >
                     <p className={styles.modalText}>
-                        MistWarp will delete projects and profile data for <strong>{user.username}</strong>.
-                        {' '}Public comments and other shared history will be anonymized. This cannot be undone.
+                        {ct('settings.deleteModalText1')} <strong>{user.username}</strong>.
+                        {' '}{ct('settings.deleteModalText2')}
                     </p>
                     {dataStatus ? <p className={styles.note} aria-live="polite">{dataStatus}</p> : null}
                 </Modal>

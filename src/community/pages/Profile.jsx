@@ -2,6 +2,7 @@
 import React, {useEffect, useState, useCallback, useMemo, useRef} from 'react';
 import {useParams, Link} from 'react-router-dom';
 import {useIntl} from '../../lib/tw-use-intl.jsx';
+import {useCommunityIntl} from '../i18n.jsx';
 import {
     UserPlus, UserCheck, Calendar, MessageSquare, MessageSquareOff, ChevronRight, Pencil, Flag, Coins, Star, Ban, VolumeX
 } from 'lucide-react';
@@ -52,6 +53,7 @@ const Profile = () => {
     const intl = useIntl();
     const t = useCallback((id, defaultMessage, values) =>
         intl.formatMessage({id, defaultMessage}, values), [intl]);
+    const {t: ct} = useCommunityIntl();
     const {user, loading: userLoading, login} = useUser();
     const viewerName = (user && user.username) || '';
     const loadContext = `${name}\u0000${viewerName}`;
@@ -233,7 +235,7 @@ const Profile = () => {
             }
         } catch (e) {
             if (actionContextRef.current === context) {
-                setActionError(e.message || 'Could not update your safety settings.');
+                setActionError(e.message || ct('profile.safetyUpdateFailed'));
             }
         } finally {
             actionLocks.current.delete(actionKey);
@@ -253,7 +255,7 @@ const Profile = () => {
             <main className={styles.page}>
                 <div className={styles.status}>
                     <p>{error}</p>
-                    {error === 'Could not load this profile.' ? <Button onClick={load}>Try again</Button> : <Link to="/explore">Browse projects</Link>}
+                    {error === 'Could not load this profile.' ? <Button onClick={load}>{ct('common.retry')}</Button> : <Link to="/explore">{ct('profile.browseProjects')}</Link>}
                 </div>
             </main>
         );
@@ -286,7 +288,7 @@ const Profile = () => {
             {blockConfirmOpen ? (
                 <Modal
                     icon={Ban}
-                    title={`Block ${profile.username || name}?`}
+                    title={`${ct('profile.blockTitle')} ${profile.username || name}?`}
                     onClose={() => setBlockConfirmOpen(false)}
                     dismissDisabled={safetyBusy}
                     actions={(
@@ -295,20 +297,20 @@ const Profile = () => {
                                 variant="danger"
                                 className={styles.blockedButton}
                                 busy={safetyBusy}
-                                busyLabel="Blocking…"
+                                busyLabel={ct('profile.blocking')}
                                 onClick={() => toggleSafety('block', true)}
-                            >Block user</Button>
+                            >{ct('profile.blockUser')}</Button>
                             <Button
                                 variant="secondary"
                                 className={styles.iconButton}
                                 disabled={safetyBusy}
                                 onClick={() => setBlockConfirmOpen(false)}
-                            >Cancel</Button>
+                            >{ct('common.cancel')}</Button>
                         </React.Fragment>
                     )}
                 >
                     <p className={styles.modalText}>
-                        You will stop receiving MistWarp comments and notifications from each other.
+                        {ct('profile.blockModalText')}
                     </p>
                     {actionError ? <p className={styles.actionError}>{actionError}</p> : null}
                 </Modal>
@@ -375,9 +377,9 @@ const Profile = () => {
 
                     {onMistWarp ? (
                         <section className={styles.section}>
-                            <h2 className={styles.sectionTitle}>Recent reviews</h2>
-                            {reviews === null ? <p className={styles.sectionEmpty}>Loading reviews…</p> : null}
-                            {reviews && !reviews.length ? <p className={styles.sectionEmpty}>No reviews yet.</p> : null}
+                            <h2 className={styles.sectionTitle}>{ct('profile.recentReviews')}</h2>
+                            {reviews === null ? <p className={styles.sectionEmpty}>{ct('profile.loadingReviews')}</p> : null}
+                            {reviews && !reviews.length ? <p className={styles.sectionEmpty}>{ct('profile.noReviews')}</p> : null}
                             {reviews && reviews.length ? (
                                 <div className={styles.reviewGrid}>
                                     {reviews.slice(0, 6).map(review => (
@@ -392,7 +394,7 @@ const Profile = () => {
                                             </div>
                                             <div
                                                 className={styles.reviewStars}
-                                                aria-label={`${review.rating} out of 5 stars`}
+                                                aria-label={`${review.rating} ${ct('profile.outOf5Stars')}`}
                                             >
                                                 {[1, 2, 3, 4, 5].map(value => (
                                                     <Star
@@ -405,7 +407,7 @@ const Profile = () => {
                                             {review.message ? (
                                                 <p><RichText text={review.message} /></p>
                                             ) : (
-                                                <p className={styles.reviewNoText}>No written review.</p>
+                                                <p className={styles.reviewNoText}>{ct('profile.noWrittenReview')}</p>
                                             )}
                                         </Link>
                                     ))}
@@ -462,7 +464,7 @@ const Profile = () => {
                                         className={styles.commentsToggle}
                                         onClick={toggleComments}
                                         busy={commentsBusy}
-                                        busyLabel={commentsOff ? 'Turning on…' : 'Turning off…'}
+                                        busyLabel={commentsOff ? ct('profile.turningOn') : ct('profile.turningOff')}
                                     >
                                         {commentsOff ? <MessageSquare size={14} /> : <MessageSquareOff size={14} />}
                                         {commentsOff ?
@@ -548,7 +550,7 @@ const Profile = () => {
                                                 variant="primary"
                                                 className={profile.followed ? styles.followingButton : styles.followButton}
                                                 busy={followBusy}
-                                                busyLabel={profile.followed ? 'Unfollowing…' : 'Following…'}
+                                                busyLabel={profile.followed ? ct('profile.unfollowing') : ct('profile.following')}
                                                 onClick={toggleFollow}
                                             >
                                                 {profile.followed ? <UserCheck size={16} /> : <UserPlus size={16} />}
@@ -577,7 +579,7 @@ const Profile = () => {
                                                     onClick={() => toggleSafety('mute')}
                                                 >
                                                     <VolumeX size={15} />
-                                                    {mwUser.viewerMuted ? 'Unmute' : 'Mute'}
+                                                    {mwUser.viewerMuted ? ct('profile.unmute') : ct('profile.mute')}
                                                 </Button>
                                             ) : null}
                                             {mwUser && mwUser.exists !== false ? (
@@ -588,7 +590,7 @@ const Profile = () => {
                                                     onClick={() => toggleSafety('block')}
                                                 >
                                                     <Ban size={15} />
-                                                    {mwUser.viewerBlocked ? 'Unblock' : 'Block'}
+                                                    {mwUser.viewerBlocked ? ct('profile.unblock') : ct('profile.block')}
                                                 </Button>
                                             ) : null}
                                             <Button
@@ -659,6 +661,7 @@ const Profile = () => {
 
 export const DonateModal = ({recipient, onClose}) => {
     const intl = useIntl();
+    const {t: ct} = useCommunityIntl();
     const [amount, setAmount] = useState('');
     const [busy, setBusy] = useState(false);
     const [status, setStatus] = useState(null);
@@ -734,8 +737,8 @@ export const DonateModal = ({recipient, onClose}) => {
         } catch (e) {
             if (currentRecipient.current === actionRecipient) {
                 setStatus(e.needsReauth ?
-                    'Your current login cannot buy credits. Log out and back in, then try again.' :
-                    (e.message || 'Could not open checkout.'));
+                    ct('profile.reauthBuyCredits') :
+                    (e.message || ct('profile.checkoutFailed')));
             }
         } finally {
             actionLocks.current.delete(actionKey);
@@ -754,7 +757,7 @@ export const DonateModal = ({recipient, onClose}) => {
             dismissDisabled={busy}
             icon={Coins}
             onClose={close}
-            title={`Donate to ${recipient}`}
+            title={`${ct('profile.donateTo')} ${recipient}`}
         >
             {sent ? (
                 <div className={styles.donateDone}>
@@ -808,7 +811,7 @@ export const DonateModal = ({recipient, onClose}) => {
                         className={styles.donateSend}
                         type="submit"
                         busy={busy}
-                        busyLabel={insufficient ? 'Opening…' : 'Sending…'}
+                        busyLabel={insufficient ? ct('profile.opening') : ct('profile.sending')}
                     >
                         <Coins size={16} />
                         {insufficient ?

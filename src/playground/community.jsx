@@ -63,7 +63,9 @@ if (projectEntryMatch) {
         >
             <IntlBridge>
                 <BrowserRouter>
-                    <App />
+                    <CommunityIntlProvider>
+                        <App />
+                    </CommunityIntlProvider>
                 </BrowserRouter>
             </IntlBridge>
         </IntlProvider>

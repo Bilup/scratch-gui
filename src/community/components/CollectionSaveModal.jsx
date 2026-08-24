@@ -3,11 +3,13 @@ import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {Check, Library, Plus} from 'lucide-react';
 import api from '../api';
 import {useUser} from '../UserContext.jsx';
+import {useCommunityIntl} from '../i18n.jsx';
 import Modal from './ui/Modal.jsx';
 import Button from './ui/Button.jsx';
 import styles from './CollectionSaveModal.module.css';
 
 const CollectionSaveModal = ({project, onClose}) => {
+    const {t} = useCommunityIntl();
     const {user} = useUser();
     const viewerName = (user && user.username) || '';
     const actionContext = `${viewerName}\u0000${project.id}`;
@@ -39,7 +41,7 @@ const CollectionSaveModal = ({project, onClose}) => {
                 }
             })
             .catch(e => {
-                if (active) setError(e.message || 'Could not load your collections.');
+                if (active) setError(e.message || t('collectionSave.couldNotLoad', 'Could not load your collections.'));
             });
         return () => {
             active = false;
@@ -67,10 +69,12 @@ const CollectionSaveModal = ({project, onClose}) => {
             setCollections(current => current.map(item => (
                 item._id === collection._id ? data.space : item
             )));
-            setStatus(saved ? `Removed from ${collection.title}.` : `Saved to ${collection.title}.`);
+            setStatus(saved ?
+                t('collectionSave.removedFrom', 'Removed from {title}').replace('{title}', collection.title) :
+                t('collectionSave.savedTo', 'Saved to {title}').replace('{title}', collection.title));
         } catch (e) {
             if (actionContextRef.current === context) {
-                setError(e.message || 'Could not update this collection.');
+                setError(e.message || t('collectionSave.couldNotUpdate', 'Could not update this collection.'));
             }
         } finally {
             actionLocks.current.delete(actionKey);
@@ -110,16 +114,20 @@ const CollectionSaveModal = ({project, onClose}) => {
                 } catch (e) {
                     if (actionContextRef.current === context) {
                         setError(
-                            `Created ${collection.title}, but could not save this project. ${e.message || ''}`.trim()
+                            t('collectionSave.createdSaveError', 'Created {title}, but could not save this project. {error}')
+                                .replace('{title}', collection.title)
+                                .replace('{error}', e.message || '').trim()
                         );
                     }
                     return;
                 }
             }
-            setStatus(canSave ? `Created ${collection.title} and saved this project.` : `Created ${collection.title}.`);
+            setStatus(canSave ?
+                t('collectionSave.createdAndSaved', 'Created {title} and saved this project.').replace('{title}', collection.title) :
+                t('collectionSave.created', 'Created {title}.').replace('{title}', collection.title));
         } catch (e) {
             if (actionContextRef.current === context) {
-                setError(e.message || 'Could not create the collection.');
+                setError(e.message || t('collectionSave.couldNotCreate', 'Could not create the collection.'));
             }
         } finally {
             actionLocks.current.delete(actionKey);
@@ -130,23 +138,23 @@ const CollectionSaveModal = ({project, onClose}) => {
     return (
         <Modal
             icon={Library}
-            title="Save to a collection"
+            title={t('collectionSave.title', 'Save to a collection')}
             onClose={onClose}
             dismissDisabled={Boolean(busy)}
         >
             {!canSave ? (
                 <p className={styles.notice}>
-                    Share this project or make it unlisted before adding it to a collection.
+                    {t('collectionSave.notice', 'Share this project or make it unlisted before adding it to a collection.')}
                 </p>
             ) : null}
             <form className={styles.create} onSubmit={create}>
                 <label>
-                    <span>New collection</span>
+                    <span>{t('collectionSave.newCollection', 'New collection')}</span>
                     <input
                         value={title}
                         disabled={Boolean(busy)}
                         maxLength={100}
-                        placeholder="Collection name"
+                        placeholder={t('collectionSave.namePlaceholder', 'Collection name')}
                         onChange={event => setTitle(event.target.value)}
                     />
                 </label>
@@ -155,32 +163,32 @@ const CollectionSaveModal = ({project, onClose}) => {
                         value={visibility}
                         disabled={Boolean(busy)}
                         onChange={event => setVisibility(event.target.value)}
-                        aria-label="Collection visibility"
+                        aria-label={t('collectionSave.visibilityAria', 'Collection visibility')}
                     >
-                        <option value="public">Public</option>
-                        <option value="unlisted">Unlisted</option>
-                        <option value="private">Private</option>
+                        <option value="public">{t('collectionSave.public', 'Public')}</option>
+                        <option value="unlisted">{t('collectionSave.unlisted', 'Unlisted')}</option>
+                        <option value="private">{t('collectionSave.private', 'Private')}</option>
                     </select>
                     <Button
                         variant="primary"
                         type="submit"
                         disabled={!title.trim() || Boolean(busy)}
                         busy={busy === 'new'}
-                        busyLabel="Creating…"
+                        busyLabel={t('collectionSave.creating', 'Creating…')}
                     >
                         <Plus size={15} />
-                        {canSave ? 'Create and save' : 'Create collection'}
+                        {canSave ? t('collectionSave.createAndSave', 'Create and save') : t('collectionSave.createCollection', 'Create collection')}
                     </Button>
                 </div>
             </form>
             <div className={styles.divider} />
             <div className={styles.heading}>
-                <strong>Your collections</strong>
+                <strong>{t('collectionSave.yourCollections', 'Your collections')}</strong>
                 <span>{collections ? collections.length : ''}</span>
             </div>
-            {collections === null && !error ? <p className={styles.empty}>Loading collections…</p> : null}
+            {collections === null && !error ? <p className={styles.empty}>{t('collectionSave.loading', 'Loading collections…')}</p> : null}
             {collections && !collections.length ? (
-                <p className={styles.empty}>You do not have any collections yet.</p>
+                <p className={styles.empty}>{t('collectionSave.empty', 'You do not have any collections yet.')}</p>
             ) : null}
             {collections && collections.length ? (
                 <div className={styles.list}>
@@ -200,7 +208,7 @@ const CollectionSaveModal = ({project, onClose}) => {
                                 </span>
                                 <span className={styles.saveState}>
                                     {busy === collection._id ?
-                                        'Saving…' : saved ? <><Check size={15} /> Saved</> : 'Save'}
+                                        t('collectionSave.saving', 'Saving…') : saved ? <><Check size={15} /> {t('collectionSave.saved', 'Saved')}</> : t('collectionSave.save', 'Save')}
                                 </span>
                             </button>
                         );
@@ -217,7 +225,7 @@ const CollectionSaveModal = ({project, onClose}) => {
                                 variant="secondary"
                                 onClick={() => setLoadAttempt(attempt => attempt + 1)}
                             >
-                                Try again
+                                {t('collectionSave.tryAgain', 'Try again')}
                             </Button>
                         </>
                     ) : null}

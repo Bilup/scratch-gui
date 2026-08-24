@@ -7,17 +7,20 @@ import Avatar from '../components/Avatar.jsx';
 import Button from '../components/ui/Button.jsx';
 import setPageMeta from '../page-meta.js';
 import useLatest from '../use-latest.js';
+import {useCommunityIntl} from '../i18n.jsx';
 import styles from './Followers.module.css';
 
 const Followers = ({mode}) => {
     const {name} = useParams();
+    const {t} = useCommunityIntl();
     const [followers, setFollowers] = useState(null);
     const [error, setError] = useState('');
     const [attempt, setAttempt] = useState(0);
     const beginLoad = useLatest();
     const following = mode === 'following';
-    const label = following ? 'following' : 'followers';
-    const emptyText = following ? `${name} is not following anyone yet.` : 'No followers yet.';
+    const dataKey = following ? 'following' : 'followers';
+    const label = following ? t('followers.following') : t('followers.followers');
+    const emptyText = following ? `${name} ${t('followers.notFollowingAnyone')}` : t('followers.noFollowers');
 
     useEffect(() => {
         setPageMeta({title: `${name}'s ${label}`, image: rotur.avatar(name, 256), card: 'summary'});
@@ -29,8 +32,8 @@ const Followers = ({mode}) => {
         setError('');
         const request = following ? rotur.following(name) : rotur.followers(name);
         request
-            .then(fresh(data => setFollowers(data[label] || [])))
-            .catch(fresh(() => setError(`Could not load ${label}.`)));
+            .then(fresh(data => setFollowers(data[dataKey] || [])))
+            .catch(fresh(() => setError(`${t('followers.couldNotLoad')} ${label}.`)));
     }, [name, beginLoad, attempt, following, label]);
 
     return (
@@ -46,10 +49,10 @@ const Followers = ({mode}) => {
             {error ? (
                 <p className={styles.status}>
                     {error}{' '}
-                    <Button onClick={() => setAttempt(value => value + 1)}>Try again</Button>
+                    <Button onClick={() => setAttempt(value => value + 1)}>{t('common.retry')}</Button>
                 </p>
             ) : followers === null ? (
-                <p className={styles.status}>Loading…</p>
+                <p className={styles.status}>{t('common.loading')}</p>
             ) : followers.length ? (
                 <div className={styles.grid}>
                     {followers.map(follower => (

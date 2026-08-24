@@ -19,25 +19,28 @@ import {useCommunityIntl} from '../i18n.jsx';
 import styles from './Home.module.css';
 
 const ACTIVITY_ICONS = {love: Heart, favorite: Star, share: Globe, remix: GitFork, review: Star};
-const ROADMAP_STATUS_LABELS = {open: 'Suggested', planned: 'Planned', building: 'In progress', shipped: 'Shipped', declined: 'Not planned'};
+const ROADMAP_STATUS_KEYS = {open: 'roadmap.statusOpen', planned: 'roadmap.statusPlanned', building: 'roadmap.statusBuilding', shipped: 'roadmap.statusShipped', declined: 'roadmap.statusDeclined'};
 
-const describeActivity = item => {
+const describeActivity = (item, t) => {
     switch (item.type) {
-    case 'love': return <>loved <strong>{item.projectTitle}</strong></>;
-    case 'favorite': return <>favorited <strong>{item.projectTitle}</strong></>;
-    case 'share': return <>shared <strong>{item.projectTitle}</strong></>;
-    case 'remix': return <>remixed <strong>{item.parentTitle || item.projectTitle}</strong></>;
-    case 'review': return <>rated <strong>{item.projectTitle}</strong> {item.rating} out of 5</>;
-    default: return <>posted an update</>;
+    case 'love': return <>{t('feed.loved')} <strong>{item.projectTitle}</strong></>;
+    case 'favorite': return <>{t('feed.favorited')} <strong>{item.projectTitle}</strong></>;
+    case 'share': return <>{t('feed.shared')} <strong>{item.projectTitle}</strong></>;
+    case 'remix': return <>{t('feed.remixed')} <strong>{item.parentTitle || item.projectTitle}</strong></>;
+    case 'review': return <>{t('feed.rated')} <strong>{item.projectTitle}</strong> {item.rating} {t('feed.outOf5')}</>;
+    default: return <>{t('feed.postedUpdate')}</>;
     }
 };
 
-const SectionHead = ({icon: Icon, title, link, linkLabel}) => (
-    <div className={styles.sectionHead}>
-        <h2><Icon size={19} />{title}</h2>
-        {link ? <Link to={link}>{linkLabel || 'See all'}</Link> : null}
-    </div>
-);
+const SectionHead = ({icon: Icon, title, link, linkLabel}) => {
+    const {t} = useCommunityIntl();
+    return (
+        <div className={styles.sectionHead}>
+            <h2><Icon size={19} />{title}</h2>
+            {link ? <Link to={link}>{linkLabel || t('common.seeAll')}</Link> : null}
+        </div>
+    );
+};
 
 const PanelLoading = () => <div className={styles.feedScroll}>{[0, 1].map(i => <div key={i} className={styles.skeleton} />)}</div>;
 
@@ -45,6 +48,7 @@ const NewsSection = ({viewerName}) => {
     const [items, setItems] = useState(null);
     const [failed, setFailed] = useState(false);
     const [attempt, setAttempt] = useState(0);
+    const {t} = useCommunityIntl();
     const load = () => setAttempt(value => value + 1);
     useEffect(() => {
         let active = true;
@@ -59,10 +63,10 @@ const NewsSection = ({viewerName}) => {
     }, [attempt, viewerName]);
     return (
         <section className={styles.feedBox}>
-            <SectionHead icon={Megaphone} title="News" link="/news" linkLabel="All updates" />
+            <SectionHead icon={Megaphone} title={t('news.title')} link="/news" linkLabel={t('news.allUpdates')} />
             {!items && !failed ? <PanelLoading /> : null}
-            {failed ? <div className={styles.empty}>Couldn&apos;t load news. <Button onClick={load}>Try again</Button></div> : null}
-            {items && !items.length ? <div className={styles.empty}>No updates yet.</div> : null}
+            {failed ? <div className={styles.empty}>{t('news.failed')} <Button onClick={load}>{t('common.retry')}</Button></div> : null}
+            {items && !items.length ? <div className={styles.empty}>{t('news.empty')}</div> : null}
             {items && items.length ? <div className={`${styles.newsList} ${styles.feedScroll}`}>{items.map(item => <NewsItem key={item.id} item={item} onChanged={load} />)}</div> : null}
         </section>
     );
@@ -72,6 +76,7 @@ const FriendsSection = ({user, login}) => {
     const [items, setItems] = useState(null);
     const [failed, setFailed] = useState(false);
     const [attempt, setAttempt] = useState(0);
+    const {t} = useCommunityIntl();
     useEffect(() => {
         let active = true;
         setFailed(false);
@@ -90,11 +95,11 @@ const FriendsSection = ({user, login}) => {
     }, [user, attempt]);
     return (
         <section className={styles.feedBox}>
-            <SectionHead icon={Users} title="From people you follow" />
-            {!user ? <div className={styles.empty}>Sign in to see projects, reviews, and activity from people you follow. <button type="button" onClick={login}>Sign in with Bilup Accounts</button></div> : null}
+            <SectionHead icon={Users} title={t('friends.title')} />
+            {!user ? <div className={styles.empty}>{t('friends.signIn')} <button type="button" onClick={login}>{t('common.signInAccounts')}</button></div> : null}
             {user && !items && !failed ? <PanelLoading /> : null}
-            {failed ? <div className={styles.empty}>Couldn&apos;t load activity. <Button onClick={() => setAttempt(value => value + 1)}>Try again</Button></div> : null}
-            {items && !items.length && user ? <div className={styles.empty}>No recent activity from people you follow.</div> : null}
+            {failed ? <div className={styles.empty}>{t('friends.failed')} <Button onClick={() => setAttempt(value => value + 1)}>{t('common.retry')}</Button></div> : null}
+            {items && !items.length && user ? <div className={styles.empty}>{t('friends.empty')}</div> : null}
             {items && items.length ? (
                 <div className={`${styles.activityList} ${styles.feedScroll}`}>
                     {items.slice(0, 4).map((item, index) => {
@@ -105,7 +110,7 @@ const FriendsSection = ({user, login}) => {
                                 <span className={styles.activityIcon}><Icon size={14} /></span>
                                 <span className={styles.activityText}>
                                     <Link to={`/users/${item.actor}`} className={styles.activityActor}>{item.actor}</Link>{' '}
-                                    {item.projectId ? <Link to={projectUrl(item.projectId)}>{describeActivity(item)}</Link> : describeActivity(item)}
+                                    {item.projectId ? <Link to={projectUrl(item.projectId)}>{describeActivity(item, t)}</Link> : describeActivity(item, t)}
                                 </span>
                                 <span className={styles.activityTime}>{timeAgo(item.created)}</span>
                             </div>
@@ -121,6 +126,7 @@ const RoadmapSection = ({viewerName}) => {
     const [ideas, setIdeas] = useState(null);
     const [failed, setFailed] = useState(false);
     const [attempt, setAttempt] = useState(0);
+    const {t} = useCommunityIntl();
     useEffect(() => {
         let active = true;
         setIdeas(null);
@@ -134,10 +140,10 @@ const RoadmapSection = ({viewerName}) => {
     }, [attempt, viewerName]);
     return (
         <section className={styles.feedBox}>
-            <SectionHead icon={Lightbulb} title="Roadmap" link="/roadmap" linkLabel="Suggest and vote" />
+            <SectionHead icon={Lightbulb} title={t('roadmap.title')} link="/roadmap" linkLabel={t('common.suggestVote')} />
             {!ideas && !failed ? <PanelLoading /> : null}
-            {failed ? <div className={styles.empty}>Couldn&apos;t load roadmap suggestions. <Button onClick={() => setAttempt(value => value + 1)}>Try again</Button></div> : null}
-            {ideas && !ideas.length ? <div className={styles.empty}>No suggestions yet. <Link to="/roadmap">Add the first one</Link></div> : null}
+            {failed ? <div className={styles.empty}>{t('roadmap.failed')} <Button onClick={() => setAttempt(value => value + 1)}>{t('common.retry')}</Button></div> : null}
+            {ideas && !ideas.length ? <div className={styles.empty}>{t('roadmap.empty')} <Link to="/roadmap">{t('roadmap.addFirst')}</Link></div> : null}
             {ideas && ideas.length ? (
                 <div className={`${styles.roadmapList} ${styles.feedScroll}`}>
                     {ideas.slice(0, 4).map(idea => (
@@ -154,10 +160,10 @@ const RoadmapSection = ({viewerName}) => {
                             />
                             <div className={styles.roadmapBody}>
                                 <div className={styles.roadmapLabels}>
-                                    {idea.kind === 'bug' ? <span><Bug size={10} /> Bug</span> : null}
+                                    {idea.kind === 'bug' ? <span><Bug size={10} /> {t('roadmap.bug')}</span> : null}
                                     <span>{idea.category}</span>
-                                    <span className={styles[`roadmapStatus${idea.status}`]}>{ROADMAP_STATUS_LABELS[idea.status] || idea.status}</span>
-                                    {idea.interested ? <span className={styles.roadmapOfficial}><Sparkles size={10} /> Bilup is interested</span> : null}
+                                    <span className={styles[`roadmapStatus${idea.status}`]}>{ROADMAP_STATUS_KEYS[idea.status] ? t(ROADMAP_STATUS_KEYS[idea.status]) : idea.status}</span>
+                                    {idea.interested ? <span className={styles.roadmapOfficial}><Sparkles size={10} /> {t('roadmap.bilupInterested')}</span> : null}
                                 </div>
                                 <h3>{idea.title}</h3>
                                 <p>{idea.description}</p>
@@ -175,14 +181,14 @@ const RoadmapSection = ({viewerName}) => {
     );
 };
 
-const notificationText = item => {
-    if (item.type === 'project_review') return `rated ${item.projectTitle || 'your project'} ${item.rating} out of 5`;
-    if (item.type === 'love') return `loved ${item.projectTitle || 'your project'}`;
-    if (item.type === 'comment') return `commented on ${item.projectTitle || 'your project'}`;
-    if (item.type === 'roadmap_comment') return `commented on ${item.roadmapTitle || 'your suggestion'}`;
-    if (item.type === 'follow') return 'followed you';
-    if (item.type === 'remix') return `remixed ${item.projectTitle || 'your project'}`;
-    return item.body || 'sent you a notification';
+const notificationText = (item, t) => {
+    if (item.type === 'project_review') return `${t('notify.rated')} ${item.projectTitle || t('notify.yourProject')} ${item.rating} ${t('notify.outOf5')}`;
+    if (item.type === 'love') return `${t('notify.loved')} ${item.projectTitle || t('notify.yourProject')}`;
+    if (item.type === 'comment') return `${t('notify.commented')} ${item.projectTitle || t('notify.yourProject')}`;
+    if (item.type === 'roadmap_comment') return `${t('notify.commented')} ${item.roadmapTitle || t('notify.yourSuggestion')}`;
+    if (item.type === 'follow') return t('notify.followed');
+    if (item.type === 'remix') return `${t('notify.remixed')} ${item.projectTitle || t('notify.yourProject')}`;
+    return item.body || t('notify.sentNotification');
 };
 
 const notificationLink = item => {
@@ -196,6 +202,7 @@ const NotificationsSection = ({user, login}) => {
     const [items, setItems] = useState(null);
     const [failed, setFailed] = useState(false);
     const [attempt, setAttempt] = useState(0);
+    const {t} = useCommunityIntl();
     useEffect(() => {
         let active = true;
         setFailed(false);
@@ -213,11 +220,11 @@ const NotificationsSection = ({user, login}) => {
     }, [user, attempt]);
     return (
         <section className={styles.feedBox}>
-            <SectionHead icon={Bell} title="Recent notifications" link={user ? '/notifications' : null} linkLabel="See all" />
-            {!user ? <div className={styles.empty}>Sign in to see your notifications. <button type="button" onClick={login}>Sign in with Bilup Accounts</button></div> : null}
+            <SectionHead icon={Bell} title={t('notifications.title')} link={user ? '/notifications' : null} linkLabel={t('common.seeAll')} />
+            {!user ? <div className={styles.empty}>{t('notifications.signIn')} <button type="button" onClick={login}>{t('common.signInAccounts')}</button></div> : null}
             {user && !items && !failed ? <PanelLoading /> : null}
-            {failed ? <div className={styles.empty}>Couldn&apos;t load notifications. <Button onClick={() => setAttempt(value => value + 1)}>Try again</Button></div> : null}
-            {items && !items.length && user ? <div className={styles.empty}>Nothing new yet.</div> : null}
+            {failed ? <div className={styles.empty}>{t('notifications.failed')} <Button onClick={() => setAttempt(value => value + 1)}>{t('common.retry')}</Button></div> : null}
+            {items && !items.length && user ? <div className={styles.empty}>{t('notifications.empty')}</div> : null}
             {items && items.length ? (
                 <div className={`${styles.activityList} ${styles.feedScroll}`}>
                     {items.slice(0, 4).map((item, index) => {
@@ -231,7 +238,7 @@ const NotificationsSection = ({user, login}) => {
                                 <span className={styles.activityIcon}><Bell size={14} /></span>
                                 <span className={styles.activityText}>
                                     {item.actor ? <Link to={`/users/${item.actor}`} className={styles.activityActor}>{actor}</Link> : <strong className={styles.activityActor}>{actor}</strong>}{' '}
-                                    <Link to={target}>{notificationText(item)}</Link>
+                                    <Link to={target}>{notificationText(item, t)}</Link>
                                 </span>
                                 <span className={styles.activityTime}>{timeAgo(item.created || item.timestamp)}</span>
                             </div>
@@ -291,7 +298,7 @@ const Home = () => {
                 <RoadmapSection viewerName={viewerName} />
             </div>
             <ProjectRow
-                title="Trending"
+                title={t('home.trending')}
                 icon={Sparkles}
                 projects={projects.trending}
                 link="/explore?sort=trending"
@@ -299,7 +306,7 @@ const Home = () => {
             />
             <ChallengeCalendar className={styles.homeCalendar} />
             <ProjectRow
-                title="Freshly shared"
+                title={t('home.freshlyShared')}
                 icon={Clock}
                 projects={projects.recent}
                 link="/explore?sort=recent"
@@ -309,15 +316,18 @@ const Home = () => {
     );
 };
 
-const ProjectRow = ({title, icon: Icon, projects, link, onRetry}) => (
-    <section className={styles.projectSection}>
-        <SectionHead icon={Icon} title={title} link={link} />
-        {projects === null ? <div className={styles.projectGrid}>{[0, 1, 2, 3].map(i => <div key={i} className={styles.projectSkeleton} />)}</div> : null}
-        {projects === false ? <div className={styles.empty}>Couldn&apos;t load projects. <Button onClick={onRetry}>Try again</Button></div> : null}
-        {Array.isArray(projects) && !projects.length ? <div className={styles.empty}>No shared projects yet.</div> : null}
-        {Array.isArray(projects) && projects.length ? <div className={styles.projectGrid}>{projects.map(project => <ProjectCard key={project.id} project={project} />)}</div> : null}
-    </section>
-);
+const ProjectRow = ({title, icon: Icon, projects, link, onRetry}) => {
+    const {t} = useCommunityIntl();
+    return (
+        <section className={styles.projectSection}>
+            <SectionHead icon={Icon} title={title} link={link} />
+            {projects === null ? <div className={styles.projectGrid}>{[0, 1, 2, 3].map(i => <div key={i} className={styles.projectSkeleton} />)}</div> : null}
+            {projects === false ? <div className={styles.empty}>{t('home.failedLoadProjects')} <Button onClick={onRetry}>{t('common.retry')}</Button></div> : null}
+            {Array.isArray(projects) && !projects.length ? <div className={styles.empty}>{t('home.noSharedProjects')}</div> : null}
+            {Array.isArray(projects) && projects.length ? <div className={styles.projectGrid}>{projects.map(project => <ProjectCard key={project.id} project={project} />)}</div> : null}
+        </section>
+    );
+};
 
 export {FriendsSection, RoadmapSection, NotificationsSection};
 export default Home;
