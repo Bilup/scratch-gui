@@ -133,7 +133,7 @@ module.exports = {
     'home.github': 'Follow on GitHub',
     'home.lead': 'MistWarp brings branches, project history, and contributions to visual coding without making you learn Git first.',
     'home.noSharedProjects': 'No shared projects yet.',
-    'home.signin': 'Sign in with Rotur',
+    'home.signin': 'Sign in with Bilup Accounts',
     'home.start': 'Start creating',
     'home.title': 'Elevate your creation.',
     'home.trending': 'Trending',

@@ -7,7 +7,7 @@ const messages = {
     "home.github": "在 GitHub 上关注",
     "home.lead": "Bilup 为可视化编程带来分支、历史和贡献功能，无需先学习 Git。",
     "home.noSharedProjects": "暂无分享的作品。",
-    "home.signin": "使用 Rotur 登录",
+    "home.signin": "使用 Bilup Accounts 登录",
     "home.start": "开始创作",
     "home.title": "让创作锦上添花。",
     "home.trending": "热门",
