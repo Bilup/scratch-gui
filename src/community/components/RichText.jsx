@@ -51,7 +51,7 @@ const ProjectLink = ({id}) => {
 const projectIdFrom = url => {
     try {
         const parsed = new URL(url);
-        if (parsed.host !== 'warp.mistium.com' && parsed.host !== window.location.host) {
+        if (parsed.host !== 'com.bilup.org' && parsed.host !== window.location.host) {
             return null;
         }
         const match = parsed.pathname.match(/^\/project\/([A-Za-z0-9]+)\/?$/);

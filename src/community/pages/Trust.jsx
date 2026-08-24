@@ -30,7 +30,7 @@ const Trust = () => {
                 <section className={styles.section}>
                     <h2>{ct('trust.accountH')}</h2>
                     <p>{ct('trust.accountBody')}</p>
-                    <p><a href="https://rotur.dev/me" target="_blank" rel="noreferrer">{ct('trust.manageRotur')}</a></p>
+                    <p><a href="https://accounts.bilup.org/me" target="_blank" rel="noreferrer">{ct('trust.manageRotur')}</a></p>
                 </section>
                 <section className={styles.section}>
                     <h2>{ct('trust.controlsH')}</h2>

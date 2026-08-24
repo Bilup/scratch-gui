@@ -2,7 +2,7 @@
 
 const API_BASE = 'https://api.bilup.org/api';
 const AVATARS = 'https://avatars.accounts.bilup.org';
-const DEFAULT_IMAGE = 'https://warp.mistium.com/images/apple-touch-icon.png';
+const DEFAULT_IMAGE = 'https://com.bilup.org/images/apple-touch-icon.png';
 const FETCH_TIMEOUT_MS = 3000;
 
 const STATIC_META = {

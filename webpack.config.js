@@ -473,7 +473,7 @@ module.exports = [
                 'process.env.ROOT': JSON.stringify(root),
                 'process.env.ROUTING_STYLE': JSON.stringify(process.env.ROUTING_STYLE || 'wildcard'),
                 'process.env.MW_COMMUNITY': JSON.stringify(ENABLE_COMMUNITY ? 'true' : ''),
-                'process.env.MW_STATUS_URL': JSON.stringify(process.env.MW_STATUS_URL || 'https://status.warp.mistium.com')
+                'process.env.MW_STATUS_URL': JSON.stringify(process.env.MW_STATUS_URL || 'https://status.com.bilup.org')
             }),
             new HtmlWebpackPlugin({
                 chunks: ['editor'],

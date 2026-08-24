@@ -77,7 +77,7 @@ const USERNAME_RE = /^[A-Za-z0-9][A-Za-z0-9_-]{0,19}$/;
 
 const commentAnchor = n => (n.commentId ? `#comment-id-${n.commentId}` : '');
 
-const groupUrl = n => (n.group_tag ? `https://rotur.dev/groups/${encodeURIComponent(n.group_tag)}` : null);
+const groupUrl = n => (n.group_tag ? `https://accounts.bilup.org/groups/${encodeURIComponent(n.group_tag)}` : null);
 
 const REPORT_OUTCOMES = {
     dismiss: 'mw.community.notifications.outcome.dismiss',

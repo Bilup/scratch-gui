@@ -559,7 +559,7 @@ const Settings = ({isScratchDesktop: desktop = isScratchDesktop()}) => {
                                 </React.Fragment>
                             )}
                             {dataStatus && !deleteModalOpen ? <p className={styles.note} aria-live="polite">{dataStatus}</p> : null}
-                            <p className={styles.note}>{ct('settings.privacyTerms')} <Link to="/trust">{ct('settings.privacyTermsLink')}</Link>, {ct('settings.manageRotur')} <a href="https://rotur.dev/me" target="_blank" rel="noreferrer">{ct('settings.manageRoturLink')}</a>.</p>
+                            <p className={styles.note}>{ct('settings.privacyTerms')} <Link to="/trust">{ct('settings.privacyTermsLink')}</Link>, {ct('settings.manageRotur')} <a href="https://accounts.bilup.org/me" target="_blank" rel="noreferrer">{ct('settings.manageRoturLink')}</a>.</p>
                         </section>
                     ) : null}
 

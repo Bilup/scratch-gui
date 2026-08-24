@@ -125,7 +125,7 @@ test('follower leaderboard adds account index and status from profiles', async (
     }]);
     expect(window.fetch).toHaveBeenCalledTimes(2);
     expect(window.fetch.mock.calls.map(call => call[0])).toEqual([
-        'https://api.rotur.dev/stats/followers?max=1',
-        'https://api.rotur.dev/profile/Mist?include_posts=0'
+        'https://api.accounts.bilup.org/stats/followers?max=1',
+        'https://api.accounts.bilup.org/profile/Mist?include_posts=0'
     ]);
 });

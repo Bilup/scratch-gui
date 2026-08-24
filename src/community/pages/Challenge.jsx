@@ -62,13 +62,13 @@ export const challengeRatingsReady = (criteria, ratings) => (
     })
 );
 
-const remaining = (value, now) => {
+const remaining = (value, now, t) => {
     const difference = Math.max(0, timestamp(value) - now);
     const days = Math.floor(difference / 86400000);
     const hours = Math.floor((difference % 86400000) / 3600000);
-    if (days) return `${days}d ${hours}h`;
+    if (days) return `${days}${t('challenge.days')} ${hours}${t('challenge.hours')}`;
     const minutes = Math.floor((difference % 3600000) / 60000);
-    return `${hours}h ${minutes}m`;
+    return `${hours}${t('challenge.hours')} ${minutes}${t('challenge.minutes')}`;
 };
 
 const ScoreForm = ({challengeId, project, criteria, onSaved}) => {
@@ -302,7 +302,7 @@ const Challenge = ({id, space, user, login, load}) => {
                     <div className={styles.host}><Avatar username={space.owner} size={30} /><span>{t('challenge.hostedBy')} <Link to={`/users/${space.owner}`}>{space.owner}</Link></span></div>
                 </div>
                 <div className={styles.heroSide}>
-                    {deadline && currentPhase !== 'results' && currentPhase !== 'awaiting-results' ? <div className={styles.countdown}><Clock3 size={18} /><span>{currentPhase === 'upcoming' ? t('challenge.startsIn') : currentPhase === 'submissions' ? t('challenge.endsIn') : t('challenge.judgingEndsIn')}</span><strong>{remaining(deadline, now)}</strong></div> : null}
+                    {deadline && currentPhase !== 'results' && currentPhase !== 'awaiting-results' ? <div className={styles.countdown}><Clock3 size={18} /><span>{currentPhase === 'upcoming' ? t('challenge.startsIn') : currentPhase === 'submissions' ? t('challenge.endsIn') : t('challenge.judgingEndsIn')}</span><strong>{remaining(deadline, now, t)}</strong></div> : null}
                     {(currentPhase === 'upcoming' || currentPhase === 'submissions') ? <Button variant={space.joined ? 'secondary' : 'primary'} busy={actionBusy === 'join'} busyLabel={t('challenge.updating')} disabled={Boolean(actionBusy)} onClick={toggleJoined}>{space.joined ? <UserMinus size={16} /> : <UserPlus size={16} />}{space.joined ? t('challenge.leave') : t('challenge.join')}</Button> : null}
                     {space.canManage ? <Link className={styles.manage} to={`/spaces/${id}/manage`}><Settings size={16} /> {t('challenge.manage')}</Link> : null}
                 </div>

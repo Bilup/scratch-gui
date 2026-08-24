@@ -1,7 +1,9 @@
 /* eslint-disable max-len */
 import React, {createContext, useContext, useEffect, useMemo, useState} from 'react';
+import {IntlProvider} from 'react-intl';
 import enMessages from './i18n-messages-en.js';
 import zhMessages from './i18n-messages-zh-cn.js';
+import communityTranslations from './translations/zh-cn.json';
 
 const LOCALE_KEY = 'mw:community-locale';
 export const LOCALES = [
@@ -46,6 +48,16 @@ const messages = {
     }
 };
 
+// Merge the community translations JSON into the messages for each locale so that
+// `FormattedMessage` calls inside the community can find `mw.community.*` keys
+// without depending on the editor-side `editorMessages` merge.
+for (const locale of Object.keys(communityTranslations)) {
+    const toMixIn = communityTranslations[locale];
+    if (toMixIn && messages[locale]) {
+        messages[locale] = {...messages[locale], ...toMixIn};
+    }
+}
+
 const getPreference = () => {
     try {
         return localStorage.getItem(LOCALE_KEY) || 'auto';
@@ -85,7 +97,13 @@ export const CommunityIntlProvider = ({children}) => {
         setPreference,
         t: key => messages[locale][key] || messages.en[key] || key
     }), [locale, preference]);
-    return <CommunityI18nContext.Provider value={value}>{children}</CommunityI18nContext.Provider>;
+    return (
+        <CommunityI18nContext.Provider value={value}>
+            <IntlProvider locale={locale} messages={messages[locale] || messages.en}>
+                {children}
+            </IntlProvider>
+        </CommunityI18nContext.Provider>
+    );
 };
 
 export const useCommunityIntl = () => useContext(CommunityI18nContext);

@@ -135,7 +135,7 @@ module.exports = {
     'home.noSharedProjects': 'No shared projects yet.',
     'home.signin': 'Sign in with Rotur',
     'home.start': 'Start creating',
-    'home.title': 'Make a project. Let someone improve it.',
+    'home.title': 'Elevate your creation.',
     'home.trending': 'Trending',
 
     'manageSpace.addCriterion': 'Add criterion',
