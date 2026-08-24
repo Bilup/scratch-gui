@@ -265,7 +265,7 @@ const clearWorkdirExceptGit = async pfs => {
     }
 };
 
-const initRepo = async ({defaultBranch = 'main', vm = null, onProgress} = {}) => {
+const initRepo = async ({defaultBranch = 'main', vm = null, initialMessage = 'Initial version', onProgress} = {}) => {
     if (!defaultBranch || typeof defaultBranch !== 'string') {
         throw new Error('Invalid default branch name');
     }
@@ -301,7 +301,7 @@ const initRepo = async ({defaultBranch = 'main', vm = null, onProgress} = {}) =>
             await git.commit({
                 fs,
                 dir: REPO_DIR,
-                message: 'Initialize repository',
+                message: initialMessage,
                 author: getDefaultAuthor()
             });
         } catch (e) {
@@ -1023,8 +1023,10 @@ const startEditorMerge = async ({ours, theirs, author} = {}) => {
         const data = e.data || {};
         const conflicts = Array.isArray(data.filepaths) ? data.filepaths : [];
         const text = conflicts.filter(filepath => TEXT_MERGE_RE.test(filepath));
+        const binary = conflicts.filter(filepath => !TEXT_MERGE_RE.test(filepath));
         setPendingMerge({
-            binary: conflicts.filter(filepath => !TEXT_MERGE_RE.test(filepath)),
+            binary,
+            binaryResolved: [],
             conflicts: text,
             message,
             ours,
@@ -1032,8 +1034,32 @@ const startEditorMerge = async ({ours, theirs, author} = {}) => {
             theirs,
             theirsOid
         });
-        return {conflicts: text, merged: false};
+        return {conflicts: text, binaryConflicts: binary, merged: false};
     }
+};
+
+const resolveEditorMergeBinary = async (filepath, choice) => {
+    if (!pendingMerge || !pendingMerge.binary.includes(filepath)) {
+        throw new Error('This file is not an active binary conflict');
+    }
+    const fs = getFs();
+    const pfs = fs.promises;
+    const sideOid = choice === 'theirs' ? pendingMerge.theirsOid : pendingMerge.oursOid;
+    const destination = pathJoin(REPO_DIR, filepath);
+    try {
+        const {blob} = await git.readBlob({fs, dir: REPO_DIR, oid: sideOid, filepath});
+        await ensureParentDir(pfs, destination);
+        await pfs.writeFile(destination, blob instanceof Uint8Array ? blob : new Uint8Array(blob));
+        await git.add({fs, dir: REPO_DIR, filepath});
+    } catch (e) {
+        try {
+            await pfs.unlink(destination);
+        } catch (unlinkError) {
+            // already absent
+        }
+        await git.remove({fs, dir: REPO_DIR, filepath});
+    }
+    if (!pendingMerge.binaryResolved.includes(filepath)) pendingMerge.binaryResolved.push(filepath);
 };
 
 const abortEditorMerge = async () => {
@@ -1050,6 +1076,10 @@ const completeEditorMerge = async ({author} = {}) => {
     const fs = getFs();
     const pfs = fs.promises;
     const unresolved = [];
+    const unresolvedBinary = pendingMerge.binary.filter(path => !pendingMerge.binaryResolved.includes(path));
+    if (unresolvedBinary.length) {
+        throw new Error(`Choose a version for: ${unresolvedBinary.join(', ')}`);
+    }
     for (const filepath of pendingMerge.conflicts) {
         const data = await pfs.readFile(pathJoin(REPO_DIR, filepath), 'utf8');
         if (CONFLICT_MARKER_RE.test(String(data))) unresolved.push(filepath);
@@ -1089,9 +1119,36 @@ const computeCommitGraph = async ({depth = 50} = {}) => {
             map.get(key).branches.add(entry.branch);
         }
     }
-    const nodes = Array.from(map.values())
-        .map(n => ({oid: n.oid, commit: n.commit, branches: Array.from(n.branches), parents: n.parents}))
-        .sort((a, b) => (b.commit.author.timestamp || 0) - (a.commit.author.timestamp || 0));
+    const allNodes = Array.from(map.values())
+        .map(n => ({oid: n.oid, commit: n.commit, branches: Array.from(n.branches), parents: n.parents}));
+    const childrenRemaining = new Map(allNodes.map(node => [node.oid, 0]));
+    for (const node of allNodes) {
+        for (const parent of node.parents) {
+            if (childrenRemaining.has(parent)) {
+                childrenRemaining.set(parent, childrenRemaining.get(parent) + 1);
+            }
+        }
+    }
+    const newestFirst = (a, b) => (b.commit.author.timestamp || 0) - (a.commit.author.timestamp || 0);
+    const ready = allNodes.filter(node => childrenRemaining.get(node.oid) === 0).sort(newestFirst);
+    const nodes = [];
+    while (ready.length) {
+        const node = ready.shift();
+        nodes.push(node);
+        for (const parent of node.parents) {
+            if (!childrenRemaining.has(parent)) continue;
+            const remaining = childrenRemaining.get(parent) - 1;
+            childrenRemaining.set(parent, remaining);
+            if (remaining === 0) {
+                ready.push(allNodes.find(candidate => candidate.oid === parent));
+                ready.sort(newestFirst);
+            }
+        }
+    }
+    if (nodes.length < allNodes.length) {
+        const included = new Set(nodes.map(node => node.oid));
+        nodes.push(...allNodes.filter(node => !included.has(node.oid)).sort(newestFirst));
+    }
     const branchLogs = logs.map(l => ({branch: l.branch, oids: l.commits.map(c => c.oid)}));
     return {branches, nodes, branchLogs};
 };
@@ -1517,6 +1574,7 @@ export {
     listBranches,
     checkoutCommitAndRestore,
     restoreProjectFromCurrentRef,
+    resolveEditorMergeBinary,
     readSnapshotAtCommit,
     getBranchLogs,
     computeCommitGraph,

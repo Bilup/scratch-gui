@@ -37,6 +37,11 @@
     transform: translateY(-2px);
 }
 
+.library-item:focus-visible {
+    outline: 3px solid $looks-secondary;
+    outline-offset: 2px;
+}
+
 .hidden {
     display: none;
 }

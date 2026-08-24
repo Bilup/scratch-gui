@@ -1,13 +1,17 @@
 import React from 'react';
 import {Link} from 'react-router-dom';
 import {FormattedMessage} from 'react-intl';
-import {Heart, Play, Coins} from 'lucide-react';
+import {GitFork, GitPullRequest, Heart, Play, Coins, TrendingUp, Users} from 'lucide-react';
 import {projectUrl} from '../api';
+import {useCommunityIntl} from '../i18n.jsx';
 import ProjectThumbnail from './ProjectThumbnail.jsx';
 import styles from './ProjectCard.module.css';
 
-const ProjectCard = ({project}) => {
+const ProjectCard = ({project, showTrend = false}) => {
+    const {t} = useCommunityIntl();
     const price = project.price || 0;
+    const teamSize = Math.max(1, Number(project.teamSize) || 1);
+    const acceptedChanges = Number(project.acceptedChanges) || 0;
     return (
         <Link
             to={projectUrl(project.id)}
@@ -24,6 +28,12 @@ const ProjectCard = ({project}) => {
                                 id="mw.community.projectCard.owned"
                             />
                         ) : price}
+                    </span>
+                ) : null}
+                {showTrend && project.weekViews > 0 ? (
+                    <span className={styles.trendBadge} title={t('projectCard.viewsLast7', 'Views in the last seven days')}>
+                        <TrendingUp size={12} />
+                        {project.weekViews} {t('projectCard.thisWeek', 'this week')}
                     </span>
                 ) : null}
                 <ProjectThumbnail
@@ -57,6 +67,24 @@ const ProjectCard = ({project}) => {
                         <Play size={13} />
                         {project.views || 0}
                     </span>
+                    {teamSize > 1 ? (
+                        <span className={styles.stat} title={t('projectCard.peopleWorked', '{count} people have worked on this project').replace('{count}', teamSize)}>
+                            <Users size={13} />
+                            {teamSize}
+                        </span>
+                    ) : null}
+                    {acceptedChanges > 0 ? (
+                        <span className={styles.stat} title={`${acceptedChanges} ${acceptedChanges === 1 ? t('projectCard.contributionOne', 'accepted contribution') : t('projectCard.contributions', 'accepted contributions')}`}>
+                            <GitPullRequest size={13} />
+                            {acceptedChanges}
+                        </span>
+                    ) : null}
+                    {project.remixParent ? (
+                        <span className={styles.stat} title={t('projectCard.remixOf', 'Remixed from another MistWarp project')}>
+                            <GitFork size={13} />
+                            {t('projectCard.remix', 'Remix')}
+                        </span>
+                    ) : null}
                 </div>
             </div>
         </Link>

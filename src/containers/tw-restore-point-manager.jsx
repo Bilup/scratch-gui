@@ -11,8 +11,7 @@ import TWRestorePointModal from '../components/tw-restore-point-modal/restore-po
 import RestorePointAPI from '../lib/api/restore-points';
 import log from '../lib/utils/log';
 import downloadBlob from '../lib/utils/download-blob.js';
-
-/* eslint-disable no-alert */
+import {projectFilename} from '../lib/utils/safe-filename.js';
 
 const SAVE_DELAY = 250;
 const MINIMUM_SAVE_TIME = 1000;
@@ -35,20 +34,10 @@ const messages = defineMessages({
         defaultMessage: 'Are you sure you want to delete ALL restore points? This cannot be undone.',
         description: 'Confirmation that appears when deleting ALL restore points.',
         id: 'tw.restorePoints.confirmDeleteAll'
-    },
-    loadError: {
-        defaultMessage: 'Error loading restore point: {error}',
-        description: 'Error message when a restore point could not be loaded',
-        id: 'tw.restorePoints.error'
-    },
-    exportError: {
-        defaultMessage: 'Error exporting restore point: {error}',
-        description: 'Error message when a restore point could not be exported',
-        id: 'tw.restorePoints.exportError'
     }
 });
 
-class TWRestorePointManager extends React.Component {
+export class TWRestorePointManager extends React.Component {
     constructor (props) {
         super(props);
         bindAll(this, [
@@ -60,10 +49,9 @@ class TWRestorePointManager extends React.Component {
             'handleChangeInterval',
             'handleClickExport',
             'handleClickLoad',
-            'isExportingRestorePoint',
-            'showConfirmDialog',
-            'handleConfirmDialog',
-            'handleCancelDialog'
+            'handleConfirmAction',
+            'handleCancelAction',
+            'isExportingRestorePoint'
         ]);
         this.state = {
             loading: true,
@@ -72,11 +60,16 @@ class TWRestorePointManager extends React.Component {
             error: null,
             interval: RestorePointAPI.readInterval(),
             exportingRestorePoints: [],
-            // 自定义确认对话框状态：{message, onConfirm}
-            // 替代原生 confirm()，样式与扩展管理弹窗保持一致
-            confirmDialog: null
+            confirmation: null,
+            confirmationError: ''
         };
         this.timeout = null;
+        this.createPromise = null;
+        this.deleting = false;
+        this.loadingRestorePoint = false;
+        this.exportingRestorePoints = new Set();
+        this.refreshRequest = 0;
+        this.unmounted = false;
         this._lastSaveDuration = 0;
         this._saveCooldownUntil = 0;
     }
@@ -105,12 +98,16 @@ class TWRestorePointManager extends React.Component {
             this.refreshState();
         } else if (!nextProps.isModalVisible && this.props.isModalVisible) {
             this.setState({
-                restorePoints: []
+                restorePoints: [],
+                confirmation: null,
+                confirmationError: ''
             });
         }
     }
 
     componentWillUnmount () {
+        this.unmounted = true;
+        this.refreshRequest++;
         this.cancelQueuedRestorePoint();
         this.props.vm.off('PROJECT_CHANGED', this.handleProjectChanged);
         this.props.vm.off('TRIGGER_MANUAL_RESTORE_POINT', this.handleClickCreate);
@@ -123,109 +120,68 @@ class TWRestorePointManager extends React.Component {
     }
 
     handleClickCreate () {
-        this.createRestorePoint(RestorePointAPI.TYPE_MANUAL)
-            .catch(error => {
-                this.handleModalError(error);
-            });
+        return this.createRestorePoint(RestorePointAPI.TYPE_MANUAL);
     }
 
     handleClickRefresh () {
-        this.refreshState();
+        return this.refreshState();
     }
 
     handleClickDelete (id) {
-        const projectTitle = this.state.restorePoints.find(i => i.id === id).title;
-        this.showConfirmDialog(
-            this.props.intl.formatMessage(messages.confirmDelete, {projectTitle}),
-            () => {
-                this.setState({
-                    loading: true
-                });
-                RestorePointAPI.deleteRestorePoint(id)
-                    .then(() => {
-                        this.refreshState();
-                    })
-                    .catch(error => {
-                        this.handleModalError(error);
-                    });
-            }
-        );
+        if (this.deleting) return;
+
+        const restorePoint = this.state.restorePoints.find(i => i.id === id);
+        if (!restorePoint) return;
+
+        this.setState({
+            confirmation: {
+                type: 'delete',
+                id,
+                title: 'Delete restore point?',
+                message: this.props.intl.formatMessage(messages.confirmDelete, {projectTitle: restorePoint.title}),
+                action: 'Delete'
+            },
+            confirmationError: ''
+        });
     }
 
     handleClickDeleteAll () {
-        this.showConfirmDialog(
-            this.props.intl.formatMessage(messages.confirmDeleteAll),
-            () => {
-                this.setState({
-                    loading: true
-                });
-                RestorePointAPI.deleteAllRestorePoints()
-                    .then(() => {
-                        this.refreshState();
-                    })
-                    .catch(error => {
-                        this.handleModalError(error);
-                    });
-            }
-        );
+        if (this.deleting) return;
+        this.setState({
+            confirmation: {
+                type: 'delete-all',
+                title: 'Delete all restore points?',
+                message: this.props.intl.formatMessage(messages.confirmDeleteAll),
+                action: 'Delete all'
+            },
+            confirmationError: ''
+        });
     }
 
-    // 加载还原点：若项目有未保存修改，先弹出确认对话框
-    handleClickLoad (id) {
-        if (!this.props.isShowingProject) {
-            // Loading a project now will break the state machine
-            return;
-        }
-        if (this.props.projectChanged) {
-            this.showConfirmDialog(
-                this.props.intl.formatMessage(messages.confirmLoad),
-                () => this.loadRestorePoint(id)
-            );
-            return;
-        }
-        this.loadRestorePoint(id);
-    }
-
-    loadRestorePoint (id) {
-        this.props.onCloseModal();
-        this.props.onStartLoadingRestorePoint(this.props.loadingState);
-
-        const backup = this.props.projectChanged ?
-            RestorePointAPI.createSafetyRestorePoint(this.props.vm, this.props.projectTitle) :
-            Promise.resolve();
-        backup
-            .then(() => RestorePointAPI.loadRestorePoint(this.props.vm, id))
-            .then(() => {
-                this.props.onFinishLoadingRestorePoint(true, this.props.loadingState);
-                setTimeout(() => {
-                    this.props.vm.renderer.draw();
-                });
-            })
-            .catch(error => {
-                log.error(error);
-                alert(this.props.intl.formatMessage(messages.loadError, {
-                    error
-                }));
-                this.props.onFinishLoadingRestorePoint(false, this.props.loadingState);
-            });
+    canLoadProject () {
+        // Loading a project now would break the state machine.
+        return this.props.isShowingProject;
     }
 
     handleClickExport (id) {
-        if (this.isExportingRestorePoint(id)) {
+        if (this.exportingRestorePoints.has(id)) {
             return;
         }
 
+        this.exportingRestorePoints.add(id);
         this.setState(oldState => ({
             exportingRestorePoints: [...oldState.exportingRestorePoints, id]
         }));
 
         const removeFromExportingList = () => {
+            this.exportingRestorePoints.delete(id);
+            if (this.unmounted) return;
             this.setState(oldState => ({
                 exportingRestorePoints: oldState.exportingRestorePoints.filter(i => i !== id)
             }));
         };
 
-        RestorePointAPI.exportRestorePoint(id)
+        return RestorePointAPI.exportRestorePoint(id)
             .then(result => {
                 // The project title may be blank (new project that was never
                 // named), which would produce a download named ".sb3". Fall back
@@ -237,15 +193,92 @@ class TWRestorePointManager extends React.Component {
             })
             .catch(error => {
                 log.error(error);
-                alert(this.props.intl.formatMessage(messages.exportError, {
-                    error
-                }));
+                this.props.onShowExportError();
                 removeFromExportingList();
             });
     }
 
     isExportingRestorePoint (id) {
         return this.state.exportingRestorePoints.includes(id);
+    }
+
+    handleClickLoad (id) {
+        if (this.loadingRestorePoint || !this.canLoadProject()) {
+            return;
+        }
+        if (this.props.projectChanged) {
+            this.setState({
+                confirmation: {
+                    type: 'load',
+                    id,
+                    title: 'Replace current project?',
+                    message: this.props.intl.formatMessage(messages.confirmLoad),
+                    action: 'Load restore point'
+                },
+                confirmationError: ''
+            });
+            return;
+        }
+        this.loadRestorePoint(id);
+    }
+
+    loadRestorePoint (id) {
+        if (this.loadingRestorePoint || !this.canLoadProject()) return;
+
+        this.loadingRestorePoint = true;
+        this.props.onCloseModal();
+        this.props.onStartLoadingRestorePoint(this.props.loadingState);
+
+        const backup = this.props.projectChanged ?
+            RestorePointAPI.createSafetyRestorePoint(this.props.vm, this.props.projectTitle) :
+            Promise.resolve();
+        return backup
+            .then(() => RestorePointAPI.loadRestorePoint(this.props.vm, id))
+            .then(() => {
+                this.props.onFinishLoadingRestorePoint(true, this.props.loadingState);
+                setTimeout(() => {
+                    this.props.vm.renderer.draw();
+                });
+            })
+            .catch(error => {
+                log.error(error);
+                this.props.onShowLoadError();
+                this.props.onFinishLoadingRestorePoint(false, this.props.loadingState);
+            })
+            .then(() => {
+                this.loadingRestorePoint = false;
+            });
+    }
+
+    handleCancelAction () {
+        if (this.deleting || this.loadingRestorePoint) return;
+        this.setState({confirmation: null, confirmationError: ''});
+    }
+
+    handleConfirmAction () {
+        const {confirmation} = this.state;
+        if (!confirmation || this.deleting || this.loadingRestorePoint) return;
+        if (confirmation.type === 'load') {
+            this.setState({confirmation: null, confirmationError: ''});
+            return this.loadRestorePoint(confirmation.id);
+        }
+
+        this.deleting = true;
+        this.setState({confirmationError: ''});
+        const deletion = confirmation.type === 'delete' ?
+            RestorePointAPI.deleteRestorePoint(confirmation.id) : RestorePointAPI.deleteAllRestorePoints();
+        return deletion
+            .then(() => {
+                this.setState({confirmation: null, confirmationError: ''});
+                return this.refreshState();
+            })
+            .catch(error => {
+                log.error('Restore point deletion error', error);
+                this.setState({confirmationError: `${error}`});
+            })
+            .then(() => {
+                this.deleting = false;
+            });
     }
 
     handleChangeInterval (e) {
@@ -286,6 +319,8 @@ class TWRestorePointManager extends React.Component {
     }
 
     createRestorePoint (type) {
+        if (this.createPromise) return this.createPromise;
+
         if (this.props.isModalVisible) {
             this.setState({
                 loading: true
@@ -294,7 +329,7 @@ class TWRestorePointManager extends React.Component {
 
         this.props.onStartCreatingRestorePoint();
         const startedAt = Date.now();
-        return Promise.all([
+        this.createPromise = Promise.all([
             // Wait a little bit before saving so UI can update before saving, which can cause stutter
             sleep(SAVE_DELAY)
                 .then(() => RestorePointAPI.createRestorePoint(this.props.vm, this.props.projectTitle, type))
@@ -324,25 +359,36 @@ class TWRestorePointManager extends React.Component {
                 if (this.props.isModalVisible) {
                     this.refreshState();
                 }
+                return false;
+            })
+            .then(result => {
+                this.createPromise = null;
+                return result;
             });
+        return this.createPromise;
     }
 
     refreshState () {
+        const request = ++this.refreshRequest;
         this.setState({
             loading: true,
             error: null,
             restorePoints: []
         });
-        RestorePointAPI.getAllRestorePoints()
+        return RestorePointAPI.getAllRestorePoints()
             .then(data => {
+                if (this.unmounted || request !== this.refreshRequest) return false;
                 this.setState({
                     loading: false,
                     totalSize: data.totalSize,
                     restorePoints: data.restorePoints
                 });
+                return true;
             })
             .catch(error => {
+                if (this.unmounted || request !== this.refreshRequest) return false;
                 this.handleModalError(error);
+                return false;
             });
     }
 
@@ -351,33 +397,6 @@ class TWRestorePointManager extends React.Component {
         this.setState({
             error: `${error}`,
             loading: false
-        });
-    }
-
-    // 打开自定义确认对话框（替代原生 confirm()）
-    showConfirmDialog (message, onConfirm) {
-        this.setState({
-            confirmDialog: {
-                message,
-                onConfirm
-            }
-        });
-    }
-
-    handleConfirmDialog () {
-        const dialog = this.state.confirmDialog;
-        this.setState({
-            confirmDialog: null
-        }, () => {
-            if (dialog && typeof dialog.onConfirm === 'function') {
-                dialog.onConfirm();
-            }
-        });
-    }
-
-    handleCancelDialog () {
-        this.setState({
-            confirmDialog: null
         });
     }
 
@@ -399,9 +418,11 @@ class TWRestorePointManager extends React.Component {
                     totalSize={this.state.totalSize}
                     restorePoints={this.state.restorePoints}
                     error={this.state.error}
-                    confirmDialog={this.state.confirmDialog}
-                    onConfirmDialog={this.handleConfirmDialog}
-                    onCancelDialog={this.handleCancelDialog}
+                    confirmation={this.state.confirmation}
+                    confirmationBusy={this.deleting}
+                    confirmationError={this.state.confirmationError}
+                    onCancelConfirmation={this.handleCancelAction}
+                    onConfirm={this.handleConfirmAction}
                 />
             );
         }
@@ -416,6 +437,8 @@ TWRestorePointManager.propTypes = {
     onStartCreatingRestorePoint: PropTypes.func.isRequired,
     onFinishCreatingRestorePoint: PropTypes.func.isRequired,
     onErrorCreatingRestorePoint: PropTypes.func.isRequired,
+    onShowExportError: PropTypes.func.isRequired,
+    onShowLoadError: PropTypes.func.isRequired,
     onStartLoadingRestorePoint: PropTypes.func.isRequired,
     onFinishLoadingRestorePoint: PropTypes.func.isRequired,
     onCloseModal: PropTypes.func.isRequired,
@@ -444,10 +467,12 @@ const mapStateToProps = state => ({
     vm: state.scratchGui.vm
 });
 
-const mapDispatchToProps = dispatch => ({
+export const mapDispatchToProps = dispatch => ({
     onStartCreatingRestorePoint: () => dispatch(showStandardAlert('twCreatingRestorePoint')),
     onFinishCreatingRestorePoint: () => showAlertWithTimeout(dispatch, 'twRestorePointSuccess'),
     onErrorCreatingRestorePoint: () => showAlertWithTimeout(dispatch, 'twRestorePointError'),
+    onShowExportError: () => dispatch(showStandardAlert('twRestorePointExportError')),
+    onShowLoadError: () => dispatch(showStandardAlert('twRestorePointLoadError')),
     onStartLoadingRestorePoint: loadingState => {
         dispatch(openLoadingProject());
         dispatch(requestProjectUpload(loadingState));
@@ -455,7 +480,7 @@ const mapDispatchToProps = dispatch => ({
     onFinishLoadingRestorePoint: (success, loadingState) => {
         dispatch(onLoadedProject(loadingState, false, success));
         dispatch(closeLoadingProject());
-        dispatch(setFileHandle(null));
+        if (success) dispatch(setFileHandle(null));
     },
     onCloseModal: () => dispatch(closeRestorePointModal())
 });

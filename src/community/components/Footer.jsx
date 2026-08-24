@@ -52,7 +52,7 @@ const Footer = () => (
                     </Link>
                 </div>
                 <div className={styles.column}>
-                    <span className={styles.columnTitle}>
+<span className={styles.columnTitle}>
                         <FormattedMessage
                             defaultMessage="Community"
                             description="Footer column title"
@@ -65,6 +65,12 @@ const Footer = () => (
                             description="Footer link to explore"
                             id="mw.community.nav.explore"
                         />
+                    </Link>
+                    <Link to="/spaces">
+                        <FormattedMessage defaultMessage="Spaces and challenges" description="Footer link to spaces" id="mw.community.footer.spacesAndChallenges" />
+                    </Link>
+                    <Link to="/roadmap">
+                        <FormattedMessage defaultMessage="Roadmap" description="Footer link to roadmap" id="mw.community.footer.roadmap" />
                     </Link>
                     <Link to="/leaderboard">
                         <FormattedMessage
@@ -96,6 +102,10 @@ const Footer = () => (
                             id="mw.community.footer.more"
                         />
                     </span>
+                    <a href="/docs/">
+                        <FormattedMessage defaultMessage="Documentation" description="Footer link to documentation" id="mw.community.footer.documentation" />
+                    </a>
+                    <a href="https://packager.bilup.org/">Packager</a>
                     <a
                         href="https://github.com/bilup"
                         target="_blank"
@@ -116,6 +126,20 @@ const Footer = () => (
                             description="Footer link to credits"
                             id="mw.community.footer.credits"
                         />
+                    </Link>
+                </div>
+                <div className={styles.column}>
+                    <span className={styles.columnTitle}>
+                        <FormattedMessage defaultMessage="Help and safety" description="Footer column title" id="mw.community.footer.helpSafety" />
+                    </span>
+                    <Link to="/support">
+                        <FormattedMessage defaultMessage="Support" description="Footer link to support" id="mw.community.footer.support" />
+                    </Link>
+                    <Link to="/trust">
+                        <FormattedMessage defaultMessage="Trust, privacy, and terms" description="Footer link to trust page" id="mw.community.footer.trustPrivacyTerms" />
+                    </Link>
+                    <Link to="/status">
+                        <FormattedMessage defaultMessage="Service status" description="Footer link to status" id="mw.community.footer.serviceStatus" />
                     </Link>
                 </div>
             </div>

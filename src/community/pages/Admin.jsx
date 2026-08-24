@@ -1,11 +1,13 @@
-import React, {useEffect, useState, useCallback} from 'react';
+/* eslint-disable max-len */
+import React, {useEffect, useRef, useState, useCallback} from 'react';
 import {Link} from 'react-router-dom';
 import {useIntl} from '../../lib/tw-use-intl.jsx';
 import {Flag, User, FolderOpen, Ban, ShieldCheck, BarChart3, AlertTriangle, Puzzle} from 'lucide-react';
 import api, {projectUrl, embedUrl} from '../api';
 import {useUser} from '../UserContext.jsx';
 import Avatar from '../components/Avatar.jsx';
-import {formatDateTime, formatBytes} from '../format';
+import Modal from '../components/ui/Modal.jsx';
+import {formatDateTime, formatBytes, timeAgo} from '../format';
 import useLatest from '../use-latest.js';
 import styles from './Admin.module.css';
 
@@ -88,6 +90,52 @@ const QuotaTile = ({quota}) => {
 
 const num = v => Number(v || 0).toLocaleString();
 
+const AdminActionDialog = ({dialog, busy, error, onChange, onCancel, onConfirm}) => {
+    const {formatMessage: fmtD} = useIntl();
+    const td = (id, defaultMessage, values) => fmtD({id, defaultMessage}, values);
+    if (!dialog) return null;
+    const Icon = dialog.icon || AlertTriangle;
+    return (
+        <Modal
+            icon={Icon}
+            title={dialog.title}
+            dismissDisabled={busy}
+            onClose={onCancel}
+            actions={<React.Fragment>
+                <button className={styles.secondary} disabled={busy} onClick={onCancel}>{td('mw.community.admin.cancel', 'Cancel')}</button>
+                <button className={dialog.danger ? styles.danger : styles.primary} disabled={busy} onClick={onConfirm}>
+                    {busy ? td('mw.community.admin.working', 'Working…') : dialog.action}
+                </button>
+            </React.Fragment>}
+        >
+            {dialog.description ? <p>{dialog.description}</p> : null}
+            {(dialog.fields || []).map(field => (
+                <label key={field.key} className={styles.field}>
+                    <span>{field.label}</span>
+                    {field.multiline ? (
+                        <textarea
+                            className={styles.textarea}
+                            maxLength={field.maxLength || 1000}
+                            value={field.value}
+                            onChange={event => onChange(field.key, event.target.value)}
+                        />
+                    ) : (
+                        <input
+                            className={styles.input}
+                            maxLength={field.maxLength || 100}
+                            value={field.value}
+                            onChange={event => onChange(field.key, event.target.value)}
+                        />
+                    )}
+                </label>
+            ))}
+            {error ? <p className={styles.error}>{error}</p> : null}
+        </Modal>
+    );
+};
+
+export {AdminActionDialog};
+
 const StatsOverview = () => {
     const intl = useIntl();
     const t = (id, defaultMessage, values) => intl.formatMessage({id, defaultMessage}, values);
@@ -96,6 +144,7 @@ const StatsOverview = () => {
     const [error, setError] = useState('');
     const [payoutBusy, setPayoutBusy] = useState(false);
     const [payoutNote, setPayoutNote] = useState('');
+    const payoutLocks = useRef(new Set());
 
     useEffect(() => {
         api.admin.stats()
@@ -108,7 +157,8 @@ const StatsOverview = () => {
     }, []);
 
     const retryPayouts = async () => {
-        if (payoutBusy) return;
+        if (payoutLocks.current.has('retry')) return;
+        payoutLocks.current.add('retry');
         setPayoutBusy(true);
         setPayoutNote('');
         try {
@@ -122,6 +172,7 @@ const StatsOverview = () => {
         } catch (e) {
             setPayoutNote(e.message || t('mw.community.admin.couldNotRetry', 'Could not retry payouts.'));
         } finally {
+            payoutLocks.current.delete('retry');
             setPayoutBusy(false);
         }
     };
@@ -203,48 +254,93 @@ const ProjectManager = () => {
     const [projects, setProjects] = useState(null);
     const [error, setError] = useState('');
     const [note, setNote] = useState('');
+    const [dialog, setDialog] = useState(null);
+    const [dialogError, setDialogError] = useState('');
+    const [dialogBusy, setDialogBusy] = useState(false);
+    const actionInFlight = useRef(false);
+    const beginSearch = useLatest();
 
     const search = useCallback(async q => {
+        const fresh = beginSearch();
         setError('');
         setNote('');
         try {
             const data = await api.admin.searchProjects(q || '');
-            setProjects(data.projects || []);
+            fresh(setProjects)(data.projects || []);
         } catch (e) {
-            setError(e.message || t('mw.community.admin.couldNotLoadProjects', 'Could not load projects.'));
+            fresh(setError)(e.message || t('mw.community.admin.couldNotLoadProjects', 'Could not load projects.'));
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [beginSearch]);
 
     useEffect(() => {
         search('');
     }, [search]);
 
     const unshare = async id => {
+        if (actionInFlight.current) return;
+        const releaseAction = () => {
+            actionInFlight.current = false;
+        };
+        actionInFlight.current = true;
         try {
             setError('');
             await api.unpublish(id);
             setNote(t('mw.community.admin.projectUnshared', 'Project unshared.'));
             search(query);
         } catch (e) {
-            setError(e.message || t('mw.community.admin.couldNotUnshare', 'Could not unshare that project.'));
+            setError(e.message || t('mw.community.admin.couldNotUnshareThat', 'Could not unshare that project.'));
+        } finally {
+            releaseAction();
         }
     };
 
-    const remove = async id => {
-        if (!window.confirm(t('mw.community.admin.deleteConfirm', 'Delete this project? This cannot be undone.'))) return;
+    const remove = id => {
+        if (actionInFlight.current) return;
+        const project = (projects || []).find(item => item.id === id);
+        setDialogError('');
+        setDialog({
+            id,
+            title: t('mw.community.admin.deleteProjectTitle', 'Delete project?'),
+            description: t('mw.community.admin.deleteProjectDesc', 'Delete {title} permanently?', {title: project ? project.title : t('mw.community.admin.thisProject', 'this project')}),
+            action: t('mw.community.admin.deleteProject', 'Delete project'),
+            danger: true,
+            icon: FolderOpen
+        });
+    };
+
+    const confirmRemove = async () => {
+        if (!dialog || actionInFlight.current) return;
+        const releaseAction = () => {
+            actionInFlight.current = false;
+        };
+        actionInFlight.current = true;
+        setDialogBusy(true);
         try {
-            setError('');
-            await api.deleteProject(id);
+            setDialogError('');
+            await api.deleteProject(dialog.id);
+            setDialog(null);
             setNote(t('mw.community.admin.projectDeleted', 'Project deleted.'));
             search(query);
         } catch (e) {
-            setError(e.message || t('mw.community.admin.couldNotDelete', 'Could not delete that project.'));
+            setDialogError(e.message || t('mw.community.admin.couldNotDeleteThat', 'Could not delete that project.'));
+        } finally {
+            releaseAction();
+            setDialogBusy(false);
         }
     };
 
     return (
         <div>
+            <AdminActionDialog
+                dialog={dialog}
+                busy={dialogBusy}
+                error={dialogError}
+                onChange={() => {}}
+                onCancel={() => {
+                    if (!actionInFlight.current) setDialog(null);
+                }}
+                onConfirm={confirmRemove}
+            />
             <h2>{t('mw.community.admin.projects', 'Projects')}</h2>
             <div className={styles.addAdmin}>
                 <input
@@ -316,28 +412,48 @@ const UserDetailCard = ({username, onBack}) => {
     const [level, setLevel] = useState('good');
     const [reasonText, setReasonText] = useState('');
     const [message, setMessage] = useState('');
+    const [dialog, setDialog] = useState(null);
+    const [dialogBusy, setDialogBusy] = useState(false);
+    const [dialogError, setDialogError] = useState('');
+    const deleteInFlight = useRef(false);
+    const currentUsername = useRef(username);
+    currentUsername.current = username;
 
     useEffect(() => {
         if (!username) return;
+        let active = true;
+        setData(null);
         setError('');
         setNote('');
+        setDialog(null);
+        setDialogError('');
+        setDialogBusy(false);
         api.admin.getUser(username)
             .then(result => {
+                if (!active) return;
                 setData(result);
                 setLevel((result.standing && result.standing.level) || 'good');
                 setReasonText('');
                 setMessage('');
             })
             .catch(e => {
+                if (!active) return;
                 setData(null);
                 setError(e.message || t('mw.community.admin.couldNotLoadUser', 'Could not load that user.'));
             });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        return () => {
+            active = false;
+        };
     }, [username]);
 
     const refresh = () => {
         if (!data) return;
-        api.admin.getUser(data.username).then(setData).catch(() => {});
+        const actionUsername = data.username;
+        api.admin.getUser(actionUsername)
+            .then(result => {
+                if (currentUsername.current === actionUsername) setData(result);
+            })
+            .catch(() => {});
     };
 
     const applyStanding = async () => {
@@ -388,14 +504,38 @@ const UserDetailCard = ({username, onBack}) => {
         }
     };
 
-    const deleteProject = async pid => {
-        if (!window.confirm(t('mw.community.admin.deleteConfirm', 'Delete this project? This cannot be undone.'))) return;
+    const deleteProject = pid => {
+        if (deleteInFlight.current) return;
+        const project = (data.projects || []).find(item => item.id === pid);
+        setDialogError('');
+        setDialog({
+            id: pid,
+            title: t('mw.community.admin.deleteProjectTitle', 'Delete project?'),
+            description: t('mw.community.admin.deleteProjectDesc', 'Delete {title} permanently?', {title: project ? project.title : t('mw.community.admin.thisProject', 'this project')}),
+            action: t('mw.community.admin.deleteProject', 'Delete project'),
+            danger: true,
+            icon: FolderOpen
+        });
+    };
+
+    const confirmDeleteProject = async () => {
+        if (!dialog || deleteInFlight.current) return;
+        const releaseDelete = () => {
+            deleteInFlight.current = false;
+        };
+        deleteInFlight.current = true;
+        setDialogBusy(true);
         try {
-            await api.deleteProject(pid);
+            setDialogError('');
+            await api.deleteProject(dialog.id);
+            setDialog(null);
             setNote(t('mw.community.admin.projectDeleted', 'Project deleted.'));
             refresh();
         } catch (e) {
-            setError(e.message || t('mw.community.admin.couldNotDelete', 'Could not delete.'));
+            setDialogError(e.message || t('mw.community.admin.couldNotDelete', 'Could not delete.'));
+        } finally {
+            releaseDelete();
+            setDialogBusy(false);
         }
     };
 
@@ -411,6 +551,16 @@ const UserDetailCard = ({username, onBack}) => {
 
     return (
         <div>
+            <AdminActionDialog
+                dialog={dialog}
+                busy={dialogBusy}
+                error={dialogError}
+                onChange={() => {}}
+                onCancel={() => {
+                    if (!deleteInFlight.current) setDialog(null);
+                }}
+                onConfirm={confirmDeleteProject}
+            />
             <button className={styles.secondary} onClick={onBack} style={{marginBottom: 10}}>{t('mw.community.admin.backToList', '← Back to list')}</button>
             <div className={styles.userCard}>
                 <div className={styles.userHead}>
@@ -656,7 +806,7 @@ const EvidenceDetails = ({data}) => {
             <iframe
                 className={styles.evidenceStage}
                 src={embedUrl({projectJsonUrl: data.projectJsonUrl, assetsBase: data.assetsBase})}
-                title="Reported project copy"
+                title={t('mw.community.admin.reportedCopy', 'Reported project copy')}
                 sandbox="allow-scripts allow-pointer-lock"
             />
         </div>
@@ -710,6 +860,10 @@ const ExtensionManager = () => {
     const [source, setSource] = useState(null);
     const [blockedUrl, setBlockedUrl] = useState('');
     const [query, setQuery] = useState('');
+    const [dialog, setDialog] = useState(null);
+    const [dialogBusy, setDialogBusy] = useState(false);
+    const [dialogError, setDialogError] = useState('');
+    const policyInFlight = useRef(false);
 
     const load = useCallback(() => {
         setError('');
@@ -723,16 +877,21 @@ const ExtensionManager = () => {
         load();
     }, [load]);
 
-    const setPolicy = async (hash, status) => {
-        if (status === 'blocked' && !window.confirm(t('mw.community.admin.blockConfirm', 'Block this extension and unshare every project using it?'))) {
-            return;
-        }
+    const applyPolicy = async (hash, status) => {
+        if (policyInFlight.current) return;
+        const releasePolicy = () => {
+            policyInFlight.current = false;
+        };
+        policyInFlight.current = true;
+        setDialogBusy(true);
+        setDialogError('');
         try {
             const result = await api.admin.setExtensionPolicy(hash, status);
             setNote(result.affected ?
                 t('mw.community.admin.affectedNote', 'Made {count} affected projects private and notified their owners.', {count: result.affected}) :
                 t('mw.community.admin.policyUpdated', 'Extension policy updated.'));
             setSource(null);
+            setDialog(null);
             setData(current => ({
                 ...current,
                 extensions: (current.extensions || []).map(extension => {
@@ -741,18 +900,47 @@ const ExtensionManager = () => {
                 })
             }));
         } catch (e) {
-            setError(e.message || t('mw.community.admin.couldNotUpdatePolicy', 'Could not update extension policy.'));
+            if (dialog) setDialogError(e.message || t('mw.community.admin.couldNotUpdateExtPolicy', 'Could not update extension policy.'));
+            else setError(e.message || t('mw.community.admin.couldNotUpdateExtPolicy', 'Could not update extension policy.'));
+        } finally {
+            releasePolicy();
+            setDialogBusy(false);
         }
     };
 
-    const setUrlPolicy = async (url, blocked) => {
-        if (blocked && !window.confirm(t('mw.community.admin.blockUrlConfirm', 'Block this URL and unshare every project using it?'))) return;
+    const setPolicy = (hash, status) => {
+        if (status === 'blocked') {
+            setDialogError('');
+            setDialog({
+                kind: 'hash',
+                hash,
+                status,
+                title: t('mw.community.admin.blockExtTitle', 'Block extension?'),
+                description: t('mw.community.admin.blockExtDesc', 'This makes every project using the extension private and notifies its owner.'),
+                action: t('mw.community.admin.blockExtension', 'Block extension'),
+                danger: true,
+                icon: Puzzle
+            });
+            return;
+        }
+        applyPolicy(hash, status);
+    };
+
+    const applyUrlPolicy = async (url, blocked) => {
+        if (policyInFlight.current) return;
+        const releasePolicy = () => {
+            policyInFlight.current = false;
+        };
+        policyInFlight.current = true;
+        setDialogBusy(true);
+        setDialogError('');
         try {
             const result = await api.admin.setExtensionUrlPolicy(url, blocked);
             setNote(result.affected ?
                 t('mw.community.admin.affectedNote', 'Made {count} affected projects private and notified their owners.', {count: result.affected}) :
                 t('mw.community.admin.urlUpdated', 'URL policy updated.'));
             setBlockedUrl('');
+            setDialog(null);
             setData(current => ({
                 ...current,
                 blockedUrls: blocked ?
@@ -760,8 +948,36 @@ const ExtensionManager = () => {
                     (current.blockedUrls || []).filter(blockedEntry => blockedEntry !== url)
             }));
         } catch (e) {
-            setError(e.message || t('mw.community.admin.couldNotUpdateUrl', 'Could not update URL policy.'));
+            if (dialog) setDialogError(e.message || t('mw.community.admin.couldNotUpdateUrlPolicy', 'Could not update URL policy.'));
+            else setError(e.message || t('mw.community.admin.couldNotUpdateUrlPolicy', 'Could not update URL policy.'));
+        } finally {
+            releasePolicy();
+            setDialogBusy(false);
         }
+    };
+
+    const setUrlPolicy = (url, blocked) => {
+        if (blocked) {
+            setDialogError('');
+            setDialog({
+                kind: 'url',
+                url,
+                blocked,
+                title: t('mw.community.admin.blockUrlTitle', 'Block extension URL?'),
+                description: t('mw.community.admin.blockUrlDesc', 'This makes every project using the URL private and notifies its owner.'),
+                action: t('mw.community.admin.blockUrl', 'Block URL'),
+                danger: true,
+                icon: Puzzle
+            });
+            return;
+        }
+        applyUrlPolicy(url, blocked);
+    };
+
+    const confirmPolicy = () => {
+        if (!dialog) return;
+        if (dialog.kind === 'hash') return applyPolicy(dialog.hash, dialog.status);
+        return applyUrlPolicy(dialog.url, dialog.blocked);
     };
 
     const viewSource = async hash => {
@@ -809,6 +1025,16 @@ const ExtensionManager = () => {
 
     return (
         <div>
+            <AdminActionDialog
+                dialog={dialog}
+                busy={dialogBusy}
+                error={dialogError}
+                onChange={() => {}}
+                onCancel={() => {
+                    if (!policyInFlight.current) setDialog(null);
+                }}
+                onConfirm={confirmPolicy}
+            />
             <h2>{t('mw.community.admin.extensions', 'Extensions')}</h2>
             <input
                 type="search"
@@ -977,6 +1203,10 @@ const Admin = () => {
     const [error, setError] = useState('');
     const [newAdmin, setNewAdmin] = useState('');
     const [active, setActive] = useState('overview');
+    const [dialog, setDialog] = useState(null);
+    const [dialogBusy, setDialogBusy] = useState(false);
+    const [dialogError, setDialogError] = useState('');
+    const actionLocks = useRef(new Set());
     const beginLoad = useLatest();
 
     const load = useCallback(() => {
@@ -998,6 +1228,9 @@ const Admin = () => {
     }, [user, load]);
 
     const act = async (id, action, reason) => {
+        const actionKey = `report:${id}`;
+        if (actionLocks.current.has(actionKey)) return;
+        actionLocks.current.add(actionKey);
         try {
             setError('');
             await api.admin.reportAction(id, action, reason);
@@ -1005,33 +1238,116 @@ const Admin = () => {
             load();
         } catch (e) {
             setError(e.message || t('mw.community.admin.actionFailed', 'Action failed.'));
+        } finally {
+            actionLocks.current.delete(actionKey);
         }
     };
 
+    const replyToSupport = report => {
+        setDialogError('');
+        setDialog({
+            kind: 'support-reply',
+            report,
+            title: t('mw.community.admin.replyToTitle', 'Reply to @{reporter}', {reporter: report.reporter}),
+            description: t('mw.community.admin.replyToDesc', 'The reply is sent as a private moderation message. Sending it closes the support request.'),
+            action: t('mw.community.admin.sendAndClose', 'Send and close'),
+            fields: [{key: 'message', label: t('mw.community.admin.message', 'Message'), value: '', multiline: true, maxLength: 2000}],
+            icon: Flag
+        });
+    };
+
     const warnFromReport = report => {
-        const reason = window.prompt(t('mw.community.admin.warnPrompt', 'Reason for the warning (shown to the user):'));
-        if (reason === null) return; // cancelled
-        act(report.id, 'warn_user', reason.trim());
+        setDialogError('');
+        setDialog({
+            kind: 'warn-report',
+            report,
+            title: t('mw.community.admin.warnUserTitle', 'Warn user?'),
+            description: t('mw.community.admin.warnUserDesc', 'The user will see this reason in their moderation notice.'),
+            action: t('mw.community.admin.sendWarning', 'Send warning'),
+            fields: [{key: 'reason', label: t('mw.community.admin.reason', 'Reason'), value: '', multiline: true, maxLength: 1000}],
+            icon: AlertTriangle
+        });
     };
 
     const banFromReport = report => {
-        const who = report.type === 'project' ?
-            t('mw.community.admin.ownerOfProject', 'the owner of this project') :
-            `@${report.target}`;
-        if (!window.confirm(t('mw.community.admin.banWhoConfirm', 'Ban {who}? They will be locked out of Bilup until unbanned.', {who}))) return;
-        act(report.id, 'ban_user');
+        const who = report.type === 'project' ? t('mw.community.admin.theOwner', 'the owner of this project') : `@${report.target}`;
+        setDialogError('');
+        setDialog({
+            kind: 'ban-report',
+            report,
+            title: t('mw.community.admin.banWhoTitle', 'Ban {who}?', {who}),
+            description: t('mw.community.admin.banDesc', 'They will be locked out of Bilup until an admin unbans them.'),
+            action: t('mw.community.admin.banUser', 'Ban user'),
+            danger: true,
+            icon: Ban
+        });
     };
 
-    const banByName = async () => {
-        const username = window.prompt(t('mw.community.admin.banWhichUser', 'Ban which user?'));
-        if (!username) return;
-        const reason = window.prompt(t('mw.community.admin.banReason', 'Reason for the ban?')) || '';
+    const banByName = () => {
+        setDialogError('');
+        setDialog({
+            kind: 'ban-user',
+            title: t('mw.community.admin.banUser', 'Ban user'),
+            description: t('mw.community.admin.banDesc', 'They will be locked out of Bilup until an admin unbans them.'),
+            action: t('mw.community.admin.banUser', 'Ban user'),
+            danger: true,
+            fields: [
+                {key: 'username', label: t('mw.community.admin.username', 'Username'), value: '', maxLength: 80},
+                {key: 'reason', label: t('mw.community.admin.reason', 'Reason'), value: '', multiline: true, maxLength: 1000}
+            ],
+            icon: Ban
+        });
+    };
+
+    const updateDialogField = (key, value) => {
+        setDialog(current => ({
+            ...current,
+            fields: current.fields.map(field => (field.key === key ? {...field, value} : field))
+        }));
+        setDialogError('');
+    };
+
+    const confirmDialog = async () => {
+        if (!dialog) return;
+        const actionKey = `dialog:${dialog.kind}:${dialog.report ? dialog.report.id : 'user'}`;
+        if (actionLocks.current.has(actionKey)) return;
+        const values = Object.fromEntries((dialog.fields || []).map(field => [field.key, field.value.trim()]));
+        if (dialog.kind === 'support-reply' && !values.message) {
+            setDialogError(t('mw.community.admin.enterReply', 'Enter a reply.'));
+            return;
+        }
+        if (dialog.kind === 'warn-report' && !values.reason) {
+            setDialogError(t('mw.community.admin.enterWarningReason', 'Enter a warning reason.'));
+            return;
+        }
+        if (dialog.kind === 'ban-user' && !values.username) {
+            setDialogError(t('mw.community.admin.enterUsername', 'Enter a username.'));
+            return;
+        }
+        actionLocks.current.add(actionKey);
+        setDialogBusy(true);
+        setDialogError('');
         try {
-            setError('');
-            await api.admin.ban(username.trim(), reason.trim());
+            if (dialog.kind === 'support-reply') {
+                await api.admin.messageUser(dialog.report.reporter, values.message);
+                await api.admin.reportAction(dialog.report.id, 'dismiss');
+                window.dispatchEvent(new Event('mw:reports-updated'));
+            } else if (dialog.kind === 'warn-report') {
+                await api.admin.reportAction(dialog.report.id, 'warn_user', values.reason);
+                window.dispatchEvent(new Event('mw:reports-updated'));
+            } else if (dialog.kind === 'ban-report') {
+                await api.admin.reportAction(dialog.report.id, 'ban_user');
+                window.dispatchEvent(new Event('mw:reports-updated'));
+            } else if (dialog.kind === 'ban-user') {
+                await api.admin.ban(values.username, values.reason);
+            }
+            setDialog(null);
             load();
         } catch (e) {
-            setError(e.message || t('mw.community.admin.couldNotBan', 'Could not ban that user.'));
+            setDialogError(e.message || t('mw.community.admin.actionFailed', 'Action failed.'));
+        } finally {
+            actionLocks.current.delete(actionKey);
+            setDialogBusy(false);
         }
     };
 
@@ -1083,7 +1399,17 @@ const Admin = () => {
 
     return (
         <main className={styles.page}>
-            <h1>{t('mw.community.admin.admin', 'Admin')}</h1>
+            <AdminActionDialog
+                dialog={dialog}
+                busy={dialogBusy}
+                error={dialogError}
+                onChange={updateDialogField}
+                onCancel={() => {
+                    if (!dialogBusy) setDialog(null);
+                }}
+                onConfirm={confirmDialog}
+            />
+            <h1>{t('mw.community.admin.title', 'Admin')}</h1>
             {error ? <p className={styles.error}>{error}</p> : null}
 
             <div className={styles.layout}>
@@ -1132,7 +1458,7 @@ const Admin = () => {
                                         >
                                             <div className={styles.rowInfo}>
                                                 <span className={styles.rowTitle}>
-                                                    {report.type === 'project' ? (
+                                                    {report.type === 'support' ? `${report.supportType || t('mw.community.admin.support', 'Support')} ${t('mw.community.admin.requestFrom', 'request from @{reporter}', {reporter: report.reporter})}` : report.type === 'project' ? (
                                                         <Link
                                                             to={projectUrl(report.target)}
                                                         >{t('mw.community.admin.reportProject', 'Project {id}', {id: report.target})}</Link>
@@ -1167,36 +1493,34 @@ const Admin = () => {
                                                     )}
                                                 </span>
                                                 <span className={styles.rowMeta}>
-                                                    {t('mw.community.admin.reportedBy', 'Reported by @{reporter} · {time}', {
+                                                    {t('mw.community.admin.reportedBy', 'Reported by @{reporter} · {time} ago', {
                                                         reporter: report.reporter,
-                                                        time: formatDateTime(report.created)
+                                                        time: timeAgo(report.created)
                                                     })}
-                                                    {report.context ? ` · ${t('mw.community.admin.inContext', 'in {context}', {context: report.context})}` : ''}
+                                                    {report.type !== 'support' && report.context ? t('mw.community.admin.inContext', ' · in {context}', {context: report.context}) : ''}
                                                 </span>
                                                 <span className={styles.reason}>{report.reason}</span>
+                                                {report.type === 'support' && report.context ? <span className={styles.reason}>{report.context}</span> : null}
                                                 {report.type === 'project' ? (
                                                     <EvidencePanel target={report.target} />
                                                 ) : null}
                                             </div>
                                             <div className={styles.rowActions}>
+                                                {report.type === 'support' ? <button className={styles.secondary} onClick={() => replyToSupport(report)}>{t('mw.community.admin.replyAndClose', 'Reply and close')}</button> : null}
                                                 {report.type === 'project' ? (
                                                     <button
                                                         className={styles.secondary}
                                                         onClick={() => act(report.id, 'unshare_project')}
                                                     >{t('mw.community.admin.unshare', 'Unshare')}</button>
                                                 ) : null}
-                                                <button
+                                                {report.type !== 'support' ? <button
                                                     className={styles.secondary}
                                                     onClick={() => warnFromReport(report)}
-                                                >{report.type === 'project' ?
-                                                    t('mw.community.admin.warnOwner', 'Warn owner') :
-                                                    t('mw.community.admin.warnUser', 'Warn user')}</button>
-                                                <button
+                                                >{report.type === 'project' ? t('mw.community.admin.warnOwner', 'Warn owner') : t('mw.community.admin.warnUser', 'Warn user')}</button> : null}
+                                                {report.type !== 'support' ? <button
                                                     className={styles.danger}
                                                     onClick={() => banFromReport(report)}
-                                                >{report.type === 'project' ?
-                                                    t('mw.community.admin.banOwner', 'Ban owner') :
-                                                    t('mw.community.admin.banUser', 'Ban user')}</button>
+                                                >{report.type === 'project' ? t('mw.community.admin.banOwner', 'Ban owner') : t('mw.community.admin.banUser', 'Ban user')}</button> : null}
                                                 <button
                                                     className={styles.secondary}
                                                     onClick={() => act(report.id, 'dismiss')}

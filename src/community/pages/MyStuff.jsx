@@ -1,25 +1,52 @@
 import React, {useEffect, useState, useCallback, useRef} from 'react';
-import {Link} from 'react-router-dom';
+import {Link, useSearchParams} from 'react-router-dom';
 import {useIntl} from '../../lib/tw-use-intl.jsx';
 import {
     Plus, Trash2, Heart, ThumbsDown, Play, Upload, Star, MoreHorizontal, Pencil, ExternalLink, HardDrive,
-    SlidersHorizontal, Coins, Eye, TrendingUp, Wallet, HeartHandshake, FolderOpen, Bookmark, LayoutDashboard,
-    RefreshCw, AlertTriangle, CheckCircle
+    SlidersHorizontal, Coins, Eye, TrendingUp, Wallet, HeartHandshake, FolderOpen, LayoutDashboard,
+    RefreshCw, AlertTriangle, CheckCircle, Library, Layers3
 } from 'lucide-react';
 import api, {editorUrl, projectUrl} from '../api';
 import {formatBytes} from '../format';
 import {getAccountSummary} from '../../lib/rotur/client.js';
 import {useUser} from '../UserContext.jsx';
-import ProjectCard from '../components/ProjectCard.jsx';
+import Button from '../components/ui/Button.jsx';
+import Dropdown from '../components/ui/Dropdown.jsx';
+import IconButton from '../components/ui/IconButton.jsx';
+import Modal from '../components/ui/Modal.jsx';
 import ProjectThumbnail from '../components/ProjectThumbnail.jsx';
+import CollectionSaveModal from '../components/CollectionSaveModal.jsx';
+import MyStuffSpaces from '../components/MyStuffSpaces.jsx';
 import StatChart, {historyRows} from '../components/StatChart.jsx';
-import {KO_FI_SHOP_URL} from '../credits';
+import {CREDIT_PACKS, openCreditCheckout} from '../credits';
 import Sidebar from '../components/Sidebar.jsx';
-import useEscape from '../use-escape.js';
+import useLatest from '../use-latest.js';
 import styles from './MyStuff.module.css';
 
 const fmt = value => (Number(value) || 0).toLocaleString();
 const fmtCredits = value => Math.round((Number(value) || 0) * 100) / 100;
+
+const uploadErrorTarget = (agreementAccepted, error, t) => {
+    const message = error && error.message;
+    return agreementAccepted ? {
+        actionError: message || t('mw.community.myStuff.couldNotUpload', 'Could not upload that project.'),
+        agreementError: ''
+    } : {
+        actionError: '',
+        agreementError: message || t('mw.community.myStuff.couldNotAcceptAgreement', 'Could not accept agreement.')
+    };
+};
+
+const uploadProgressLabel = (loaded, total, t) => {
+    if (!(total > 0)) return t('mw.community.myStuff.uploading', 'Uploading…');
+    const percent = Math.min(100, Math.max(0, Math.round((loaded / total) * 100)));
+    return percent >= 100 ?
+        t('mw.community.myStuff.processingOnServer', 'Processing on server…') :
+        t('mw.community.myStuff.uploadingPercent', 'Uploading {percent}%', {percent});
+};
+
+const shouldRefreshProjectsAfterUploadError = error =>
+    Boolean(error && error.code === 'upload_processing_timeout');
 
 const visibilityLabel = (project, intl) => {
     const v = project.visibility || (project.shared ? 'public' : 'private');
@@ -29,11 +56,33 @@ const visibilityLabel = (project, intl) => {
 };
 
 const Overview = ({stats, account, quota}) => {
-    const intl = useIntl();
+const intl = useIntl();
     const t = (id, defaultMessage, values) => intl.formatMessage({id, defaultMessage}, values);
+    const [buyBusy, setBuyBusy] = useState(false);
+    const [buyError, setBuyError] = useState('');
+    const buyInFlight = useRef(false);
     const weekViews = historyRows(stats.viewHistory, 7).reduce((sum, row) => sum + row.value, 0);
     const pct = quota ? (quota.used / quota.limit) * 100 : 0;
 
+    const buyCredits = async () => {
+        if (buyInFlight.current) return;
+        const releaseBuy = () => {
+            buyInFlight.current = false;
+        };
+        buyInFlight.current = true;
+        setBuyBusy(true);
+        setBuyError('');
+        try {
+            await openCreditCheckout(CREDIT_PACKS[1]);
+        } catch (e) {
+            setBuyError(e.needsReauth ?
+                t('mw.community.myStuff.buyCreditsReauth', 'Your current login cannot buy credits. Log out and back in, then try again.') :
+                (e.message || t('mw.community.myStuff.couldNotOpenCheckout', 'Could not open checkout.')));
+        } finally {
+            releaseBuy();
+            setBuyBusy(false);
+        }
+    };
     return (
         <section className={styles.dashboard}>
             <div className={styles.dashGrid}>
@@ -79,11 +128,15 @@ const Overview = ({stats, account, quota}) => {
                     <div className={`${styles.dashTile} ${styles.tileBalance}`}>
                         <span className={styles.dashIcon}><Wallet size={18} /></span>
                         <span className={styles.dashNumber}>{fmtCredits(account.balance)}</span>
-                        <span className={styles.dashLabel}>{t('mw.community.myStuff.balance', 'Balance')}</span>
-                        <a
+<span className={styles.dashLabel}>{t('mw.community.myStuff.balance', 'Balance')}</span>
+                        <Button
+                            variant="secondary"
                             className={styles.dashBuy}
-                            href={KO_FI_SHOP_URL}
-                        >{t('mw.community.myStuff.buyCredits', 'Buy credits')}</a>
+                            onClick={buyCredits}
+                            busy={buyBusy}
+                            busyLabel={t('mw.community.myStuff.opening', 'Opening…')}
+                        >{t('mw.community.myStuff.buyCredits', 'Buy credits')}</Button>
+                        {buyError ? <span className={styles.error}>{buyError}</span> : null}
                     </div>
                 ) : null}
                 {account && account.donationsReceived > 0 ? (
@@ -114,6 +167,7 @@ const UploadUsage = ({quota, onRefresh}) => {
     const [payTo, setPayTo] = useState('');
     const [resetError, setResetError] = useState('');
     const [resetDone, setResetDone] = useState(false);
+    const resetInFlight = useRef(false);
 
     const pct = quota ? (quota.used / quota.limit) * 100 : 0;
 
@@ -121,6 +175,11 @@ const UploadUsage = ({quota, onRefresh}) => {
 
     // shared boilerplate for both reset actions
     const runReset = useCallback(async (fn, errorPrefix) => {
+        if (resetInFlight.current) return;
+        const releaseReset = () => {
+            resetInFlight.current = false;
+        };
+        resetInFlight.current = true;
         setResetting(true);
         setResetError('');
         try {
@@ -128,6 +187,7 @@ const UploadUsage = ({quota, onRefresh}) => {
         } catch (e) {
             setResetError(e.message || errorPrefix);
         } finally {
+            releaseReset();
             setResetting(false);
         }
     }, []);
@@ -156,7 +216,6 @@ const UploadUsage = ({quota, onRefresh}) => {
         setResetKey('');
         setResetError('');
     }, []);
-    useEscape(showConfirm ? dismiss : null);
 
     // Resolve the oldest upload date, tolerating both ms and s timestamps and
     // rejecting obviously-wrong values (e.g. 1970-era epochs when nothing was uploaded).
@@ -233,59 +292,61 @@ const UploadUsage = ({quota, onRefresh}) => {
                 ) : resetError ? (
                     <div className={styles.uploadResetError}>
                         <p><AlertTriangle size={14} /> {resetError}</p>
-                        <button
+                        <Button
+                            variant="secondary"
                             className={styles.secondary}
                             onClick={() => setResetError('')}
-                        >{t('mw.community.myStuff.dismiss', 'Dismiss')}</button>
+>{t('mw.community.myStuff.dismiss', 'Dismiss')}</Button>
                     </div>
                 ) : (
-                    <button
+                    <Button
+                        variant="primary"
                         className={styles.uploadResetBtn}
                         onClick={handleReset}
-                        disabled={resetting}
+                        busy={resetting}
+                        busyLabel={t('mw.community.myStuff.starting', 'Starting…')}
                     >
                         <RefreshCw size={16} />
-                        {resetting ?
+{resetting ?
                             t('mw.community.myStuff.starting', 'Starting…') :
                             t('mw.community.myStuff.resetQuotaBtn', 'Reset quota')}
-                    </button>
+                    </Button>
                 )}
             </div>
 
             {showConfirm ? (
-                <div className={styles.confirmOverlay} onClick={dismiss}>
-                    <div
-                        className={styles.confirmModal}
-                        onClick={e => e.stopPropagation()}
-                        role="dialog"
-                        aria-modal="true"
-                    >
-                        <h3 className={styles.confirmTitle}>{t('mw.community.myStuff.confirmResetTitle', 'Reset upload quota?')}</h3>
-                        <p className={styles.confirmText}>
-                            {t('mw.community.myStuff.confirmResetCost', 'This will cost {credits}', {
-                                credits: t('mw.community.myStuff.credits', '{amount} credits', {amount})
-                            })}
-                            {payTo ? <>{t('mw.community.myStuff.confirmResetPayTo', ' sent to {payTo}', {payTo})}</> : ''}
-                            {t('mw.community.myStuff.confirmResetEnd', '. Your upload usage will be reset to zero. Continue?')}
-                        </p>
-                        <div className={styles.confirmActions}>
-                            <button
-                                className={styles.uploadResetBtn}
-                                onClick={confirmReset}
-                                disabled={resetting}
-                            >
-                                {resetting ?
-                                    t('mw.community.myStuff.resetting', 'Resetting…') :
-                                    t('mw.community.myStuff.spendCredits', 'Spend {amount} credits', {amount})}
-                            </button>
-                            <button
+<Modal
+                    title={t('mw.community.myStuff.confirmResetTitle', 'Reset upload quota?')}
+                    onClose={dismiss}
+                    dismissDisabled={resetting}
+                    actions={(
+                        <React.Fragment>
+                            <Button
+                                variant="secondary"
                                 className={styles.secondary}
                                 onClick={dismiss}
                                 disabled={resetting}
-                            >{t('mw.community.myStuff.cancel', 'Cancel')}</button>
-                        </div>
-                    </div>
-                </div>
+                            >{t('mw.community.myStuff.cancel', 'Cancel')}</Button>
+                            <Button
+                                variant="primary"
+                                className={styles.uploadResetBtn}
+                                onClick={confirmReset}
+                                busy={resetting}
+                                busyLabel={t('mw.community.myStuff.resetting', 'Resetting…')}
+                            >
+                                {t('mw.community.myStuff.spendCredits', 'Spend {amount} credits', {amount})}
+                            </Button>
+                        </React.Fragment>
+                    )}
+                >
+                    <p className={styles.confirmText}>
+                        {t('mw.community.myStuff.confirmResetCost', 'This will cost {credits}', {
+                            credits: t('mw.community.myStuff.credits', '{amount} credits', {amount})
+                        })}
+                        {payTo ? <>{t('mw.community.myStuff.confirmResetPayTo', ' sent to {payTo}', {payTo})}</> : ''}
+                        {t('mw.community.myStuff.confirmResetEnd', '. Your upload usage will be reset to zero. Continue?')}
+                    </p>
+                </Modal>
             ) : null}
         </section>
     );
@@ -295,20 +356,26 @@ const AgreementTab = () => {
     const intl = useIntl();
     const t = (id, defaultMessage, values) => intl.formatMessage({id, defaultMessage}, values);
     const [agreement, setAgreement] = useState(null);
+    const [loadError, setLoadError] = useState(false);
+    const [attempt, setAttempt] = useState(0);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
 
     useEffect(() => {
         let stale = false;
+        setAgreement(null);
+        setLoadError(false);
         api.agreement()
             .then(data => {
                 if (!stale) setAgreement(data.agreement);
             })
-            .catch(() => {});
+            .catch(() => {
+                if (!stale) setLoadError(true);
+            });
         return () => {
             stale = true;
         };
-    }, []);
+    }, [attempt]);
 
     const handleAccept = async () => {
         setBusy(true);
@@ -325,6 +392,19 @@ const AgreementTab = () => {
             setBusy(false);
         }
     };
+
+    if (loadError) {
+        return (
+            <p className={styles.status}>
+                {t('mw.community.myStuff.couldNotLoadAgreement', 'Could not load the agreement.')}{' '}
+                <button
+                    type="button"
+                    className={styles.secondary}
+                    onClick={() => setAttempt(value => value + 1)}
+                >{t('mw.community.myStuff.tryAgain', 'Try again')}</button>
+            </p>
+        );
+    }
 
     if (!agreement) {
         return <p className={styles.status}>{t('mw.community.myStuff.loadingAgreement', 'Loading agreement…')}</p>;
@@ -361,15 +441,17 @@ const AgreementTab = () => {
                                 'To continue using the platform, please accept this agreement.')}
                         </p>
                         {error ? <p className={styles.error}>{error}</p> : null}
-                        <button
+                        <Button
+                            variant="primary"
                             className={styles.agreementAcceptBtn}
                             onClick={handleAccept}
-                            disabled={busy}
+                            busy={busy}
+                            busyLabel={t('mw.community.myStuff.accepting', 'Accepting…')}
                         >
-                            {busy ?
+{busy ?
                                 t('mw.community.myStuff.accepting', 'Accepting…') :
                                 t('mw.community.myStuff.acceptV', 'Accept v{version}', {version: agreement.version})}
-                        </button>
+                        </Button>
                     </>
                 )}
             </div>
@@ -378,25 +460,37 @@ const AgreementTab = () => {
 };
 
 const SECTIONS = [
-    {key: 'overview', labelKey: 'mw.community.myStuff.section.overview', labelDefault: 'Overview', icon: LayoutDashboard},
+{key: 'overview', labelKey: 'mw.community.myStuff.section.overview', labelDefault: 'Overview', icon: LayoutDashboard},
     {key: 'projects', labelKey: 'mw.community.myStuff.section.projects', labelDefault: 'My Projects', icon: FolderOpen},
     {key: 'uploads', labelKey: 'mw.community.myStuff.section.uploads', labelDefault: 'Uploads', icon: HardDrive},
     {key: 'agreement', labelKey: 'mw.community.myStuff.section.agreement', labelDefault: 'Agreement', icon: HeartHandshake},
-    {key: 'library', labelKey: 'mw.community.myStuff.section.library', labelDefault: 'My Library', icon: Bookmark},
-    {key: 'loves', labelKey: 'mw.community.myStuff.section.loves', labelDefault: 'My Loved', icon: Heart}
+    {key: 'collections', labelKey: 'mw.community.myStuff.section.collections', labelDefault: 'Collections', icon: Library},
+    {key: 'spaces', labelKey: 'mw.community.myStuff.section.spaces', labelDefault: 'Spaces', icon: Layers3}
 ];
+const getMyStuffSection = value => {
+    if (SECTIONS.some(section => section.key === value)) return value;
+    return 'overview';
+};
 
 const MyStuff = () => {
     const intl = useIntl();
     const t = (id, defaultMessage, values) => intl.formatMessage({id, defaultMessage}, values);
-    const {user, loading} = useUser();
-    const [tab, setTab] = useState('overview');
+    const {user, loading, login} = useUser();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const tab = getMyStuffSection(searchParams.get('section'));
+    const setTab = nextTab => {
+        const next = new URLSearchParams(searchParams);
+        if (nextTab === 'overview') next.delete('section');
+        else next.set('section', nextTab);
+        setSearchParams(next);
+    };
     const [projects, setProjects] = useState(null);
     const [featuredProject, setFeaturedProject] = useState(user ? user.featuredProject : '');
     const [uploading, setUploading] = useState(false);
+    const [uploadStatus, setUploadStatus] = useState('');
     const [actionError, setActionError] = useState('');
     const [failed, setFailed] = useState(false);
-    const [openMenu, setOpenMenu] = useState('');
+    const [collectionProject, setCollectionProject] = useState(null);
     const [quota, setQuota] = useState(null);
     const [stats, setStats] = useState(null);
     const [account, setAccount] = useState(null);
@@ -405,8 +499,48 @@ const MyStuff = () => {
     const [agreeData, setAgreeData] = useState(null);
     const [agreeBusy, setAgreeBusy] = useState(false);
     const [agreeError, setAgreeError] = useState('');
+    const [mySpaces, setMySpaces] = useState(null);
+    const [libraryProjects, setLibraryProjects] = useState(null);
+    const [spacesFailed, setSpacesFailed] = useState(false);
+    const [libraryFailed, setLibraryFailed] = useState(false);
+    const [directoriesLoading, setDirectoriesLoading] = useState(false);
+    const [projectAction, setProjectAction] = useState('');
+    const [deleteConfirmProject, setDeleteConfirmProject] = useState(null);
     const uploadInput = useRef(null);
-    const menuRef = useRef(null);
+    const beginProjectLoad = useLatest();
+    const beginDirectoryLoad = useLatest();
+    const username = user ? user.username : '';
+    const accountContextRef = useRef(username);
+    accountContextRef.current = username;
+    const actionLocks = useRef(new Set());
+
+    const beginAccountAction = name => {
+        const key = `${accountContextRef.current}\u0000${name}`;
+        if (actionLocks.current.has(key)) return null;
+        actionLocks.current.add(key);
+        return key;
+    };
+    const releaseAccountAction = key => actionLocks.current.delete(key);
+
+    useEffect(() => {
+        beginDirectoryLoad();
+        setMySpaces(null);
+        setLibraryProjects(null);
+        setSpacesFailed(false);
+        setLibraryFailed(false);
+        setDirectoriesLoading(false);
+        setProjectAction('');
+        setDeleteConfirmProject(null);
+        setUploading(false);
+        setUploadStatus('');
+        setPendingUploadFile(null);
+        setShowAgreeModal(false);
+        setAgreeData(null);
+        setAgreeBusy(false);
+        setAgreeError('');
+        setCollectionProject(null);
+        setActionError('');
+    }, [beginDirectoryLoad, username]);
 
     useEffect(() => {
         if (!user) {
@@ -455,40 +589,61 @@ const MyStuff = () => {
     }, [user]);
 
     const load = useCallback(() => {
-        if (!user || tab === 'overview' || tab === 'uploads') {
+        const fresh = beginProjectLoad();
+        if (!user || tab !== 'projects') {
             return;
         }
         setProjects(null);
         setFailed(false);
-        const fetchTab = tab === 'loves' ?
-            api.userLoves(user.username) :
-            tab === 'library' ?
-                api.library() :
-                api.myProjects(user.username);
-        fetchTab
-            .then(data => setProjects(data.projects || []))
-            .catch(() => setFailed(true));
-    }, [user, tab]);
+        api.myProjects(user.username)
+            .then(fresh(data => setProjects(data.projects || [])))
+            .catch(fresh(() => setFailed(true)));
+    }, [beginProjectLoad, user, tab]);
 
     useEffect(() => {
         load();
     }, [load]);
 
+    const loadDirectories = useCallback(() => {
+        const fresh = beginDirectoryLoad();
+        setDirectoriesLoading(true);
+        setSpacesFailed(false);
+        setLibraryFailed(false);
+        Promise.allSettled([api.mySpaces(), api.library()]).then(fresh(([spacesResult, libraryResult]) => {
+            if (spacesResult.status === 'fulfilled') setMySpaces(spacesResult.value.spaces || []);
+            else setSpacesFailed(true);
+            if (libraryResult.status === 'fulfilled') setLibraryProjects(libraryResult.value.projects || []);
+            else setLibraryFailed(true);
+            setDirectoriesLoading(false);
+        }));
+    }, [beginDirectoryLoad]);
+
     useEffect(() => {
-        if (!openMenu) return () => {};
-        const onDown = event => {
-            if (menuRef.current && !menuRef.current.contains(event.target)) {
-                setOpenMenu('');
-            }
-        };
-        window.addEventListener('mousedown', onDown);
-        return () => window.removeEventListener('mousedown', onDown);
-    }, [openMenu]);
+        if (!user || !['collections', 'spaces'].includes(tab)) return;
+        if (directoriesLoading || spacesFailed || (tab === 'collections' && libraryFailed)) return;
+        if (mySpaces !== null && (tab === 'spaces' || libraryProjects !== null)) return;
+        loadDirectories();
+    }, [directoriesLoading, libraryFailed, libraryProjects, loadDirectories, mySpaces, spacesFailed, tab, user]);
+
+    const retryDirectories = () => {
+        setMySpaces(null);
+        setLibraryProjects(null);
+        loadDirectories();
+    };
 
     const refreshUsage = useCallback(() => {
         if (!user) return;
-        api.quota().then(data => setQuota(data)).catch(() => {});
-        api.stats().then(data => setStats(data.stats || null)).catch(() => {});
+        const context = accountContextRef.current;
+        api.quota()
+            .then(data => {
+                if (accountContextRef.current === context) setQuota(data);
+            })
+            .catch(() => {});
+        api.stats()
+            .then(data => {
+                if (accountContextRef.current === context) setStats(data.stats || null);
+            })
+            .catch(() => {});
     }, [user]);
 
     const clearFeaturedIf = async id => {
@@ -502,25 +657,45 @@ const MyStuff = () => {
     };
 
     const unpublish = async id => {
+        const actionKey = beginAccountAction('project');
+        if (!actionKey) return;
+        const context = accountContextRef.current;
+        setProjectAction(`visibility:${id}`);
         try {
             setActionError('');
             await api.unpublish(id);
+            if (accountContextRef.current !== context) return;
             await clearFeaturedIf(id);
             load();
             refreshUsage();
         } catch (e) {
-            setActionError(e.message);
+            if (accountContextRef.current === context) {
+                setActionError(e.message || t('mw.community.myStuff.unshareFailed', 'Could not unshare this project.'));
+            }
+        } finally {
+            releaseAccountAction(actionKey);
+            if (accountContextRef.current === context) setProjectAction('');
         }
     };
 
     const publish = async id => {
+        const actionKey = beginAccountAction('project');
+        if (!actionKey) return;
+        const context = accountContextRef.current;
+        setProjectAction(`visibility:${id}`);
         try {
             setActionError('');
             await api.publish(id);
+            if (accountContextRef.current !== context) return;
             load();
             refreshUsage();
         } catch (e) {
-            setActionError(e.message);
+            if (accountContextRef.current === context) {
+                setActionError(e.message || t('mw.community.myStuff.shareFailed', 'Could not share this project.'));
+            }
+        } finally {
+            releaseAccountAction(actionKey);
+            if (accountContextRef.current === context) setProjectAction('');
         }
     };
 
@@ -529,37 +704,64 @@ const MyStuff = () => {
         if (!window.confirm(t('mw.community.myStuff.deleteConfirm', 'Delete this project forever? This cannot be undone.'))) {
             return;
         }
+        const actionKey = beginAccountAction('project');
+        if (!actionKey) return;
+        const context = accountContextRef.current;
+        setProjectAction(`delete:${id}`);
         try {
             setActionError('');
             await api.deleteProject(id);
+            if (accountContextRef.current !== context) return;
             await clearFeaturedIf(id);
             load();
             refreshUsage();
         } catch (e) {
-            setActionError(e.message);
+            if (accountContextRef.current === context) {
+                setActionError(e.message || t('mw.community.myStuff.deleteFailed', 'Could not delete this project.'));
+            }
+        } finally {
+            releaseAccountAction(actionKey);
+            if (accountContextRef.current === context) {
+                setProjectAction('');
+                setDeleteConfirmProject(null);
+            }
         }
     };
 
     const toggleFeatured = async id => {
-        setOpenMenu('');
+        const actionKey = beginAccountAction('project');
+        if (!actionKey) return;
+        const context = accountContextRef.current;
         const next = featuredProject === id ? '' : id;
+        setProjectAction(`feature:${id}`);
         try {
             setActionError('');
             await api.updateProfile({featuredProject: next});
-            setFeaturedProject(next);
+            if (accountContextRef.current === context) setFeaturedProject(next);
         } catch (e) {
-            setActionError(e.message);
+            if (accountContextRef.current === context) {
+                setActionError(e.message || t('mw.community.myStuff.featureFailed', 'Could not update the featured project.'));
+            }
+        } finally {
+            releaseAccountAction(actionKey);
+            if (accountContextRef.current === context) setProjectAction('');
         }
     };
 
-    const createFromSb3 = useCallback(async file => {
+    const createFromSb3 = useCallback(async (file, onUploadProgress) => {
         let created;
         try {
             created = await api.createProject({title: file.name.replace(/\.sb3$/i, '') || t('mw.community.myStuff.untitled', 'Untitled')});
-            await api.uploadProject(created.id, file);
+            let uploadFile = file;
+            try {
+                uploadFile = await api.prepareSparseProjectUpload(created.id, file);
+            } catch (e) {
+                // The server can still validate and store the original archive if sparse preparation fails.
+            }
+            await api.uploadProject(created.id, uploadFile, null, onUploadProgress);
             return created;
         } catch (e) {
-            if (created) {
+            if (created && e.code !== 'upload_processing_timeout') {
                 await api.deleteProject(created.id).catch(() => {});
             }
             throw e;
@@ -568,6 +770,7 @@ const MyStuff = () => {
 
     const uploadSb3 = async event => {
         const file = event.target.files[0];
+        const context = accountContextRef.current;
         event.target.value = '';
         if (!file) return;
         if (!file.name.toLowerCase().endsWith('.sb3')) {
@@ -578,40 +781,77 @@ const MyStuff = () => {
             setActionError(t('mw.community.myStuff.quotaFull', 'Your weekly upload quota is full. Free up space or reset it before uploading.'));
             return;
         }
+        const actionKey = beginAccountAction('upload');
+        if (!actionKey) return;
+
+        setActionError('');
+        setUploading(true);
+        setUploadStatus(t('mw.community.myStuff.uploading', 'Uploading…'));
 
         // Check agreement acceptance before allowing upload, show modal if needed
         try {
             const agreementData = await api.agreement();
+            if (accountContextRef.current !== context) {
+                releaseAccountAction(actionKey);
+                return;
+            }
             const ag = agreementData.agreement;
             if (ag.version > 0 && !ag.accepted) {
                 setAgreeData(ag);
                 setPendingUploadFile(file);
                 setShowAgreeModal(true);
+                setUploading(false);
+                setUploadStatus('');
+                releaseAccountAction(actionKey);
                 return;
             }
         } catch (e) {
-            // If the agreement endpoint fails, we let the upload proceed
-            // rather than blocking on a network error.
+            if (accountContextRef.current === context) {
+                setActionError(t('mw.community.myStuff.checkAgreementFailed', 'Could not check the community agreement. Try the upload again.'));
+                setUploading(false);
+                setUploadStatus('');
+            }
+            releaseAccountAction(actionKey);
+            return;
         }
 
         try {
-            setActionError('');
-            setUploading(true);
-            await createFromSb3(file);
+            await createFromSb3(file, (loaded, total) => {
+                if (accountContextRef.current === context) {
+                    setUploadStatus(uploadProgressLabel(loaded, total, t));
+                }
+            });
+            if (accountContextRef.current !== context) return;
             setTab('projects');
             load();
         } catch (e) {
-            setActionError(e.message || t('mw.community.myStuff.uploadFailed', 'Could not upload that project.'));
+            if (accountContextRef.current === context) {
+                setActionError(e.message || t('mw.community.myStuff.uploadFailed', 'Could not upload that project.'));
+                if (shouldRefreshProjectsAfterUploadError(e)) {
+                    setTab('projects');
+                    load();
+                }
+            }
         } finally {
-            setUploading(false);
+            releaseAccountAction(actionKey);
+            if (accountContextRef.current === context) {
+                setUploading(false);
+                setUploadStatus('');
+            }
         }
     };
 
     const confirmAgreeAndUpload = useCallback(async () => {
+        const actionKey = beginAccountAction('upload');
+        if (!actionKey) return;
+        const context = accountContextRef.current;
         setAgreeBusy(true);
         setAgreeError('');
+        let agreementAccepted = false;
         try {
             await api.acceptAgreement();
+            if (accountContextRef.current !== context) return;
+            agreementAccepted = true;
             // Now proceed with the stored upload
             const file = pendingUploadFile;
             setPendingUploadFile(null);
@@ -620,14 +860,33 @@ const MyStuff = () => {
             // Run the upload
             setActionError('');
             setUploading(true);
-            await createFromSb3(file);
+            setUploadStatus(t('mw.community.myStuff.uploading', 'Uploading…'));
+            if (!file) throw new Error(t('mw.community.myStuff.chooseFileAgain', 'Choose the project file again.'));
+            await createFromSb3(file, (loaded, total) => {
+                if (accountContextRef.current === context) {
+                    setUploadStatus(uploadProgressLabel(loaded, total, t));
+                }
+            });
+            if (accountContextRef.current !== context) return;
             setTab('projects');
             load();
         } catch (e) {
-            setAgreeError(e.message || t('mw.community.myStuff.couldNotAccept', 'Could not accept agreement.'));
+            if (accountContextRef.current === context) {
+                const target = uploadErrorTarget(agreementAccepted, e, t);
+                if (target.actionError) setActionError(target.actionError);
+                if (target.agreementError) setAgreeError(target.agreementError);
+                if (agreementAccepted && shouldRefreshProjectsAfterUploadError(e)) {
+                    setTab('projects');
+                    load();
+                }
+            }
         } finally {
-            setAgreeBusy(false);
-            setUploading(false);
+            releaseAccountAction(actionKey);
+            if (accountContextRef.current === context) {
+                setAgreeBusy(false);
+                setUploading(false);
+                setUploadStatus('');
+            }
         }
     }, [pendingUploadFile, load, createFromSb3]);
 
@@ -637,13 +896,20 @@ const MyStuff = () => {
         setAgreeData(null);
         setAgreeError('');
     }, []);
-    useEscape(showAgreeModal ? cancelAgreeModal : null);
+    const deleteBusy = deleteConfirmProject && projectAction === `delete:${deleteConfirmProject.id}`;
+    const dismissDeleteConfirm = useCallback(() => {
+        if (!projectAction) setDeleteConfirmProject(null);
+    }, [projectAction]);
 
     if (loading) {
         return <main className={styles.page}><p className={styles.status}>{t('mw.community.myStuff.loading', 'Loading…')}</p></main>;
     }
     if (!user) {
-        return <main className={styles.page}><p className={styles.status}>{t('mw.community.myStuff.signIn', 'Sign in to see your projects.')}</p></main>;
+        return (
+            <main className={styles.page}>
+                <p className={styles.status}>{t('mw.community.myStuff.signIn', 'Sign in to see your projects.')} <Button onClick={login}>{t('mw.community.myStuff.signInBtn', 'Sign in')}</Button></p>
+            </main>
+        );
     }
 
     const sections = SECTIONS.map(section => ({
@@ -663,16 +929,18 @@ const MyStuff = () => {
                         accept=".sb3,application/x.scratch.sb3"
                         onChange={uploadSb3}
                     />
-                    <button
+                    <Button
+                        variant="primary"
                         className={styles.uploadButton}
-                        disabled={uploading}
-                        onClick={() => uploadInput.current.click()}
+                        busy={uploading}
+                        busyLabel={uploadStatus || t('mw.community.myStuff.uploading', 'Uploading…')}
+                        onClick={() => uploadInput.current && uploadInput.current.click()}
                     >
                         <Upload size={16} />
                         {uploading ?
                             t('mw.community.myStuff.uploading', 'Uploading…') :
                             t('mw.community.myStuff.uploadSb3', 'Upload .sb3')}
-                    </button>
+                    </Button>
                     <a
                         className={styles.newButton}
                         href={editorUrl()}
@@ -700,47 +968,76 @@ const MyStuff = () => {
             ) : null}
 
             {showAgreeModal && agreeData ? (
-                <div className={styles.confirmOverlay} onClick={cancelAgreeModal}>
-                    <div
-                        className={styles.agreeModal}
-                        onClick={e => e.stopPropagation()}
-                        role="dialog"
-                        aria-modal="true"
-                    >
-                        <h2 className={styles.confirmTitle}>
-                            {t('mw.community.myStuff.uploadAgreement', 'Upload agreement v{version}', {
-                                version: agreeData.version
-                            })}
-                        </h2>
-                        <div className={styles.agreeModalBody}>
-                            <pre className={styles.agreementText}>{agreeData.text}</pre>
-                        </div>
-                        {agreeError ? (
-                            <p className={styles.error}>{agreeError}</p>
-                        ) : null}
-                        <p className={styles.agreementPrompt}>
-                            {t('mw.community.myStuff.mustAccept', 'You must accept this agreement before you can upload projects.')}
-                        </p>
-                        <div className={styles.confirmActions}>
-                            <button
+                <Modal
+                    className={styles.agreeModal}
+                    title={t('mw.community.myStuff.uploadAgreement', 'Upload agreement v{version}', {
+                        version: agreeData.version
+                    })}
+                    onClose={cancelAgreeModal}
+                    dismissDisabled={agreeBusy}
+                    actions={(
+                        <React.Fragment>
+                            <Button
+                                variant="secondary"
+                                className={styles.secondary}
+                                onClick={cancelAgreeModal}
+                                disabled={agreeBusy}
+                            >{t('mw.community.myStuff.cancel', 'Cancel')}</Button>
+                            <Button
+                                variant="primary"
                                 className={styles.agreementAcceptBtn}
                                 onClick={confirmAgreeAndUpload}
-                                disabled={agreeBusy}
+                                busy={agreeBusy}
+                                busyLabel={t('mw.community.myStuff.accepting', 'Accepting…')}
                             >
                                 {agreeBusy ?
                                     t('mw.community.myStuff.accepting', 'Accepting…') :
                                     t('mw.community.myStuff.acceptAndUpload', 'Accept v{version} & upload', {
                                         version: agreeData.version
                                     })}
-                            </button>
-                            <button
-                                className={styles.secondary}
-                                onClick={cancelAgreeModal}
-                                disabled={agreeBusy}
-                            >{t('mw.community.myStuff.cancel', 'Cancel')}</button>
-                        </div>
+                            </Button>
+                        </React.Fragment>
+                    )}
+                >
+                    <div className={styles.agreeModalBody}>
+                        <pre className={styles.agreementText}>{agreeData.text}</pre>
                     </div>
-                </div>
+                    {agreeError ? <p className={styles.error}>{agreeError}</p> : null}
+                    <p className={styles.agreementPrompt}>
+                        {t('mw.community.myStuff.mustAccept', 'You must accept this agreement before you can upload projects.')}
+                    </p>
+                </Modal>
+            ) : null}
+
+            {deleteConfirmProject ? (
+                <Modal
+                    title={t('mw.community.myStuff.deleteProjectTitle', 'Delete project?')}
+                    onClose={dismissDeleteConfirm}
+                    dismissDisabled={Boolean(deleteBusy)}
+                    actions={(
+                        <React.Fragment>
+                            <Button
+                                variant="secondary"
+                                className={styles.secondary}
+                                disabled={Boolean(deleteBusy)}
+                                onClick={dismissDeleteConfirm}
+                            >{t('mw.community.myStuff.cancel', 'Cancel')}</Button>
+                            <Button
+                                variant="danger"
+                                className={`${styles.secondary} ${styles.danger}`}
+                                busy={Boolean(deleteBusy)}
+                                busyLabel={t('mw.community.myStuff.deleting', 'Deleting…')}
+                                onClick={() => deleteProject(deleteConfirmProject.id)}
+                            >{t('mw.community.myStuff.deleteProjectBtn', 'Delete project')}</Button>
+                        </React.Fragment>
+                    )}
+                >
+                    <p className={styles.confirmText}>
+                        <strong>{deleteConfirmProject.title}</strong> {t('mw.community.myStuff.deletePermanently',
+                            'will be deleted permanently.')}
+                        {' '}{t('mw.community.myStuff.cannotUndo', 'This cannot be undone.')}
+                    </p>
+                </Modal>
             ) : null}
 
             <div className={styles.layout}>
@@ -767,39 +1064,33 @@ const MyStuff = () => {
                             onRefresh={refreshUsage}
                         />
                     ) : tab === 'agreement' ? (
-                        <AgreementTab />
+                        <AgreementTab key={username} />
+                    ) : tab === 'collections' || tab === 'spaces' ? (
+                        <MyStuffSpaces
+                            key={tab}
+                            mode={tab}
+                            spaces={mySpaces}
+                            libraryProjects={libraryProjects}
+                            username={user.username}
+                            error={spacesFailed || (tab === 'collections' && libraryFailed)}
+                            onRetry={retryDirectories}
+                        />
                     ) : failed ? (
                         <p className={styles.status}>
                             {t('mw.community.myStuff.couldNotLoad', 'Couldn\'t load.')}{' '}
                             <button
+                                type="button"
                                 className={styles.secondary}
                                 onClick={load}
                             >{t('mw.community.myStuff.tryAgain', 'Try again')}</button>
                         </p>
                     ) : projects === null ? (
                         <p className={styles.status}>{t('mw.community.myStuff.loading', 'Loading…')}</p>
-                    ) : tab !== 'projects' ? (
-                        projects.length ? (
-                            <div className={styles.grid}>
-                                {projects.map(project => (
-                                    <ProjectCard
-                                        key={project.id}
-                                        project={project}
-                                    />
-                                ))}
-                            </div>
-                        ) : (
-                            <p className={styles.status}>
-                                {tab === 'library' ?
-                                    t('mw.community.myStuff.libraryEmpty', 'Projects you buy or save to your library show up here.') :
-                                    t('mw.community.myStuff.lovesEmpty', 'Projects you heart show up here.')}
-                            </p>
-                        )
                     ) : projects.length ? (
                         <div className={styles.list}>
                             {projects.map(project => {
                                 const featured = featuredProject === project.id;
-                                const isMenuOpen = openMenu === project.id;
+                                const visibilityBusy = projectAction === `visibility:${project.id}`;
                                 return (
                                     <div
                                         key={project.id}
@@ -858,44 +1149,82 @@ const MyStuff = () => {
                                         </div>
                                         <div className={styles.rowActions}>
                                             {project.shared ? (
-                                                <button
+                                                <Button
+                                                    variant="secondary"
                                                     className={styles.secondary}
+                                                    disabled={Boolean(projectAction)}
+                                                    busy={visibilityBusy}
+                                                    busyLabel={t('mw.community.myStuff.updating', 'Updating…')}
                                                     onClick={() => unpublish(project.id)}
-                                                >{t('mw.community.myStuff.unshare', 'Unshare')}</button>
-                                            ) : (
-                                                <button
-                                                    className={styles.secondary}
-                                                    onClick={() => publish(project.id)}
-                                                >{t('mw.community.myStuff.share', 'Share')}</button>
-                                            )}
-                                            <div
-                                                className={styles.actionMenuWrap}
-                                                ref={isMenuOpen ? menuRef : null}
-                                            >
-                                                <button
-                                                    className={styles.moreButton}
-                                                    aria-label={t('mw.community.myStuff.actionsFor', 'Actions for {title}', {title: project.title})}
-                                                    aria-expanded={isMenuOpen}
-                                                    onClick={() => setOpenMenu(isMenuOpen ? '' : project.id)}
                                                 >
-                                                    <MoreHorizontal size={18} />
-                                                </button>
-                                                {isMenuOpen ? (
-                                                    <div className={styles.actionMenu}>
-                                                        <a href={editorUrl({platformProject: project.id})}>
+                                                    {t('mw.community.myStuff.unshare', 'Unshare')}
+                                                </Button>
+                                            ) : (
+                                                <Button
+                                                    variant="secondary"
+                                                    className={styles.secondary}
+                                                    disabled={Boolean(projectAction)}
+                                                    busy={visibilityBusy}
+                                                    busyLabel={t('mw.community.myStuff.updating', 'Updating…')}
+                                                    onClick={() => publish(project.id)}
+                                                >
+                                                    {t('mw.community.myStuff.share', 'Share')}
+                                                </Button>
+                                            )}
+                                            <Dropdown
+                                                className={styles.actionMenuWrap}
+                                                menuClassName={styles.actionMenu}
+                                                renderTrigger={({open, toggle}) => (
+                                                    <IconButton
+                                                        variant="secondary"
+                                                        className={styles.moreButton}
+                                                        label={t('mw.community.myStuff.actionsFor', 'Actions for {title}', {title: project.title})}
+                                                        aria-expanded={open}
+                                                        aria-haspopup="menu"
+                                                        disabled={Boolean(projectAction)}
+                                                        onClick={toggle}
+                                                    >
+                                                        <MoreHorizontal size={18} />
+                                                    </IconButton>
+                                                )}
+                                            >
+                                                {({close}) => (
+                                                    <React.Fragment>
+                                                        <a
+                                                            href={editorUrl({platformProject: project.id})}
+                                                            onClick={close}
+                                                        >
                                                             <Pencil size={14} />
                                                             {t('mw.community.myStuff.openInEditor', 'Open in editor')}
                                                         </a>
-                                                        <Link to={`/mystuff/project/${project.id}`}>
-                                                            <SlidersHorizontal size={14} />
-                                                            {t('mw.community.myStuff.manageAnalytics', 'Manage & analytics')}
-                                                        </Link>
-                                                        <Link to={projectUrl(project.id)}>
+                                                        <Link to={projectUrl(project.id)} onClick={close}>
                                                             <ExternalLink size={14} />
                                                             {t('mw.community.myStuff.projectPage', 'Project page')}
                                                         </Link>
+                                                        <div className={styles.menuSeparator} role="separator" />
+                                                        <Link to={`/mystuff/project/${project.id}`} onClick={close}>
+                                                            <SlidersHorizontal size={14} />
+                                                            {t('mw.community.myStuff.manageAnalytics', 'Manage & analytics')}
+                                                        </Link>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                close();
+                                                                setCollectionProject(project);
+                                                            }}
+                                                        >
+                                                            <Library size={14} />
+                                                            {t('mw.community.myStuff.saveToCollection', 'Save to collection')}
+                                                        </button>
                                                         {project.shared ? (
-                                                            <button onClick={() => toggleFeatured(project.id)}>
+                                                            <button
+                                                                type="button"
+                                                                disabled={Boolean(projectAction)}
+                                                                onClick={() => {
+                                                                    close();
+                                                                    toggleFeatured(project.id);
+                                                                }}
+                                                            >
                                                                 <Star
                                                                     size={14}
                                                                     fill={featured ? 'currentColor' : 'none'}
@@ -905,16 +1234,22 @@ const MyStuff = () => {
                                                                     t('mw.community.myStuff.featureOnProfile', 'Feature on profile')}
                                                             </button>
                                                         ) : null}
+                                                        <div className={styles.menuSeparator} role="separator" />
                                                         <button
+                                                            type="button"
                                                             className={styles.danger}
-                                                            onClick={() => deleteProject(project.id)}
+                                                            disabled={Boolean(projectAction)}
+                                                            onClick={() => {
+                                                                close();
+                                                                setDeleteConfirmProject(project);
+                                                            }}
                                                         >
                                                             <Trash2 size={14} />
                                                             {t('mw.community.myStuff.delete', 'Delete')}
                                                         </button>
-                                                    </div>
-                                                ) : null}
-                                            </div>
+                                                    </React.Fragment>
+                                                )}
+                                            </Dropdown>
                                         </div>
                                     </div>
                                 );
@@ -925,8 +1260,20 @@ const MyStuff = () => {
                     )}
                 </div>
             </div>
+            {collectionProject ? (
+                <CollectionSaveModal
+                    project={collectionProject}
+                    onClose={() => setCollectionProject(null)}
+                />
+            ) : null}
         </main>
     );
 };
 
+export {
+    getMyStuffSection,
+    shouldRefreshProjectsAfterUploadError,
+    uploadErrorTarget,
+    uploadProgressLabel
+};
 export default MyStuff;

@@ -177,6 +177,7 @@ const UnconnectedThemePage = ({theme, onChangeTheme}) => (
         </div>
         <div className={styles.setting}>
             <button
+                type="button"
                 className={styles.button}
                 onClick={openBlocksAddonSettings}
             >
@@ -197,7 +198,7 @@ UnconnectedThemePage.propTypes = {
 };
 export const ThemePage = connect(themeStateToProps, themeDispatchToProps)(UnconnectedThemePage);
 
-class UnconnectedWallpaperPage extends React.Component {
+export class UnconnectedWallpaperPage extends React.Component {
     constructor (props) {
         super(props);
         this.state = {
@@ -222,6 +223,12 @@ class UnconnectedWallpaperPage extends React.Component {
             history: (wallpaper.history || []).filter(u => u !== url),
             ...(wallpaper.url === url ? {url: ''} : null)
         });
+    };
+    handleSelectWallpaper = e => {
+        this.setWallpaper({url: e.currentTarget.value});
+    };
+    handleRemoveWallpaper = e => {
+        this.handleRemove(e.currentTarget.value);
     };
     render () {
         const {theme} = this.props;
@@ -331,22 +338,29 @@ class UnconnectedWallpaperPage extends React.Component {
                         className={classNames(styles.wallpaperItem, {
                             [styles.wallpaperItemSelected]: !wallpaper.url
                         })}
-                        onClick={() => this.setWallpaper({url: ''})}
                     >
-                        <div className={styles.wallpaperThumb}>
-                            <FormattedMessage
-                                defaultMessage="None"
-                                description="Label for no wallpaper option"
-                                id="tw.wallpaper.none"
-                            />
-                        </div>
-                        <span className={styles.wallpaperItemUrl}>
-                            <FormattedMessage
-                                defaultMessage="No wallpaper"
-                                description="Label for no wallpaper selected"
-                                id="tw.wallpaper.noWallpaper"
-                            />
-                        </span>
+                        <button
+                            type="button"
+                            className={styles.wallpaperChoice}
+                            aria-pressed={!wallpaper.url}
+                            value=""
+                            onClick={this.handleSelectWallpaper}
+                        >
+                            <div className={styles.wallpaperThumb}>
+                                <FormattedMessage
+                                    defaultMessage="None"
+                                    description="Label for no wallpaper option"
+                                    id="tw.wallpaper.none"
+                                />
+                            </div>
+                            <span className={styles.wallpaperItemUrl}>
+                                <FormattedMessage
+                                    defaultMessage="No wallpaper"
+                                    description="Label for no wallpaper selected"
+                                    id="tw.wallpaper.noWallpaper"
+                                />
+                            </span>
+                        </button>
                     </div>
                     {(wallpaper.history || []).map(url => (
                         <div
@@ -354,27 +368,34 @@ class UnconnectedWallpaperPage extends React.Component {
                             className={classNames(styles.wallpaperItem, {
                                 [styles.wallpaperItemSelected]: wallpaper.url === url
                             })}
-                            onClick={() => this.setWallpaper({url})}
                         >
-                            <div className={styles.wallpaperThumb}>
-                                <img
-                                    src={url}
-                                    alt=""
-                                    onError={e => {
-                                        e.target.style.display = 'none';
-                                    }}
-                                />
-                            </div>
-                            <span
-                                className={styles.wallpaperItemUrl}
-                                title={url}
+                            <button
+                                type="button"
+                                className={styles.wallpaperChoice}
+                                aria-pressed={wallpaper.url === url}
+                                value={url}
+                                onClick={this.handleSelectWallpaper}
                             >
-                                {url}
-                            </span>
+                                <div className={styles.wallpaperThumb}>
+                                    <img
+                                        src={url}
+                                        alt=""
+                                        onError={e => {
+                                            e.target.style.display = 'none';
+                                        }}
+                                    />
+                                </div>
+                                <span
+                                    className={styles.wallpaperItemUrl}
+                                    title={url}
+                                >
+                                    {url}
+                                </span>
+                            </button>
                             <button
                                 type="button"
                                 className={styles.iconButton}
-                                title={this.props.intl.formatMessage({
+title={this.props.intl.formatMessage({
                                     id: 'mw.settings.removeWallpaper',
                                     defaultMessage: 'Remove wallpaper'
                                 })}
@@ -503,6 +524,7 @@ class UnconnectedFontsPage extends React.Component {
                         </p>
                     )}
                     <button
+                        type="button"
                         className={styles.button}
                         onClick={this.handleOpenFontsWindow}
                     >
@@ -524,8 +546,9 @@ class UnconnectedFontsPage extends React.Component {
                     {history.length > 0 ? (
                         <div className={styles.fontList}>
                             {history.map(font => (
-                                <div
+                                <button
                                     key={font}
+                                    type="button"
                                     className={styles.fontRow}
                                     data-family={font}
                                     style={{fontFamily: font, cursor: 'pointer'}}
@@ -533,7 +556,7 @@ class UnconnectedFontsPage extends React.Component {
                                     onClick={this.handleRecentFontClick}
                                 >
                                     {font}
-                                </div>
+                                </button>
                             ))}
                         </div>
                     ) : (

@@ -4,16 +4,19 @@ import {Link} from 'react-router-dom';
 import {FormattedMessage} from 'react-intl';
 import {useIntl} from '../../lib/tw-use-intl.jsx';
 import {
-    AppWindow, AtSign, Coins, Flag, GitFork, Heart, Megaphone,
-    MessageCircle, Reply, ShieldAlert, UserPlus
+    AppWindow, AtSign, Coins, Flag, Gavel, GitFork, Heart, Megaphone,
+    MessageCircle, Reply, ShieldAlert, UserPlus, GitPullRequest, Layers3, Lightbulb, Star, Users
 } from 'lucide-react';
 import {projectUrl} from '../api';
 import Avatar from '../components/Avatar.jsx';
 import Button from '../components/ui/Button.jsx';
+import RichText from '../components/RichText.jsx';
 import {useUser} from '../UserContext.jsx';
 import {fetchNotifications, markNotificationsRead, subscribeNotifications} from '../../lib/rotur/client.js';
 import {timeAgo} from '../format';
 import styles from './Notifications.module.css';
+import {getNotificationPreferences, categoryForNotification} from '../notification-preferences';
+import {useCommunityIntl} from '../i18n.jsx';
 
 const ICONS = {
     love: Heart,
@@ -41,6 +44,19 @@ const ICONS = {
     moderation: ShieldAlert,
     news: Megaphone,
     report_update: Flag,
+    contribution: GitPullRequest,
+    space_project: Layers3,
+    space_comment: MessageCircle,
+    space_curator_invite: UserPlus,
+    space_curator_accepted: Users,
+    space_curator_declined: Users,
+    space_curator_removed: ShieldAlert,
+    challenge_judge_invite: Gavel,
+    challenge_judge_accepted: Gavel,
+    challenge_join: UserPlus,
+    project_feedback: Lightbulb,
+    project_review: Star,
+    roadmap_comment: Lightbulb,
     notification: AppWindow
 };
 
@@ -61,7 +77,7 @@ const USERNAME_RE = /^[A-Za-z0-9][A-Za-z0-9_-]{0,19}$/;
 
 const commentAnchor = n => (n.commentId ? `#comment-id-${n.commentId}` : '');
 
-const groupUrl = n => (n.group_tag ? `https://rotur.dev/groups/${encodeURIComponent(n.group_tag)}` : null);
+const groupUrl = n => (n.group_tag ? `https://accounts.bilup.org/groups/${encodeURIComponent(n.group_tag)}` : null);
 
 const REPORT_OUTCOMES = {
     dismiss: 'mw.community.notifications.outcome.dismiss',
@@ -72,15 +88,7 @@ const REPORT_OUTCOMES = {
 
 const escapeRegex = s => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-// Split text into plain segments and clickable URL segments.
-const linkify = text => {
-    const parts = String(text || '').split(/(https?:\/\/[^\s]+)/g);
-    return parts.map((part, i) => (
-        /^https?:\/\//.test(part) ? (
-            <a key={i} href={part} target="_blank" rel="noreferrer" className={styles.link}>{part}</a>
-        ) : part
-    ));
-};
+const linkify = text => <RichText text={text} />;
 
 // Generic notifications carry the sender in `title` (MistWarp posts
 // title = actor) and the full sentence in `body`; drop the duplicated
@@ -90,6 +98,21 @@ const stripSender = (sender, text) => {
         return text;
     }
     return text.replace(new RegExp(`^${escapeRegex(sender)}[\\s:.,\\u2014-]*`, 'i'), '');
+};
+
+const mergeNotifications = (...lists) => {
+    const seen = new Set();
+    const merged = [];
+    for (const list of lists) {
+        for (const item of list || []) {
+            if (!item) continue;
+            const key = item.id || `${item.type}:${item.created || item.timestamp}:${item.actor || item.title || ''}`;
+            if (seen.has(key)) continue;
+            seen.add(key);
+            merged.push(item);
+        }
+    }
+    return merged;
 };
 
 // Prefer a username-shaped title (real actor) over the app account that
@@ -110,14 +133,20 @@ const describe = (n, intl) => {
             defaultMessage="loved {title}"
             values={{title: <strong>{n.projectTitle}</strong>}}
         /> :
-        <span>loved your project</span>;
+        <FormattedMessage
+            id="mw.community.notifications.lovedYourProject"
+            defaultMessage="loved your project"
+        />;
     case 'comment': return n.projectTitle ?
         <FormattedMessage
             id="mw.community.notifications.comment"
             defaultMessage="commented on {title}"
             values={{title: <strong>{n.projectTitle}</strong>}}
         /> :
-        <span>commented on your project</span>;
+        <FormattedMessage
+            id="mw.community.notifications.commentedYourProject"
+            defaultMessage="commented on your project"
+        />;
     case 'profile_comment': return <FormattedMessage
         id="mw.community.notifications.profileComment"
         defaultMessage="commented on your profile"
@@ -157,7 +186,10 @@ const describe = (n, intl) => {
             defaultMessage="remixed {title}"
             values={{title: <strong>{n.projectTitle}</strong>}}
         /> :
-        <span>remixed your project</span>;
+        <FormattedMessage
+            id="mw.community.notifications.remixedYourProject"
+            defaultMessage="remixed your project"
+        />;
     case 'follow': return <FormattedMessage
         id="mw.community.notifications.follow"
         defaultMessage="followed you"
@@ -263,6 +295,79 @@ const describe = (n, intl) => {
             defaultMessage: 'reviewed; no action was taken'
         })}}
     />;
+    case 'contribution': return <FormattedMessage
+        id="mw.community.notifications.contribution"
+        defaultMessage="sent changes for {title}"
+        values={{title: <strong>{n.projectTitle}</strong>}}
+    />;
+    case 'space_project': return (
+        <FormattedMessage
+            id="mw.community.notifications.spaceProject"
+            defaultMessage="added {title} to {space}"
+            values={{title: <strong>{n.projectTitle}</strong>, space: <strong>{n.spaceTitle}</strong>}}
+        />
+    );
+    case 'space_comment': return <FormattedMessage
+        id="mw.community.notifications.spaceComment"
+        defaultMessage="commented on {space}"
+        values={{space: <strong>{n.spaceTitle}</strong>}}
+    />;
+    case 'space_curator_invite': return <FormattedMessage
+        id="mw.community.notifications.spaceCuratorInvite"
+        defaultMessage="invited you to curate {space}"
+        values={{space: <strong>{n.spaceTitle}</strong>}}
+    />;
+    case 'space_curator_accepted': return (
+        <FormattedMessage
+            id="mw.community.notifications.spaceCuratorAccepted"
+            defaultMessage="accepted your invitation to curate {space}"
+            values={{space: <strong>{n.spaceTitle}</strong>}}
+        />
+    );
+    case 'space_curator_declined': return (
+        <FormattedMessage
+            id="mw.community.notifications.spaceCuratorDeclined"
+            defaultMessage="declined your invitation to curate {space}"
+            values={{space: <strong>{n.spaceTitle}</strong>}}
+        />
+    );
+    case 'space_curator_removed': return <FormattedMessage
+        id="mw.community.notifications.spaceCuratorRemoved"
+        defaultMessage="removed you as a curator of {space}"
+        values={{space: <strong>{n.spaceTitle}</strong>}}
+    />;
+    case 'challenge_judge_invite': return <FormattedMessage
+        id="mw.community.notifications.challengeJudgeInvite"
+        defaultMessage="invited you to judge {space}"
+        values={{space: <strong>{n.spaceTitle}</strong>}}
+    />;
+    case 'challenge_judge_accepted': return (
+        <FormattedMessage
+            id="mw.community.notifications.challengeJudgeAccepted"
+            defaultMessage="accepted your invitation to judge {space}"
+            values={{space: <strong>{n.spaceTitle}</strong>}}
+        />
+    );
+    case 'challenge_join': return <FormattedMessage
+        id="mw.community.notifications.challengeJoin"
+        defaultMessage="joined {space}"
+        values={{space: <strong>{n.spaceTitle}</strong>}}
+    />;
+    case 'project_feedback': return <FormattedMessage
+        id="mw.community.notifications.projectFeedback"
+        defaultMessage="sent {type} feedback for {title}"
+        values={{type: n.feedbackType, title: <strong>{n.projectTitle}</strong>}}
+    />;
+    case 'project_review': return <FormattedMessage
+        id="mw.community.notifications.projectReview"
+        defaultMessage="rated {title} {rating} out of 5"
+        values={{title: <strong>{n.projectTitle}</strong>, rating: n.rating}}
+    />;
+    case 'roadmap_comment': return <FormattedMessage
+        id="mw.community.notifications.roadmapComment"
+        defaultMessage="commented on {title}"
+        values={{title: <strong>{n.roadmapTitle}</strong>}}
+    />;
     default: return <FormattedMessage
         id="mw.community.notifications.didSomething"
         defaultMessage="did something"
@@ -342,8 +447,16 @@ GenericNotification.propTypes = {
 
 const Notifications = ({hideHeading}) => {
     const intl = useIntl();
-    const {user, loading} = useUser();
+    const {t: ct} = useCommunityIntl();
+    const {user, loading, login} = useUser();
     const [items, setItems] = useState(null);
+    const [preferences, setPreferences] = useState(getNotificationPreferences());
+
+    useEffect(() => {
+        const update = () => setPreferences(getNotificationPreferences());
+        window.addEventListener('mw:notification-preferences', update);
+        return () => window.removeEventListener('mw:notification-preferences', update);
+    }, []);
     const [failed, setFailed] = useState(false);
     const [attempt, setAttempt] = useState(0);
 
@@ -352,12 +465,7 @@ const Notifications = ({hideHeading}) => {
             return () => {};
         }
         return subscribeNotifications(notification => {
-            setItems(prev => {
-                if (!prev || prev.some(item => item.id === notification.id)) {
-                    return prev;
-                }
-                return [notification, ...prev];
-            });
+            setItems(prev => mergeNotifications([notification], prev || []));
         });
     }, [user]);
 
@@ -374,40 +482,59 @@ const Notifications = ({hideHeading}) => {
     }, []);
 
     useEffect(() => {
-        if (!user) {
-            return;
-        }
+        setItems(null);
         setFailed(false);
+        if (!user) {
+            return () => {};
+        }
+        let cancelled = false;
         fetchNotifications()
             .then(list => {
-                setItems(list);
+                if (cancelled) return;
+                setItems(current => mergeNotifications(current || [], list));
                 markNotificationsRead()
-                    .then(() => window.dispatchEvent(new Event('mw:notifications-read')))
+                    .then(() => {
+                        if (!cancelled) window.dispatchEvent(new Event('mw:notifications-read'));
+                    })
                     .catch(() => {});
             })
-            .catch(() => setFailed(true));
+            .catch(() => {
+                if (!cancelled) setFailed(true);
+            });
+        return () => {
+            cancelled = true;
+        };
     }, [user, attempt]);
 
     if (loading) {
         return <main className={styles.page}><p className={styles.status}>{intl.formatMessage({id: 'mw.community.notifications.loading', defaultMessage: 'Loading…'})}</p></main>;
     }
     if (!user) {
-        return <main className={styles.page}><p className={styles.status}>{intl.formatMessage({id: 'mw.community.notifications.signIn', defaultMessage: 'Sign in to see your notifications.'})}</p></main>;
+        return (
+            <main className={styles.page}>
+                <p className={styles.status}>
+                    {ct('notify.signIn', 'Sign in to see your notifications.')} <Button onClick={login}>{ct('notify.signInBtn', 'Sign in')}</Button>
+                </p>
+            </main>
+        );
     }
+    const visibleItems = (items || [])
+        .filter(item => preferences[categoryForNotification(item.type)] !== false);
 
     return (
         <main className={styles.page}>
             {hideHeading ? null : <h1>{intl.formatMessage({id: 'mw.community.notifications.title', defaultMessage: 'Notifications'})}</h1>}
             {failed ? (
                 <p className={styles.status}>
-                    {intl.formatMessage({id: 'mw.community.notifications.couldNotLoad', defaultMessage: 'Couldn\'t load.'})}{' '}
-                    <Button onClick={() => setAttempt(a => a + 1)}>{intl.formatMessage({id: 'mw.community.notifications.tryAgain', defaultMessage: 'Try again'})}</Button>
+                    {items === null ? ct('notify.couldNotLoad', 'Couldn\'t load notifications.') : ct('notify.someMissing', 'Some notifications may be missing.')}{' '}
+                    <Button onClick={() => setAttempt(a => a + 1)}>{ct('notify.tryAgain', 'Try again')}</Button>
                 </p>
-            ) : items === null ? (
-                <p className={styles.status}>{intl.formatMessage({id: 'mw.community.notifications.loading', defaultMessage: 'Loading…'})}</p>
-            ) : items.length ? (
+            ) : null}
+            {items === null ? (!failed ? (
+                <p className={styles.status}>{ct('common.loading', 'Loading…')}</p>
+            ) : null) : visibleItems.length ? (
                 <div className={styles.list}>
-                    {items.map(n => {
+                    {visibleItems.map(n => {
                         const Icon = ICONS[n.type] || Heart;
                         const ts = n.created || n.timestamp;
                         const time = timeAgo(ts);
@@ -458,7 +585,17 @@ const Notifications = ({hideHeading}) => {
                                 <div className={styles.text}>
                                     <Link to={`/users/${actor}`} className={styles.actor}>{actor}</Link>
                                     {' '}
-                                    {n.projectId ? (
+                                    {n.spaceId ? (
+                                        <Link
+                                            to={`/spaces/${n.spaceId}`}
+                                            className={styles.body}
+                                        >{body}</Link>
+                                    ) : n.roadmapId ? (
+                                        <Link
+                                            to={`/roadmap#idea-${n.roadmapId}`}
+                                            className={styles.body}
+                                        >{body}</Link>
+                                    ) : n.projectId ? (
                                         <Link
                                             to={`${projectUrl(n.projectId)}${commentAnchor(n)}`}
                                             className={styles.body}
@@ -475,6 +612,11 @@ const Notifications = ({hideHeading}) => {
                         );
                     })}
                 </div>
+            ) : items.length ? (
+                <p className={styles.status}>
+                    {ct('notify.preferencesHide', 'Your notification preferences hide all current activity.')}{' '}
+                    <Link to="/settings?section=notifications">{ct('notify.changePrefs', 'Change preferences')}</Link>
+                </p>
             ) : (
                 <p className={styles.status}>{intl.formatMessage({id: 'mw.community.notifications.empty', defaultMessage: 'Nothing yet. Activity on your projects shows up here.'})}</p>
             )}
@@ -486,4 +628,5 @@ Notifications.propTypes = {
     hideHeading: PropTypes.bool
 };
 
+export {mergeNotifications};
 export default Notifications;

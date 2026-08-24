@@ -10,7 +10,7 @@ const OPTIONS = [
     {value: 'private', labelId: 'mw.community.visibilityMenu.private', labelDefault: 'Unshared', icon: Lock}
 ];
 
-const VisibilityMenu = ({value, onChange}) => {
+const VisibilityMenu = ({value, onChange, disabled = false}) => {
     const intl = useIntl();
     const t = useCallback(
         (messageId, defaultMessage, values) => intl.formatMessage({id: messageId, defaultMessage}, values),
@@ -21,12 +21,15 @@ const VisibilityMenu = ({value, onChange}) => {
     return (
         <Dropdown
             width={210}
-            renderTrigger={({toggle}) => (
+            renderTrigger={({open, toggle}) => (
                 <button
                     type="button"
                     className={styles.button}
                     onClick={toggle}
+disabled={disabled}
                     aria-label={t('mw.community.visibilityMenu.ariaLabel', 'Project visibility')}
+                    aria-expanded={open}
+                    aria-haspopup="menu"
                 >
                     <CurrentIcon size={16} />
                     {t(current.labelId, current.labelDefault)}
@@ -39,6 +42,7 @@ const VisibilityMenu = ({value, onChange}) => {
                 return (
                     <DropdownItem
                         key={option.value}
+                        disabled={disabled}
                         onClick={() => {
                             close();
                             if (option.value !== value) onChange(option.value);

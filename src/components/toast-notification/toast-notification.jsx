@@ -5,7 +5,7 @@ import classNames from 'classnames';
 import styles from './toast-notification.css';
 
 const ToastNotificationComponent = props => {
-    const {message, type = 'info', visible, onClose} = props;
+    const {message, sequence, type = 'info', visible, onClose} = props;
     const intl = props.intl;
 
     const [closing, setClosing] = React.useState(false);
@@ -23,7 +23,7 @@ const ToastNotificationComponent = props => {
             setClosing(true);
         }, 3000);
         return () => clearTimeout(timeout);
-    }, [visible, message, type]);
+    }, [visible, message, sequence, type, onClose]);
 
     React.useEffect(() => {
         if (!closing) return () => {};
@@ -50,6 +50,7 @@ const ToastNotificationComponent = props => {
                 {message}
             </span>
             <button
+                type="button"
                 className={styles.closeButton}
                 onClick={handleClose}
                 aria-label={intl.formatMessage({
@@ -66,9 +67,14 @@ const ToastNotificationComponent = props => {
 ToastNotificationComponent.propTypes = {
     intl: intlShape,
     message: PropTypes.oneOfType([PropTypes.string, PropTypes.node]),
+    sequence: PropTypes.number,
     type: PropTypes.oneOf(['success', 'error', 'info', 'warning']),
     visible: PropTypes.bool,
     onClose: PropTypes.func.isRequired
+};
+
+export {
+    ToastNotificationComponent
 };
 
 export default injectIntl(ToastNotificationComponent);

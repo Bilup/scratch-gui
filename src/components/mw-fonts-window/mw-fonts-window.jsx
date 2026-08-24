@@ -25,8 +25,9 @@ import ManageFont from '../tw-fonts-modal/manage-font.jsx';
 const getFontFamily = font => (typeof font === 'string' ? font : font.family);
 
 // Reusable Font List Item
-const FontListItem = ({family, onClick}) => (
-    <div
+export const FontListItem = ({family, onClick}) => (
+    <button
+        type="button"
         className={styles.fontItem}
         data-family={family}
         onClick={onClick}
@@ -34,7 +35,7 @@ const FontListItem = ({family, onClick}) => (
         title={family}
     >
         {family}
-    </div>
+    </button>
 );
 
 FontListItem.propTypes = {
@@ -179,7 +180,7 @@ class MWFontsWindow extends React.Component {
         this.props.onChangeTheme(this.props.theme.set('fonts', newFonts));
     };
 
-    resetFonts = () => this.setSelectedFont({google: [], system: []});
+    handleResetFonts = () => this.setSelectedFont({google: [], system: []});
 
     getSelectedFontName = () =>
         this.props.theme.fonts.google[0] || this.props.theme.fonts.system[0] || null;
@@ -198,6 +199,10 @@ class MWFontsWindow extends React.Component {
         } catch {
             this.setSelectedFont({system: [family], historyFont: family});
         }
+    };
+
+    handleHistoryFontClick = event => {
+        this.selectFromHistory(event.currentTarget.dataset.family);
     };
 
     // DRY: Google Fonts handling
@@ -238,6 +243,10 @@ class MWFontsWindow extends React.Component {
         }
     };
 
+    handleGoogleFontClick = event => {
+        this.addGoogleFont(event.currentTarget.dataset.family);
+    };
+
     handleGoogleInputKeyDown = e => {
         if (e.key === 'Enter' && this.getGoogleDisplayFonts().length > 0) {
             this.addGoogleFont(getFontFamily(this.getGoogleDisplayFonts()[0]));
@@ -272,7 +281,7 @@ class MWFontsWindow extends React.Component {
                     <FontListItem
                         key={getFontFamily(font)}
                         family={getFontFamily(font)}
-                        onClick={() => this.addGoogleFont(getFontFamily(font))}
+                        onClick={this.handleGoogleFontClick}
                     />
                 ))}
             </div>
@@ -282,7 +291,7 @@ class MWFontsWindow extends React.Component {
     // DRY: Local/System font handling
     handleSystemFontInputChange = e => this.setState({systemFontInput: e.target.value});
 
-    addSystemFont = () => {
+    handleAddSystemFont = () => {
         const family = this.state.systemFontInput.trim();
         if (family) {
             this.setSelectedFont({system: [family], historyFont: family});
@@ -291,8 +300,14 @@ class MWFontsWindow extends React.Component {
     };
 
     handleSystemInputKeyDown = e => {
-        if (e.key === 'Enter') this.addSystemFont();
+        if (e.key === 'Enter') this.handleAddSystemFont();
     };
+
+    handleCloseLocalScreen = () => this.setState({localScreen: ''});
+
+    handleOpenSystemFonts = () => this.setState({localScreen: 'system'});
+
+    handleOpenCustomFonts = () => this.setState({localScreen: 'custom'});
 
     // Local fonts manager (unchanged structure, but extracted for clarity)
     renderLocalFontsManager = () => {
@@ -302,13 +317,13 @@ class MWFontsWindow extends React.Component {
         if (this.state.localScreen === 'system') {
             return (<AddSystemFont
                 fontManager={fontManager}
-                onClose={() => this.setState({localScreen: ''})}
+                onClose={this.handleCloseLocalScreen}
             />);
         }
         if (this.state.localScreen === 'custom') {
             return (<AddCustomFont
                 fontManager={fontManager}
-                onClose={() => this.setState({localScreen: ''})}
+                onClose={this.handleCloseLocalScreen}
             />);
         }
 
@@ -318,8 +333,9 @@ class MWFontsWindow extends React.Component {
                 <div className={localFontsStyles.openButtons}>
                     {/* ... buttons unchanged ... */}
                     <button
+                        type="button"
                         className={localFontsStyles.openButton}
-                        onClick={() => this.setState({localScreen: 'system'})}
+                        onClick={this.handleOpenSystemFonts}
                     >
                         <div
                             className={classNames(localFontsStyles.openButtonImage, localFontsStyles.systemImage)}
@@ -336,8 +352,9 @@ class MWFontsWindow extends React.Component {
                         </div>
                     </button>
                     <button
+                        type="button"
                         className={localFontsStyles.openButton}
-                        onClick={() => this.setState({localScreen: 'custom'})}
+                        onClick={this.handleOpenCustomFonts}
                     >
                         <div
                             className={classNames(localFontsStyles.openButtonImage, localFontsStyles.customImage)}
@@ -391,8 +408,8 @@ class MWFontsWindow extends React.Component {
             <div className={styles.fontsContainer}>
                 <SelectedFontDisplay
                     selectedFont={selectedFont}
-                    onReset={this.resetFonts}
-                    onRemove={this.resetFonts}
+                    onReset={this.handleResetFonts}
+                    onRemove={this.handleResetFonts}
                 />
 
                 <FontSection
@@ -410,7 +427,7 @@ class MWFontsWindow extends React.Component {
                                 <FontListItem
                                     key={font}
                                     family={font}
-                                    onClick={() => this.selectFromHistory(font)}
+                                    onClick={this.handleHistoryFontClick}
                                 />
                             ))}
                         </div>
@@ -473,8 +490,9 @@ class MWFontsWindow extends React.Component {
                             onKeyDown={this.handleSystemInputKeyDown}
                         />
                         <button
+                            type="button"
                             className={styles.addButton}
-                            onClick={this.addSystemFont}
+                            onClick={this.handleAddSystemFont}
                             disabled={!this.state.systemFontInput.trim()}
                         >
                             <Check

@@ -29,11 +29,13 @@ const CustomExtensionModal = props => (
             onDrop={props.onDrop}
         >
             <div className={styles.typeSelectorContainer}>
-                <div
+                <button
+                    type="button"
                     className={styles.typeSelectorButton}
                     data-active={props.type === 'url'}
+                    aria-pressed={props.type === 'url'}
+                    disabled={props.loading}
                     onClick={props.onSwitchToURL}
-                    tabIndex={0}
                 >
                     <FormattedMessage
                         defaultMessage="URL"
@@ -41,12 +43,14 @@ const CustomExtensionModal = props => (
                         description="Button to choose to load an extension from a remote URL. Not much space, so keep this short."
                         id="tw.customExtensionModal.url"
                     />
-                </div>
-                <div
+                </button>
+                <button
+                    type="button"
                     className={styles.typeSelectorButton}
                     data-active={props.type === 'file'}
+                    aria-pressed={props.type === 'file'}
+                    disabled={props.loading}
                     onClick={props.onSwitchToFile}
-                    tabIndex={0}
                 >
                     <FormattedMessage
                         defaultMessage="Files"
@@ -54,12 +58,14 @@ const CustomExtensionModal = props => (
                         description="Button to choose to load an extension from one or more local files. Not much space, so keep this short."
                         id="tw.customExtensionModal.file"
                     />
-                </div>
-                <div
+                </button>
+                <button
+                    type="button"
                     className={styles.typeSelectorButton}
                     data-active={props.type === 'text'}
+                    aria-pressed={props.type === 'text'}
+                    disabled={props.loading}
                     onClick={props.onSwitchToText}
-                    tabIndex={0}
                 >
                     <FormattedMessage
                         defaultMessage="Text"
@@ -67,7 +73,7 @@ const CustomExtensionModal = props => (
                         description="Button to choose to load an extension from a text input. Not much space, so keep this short."
                         id="tw.customExtensionModal.text"
                     />
-                </div>
+                </button>
             </div>
 
             {props.type === 'url' ? (
@@ -83,6 +89,7 @@ const CustomExtensionModal = props => (
                         type="text"
                         className={styles.urlInput}
                         value={props.url}
+                        disabled={props.loading}
                         onChange={props.onChangeURL}
                         onKeyDown={props.onKeyDown}
                         placeholder="https://extensions.bilup.org/..."
@@ -100,6 +107,7 @@ const CustomExtensionModal = props => (
                     </p>
                     <FileInput
                         accept=".js"
+                        disabled={props.loading}
                         onChange={props.onChangeFiles}
                         files={props.files}
                     />
@@ -117,6 +125,7 @@ const CustomExtensionModal = props => (
                         className={styles.textCodeInput}
                         placeholder={'class Extension {\n  // ...\n}\nScratch.extensions.register(new Extension());'}
                         value={props.text}
+                        disabled={props.loading}
                         onChange={props.onChangeText}
                         autoFocus
                         spellCheck={false}
@@ -180,17 +189,32 @@ const CustomExtensionModal = props => (
                 )
             )}
 
+            {props.error && (
+                <p className={styles.loadError}>
+                    {props.error}
+                </p>
+            )}
+
             <div className={styles.buttonRow}>
                 <button
+                    type="button"
                     className={styles.loadButton}
                     onClick={props.onLoadExtension}
-                    disabled={!props.canLoadExtension}
+                    disabled={!props.canLoadExtension || props.loading}
                 >
-                    <FormattedMessage
-                        defaultMessage="Load"
-                        description="Button that loads the given custom extension"
-                        id="tw.customExtensionModal.load"
-                    />
+                    {props.loading ? (
+                        <FormattedMessage
+                            defaultMessage="Loading…"
+                            description="Button label while a custom extension is loading"
+                            id="tw.customExtensionModal.loading"
+                        />
+                    ) : (
+                        <FormattedMessage
+                            defaultMessage="Load"
+                            description="Button that loads the given custom extension"
+                            id="tw.customExtensionModal.load"
+                        />
+                    )}
                 </button>
             </div>
         </Box>
@@ -200,6 +224,8 @@ const CustomExtensionModal = props => (
 CustomExtensionModal.propTypes = {
     intl: intlShape,
     canLoadExtension: PropTypes.bool.isRequired,
+    error: PropTypes.string,
+    loading: PropTypes.bool.isRequired,
     type: PropTypes.oneOf(['url', 'file', 'text']).isRequired,
     onSwitchToFile: PropTypes.func.isRequired,
     onSwitchToURL: PropTypes.func.isRequired,
