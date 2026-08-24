@@ -426,7 +426,7 @@ const Home = () => {
                 <div className={styles.heroText}>
                     <h1>
                         <FormattedMessage
-                            defaultMessage="Build, share, and remix projects together."
+                            defaultMessage="Elevate your creation."
                             id="mw.community.home.heroTitle"
                         />
                     </h1>
