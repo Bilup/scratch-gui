@@ -18,6 +18,7 @@ try {
 }
 
 const ENABLE_COMMUNITY = true;
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
 // Plugins
 const CopyWebpackPlugin = require('copy-webpack-plugin');
@@ -90,8 +91,10 @@ const htmlWebpackPluginCommon = {
 const CACHE_EPOCH = 'gleba';
 
 const base = {
-    mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
-    devtool: process.env.SOURCEMAP || (process.env.NODE_ENV === 'production' ? false : 'cheap-module-source-map'),
+    mode: IS_PRODUCTION ? 'production' : 'development',
+    cache: !IS_PRODUCTION,
+    devtool: process.env.SOURCEMAP || (IS_PRODUCTION ? false : 'eval-cheap-module-source-map'),
+    stats: IS_PRODUCTION ? 'normal' : 'errors-warnings',
     devServer: {
         contentBase: false,
         host: '0.0.0.0',
@@ -253,6 +256,10 @@ const base = {
                 /node_modules[\\/]fake-indexeddb/
             ],
             options: {
+                cacheDirectory: path.resolve(__dirname, 'node_modules/.cache/babel-loader'),
+                cacheCompression: false,
+                // Explicitly disable babelrc so we don't catch various config
+                // in much lower dependencies.
                 babelrc: false,
                 plugins: [
                     ['react-intl', {
@@ -465,7 +472,8 @@ module.exports = [
                 'process.env.ENABLE_SERVICE_WORKER': JSON.stringify(process.env.ENABLE_SERVICE_WORKER || ''),
                 'process.env.ROOT': JSON.stringify(root),
                 'process.env.ROUTING_STYLE': JSON.stringify(process.env.ROUTING_STYLE || 'wildcard'),
-                'process.env.MW_COMMUNITY': JSON.stringify(ENABLE_COMMUNITY ? 'true' : '')
+                'process.env.MW_COMMUNITY': JSON.stringify(ENABLE_COMMUNITY ? 'true' : ''),
+                'process.env.MW_STATUS_URL': JSON.stringify(process.env.MW_STATUS_URL || 'https://status.warp.mistium.com')
             }),
             new HtmlWebpackPlugin({
                 chunks: ['editor'],
@@ -525,15 +533,13 @@ module.exports = [
                     }
                 ]
             }),
-            new CopyWebpackPlugin({
-                patterns: [
-                    {
-                        from: path.resolve(__dirname, '../docs/build'),
-                        to: 'docs',
-                        noErrorOnMissing: true
-                    }
-                ]
-            }),
+            ...(IS_PRODUCTION ? [new CopyWebpackPlugin({
+                patterns: [{
+                    from: path.resolve(__dirname, '../docs/build'),
+                    to: 'docs',
+                    noErrorOnMissing: true
+                }]
+            })] : []),
             new CopyWebpackPlugin({
                 patterns: [
                     {

@@ -22,6 +22,15 @@ import Notifications from './pages/Notifications.jsx';
 import News from './pages/News.jsx';
 import Leaderboard from './pages/Leaderboard.jsx';
 import Admin from './pages/Admin.jsx';
+import Spaces from './pages/Spaces.jsx';
+import Space from './pages/Space.jsx';
+import ManageSpace from './pages/ManageSpace.jsx';
+import Roadmap from './pages/Roadmap.jsx';
+import Trust from './pages/Trust.jsx';
+import Support from './pages/Support.jsx';
+import Status from './pages/Status.jsx';
+import NotFound from './pages/NotFound.jsx';
+import {useCommunityIntl} from './i18n.jsx';
 
 const ROUTE_TITLES = [
     ['/explore', 'mw.community.route.explore', 'Explore'],
@@ -32,6 +41,12 @@ const ROUTE_TITLES = [
     ['/notifications', 'mw.community.route.notifications', 'Notifications'],
     ['/news', 'mw.community.route.news', 'News'],
     ['/leaderboard', 'mw.community.route.leaderboard', 'Leaderboard'],
+    ['/spaces/', 'Space'],
+    ['/spaces', 'Spaces'],
+    ['/roadmap', 'Roadmap'],
+    ['/trust', 'Trust and safety'],
+    ['/support', 'Support'],
+    ['/status', 'Service status'],
     ['/users/', 'mw.community.route.profile', 'Profile'],
     ['/project/', 'mw.community.route.project', 'Project']
 ];
@@ -53,33 +68,42 @@ const App = () => {
     useEffect(() => {
         initPrefetch();
     }, []);
-    return (
-        <UserProvider>
-            <RouteMeta />
-            <NavBar />
-            <BetaBanner />
-            <StandingBanner />
-            <div className="mw-app-content">
-                <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/explore" element={<Explore />} />
-                    <Route path="/credits" element={<Credits />} />
-                    <Route path="/project/:id" element={<Project />} />
-                    <Route path="/users/:name" element={<Profile />} />
-                    <Route path="/users/:name/followers" element={<Followers />} />
-                    <Route path="/settings" element={<Settings />} />
-                    <Route path="/mystuff" element={<MyStuff />} />
-                    <Route path="/mystuff/project/:id" element={<ManageProject />} />
-                    <Route path="/wallet" element={<Wallet />} />
-                    <Route path="/notifications" element={<Notifications />} />
-                    <Route path="/news" element={<News />} />
-                    <Route path="/leaderboard" element={<Leaderboard />} />
-                    <Route path="/admin" element={<Admin />} />
-                </Routes>
-            </div>
-            <Footer />
-        </UserProvider>
-    );
+    const {t} = useCommunityIntl();
+    return (<UserProvider>
+        <a className="mw-skip-link" href="#mw-main-content">{t('a11y.skip')}</a>
+        <RouteMeta />
+        <NavBar />
+        <BetaBanner />
+        <StandingBanner />
+        <div className="mw-app-content" id="mw-main-content" tabIndex="-1">
+            <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/explore" element={<Explore />} />
+                <Route path="/credits" element={<Credits />} />
+                <Route path="/project/:id" element={<Project />} />
+                <Route path="/users/:name" element={<Profile />} />
+                <Route path="/users/:name/followers" element={<Followers />} />
+                <Route path="/users/:name/following" element={<Followers mode="following" />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/mystuff" element={<MyStuff />} />
+                <Route path="/mystuff/project/:id" element={<ManageProject />} />
+                <Route path="/wallet" element={<Wallet />} />
+                <Route path="/notifications" element={<Notifications />} />
+                <Route path="/news" element={<News />} />
+                <Route path="/leaderboard" element={<Leaderboard />} />
+                <Route path="/spaces" element={<Spaces />} />
+                <Route path="/spaces/:id" element={<Space />} />
+                <Route path="/spaces/:id/manage" element={<ManageSpace />} />
+                <Route path="/roadmap" element={<Roadmap />} />
+                <Route path="/trust" element={<Trust />} />
+                <Route path="/support" element={<Support />} />
+                <Route path="/status" element={<Status />} />
+                <Route path="/admin" element={<Admin />} />
+                <Route path="*" element={<NotFound />} />
+            </Routes>
+        </div>
+        <Footer />
+    </UserProvider>);
 };
 
 export default App;

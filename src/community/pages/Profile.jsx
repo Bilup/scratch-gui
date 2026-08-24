@@ -1,10 +1,11 @@
-import React, {useEffect, useState, useCallback, useMemo} from 'react';
+/* eslint-disable max-len */
+import React, {useEffect, useState, useCallback, useMemo, useRef} from 'react';
 import {useParams, Link} from 'react-router-dom';
 import {useIntl} from '../../lib/tw-use-intl.jsx';
 import {
-    UserPlus, UserCheck, Calendar, MessageSquare, MessageSquareOff, ChevronRight, Pencil, Flag, Coins, X
+    UserPlus, UserCheck, Calendar, MessageSquare, MessageSquareOff, ChevronRight, Pencil, Flag, Coins, Star, Ban, VolumeX
 } from 'lucide-react';
-import api from '../api';
+import api, {projectUrl} from '../api';
 import rotur from '../rotur';
 import {payUser} from '../../lib/rotur/client.js';
 import {isInsufficientFunds, openCreditCheckout, CREDIT_PACKS} from '../credits';
@@ -14,15 +15,21 @@ import CommentThread from '../components/CommentThread.jsx';
 import ReportModal from '../components/ReportModal.jsx';
 import Avatar from '../components/Avatar.jsx';
 import RichText from '../components/RichText.jsx';
+import Button from '../components/ui/Button.jsx';
+import Modal from '../components/ui/Modal.jsx';
 import ActivityCard from '../components/ActivityCard.jsx';
 import FeaturedProject from '../components/FeaturedProject.jsx';
 import useLatest from '../use-latest.js';
-import useEscape from '../use-escape.js';
 import setPageMeta from '../page-meta.js';
 import safeIconSvg from '../safe-icon.js';
+import scrollToAnchorWithRetry from '../scroll-to-anchor.js';
+import {timeAgo} from '../format';
 import styles from './Profile.module.css';
 
 const FOLLOWER_STRIP_COUNT = 16;
+export const profileLoadMessage = error => (
+    error && error.status === 404 ? 'This user does not exist on Rotur.' : 'Could not load this profile.'
+);
 
 const joinYear = ms => {
     if (!ms) return null;
@@ -33,59 +40,84 @@ const joinYear = ms => {
     }
 };
 
+const scrollToCommentAnchor = id => scrollToAnchorWithRetry(id);
+
+const parseDonationAmount = value => {
+    const amount = Math.round(Number(value) * 100) / 100;
+    return Number.isFinite(amount) && amount > 0 ? amount : null;
+};
+
 const Profile = () => {
     const {name} = useParams();
     const intl = useIntl();
     const t = useCallback((id, defaultMessage, values) =>
         intl.formatMessage({id, defaultMessage}, values), [intl]);
-    const {user} = useUser();
+    const {user, loading: userLoading, login} = useUser();
+    const viewerName = (user && user.username) || '';
+    const loadContext = `${name}\u0000${viewerName}`;
     const [profile, setProfile] = useState(null);
+    const [profileLoadContext, setProfileLoadContext] = useState('');
     const [mwUser, setMwUser] = useState(null);
     const [followers, setFollowers] = useState([]);
     const [error, setError] = useState(null);
+    const [errorLoadContext, setErrorLoadContext] = useState('');
     const [actionError, setActionError] = useState(null);
     const [followBusy, setFollowBusy] = useState(false);
     const [commentsBusy, setCommentsBusy] = useState(false);
     const [reporting, setReporting] = useState(false);
     const [adminProjects, setAdminProjects] = useState([]);
-    const [presence, setPresence] = useState(null);
     const [donating, setDonating] = useState(false);
+    const [reviews, setReviews] = useState(null);
+    const [safetyBusy, setSafetyBusy] = useState(false);
+    const [blockConfirmOpen, setBlockConfirmOpen] = useState(false);
+    const actionContext = `${name}\u0000${viewerName}`;
+    const actionContextRef = useRef(actionContext);
+    actionContextRef.current = actionContext;
+    const actionLocks = useRef(new Set());
 
     const beginLoad = useLatest();
 
     const load = useCallback(() => {
         const fresh = beginLoad();
+        setError(null);
+        setErrorLoadContext('');
         rotur.profile(name, {includePosts: false})
-            .then(fresh(setProfile))
+            .then(fresh(data => {
+                if (!data || typeof data !== 'object') throw new Error('Profile response was incomplete.');
+                setProfile(data);
+                setProfileLoadContext(loadContext);
+            }))
             .catch(fresh(() => setError(t('mw.community.profile.notFound',
                 'This user does not exist on Bilup Accounts.'))));
         api.getUser(name)
-            .then(fresh(setMwUser))
+            .then(fresh(data => setMwUser(data ? {
+                ...data,
+                projects: Array.isArray(data.projects) ? data.projects : []
+            } : null)))
             .catch(fresh(() => setMwUser(null)));
+        api.userReviews(name)
+            .then(fresh(data => setReviews(data && Array.isArray(data.reviews) ? data.reviews : [])))
+            .catch(fresh(() => setReviews([])));
         rotur.followers(name)
-            .then(fresh(data => setFollowers(data.followers || [])))
+            .then(fresh(data => setFollowers(data && Array.isArray(data.followers) ? data.followers : [])))
             .catch(fresh(() => setFollowers([])));
-    }, [name, beginLoad]);
+    }, [loadContext, name, beginLoad]);
 
     useEffect(() => {
         setProfile(null);
         setMwUser(null);
         setFollowers([]);
+        setReviews(null);
         setError(null);
+        setActionError(null);
+        setFollowBusy(false);
+        setCommentsBusy(false);
+        setSafetyBusy(false);
+        setBlockConfirmOpen(false);
         setReporting(false);
+        setDonating(false);
         load();
-    }, [name, load]);
-
-    useEffect(() => {
-        setPresence(null);
-        let active = true;
-        rotur.status(name)
-            .then(data => active && setPresence(data))
-            .catch(() => active && setPresence(null));
-        return () => {
-            active = false;
-        };
-    }, [name]);
+    }, [name, viewerName, load]);
 
     useEffect(() => {
         if (!user || !user.isAdmin) {
@@ -113,41 +145,39 @@ const Profile = () => {
 
     // Scroll to a comment anchor after the comments section renders
     useEffect(() => {
+        if (profileLoadContext !== loadContext) return;
         const hash = window.location.hash;
         if (!hash) return;
-        const id = hash.replace('#', '');
-        const tryScroll = (attempts = 0) => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.scrollIntoView({behavior: 'smooth', block: 'center'});
-                return;
-            }
-            if (attempts < 20) {
-                setTimeout(() => tryScroll(attempts + 1), 300);
-            }
-        };
-        tryScroll();
-    }, [profile, mwUser]);
+        return scrollToCommentAnchor(hash.replace('#', ''));
+    }, [loadContext, profileLoadContext]);
 
     const toggleFollow = async () => {
-        if (!user || !profile || followBusy) return;
+        const context = actionContextRef.current;
+        const actionKey = `${context}\u0000follow`;
+        if (!user || !profile || actionLocks.current.has(actionKey)) return;
+        actionLocks.current.add(actionKey);
         setFollowBusy(true);
         setActionError(null);
         try {
             const me = user.username;
             if (profile.followed) {
                 await rotur.unfollow(name);
+                if (actionContextRef.current !== context) return;
                 setProfile(p => ({...p, followed: false, followers: Math.max(0, (p.followers || 1) - 1)}));
                 setFollowers(fs => fs.filter(f => f.toLowerCase() !== me.toLowerCase()));
             } else {
                 await rotur.follow(name);
+                if (actionContextRef.current !== context) return;
                 setProfile(p => ({...p, followed: true, followers: (p.followers || 0) + 1}));
                 setFollowers(fs => [me, ...fs.filter(f => f.toLowerCase() !== me.toLowerCase())]);
             }
         } catch (e) {
-            setActionError(e.message || t('mw.community.profile.followFailed', 'Could not update follow.'));
+            if (actionContextRef.current === context) {
+                setActionError(e.message || t('mw.community.profile.followFailed', 'Could not update follow.'));
+            }
         } finally {
-            setFollowBusy(false);
+            actionLocks.current.delete(actionKey);
+            if (actionContextRef.current === context) setFollowBusy(false);
         }
     };
 
@@ -155,16 +185,59 @@ const Profile = () => {
     const commentsOff = Boolean(mwUser && mwUser.commentsOff);
 
     const toggleComments = async () => {
-        if (commentsBusy) return;
+        const context = actionContextRef.current;
+        const actionKey = `${context}\u0000comments`;
+        if (actionLocks.current.has(actionKey)) return;
+        actionLocks.current.add(actionKey);
         setCommentsBusy(true);
         setActionError(null);
         try {
             await api.updateProfile({commentsOff: !commentsOff});
-            load();
+            if (actionContextRef.current === context) load();
         } catch (e) {
-            setActionError(e.message || t('mw.community.profile.commentsFailed', 'Could not update comments.'));
+            if (actionContextRef.current === context) {
+                setActionError(e.message || t('mw.community.profile.commentsFailed', 'Could not update comments.'));
+            }
         } finally {
-            setCommentsBusy(false);
+            actionLocks.current.delete(actionKey);
+            if (actionContextRef.current === context) setCommentsBusy(false);
+        }
+    };
+
+    const toggleSafety = async (kind, confirmed = false) => {
+        const context = actionContextRef.current;
+        if (!mwUser) return;
+        const active = kind === 'block' ? mwUser.viewerBlocked : mwUser.viewerMuted;
+        if (kind === 'block' && !active && !confirmed) {
+            setActionError(null);
+            setBlockConfirmOpen(true);
+            return;
+        }
+        const actionKey = `${context}\u0000safety`;
+        if (actionLocks.current.has(actionKey)) return;
+        actionLocks.current.add(actionKey);
+        setSafetyBusy(true);
+        setActionError(null);
+        try {
+            if (kind === 'block') {
+                if (active) await api.unblockUser(name);
+                else await api.blockUser(name);
+                if (actionContextRef.current !== context) return;
+                setMwUser(current => ({...current, viewerBlocked: !active}));
+                setBlockConfirmOpen(false);
+            } else {
+                if (active) await api.unmuteUser(name);
+                else await api.muteUser(name);
+                if (actionContextRef.current !== context) return;
+                setMwUser(current => ({...current, viewerMuted: !active}));
+            }
+        } catch (e) {
+            if (actionContextRef.current === context) {
+                setActionError(e.message || 'Could not update your safety settings.');
+            }
+        } finally {
+            actionLocks.current.delete(actionKey);
+            if (actionContextRef.current === context) setSafetyBusy(false);
         }
     };
 
@@ -175,10 +248,17 @@ const Profile = () => {
         react: (commentId, type) => api.reactProfileComment(name, commentId, type)
     }), [name]);
 
-    if (error) {
-        return <main className={styles.page}><p className={styles.status}>{error}</p></main>;
+    if (error && errorLoadContext === loadContext && profileLoadContext !== loadContext) {
+        return (
+            <main className={styles.page}>
+                <div className={styles.status}>
+                    <p>{error}</p>
+                    {error === 'Could not load this profile.' ? <Button onClick={load}>Try again</Button> : <Link to="/explore">Browse projects</Link>}
+                </div>
+            </main>
+        );
     }
-    if (!profile) {
+    if (!profile || profileLoadContext !== loadContext) {
         return <main className={styles.page}><p className={styles.status}>{t('mw.community.profile.loading', 'Loading…')}</p></main>;
     }
 
@@ -188,14 +268,51 @@ const Profile = () => {
     const unsharedProjects = adminProjects.filter(project => !project.shared);
     const onMistWarp = !mwUser || mwUser.exists !== false;
     const year = joinYear(profile.created);
-    const isOnline = Boolean(presence && presence.presence && presence.presence !== 'offline');
-    const statusDotClass = isOnline ? styles.onlineDot : styles.offlineDot;
-    const statusText = presence ? (presence.status || presence.presence) : '';
+    const presence = profile.status || null;
+    const presenceState = presence && typeof presence.presence === 'string' ?
+        presence.presence.toLowerCase() : 'offline';
+    const statusDotClass = presenceState === 'online' ? styles.onlineDot :
+        presenceState === 'idle' ? styles.idleDot :
+            presenceState === 'dnd' ? styles.dndDot : styles.offlineDot;
+    const rawStatusText = presence && typeof presence.status === 'string' ? presence.status : '';
+    const hasStatusText = rawStatusText.replace(/[\s\u2800\u3164\uFFA0]/g, '').length > 0;
+    const statusText = hasStatusText ? rawStatusText :
+        `${presenceState.charAt(0).toUpperCase()}${presenceState.slice(1)}`;
     const activities = presence && Array.isArray(presence.activities) ? presence.activities : [];
     const badges = Array.isArray(profile.badges) ? profile.badges.slice(0, 6) : [];
 
     return (
         <main className={styles.page}>
+            {blockConfirmOpen ? (
+                <Modal
+                    icon={Ban}
+                    title={`Block ${profile.username || name}?`}
+                    onClose={() => setBlockConfirmOpen(false)}
+                    dismissDisabled={safetyBusy}
+                    actions={(
+                        <React.Fragment>
+                            <Button
+                                variant="danger"
+                                className={styles.blockedButton}
+                                busy={safetyBusy}
+                                busyLabel="Blocking…"
+                                onClick={() => toggleSafety('block', true)}
+                            >Block user</Button>
+                            <Button
+                                variant="secondary"
+                                className={styles.iconButton}
+                                disabled={safetyBusy}
+                                onClick={() => setBlockConfirmOpen(false)}
+                            >Cancel</Button>
+                        </React.Fragment>
+                    )}
+                >
+                    <p className={styles.modalText}>
+                        You will stop receiving MistWarp comments and notifications from each other.
+                    </p>
+                    {actionError ? <p className={styles.actionError}>{actionError}</p> : null}
+                </Modal>
+            ) : null}
             {reporting ? (
                 <ReportModal
                     type="user"
@@ -256,6 +373,47 @@ const Profile = () => {
                         </section>
                     ) : null}
 
+                    {onMistWarp ? (
+                        <section className={styles.section}>
+                            <h2 className={styles.sectionTitle}>Recent reviews</h2>
+                            {reviews === null ? <p className={styles.sectionEmpty}>Loading reviews…</p> : null}
+                            {reviews && !reviews.length ? <p className={styles.sectionEmpty}>No reviews yet.</p> : null}
+                            {reviews && reviews.length ? (
+                                <div className={styles.reviewGrid}>
+                                    {reviews.slice(0, 6).map(review => (
+                                        <Link
+                                            key={review._id}
+                                            to={projectUrl(review.projectId)}
+                                            className={styles.reviewCard}
+                                        >
+                                            <div className={styles.reviewHead}>
+                                                <strong>{review.projectTitle}</strong>
+                                                <span>{timeAgo(review.edited || review.created)}</span>
+                                            </div>
+                                            <div
+                                                className={styles.reviewStars}
+                                                aria-label={`${review.rating} out of 5 stars`}
+                                            >
+                                                {[1, 2, 3, 4, 5].map(value => (
+                                                    <Star
+                                                        key={value}
+                                                        size={14}
+                                                        fill={value <= review.rating ? 'currentColor' : 'none'}
+                                                    />
+                                                ))}
+                                            </div>
+                                            {review.message ? (
+                                                <p><RichText text={review.message} /></p>
+                                            ) : (
+                                                <p className={styles.reviewNoText}>No written review.</p>
+                                            )}
+                                        </Link>
+                                    ))}
+                                </div>
+                            ) : null}
+                        </section>
+                    ) : null}
+
                     <section className={styles.section}>
                         <div className={styles.sectionHead}>
                             <h2 className={styles.sectionTitle}>
@@ -299,16 +457,18 @@ const Profile = () => {
                             <div className={styles.sectionHead}>
                                 <h2 className={styles.sectionTitle}>{t('mw.community.profile.comments', 'Comments')}</h2>
                                 {isSelf ? (
-                                    <button
+                                    <Button
+                                        variant="secondary"
                                         className={styles.commentsToggle}
                                         onClick={toggleComments}
-                                        disabled={commentsBusy}
+                                        busy={commentsBusy}
+                                        busyLabel={commentsOff ? 'Turning on…' : 'Turning off…'}
                                     >
                                         {commentsOff ? <MessageSquare size={14} /> : <MessageSquareOff size={14} />}
                                         {commentsOff ?
                                             t('mw.community.profile.turnOnComments', 'Turn on comments') :
                                             t('mw.community.profile.turnOffComments', 'Turn off comments')}
-                                    </button>
+                                    </Button>
                                 ) : null}
                             </div>
                             <div className={styles.feed}>
@@ -336,10 +496,15 @@ const Profile = () => {
                         ) : null}
                         <div
                             className={styles.banner}
-                            style={{backgroundImage: `url(${rotur.banner(name)})`}}
+                            style={{backgroundImage: `url(${profile.banner || rotur.banner(name)})`}}
                         />
                         <div className={styles.profileBody}>
-                            <Avatar username={name} size={88} className={styles.avatar} />
+                            <Avatar
+                                username={name}
+                                src={profile.pfp}
+                                size={88}
+                                className={styles.avatar}
+                            />
                             <div className={styles.nameRow}>
                                 <h1>{profile.username || name}</h1>
                                 {profile.pronouns ? <span className={styles.pronouns}>{profile.pronouns}</span> : null}
@@ -347,9 +512,7 @@ const Profile = () => {
                             {presence ? (
                                 <span className={styles.userStatus}>
                                     <span className={statusDotClass} />
-                                    <RichText text={statusText || (isOnline ?
-                                        t('mw.community.profile.online', 'Online') :
-                                        t('mw.community.profile.offline', 'Offline'))} />
+                                    <RichText text={statusText} />
                                 </span>
                             ) : null}
                             {badges.length ? (
@@ -373,44 +536,76 @@ const Profile = () => {
                                 </div>
                             ) : null}
                             <div className={styles.profileStats}>
-                                <div><strong>{profile.followers || 0}</strong><span>{t('mw.community.profile.followers', 'followers')}</span></div>
-                                <div><strong>{profile.following || 0}</strong><span>{t('mw.community.profile.followingCount', 'following')}</span></div>
+                                <Link className={styles.profileStatLink} to={`/users/${name}/followers`}><strong>{profile.followers || 0}</strong><span>{t('mw.community.profile.followers', 'followers')}</span></Link>
+                                <Link className={styles.profileStatLink} to={`/users/${name}/following`}><strong>{profile.following || 0}</strong><span>{t('mw.community.profile.followingCount', 'following')}</span></Link>
                                 <div><strong>{profile.currency || 0}</strong><span>{t('mw.community.profile.credits', 'credits')}</span></div>
                             </div>
                             <div className={styles.actions}>
                                 {user && !isSelf ? (
-                                    <button
-                                        className={profile.followed ? styles.followingButton : styles.followButton}
-                                        disabled={followBusy}
-                                        onClick={toggleFollow}
-                                    >
-                                        {profile.followed ? <UserCheck size={16} /> : <UserPlus size={16} />}
-                                        {profile.followed ?
-                                            t('mw.community.profile.following', 'Following') :
-                                            t('mw.community.profile.follow', 'Follow')}
-                                    </button>
-                                ) : null}
-                                {user && !isSelf ? (
-                                    <button
-                                        className={styles.followButton}
-                                        title={t('mw.community.profile.sendCreditsTo', 'Send credits to {name}', {
-                                            name: profile.username || name
-                                        })}
-                                        onClick={() => setDonating(true)}
-                                    >
-                                        <Coins size={15} />
-                                        {t('mw.community.profile.donate', 'Donate')}
-                                    </button>
-                                ) : null}
-                                {user && !isSelf ? (
-                                    <button
-                                        className={styles.iconButton}
-                                        title={t('mw.community.profile.reportUser', 'Report this user')}
-                                        aria-label={t('mw.community.profile.reportUser', 'Report this user')}
-                                        onClick={() => setReporting(true)}
-                                    >
-                                        <Flag size={15} />
-                                    </button>
+                                    <React.Fragment>
+                                        <div className={styles.primaryActions}>
+                                            <Button
+                                                variant="primary"
+                                                className={profile.followed ? styles.followingButton : styles.followButton}
+                                                busy={followBusy}
+                                                busyLabel={profile.followed ? 'Unfollowing…' : 'Following…'}
+                                                onClick={toggleFollow}
+                                            >
+                                                {profile.followed ? <UserCheck size={16} /> : <UserPlus size={16} />}
+                                                {profile.followed ?
+                                                    t('mw.community.profile.following', 'Following') :
+                                                    t('mw.community.profile.follow', 'Follow')}
+                                            </Button>
+                                            <Button
+                                                variant="primary"
+                                                className={styles.followButton}
+                                                title={t('mw.community.profile.sendCreditsTo', 'Send credits to {name}', {
+                                                    name: profile.username || name
+                                                })}
+                                                onClick={() => setDonating(true)}
+                                            >
+                                                <Coins size={15} />
+                                                {t('mw.community.profile.donate', 'Donate')}
+                                            </Button>
+                                        </div>
+                                        <div className={styles.utilityActions}>
+                                            {mwUser && mwUser.exists !== false ? (
+                                                <Button
+                                                    variant="secondary"
+                                                    className={styles.iconButton}
+                                                    disabled={safetyBusy}
+                                                    onClick={() => toggleSafety('mute')}
+                                                >
+                                                    <VolumeX size={15} />
+                                                    {mwUser.viewerMuted ? 'Unmute' : 'Mute'}
+                                                </Button>
+                                            ) : null}
+                                            {mwUser && mwUser.exists !== false ? (
+                                                <Button
+                                                    variant={mwUser.viewerBlocked ? 'secondary' : 'danger'}
+                                                    className={mwUser.viewerBlocked ? styles.blockedButton : styles.iconButton}
+                                                    disabled={safetyBusy}
+                                                    onClick={() => toggleSafety('block')}
+                                                >
+                                                    <Ban size={15} />
+                                                    {mwUser.viewerBlocked ? 'Unblock' : 'Block'}
+                                                </Button>
+                                            ) : null}
+                                            <Button
+                                                variant="secondary"
+                                                className={styles.iconButton}
+                                                onClick={() => setReporting(true)}
+                                            >
+                                                <Flag size={15} />
+                                                {t('mw.community.profile.report', 'Report')}
+                                            </Button>
+                                        </div>
+                                    </React.Fragment>
+                                ) : !user && !userLoading ? (
+                                    <Button variant="primary" className={styles.followButton} onClick={login}>
+                                        <UserPlus size={16} />
+                                        {t('mw.community.profile.signInToFollow', 'Sign in to follow')}
+                                    </Button>
                                 ) : null}
                                 {isSelf ? (
                                     <a
@@ -462,24 +657,40 @@ const Profile = () => {
     );
 };
 
-const DonateModal = ({recipient, onClose}) => {
+export const DonateModal = ({recipient, onClose}) => {
     const intl = useIntl();
     const [amount, setAmount] = useState('');
     const [busy, setBusy] = useState(false);
     const [status, setStatus] = useState(null);
     const [sent, setSent] = useState(0);
     const [insufficient, setInsufficient] = useState(false);
-    useEscape(onClose);
+    const actionLocks = useRef(new Set());
+    const currentRecipient = useRef(recipient);
+    currentRecipient.current = recipient;
+    useEffect(() => {
+        setAmount('');
+        setBusy(false);
+        setStatus(null);
+        setSent(0);
+        setInsufficient(false);
+    }, [recipient]);
+    const close = () => {
+        if (!busy) onClose();
+    };
 
     const send = async () => {
-        const value = Math.round((Number(amount) || 0) * 100) / 100;
-        if (!value || value <= 0) {
+        const value = parseDonationAmount(amount);
+        if (value === null) {
             setStatus(intl.formatMessage({
                 id: 'mw.community.profile.enterAmount',
                 defaultMessage: 'Enter an amount greater than 0.'
             }));
             return;
         }
+        const actionRecipient = recipient;
+        const actionKey = `${recipient}\u0000payment`;
+        if (actionLocks.current.has(actionKey)) return;
+        actionLocks.current.add(actionKey);
         setBusy(true);
         setStatus(null);
         setInsufficient(false);
@@ -488,129 +699,127 @@ const DonateModal = ({recipient, onClose}) => {
                 id: 'mw.community.profile.donationMemo',
                 defaultMessage: 'Bilup donation to {recipient}'
             }, {recipient}));
-            setSent(value);
+            if (currentRecipient.current === actionRecipient) setSent(value);
         } catch (e) {
-            if (isInsufficientFunds(e)) {
-                setInsufficient(true);
-            } else {
-                setStatus(e.needsReauth ?
-                    intl.formatMessage({
-                        id: 'mw.community.profile.reauthNeeded',
-                        defaultMessage: 'Your current login cannot send credits. Log out and back in, then try again.'
-                    }) :
-                    (e.message || intl.formatMessage({
-                        id: 'mw.community.profile.sendFailed',
-                        defaultMessage: 'Could not send credits.'
-                    })));
+            if (currentRecipient.current === actionRecipient) {
+                if (isInsufficientFunds(e)) {
+                    setInsufficient(true);
+                } else {
+                    setStatus(e.needsReauth ?
+                        intl.formatMessage({
+                            id: 'mw.community.profile.reauthNeeded',
+                            defaultMessage: 'Your current login cannot send credits. Log out and back in, then try again.'
+                        }) :
+                        (e.message || intl.formatMessage({
+                            id: 'mw.community.profile.sendFailed',
+                            defaultMessage: 'Could not send credits.'
+                        })));
+                }
             }
         } finally {
-            setBusy(false);
+            actionLocks.current.delete(actionKey);
+            if (currentRecipient.current === actionRecipient) setBusy(false);
         }
     };
 
     const buyCredits = async () => {
-        if (busy) return;
+        const actionRecipient = recipient;
+        const actionKey = `${recipient}\u0000payment`;
+        if (actionLocks.current.has(actionKey)) return;
+        actionLocks.current.add(actionKey);
         setBusy(true);
         setStatus(null);
         try {
             await openCreditCheckout(CREDIT_PACKS[1]);
         } catch (e) {
-            setStatus(e.needsReauth ?
-                'Your current login cannot buy credits. Log out and back in, then try again.' :
-                (e.message || 'Could not open checkout.'));
+            if (currentRecipient.current === actionRecipient) {
+                setStatus(e.needsReauth ?
+                    'Your current login cannot buy credits. Log out and back in, then try again.' :
+                    (e.message || 'Could not open checkout.'));
+            }
         } finally {
-            setBusy(false);
+            actionLocks.current.delete(actionKey);
+            if (currentRecipient.current === actionRecipient) setBusy(false);
         }
     };
 
+    const submit = event => {
+        event.preventDefault();
+        return insufficient ? buyCredits() : send();
+    };
+
     return (
-        <div
-            className={styles.donateOverlay}
-            onClick={onClose}
+        <Modal
+            className={styles.donateModal}
+            dismissDisabled={busy}
+            icon={Coins}
+            onClose={close}
+            title={`Donate to ${recipient}`}
         >
-            <div
-                className={styles.donateModal}
-                onClick={event => event.stopPropagation()}
-                role="dialog"
-                aria-modal="true"
-            >
-                <div className={styles.donateHead}>
-                    <span className={styles.donateHeadTitle}>
-                        <Coins size={17} />
-                        {intl.formatMessage({
-                            id: 'mw.community.profile.donateTo',
-                            defaultMessage: 'Donate to {recipient}'
-                        }, {recipient})}
-                    </span>
-                    <button
-                        className={styles.donateClose}
-                        onClick={onClose}
-                        aria-label={intl.formatMessage({
-                            id: 'mw.community.profile.close',
-                            defaultMessage: 'Close'
-                        })}
-                    >
-                        <X size={18} />
-                    </button>
+            {sent ? (
+                <div className={styles.donateDone}>
+                    <span className={styles.donateDoneIcon}><Coins size={28} /></span>
+                    <p>{intl.formatMessage({
+                        id: 'mw.community.profile.sentCredits',
+                        defaultMessage: 'Sent {amount} credits to {recipient}.'
+                    }, {amount: sent, recipient})}</p>
+                    <Button
+                        variant="primary"
+                        className={styles.donateSend}
+                        onClick={close}
+                    >{intl.formatMessage({
+                        id: 'mw.community.profile.done',
+                        defaultMessage: 'Done'
+                    })}</Button>
                 </div>
-                {sent ? (
-                    <div className={styles.donateDone}>
-                        <span className={styles.donateDoneIcon}><Coins size={28} /></span>
-                        <p>{intl.formatMessage({
-                            id: 'mw.community.profile.sentCredits',
-                            defaultMessage: 'Sent {amount} credits to {recipient}.'
-                        }, {amount: sent, recipient})}</p>
-                        <button
-                            className={styles.donateSend}
-                            onClick={onClose}
-                        >{intl.formatMessage({
-                            id: 'mw.community.profile.done',
-                            defaultMessage: 'Done'
-                        })}</button>
-                    </div>
-                ) : (
-                    <div className={styles.donateBody}>
-                        <p className={styles.donateText}>
+            ) : (
+                <form className={styles.donateBody} onSubmit={submit}>
+                    <p className={styles.donateText}>
+                        {intl.formatMessage({
+                            id: 'mw.community.profile.donateText',
+                            defaultMessage: 'Send Bilup Accounts credits straight to {recipient}. This transfers directly from your account.'
+                        }, {recipient})}
+                    </p>
+                    <input
+                        className={styles.donateInput}
+                        type="number"
+                        min="0.01"
+                        step="0.01"
+                        placeholder={intl.formatMessage({
+                            id: 'mw.community.profile.amountPlaceholder',
+                            defaultMessage: 'Amount in credits'
+                        })}
+                        value={amount}
+                        disabled={busy}
+                        required
+                        onChange={event => setAmount(event.target.value)}
+                    />
+                    {status ? <p className={styles.donateStatus}>{status}</p> : null}
+                    {insufficient ? (
+                        <p className={styles.donateStatus}>
                             {intl.formatMessage({
-                                id: 'mw.community.profile.donateText',
-                                defaultMessage: 'Send Bilup Accounts credits straight to {recipient}. This transfers directly from your account.'
-                            }, {recipient})}
-                        </p>
-                        <input
-                            className={styles.donateInput}
-                            type="number"
-                            min="1"
-                            step="1"
-                            placeholder={intl.formatMessage({
-                                id: 'mw.community.profile.amountPlaceholder',
-                                defaultMessage: 'Amount in credits'
+                                id: 'mw.community.profile.insufficient',
+                                defaultMessage: 'Not enough credits in your balance. Top up through Stripe, then send again.'
                             })}
-                            value={amount}
-                            onChange={event => setAmount(event.target.value)}
-                        />
-                        {status ? <p className={styles.donateStatus}>{status}</p> : null}
-                        {insufficient ? (
-                            <p className={styles.donateStatus}>
-                                Not enough credits in your balance. Top up through Stripe, then send again.
-                            </p>
-                        ) : null}
-                        <button
-                            className={styles.donateSend}
-                            onClick={insufficient ? buyCredits : send}
-                            disabled={busy}
-                        >
-                            <Coins size={16} />
-                            {busy ?
-                                intl.formatMessage({id: 'mw.community.profile.sending', defaultMessage: 'Sending…'}) :
-                                insufficient ?
-                                    intl.formatMessage({id: 'mw.community.profile.buyCredits', defaultMessage: 'Buy credits'}) :
-                                    intl.formatMessage({id: 'mw.community.profile.sendCredits', defaultMessage: 'Send credits'})}
-                        </button>
-                    </div>
-                )}
-            </div>
-        </div>
+                        </p>
+                    ) : null}
+                    <Button
+                        variant="primary"
+                        className={styles.donateSend}
+                        type="submit"
+                        busy={busy}
+                        busyLabel={insufficient ? 'Opening…' : 'Sending…'}
+                    >
+                        <Coins size={16} />
+                        {insufficient ?
+                            intl.formatMessage({id: 'mw.community.profile.buyCredits', defaultMessage: 'Buy credits'}) :
+                            intl.formatMessage({id: 'mw.community.profile.sendCredits', defaultMessage: 'Send credits'})}
+                    </Button>
+                </form>
+            )}
+        </Modal>
     );
 };
 
+export {scrollToCommentAnchor, parseDonationAmount};
 export default Profile;

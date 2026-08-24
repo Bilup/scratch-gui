@@ -1,16 +1,17 @@
+/* eslint-disable max-len */
 import React, {useEffect, useState, useCallback, useMemo, useRef} from 'react';
 import {getItem as getStorageItem} from '../../lib/utils/safe-storage.js';
 import {useParams, Link, useNavigate} from 'react-router-dom';
 import {FormattedMessage} from 'react-intl';
 import {useIntl} from '../../lib/tw-use-intl.jsx';
 import {
-    Heart, ThumbsDown, ArrowLeft, Play, GitFork, ExternalLink, EyeOff,
+    ArrowLeft, Play, GitFork, ExternalLink, EyeOff,
     MessageSquareOff, MessageSquare, ImageUp, MonitorPlay, Upload, Blocks, Flag,
     ShieldCheck, ShieldAlert, MoreHorizontal, Trash2, Link2, Link as LinkIcon, Lock, Coins, SlidersHorizontal,
-    Palette, Bookmark, BookmarkCheck, Star
+    Palette, Bookmark, BookmarkCheck, Star, Library
 } from 'lucide-react';
-import api, {projectUrl, editorUrl, embedUrl, stashProjectHandoff} from '../api';
-import {cachedFetchBuffer, cachedFetchJson} from '../../lib/community/cached-fetch.js';
+import api, {projectUrl, editorUrl, embedUrl, stashProjectHandoff, themeCustomFor} from '../api';
+import {cachedFetchBuffer, preloadContent} from '../../lib/community/cached-fetch.js';
 import {buyProject} from '../purchase';
 import {isInsufficientFunds, KO_FI_SHOP_URL} from '../credits';
 import RoturConsentModal from '../components/RoturConsentModal.jsx';
@@ -21,7 +22,6 @@ import {
 } from '../../lib/rotur/extension-bridge.js';
 import {getRoturSettings, setRoturSetting} from '../../lib/rotur/settings.js';
 import {getUsernameOverride} from '../../lib/rotur/cloud-sync.js';
-import useEscape from '../use-escape.js';
 import rotur from '../rotur';
 import {Theme} from '../../lib/themes';
 import {CustomTheme} from '../../lib/themes/custom-themes.js';
@@ -29,36 +29,35 @@ import {applyThemeVisuals, detectTheme} from '../../lib/themes/themePersistance'
 import Avatar from '../components/Avatar.jsx';
 import VisibilityMenu from '../components/VisibilityMenu.jsx';
 import ProjectInfoPanel from '../components/ProjectInfoPanel.jsx';
+import ProjectCompatibility from '../components/ProjectCompatibility.jsx';
+import CollectionSaveModal from '../components/CollectionSaveModal.jsx';
 import {useUser} from '../UserContext.jsx';
-import {sameUser} from '../format';
+import {timeAgo, sameUser, formatDate, formatPlaytime} from '../format';
 import CommentThread from '../components/CommentThread.jsx';
 import ReportModal from '../components/ReportModal.jsx';
 import DiffView from '../components/DiffView.jsx';
+import GitGraph from '../components/GitGraph.jsx';
+import Button from '../components/ui/Button.jsx';
+import Dropdown from '../components/ui/Dropdown.jsx';
+import Modal from '../components/ui/Modal.jsx';
+import RichText from '../components/RichText.jsx';
+import ReactionButtons from '../components/ReactionButtons.jsx';
 import setPageMeta from '../page-meta.js';
 import useLatest from '../use-latest.js';
-import {hashExtensionUrl} from '../../lib/community/api.js';
+import copyText from '../copy-text.js';
+import scrollToAnchorWithRetry from '../scroll-to-anchor.js';
+import {fetchWorkspace, hashExtensionUrl} from '../../lib/community/api.js';
+import {
+    cancelMwpMerge,
+    chooseMergeBinary,
+    finishMwpMerge,
+    inspectMwpPull,
+    restoreMwpVersion,
+    startMwpMerge,
+    updateMergeConflict
+} from '../../lib/git/mwp.js';
 import {isGalleryExtensionUrl} from '../../lib/trusted-extension.js';
 import styles from './Project.module.css';
-
-// Format a timestamp as "YYYY-MM-DD HH:mm" (e.g. 2026-08-07 14:30).
-// Defined locally (rather than imported) to avoid depending on a newly-added
-// named export in a shared chunk, which browsers may cache as an older version.
-const formatDateTime = ms => {
-    if (!ms) return '';
-    const d = new Date(ms);
-    if (Number.isNaN(d.getTime())) return '';
-    const pad = n => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-};
-
-const formatDate = ms => {
-    if (!ms) return null;
-    try {
-        return formatDateTime(ms) || null;
-    } catch (e) {
-        return null;
-    }
-};
 
 const CATEGORY_NAMES = {
     motion: 'Motion',
@@ -93,6 +92,14 @@ const catLabel = prefix => CATEGORY_NAMES[prefix] || (prefix.charAt(0).toUpperCa
 const catColor = prefix => CATEGORY_COLORS[prefix] || 'var(--accent-strong)';
 const EMBED_STORAGE_PREFIX = 'mw:embed-storage:';
 const EMBED_STORAGE_BLOCKED_PREFIXES = ['mw:', 'tw:'];
+
+export const reviewPayload = (rating, message) => ({rating, message: message.trim()});
+export const releasePayload = form => ({...form, version: form.version.trim(), notes: form.notes.trim()});
+export const contributionPayload = (remixProjectId, title, body) => ({
+    remixProjectId: remixProjectId.trim(),
+    title: title.trim(),
+    body: body.trim()
+});
 
 const PROJECT_THEME_MODE_KEY = 'mw:project-theme-mode';
 const getProjectThemeMode = () => {
@@ -147,31 +154,18 @@ const restoreUserTheme = () => {
 
 const topFive = counts => Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
-const getCustomExtensions = async (data, trustedExtensions) => {
-    const urls = {...(data.extensionURLs || {})};
-    for (const target of data.targets || []) {
-        Object.assign(urls, (target && target.extensionURLs) || {});
-    }
-    const custom = Object.values(urls).filter(url => typeof url === 'string' && !isGalleryExtensionUrl(url));
+const getCustomExtensions = async (urls, trustedExtensions) => {
+    const custom = (urls || []).filter(url => typeof url === 'string' && !isGalleryExtensionUrl(url));
     const trusted = new Set(trustedExtensions || []);
     const hashes = await Promise.all(custom.map(hashExtensionUrl));
     return custom.filter((url, index) => !trusted.has(hashes[index]));
 };
 
-const analyzeBlocks = data => {
-    const categories = {};
-    let total = 0;
-    for (const target of data.targets || []) {
-        for (const block of Object.values(target.blocks || {})) {
-            if (!block || typeof block !== 'object' || !block.opcode) continue;
-            total += 1;
-            const prefix = block.opcode.split('_')[0];
-            categories[prefix] = (categories[prefix] || 0) + 1;
-        }
-    }
+const analyzeBlocks = summary => {
+    const categories = (summary && summary.categories) || {};
     const topCategories = topFive(categories)
         .map(([prefix, count]) => ({id: prefix, label: catLabel(prefix), count, color: catColor(prefix)}));
-    return {total, topCategories};
+    return {total: Number(summary && summary.total) || 0, topCategories};
 };
 
 const Project = () => {
@@ -179,10 +173,25 @@ const Project = () => {
     const intl = useIntl();
     const t = useCallback((id, defaultMessage, values) =>
         intl.formatMessage({id, defaultMessage}, values), [intl]);
-    const {user, loading: userLoading} = useUser();
+    const {user, loading: userLoading, login} = useUser();
+    const viewerName = (user && user.username) || '';
+    const actionContext = `${id}\u0000${viewerName}`;
+    const actionContextRef = useRef(actionContext);
+    actionContextRef.current = actionContext;
+    const actionLocks = useRef(new Set());
+    const beginAction = name => {
+        const key = `${actionContextRef.current}\u0000${name}`;
+        if (actionLocks.current.has(key)) return null;
+        actionLocks.current.add(key);
+        return key;
+    };
+    const releaseAction = key => actionLocks.current.delete(key);
     const navigate = useNavigate();
     const [project, setProject] = useState(null);
+    const [projectLoadContext, setProjectLoadContext] = useState('');
+    const [versionHistory, setVersionHistory] = useState(null);
     const [error, setError] = useState(null);
+    const [errorLoadContext, setErrorLoadContext] = useState('');
     const [actionError, setActionError] = useState(null);
     const [tab, setTab] = useState('Comments');
     const [title, setTitle] = useState('');
@@ -191,60 +200,100 @@ const Project = () => {
     const [thumbnailStatus, setThumbnailStatus] = useState('idle');
     const [reporting, setReporting] = useState(false);
     const [copied, setCopied] = useState(false);
-    const [menuOpen, setMenuOpen] = useState(false);
-    const menuRef = useRef(null);
+    const [collectionOpen, setCollectionOpen] = useState(false);
     const thumbMenuRef = useRef(null);
     const thumbInput = useRef(null);
     const stageFrame = useRef(null);
     const [blockStats, setBlockStats] = useState(null);
     const [customExtensions, setCustomExtensions] = useState([]);
+    const [contentError, setContentError] = useState(false);
     const [unsandboxed, setUnsandboxed] = useState(false);
+    const [confirmUnsandboxed, setConfirmUnsandboxed] = useState(false);
     const [buying, setBuying] = useState(false);
     const [confirmBuy, setConfirmBuy] = useState(false);
     const [confirmBalance, setConfirmBalance] = useState(null);
     const [savingLibrary, setSavingLibrary] = useState(false);
     const [savingFeatured, setSavingFeatured] = useState(false);
+    const [savingComments, setSavingComments] = useState(false);
+    const [reactionBusy, setReactionBusy] = useState(false);
+    const [savingVisibility, setSavingVisibility] = useState(false);
     const [featuredProject, setFeaturedProject] = useState('');
     const [projectThemeApplied, setProjectThemeApplied] = useState(false);
     const [revertTheme, setRevertTheme] = useState(false);
     const [followsOwner, setFollowsOwner] = useState(false);
     const [roturModal, setRoturModal] = useState(null);
+    const [forkSetup, setForkSetup] = useState(null);
+    const [creatingFork, setCreatingFork] = useState(false);
+    const [deleteConfirm, setDeleteConfirm] = useState(false);
+    const [deletingProject, setDeletingProject] = useState(false);
     const themeMode = getProjectThemeMode();
-    useEscape(confirmBuy ? () => setConfirmBuy(false) : null);
 
     const beginLoad = useLatest();
 
     const load = useCallback(() => {
         const fresh = beginLoad();
+        setError(null);
+        setErrorLoadContext('');
+        api.commits(id)
+            .then(fresh(setVersionHistory))
+            .catch(fresh(() => setVersionHistory({commits: [], error: true})));
         return api.getProject(id)
             .then(fresh(data => {
+                if (!data || !data.project) throw new Error('Project response was incomplete.');
                 setProject(data.project);
+                setProjectLoadContext(actionContext);
                 setError(null);
             }))
-            .catch(fresh(e => setError(
-                e && e.status === 404 ?
+            .catch(fresh(e => {
+                setErrorLoadContext(actionContext);
+                setError(e && e.status === 404 ?
                     t('mw.community.project.notFound', 'Project not found.') :
-                    t('mw.community.project.loadFailed', 'Could not load this project.')
-            )));
-    }, [id, beginLoad]);
+                    t('mw.community.project.loadFailed', 'Could not load this project.'));
+            }));
+    }, [actionContext, id, beginLoad]);
 
     useEffect(() => {
         setFeaturedProject((user && user.featuredProject) || '');
     }, [user]);
 
     useEffect(() => {
+        if (userLoading) return;
         setProject(null);
+        setVersionHistory(null);
         setError(null);
         setActionError(null);
         setReporting(false);
         setTab('Comments');
+        setThumbnailMenu(false);
+        setCollectionOpen(false);
+        setConfirmBuy(false);
+        setConfirmBalance(null);
+        setForkSetup(null);
+        setCreatingFork(false);
+        setDeleteConfirm(false);
+        setDeletingProject(false);
+        setConfirmUnsandboxed(false);
+        setBuying(false);
+        setCheckoutBusy(false);
+        setSavingTitle(false);
+        setSavingLibrary(false);
+        setSavingFeatured(false);
+        setSavingComments(false);
+        setSavingVisibility(false);
+        setReactionBusy(false);
+        setThumbnailStatus('idle');
+        setCopied(false);
         setProjectThemeApplied(false);
         setRevertTheme(false);
         setFollowsOwner(false);
         restoreUserTheme();
         load();
+    }, [actionContext, id, load, userLoading]);
+
+    useEffect(() => {
+        if (userLoading) return;
         api.view(id).catch(() => {});
-    }, [id, load]);
+    }, [id, userLoading]);
 
     useEffect(() => {
         const onMessage = event => {
@@ -269,21 +318,11 @@ const Project = () => {
 
     // Scroll to a comment anchor after the comments section renders
     useEffect(() => {
+        if (projectLoadContext !== actionContext) return;
         const hash = window.location.hash;
         if (!hash) return;
-        const anchorId = hash.replace('#', '');
-        const tryScroll = (attempts = 0) => {
-            const el = document.getElementById(anchorId);
-            if (el) {
-                el.scrollIntoView({behavior: 'smooth', block: 'center'});
-                return;
-            }
-            if (attempts < 20) {
-                setTimeout(() => tryScroll(attempts + 1), 300);
-            }
-        };
-        tryScroll();
-    }, [project]); // re-run when project data loads (which triggers comment rendering)
+        return scrollToAnchorWithRetry(hash.replace('#', ''));
+    }, [actionContext, projectLoadContext]);
 
     const owner = project && project.owner;
     useEffect(() => {
@@ -306,6 +345,17 @@ const Project = () => {
     }, [project]);
 
     useEffect(() => {
+        const onMessage = event => {
+            const frame = stageFrame.current;
+            if (!frame || event.source !== frame.contentWindow) return;
+            if (!event.data || event.data.type !== 'mw:diagnostic') return;
+            api.recordDiagnostic(id, event.data.diagnostic).catch(() => {});
+        };
+        window.addEventListener('message', onMessage);
+        return () => window.removeEventListener('message', onMessage);
+    }, [id]);
+
+    useEffect(() => {
         if (!project) return;
         setPageMeta({
             title: t('mw.community.project.pageTitle', '{title} by {owner}', {
@@ -313,53 +363,58 @@ const Project = () => {
                 owner: project.owner
             }),
             description: project.instructions || project.description,
-            image: project.thumbUrl
+            image: project.cardUrl || project.thumbUrl,
+            card: 'summary_large_image'
         });
     }, [project, t]);
 
     const projectJsonUrl = project && project.projectJsonUrl;
-    const projectJsonBytes = project && project.jsonBytes;
     useEffect(() => {
         setBlockStats(null);
         setCustomExtensions([]);
+        setContentError(false);
         setUnsandboxed(false);
-        let cancelled = false;
-        if (projectJsonUrl && !(projectJsonBytes > 5 * 1024 * 1024)) {
-            cachedFetchJson(projectJsonUrl)
-                .then(async data => {
-                    if (cancelled) return;
-                    const stats = analyzeBlocks(data);
-                    if (stats) {
-                        stats.topCategories = stats.topCategories.map(cat => ({
-                            ...cat,
-                            label: t(
-                                `mw.community.project.categories.${cat.id}`,
-                                cat.label
-                            )
-                        }));
-                    }
-                    setBlockStats(stats);
-                    setCustomExtensions(await getCustomExtensions(
-                        data,
-                        project.trustedExtensions || []
-                    ));
-                })
-                .catch(() => !cancelled && setBlockStats(null));
+        setConfirmUnsandboxed(false);
+        let active = true;
+        if (projectJsonUrl) {
+            preloadContent(projectJsonUrl).catch(() => {
+                if (active) setContentError(true);
+            });
         }
         return () => {
-            cancelled = true;
+            active = false;
         };
-    }, [projectJsonUrl, projectJsonBytes, project && project.trustedExtensions]);
+    }, [projectJsonUrl]);
+
+    useEffect(() => {
+        let cancelled = false;
+        const onMessage = event => {
+            const frame = stageFrame.current;
+            if (!frame || event.source !== frame.contentWindow) return;
+            const data = event.data;
+            if (!data || data.type !== 'mw:project-metadata') return;
+            setBlockStats(analyzeBlocks(data.blockStats));
+            getCustomExtensions(data.customExtensions, (project && project.trustedExtensions) || [])
+                .then(urls => {
+                    if (!cancelled) setCustomExtensions(urls);
+                })
+                .catch(() => {
+                    if (!cancelled) setCustomExtensions([]);
+                });
+        };
+        window.addEventListener('message', onMessage);
+        return () => {
+            cancelled = true;
+            window.removeEventListener('message', onMessage);
+        };
+    }, [projectJsonUrl, project && project.trustedExtensions]);
 
     const runUnsandboxed = () => {
-        // eslint-disable-next-line no-alert
-        const ok = window.confirm(t('mw.community.project.unsandboxedConfirm',
-            'This project uses custom extensions.\n\n' +
-            'Running it without the sandbox gives it full access to your Bilup account. ' +
-            'It could read your login session, act as you, or change your data. ' +
-            'Only continue if you trust the person who made this project.'
-        ));
-        if (ok) setUnsandboxed(true);
+        setConfirmUnsandboxed(true);
+    };
+    const confirmRunUnsandboxed = () => {
+        setConfirmUnsandboxed(false);
+        setUnsandboxed(true);
     };
 
     useEffect(() => {
@@ -371,7 +426,8 @@ const Project = () => {
     }, [thumbnailStatus]);
 
     const saveTitle = async () => {
-        if (!project || !project.isOwner || savingTitle) return;
+        if (!project || !project.isOwner) return;
+        const context = actionContextRef.current;
         const next = title.trim();
         if (!next) {
             setTitle(project.title);
@@ -379,16 +435,22 @@ const Project = () => {
             return;
         }
         if (next === project.title) return;
+        const actionKey = beginAction('title');
+        if (!actionKey) return;
         try {
             setSavingTitle(true);
             await api.updateProject(id, {title: next});
+            if (actionContextRef.current !== context) return;
             setProject(current => ({...current, title: next}));
             setActionError(null);
         } catch (e) {
-            setTitle(project.title);
-            setActionError(e.message || t('mw.community.project.titleUpdateFailed', 'Could not update the title.'));
+            if (actionContextRef.current === context) {
+                setTitle(project.title);
+                setActionError(e.message || t('mw.community.project.titleUpdateFailed', 'Could not update the title.'));
+            }
         } finally {
-            setSavingTitle(false);
+            releaseAction(actionKey);
+            if (actionContextRef.current === context) setSavingTitle(false);
         }
     };
 
@@ -587,10 +649,11 @@ const Project = () => {
         try {
             const frame = stageFrame.current;
             if (!frame || !frame.contentWindow) return;
+            const theme = localStorage.getItem('tw:theme');
             frame.contentWindow.postMessage({
                 type: 'mw:apply-theme',
-                theme: getStorageItem('tw:theme'),
-                customThemes: getStorageItem('tw:custom-themes')
+                theme,
+                customThemes: theme ? themeCustomFor(theme) : ''
             }, '*');
             if (!userLoading) {
                 frame.contentWindow.postMessage(userMessage, '*');
@@ -601,7 +664,7 @@ const Project = () => {
     }, [userLoading, userMessage]);
 
     useEffect(() => {
-            if (!project || !project.id) return;
+        if (!project || !project.id) return;
         const projectId = String(project.id);
         const onMessage = event => {
             const frame = stageFrame.current;
@@ -641,54 +704,128 @@ const Project = () => {
 
     const react = async type => {
         if (!user) return;
+        const context = actionContextRef.current;
+        const actionKey = beginAction('reaction');
+        if (!actionKey) return;
+        setReactionBusy(true);
         try {
             await api.reactProject(id, type);
-            load();
+            if (actionContextRef.current === context) load();
         } catch (e) {
-            setActionError(e.message || t('mw.community.project.reactFailed', 'Could not react.'));
+            if (actionContextRef.current === context) setActionError(e.message || t('mw.community.project.reactFailed', 'Could not react.'));
+        } finally {
+            releaseAction(actionKey);
+            if (actionContextRef.current === context) setReactionBusy(false);
         }
     };
 
-    const remix = async () => {
-        if (!user) return;
+    const remix = () => {
+        if (userLoading) return;
+        if (!user) {
+            login();
+            return;
+        }
+        setActionError(null);
+        setForkSetup({
+            title: `${project.title} fork`,
+            branch: project.gitBranch || 'main'
+        });
+    };
+
+    const createFork = async event => {
+        event.preventDefault();
+        if (!forkSetup) return;
+        const context = actionContextRef.current;
+        const actionKey = beginAction('fork');
+        if (!actionKey) return;
+        setCreatingFork(true);
         try {
-            const result = await api.remix(id);
-            window.location.href = editorUrl({platformProject: result.id});
+            const result = await api.remix(id, {
+                title: forkSetup.title.trim(),
+                branch: forkSetup.branch.trim()
+            });
+            if (actionContextRef.current === context) {
+                window.location.href = editorUrl({platformProject: result.id});
+            }
         } catch (e) {
-            setActionError(t('mw.community.project.remixFailed', 'Could not remix this project.'));
+            if (actionContextRef.current === context) setActionError(e.message || t('mw.community.project.remixFailed', 'Could not remix this project.'));
+        } finally {
+            releaseAction(actionKey);
+            if (actionContextRef.current === context) setCreatingFork(false);
         }
     };
 
     const changeVisibility = async value => {
+        const context = actionContextRef.current;
+        const actionKey = beginAction('visibility');
+        if (!actionKey) return;
+        setSavingVisibility(true);
         try {
             await api.setVisibility(id, value);
+            if (actionContextRef.current !== context) return;
             setActionError(null);
             load();
         } catch (e) {
-            setActionError(e.message || t('mw.community.project.visibilityFailed', 'Could not update visibility.'));
+            if (actionContextRef.current === context) {
+                setActionError(e.message || t('mw.community.project.visibilityFailed', 'Could not update visibility.'));
+            }
+        } finally {
+            releaseAction(actionKey);
+            if (actionContextRef.current === context) setSavingVisibility(false);
         }
     };
 
     const openBuyConfirm = async () => {
+        const context = actionContextRef.current;
+        const actionKey = beginAction('balance');
+        if (!actionKey) return;
         setActionError(null);
         setConfirmBalance(null);
         setConfirmBuy(true);
         try {
-            setConfirmBalance(await getBalance());
+            const balance = await getBalance();
+            if (actionContextRef.current === context) setConfirmBalance(balance);
         } catch (e) {
             // balance stays null; the purchase still guards on the server
+        } finally {
+            releaseAction(actionKey);
+        }
+    };
+    const openCheckout = async () => {
+        const context = actionContextRef.current;
+        const actionKey = beginAction('checkout');
+        if (!actionKey) return;
+        setCheckoutBusy(true);
+        setActionError(null);
+        try {
+            await openCreditCheckout(CREDIT_PACKS[1]);
+        } catch (e) {
+            if (actionContextRef.current === context) {
+                setActionError(e.needsReauth ?
+                    t('mw.community.project.reauthNeeded',
+                        'Your current login cannot send credits. Log out and back in, then try again.') :
+                    (e.message || t('mw.community.project.checkoutFailed', 'Could not open checkout.')));
+            }
+        } finally {
+            releaseAction(actionKey);
+            if (actionContextRef.current === context) setCheckoutBusy(false);
         }
     };
 
     const doBuy = async () => {
-        if (buying) return;
+        const context = actionContextRef.current;
+        const actionKey = beginAction('buy');
+        if (!actionKey) return;
         setBuying(true);
         setActionError(null);
         try {
             const fresh = await buyProject(id);
+            if (actionContextRef.current !== context) return;
             setProject(fresh);
+            setProjectLoadContext(context);
             setConfirmBuy(false);
         } catch (e) {
+            if (actionContextRef.current !== context) return;
             setConfirmBuy(false);
             if (isInsufficientFunds(e)) {
                 window.location.assign(KO_FI_SHOP_URL);
@@ -699,34 +836,53 @@ const Project = () => {
                 setActionError(e.message || t('mw.community.project.purchaseFailed', 'Could not complete the purchase.'));
             }
         } finally {
-            setBuying(false);
+            releaseAction(actionKey);
+            if (actionContextRef.current === context) setBuying(false);
         }
     };
 
     const toggleComments = async () => {
+        const context = actionContextRef.current;
+        const actionKey = beginAction('comments');
+        if (!actionKey) return;
+        setSavingComments(true);
         try {
             await api.updateProject(id, {commentsOff: !project.commentsOff});
+            if (actionContextRef.current !== context) return;
             setActionError(null);
             load();
         } catch (e) {
-            setActionError(e.message || t('mw.community.project.commentsUpdateFailed', 'Could not update comments.'));
+            if (actionContextRef.current === context) {
+                setActionError(e.message || t('mw.community.project.commentsUpdateFailed', 'Could not update comments.'));
+            }
+        } finally {
+            releaseAction(actionKey);
+            if (actionContextRef.current === context) setSavingComments(false);
         }
     };
 
     const removeProject = async () => {
-        setMenuOpen(false);
         if (!window.confirm(t('mw.community.project.deleteConfirm', 'Delete this project? This cannot be undone.'))) return;
+        const context = actionContextRef.current;
+        const actionKey = beginAction('delete');
+        if (!actionKey) return;
+        setDeletingProject(true);
+        setActionError(null);
         try {
             await api.deleteProject(id);
-            navigate(`/users/${project.owner}`);
+            if (actionContextRef.current === context) navigate(`/users/${project.owner}`);
         } catch (e) {
-            setActionError(e.message || t('mw.community.project.deleteFailed', 'Could not delete this project.'));
+            if (actionContextRef.current === context) setActionError(e.message || t('mw.community.project.deleteFailed', 'Could not delete this project.'));
+        } finally {
+            releaseAction(actionKey);
+            if (actionContextRef.current === context) setDeletingProject(false);
         }
     };
 
     const toggleLibrary = async () => {
-        setMenuOpen(false);
-        if (savingLibrary) return;
+        const context = actionContextRef.current;
+        const actionKey = beginAction('library');
+        if (!actionKey) return;
         setSavingLibrary(true);
         try {
             if (project.saved) {
@@ -734,61 +890,66 @@ const Project = () => {
             } else {
                 await api.saveProject(id);
             }
+            if (actionContextRef.current !== context) return;
             setProject(current => ({...current, saved: !current.saved}));
             setActionError(null);
         } catch (e) {
-            setActionError(e.message || t('mw.community.project.libraryFailed', 'Could not update your library.'));
+            if (actionContextRef.current === context) {
+                setActionError(e.message || t('mw.community.project.libraryFailed', 'Could not update your library.'));
+            }
         } finally {
-            setSavingLibrary(false);
+            releaseAction(actionKey);
+            if (actionContextRef.current === context) setSavingLibrary(false);
         }
     };
 
     const toggleFeatured = async () => {
-        setMenuOpen(false);
-        if (savingFeatured) return;
+        const context = actionContextRef.current;
+        const actionKey = beginAction('featured');
+        if (!actionKey) return;
         setSavingFeatured(true);
         const next = featuredProject === id ? '' : id;
         try {
             await api.updateProfile({featuredProject: next});
+            if (actionContextRef.current !== context) return;
             setFeaturedProject(next);
             setActionError(null);
         } catch (e) {
-            setActionError(e.message || t('mw.community.project.featuredUpdateFailed',
-                'Could not update your featured project.'));
+            if (actionContextRef.current === context) {
+                setActionError(e.message || t('mw.community.project.featuredUpdateFailed',
+                    'Could not update your featured project.'));
+            }
         } finally {
-            setSavingFeatured(false);
+            releaseAction(actionKey);
+            if (actionContextRef.current === context) setSavingFeatured(false);
         }
     };
 
     const copyLink = () => {
-        setMenuOpen(false);
-        navigator.clipboard.writeText(window.location.href)
+        const context = actionContextRef.current;
+        copyText(window.location.href)
             .then(() => {
+                if (actionContextRef.current !== context) return;
                 setActionError(null);
                 setThumbnailStatus('idle');
                 setCopied(true);
-                window.setTimeout(() => setCopied(false), 2000);
+                window.setTimeout(() => {
+                    if (actionContextRef.current === context) setCopied(false);
+                }, 2000);
             })
-            .catch(() => setActionError(t('mw.community.project.copyFailed', 'Could not copy the link.')));
+.catch(() => {
+                if (actionContextRef.current === context) setActionError(t('mw.community.project.copyFailed', 'Could not copy the link.'));
+            });
     };
     const menuRemix = () => {
-        setMenuOpen(false);
         remix();
     };
-    const menuComments = () => {
-        setMenuOpen(false);
-        toggleComments();
-    };
     const menuReport = () => {
-        setMenuOpen(false);
         setReporting(true);
     };
 
     useEffect(() => {
         const onDown = event => {
-            if (menuRef.current && !menuRef.current.contains(event.target)) {
-                setMenuOpen(false);
-            }
             if (thumbMenuRef.current && !thumbMenuRef.current.contains(event.target)) {
                 setThumbnailMenu(false);
             }
@@ -799,16 +960,19 @@ const Project = () => {
 
     const pickThumbnail = event => {
         const file = event.target.files && event.target.files[0];
+        const context = actionContextRef.current;
         event.target.value = '';
         if (!file) return;
         setThumbnailStatus('saving');
         api.setThumbnail(id, file)
             .then(() => {
+                if (actionContextRef.current !== context) return;
                 setActionError(null);
                 setThumbnailStatus('saved');
                 load();
             })
             .catch(e => {
+                if (actionContextRef.current !== context) return;
                 setThumbnailStatus('idle');
                 setActionError(e.message || t('mw.community.project.thumbnailFailed', 'Could not set thumbnail.'));
             });
@@ -816,6 +980,7 @@ const Project = () => {
 
     const useStageThumbnail = () => {
         setThumbnailMenu(false);
+        const context = actionContextRef.current;
         const frame = stageFrame.current;
         if (!frame || !frame.contentWindow) {
             setActionError(t('mw.community.project.stageNotReady', 'Stage is not ready yet.'));
@@ -838,17 +1003,20 @@ const Project = () => {
                 .then(response => response.blob())
                 .then(blob => api.setThumbnail(id, blob))
                 .then(() => {
+                    if (actionContextRef.current !== context) return;
                     setActionError(null);
                     setThumbnailStatus('saved');
                     load();
                 })
                 .catch(e => {
+                    if (actionContextRef.current !== context) return;
                     setThumbnailStatus('idle');
                     setActionError(e.message || t('mw.community.project.thumbnailFailed', 'Could not set thumbnail.'));
                 });
         };
         timeout = setTimeout(() => {
             window.removeEventListener('message', onMessage);
+            if (actionContextRef.current !== context) return;
             setThumbnailStatus('idle');
             setActionError(t('mw.community.project.captureFailed', 'Could not capture the current stage.'));
         }, 5000);
@@ -863,25 +1031,29 @@ const Project = () => {
 
     const commentSource = useMemo(() => ({
         list: () => api.getComments(id),
-        add: (content, parent) => api.addComment(id, content, parent),
+        add: (content, parent, kind) => api.addComment(id, content, parent, kind),
         remove: commentId => api.deleteComment(id, commentId),
         react: (commentId, type) => api.reactComment(id, commentId, type)
     }), [id]);
 
-    if (error && !project) {
-        return <main className={styles.page}><p className={styles.status}>{error}</p></main>;
+    if (error && errorLoadContext === actionContext && projectLoadContext !== actionContext) {
+        return (
+            <main className={styles.page}>
+                <div className={styles.status}>
+                    <p>{error}</p>
+                    {error === 'Project not found.' ? <Link className={styles.primary} to="/explore">Browse projects</Link> : <Button onClick={load}>Try again</Button>}
+                </div>
+            </main>
+        );
     }
-    if (!project) {
+    if (!project || projectLoadContext !== actionContext) {
         return <main className={styles.page}><p className={styles.status}>{t('mw.community.project.loading', 'Loading…')}</p></main>;
     }
 
+    const ownsProject = Boolean(user && String(user.username).toLowerCase() === String(project.owner).toLowerCase());
     const seeInsideHref = editorUrl({platformProject: project.id});
 
-    const commentTabs = project.repo ? [
-        {id: 'Comments', labelId: 'mw.community.project.comments'},
-        {id: 'History', labelId: 'mw.community.project.history'},
-        {id: 'Pull requests', labelId: 'mw.community.project.pullRequests'}
-    ] : [{id: 'Comments', labelId: 'mw.community.project.comments'}];
+    const commentTabs = ['Comments', 'Reviews', 'Releases', 'History', 'Pull requests', 'Contribute'];
     const sharedDate = formatDate(project.sharedAt || project.created);
     const visibility = project.visibility || (project.shared ? 'public' : 'private');
     const price = project.price || 0;
@@ -929,13 +1101,15 @@ const Project = () => {
                         <VisibilityMenu
                             value={visibility}
                             onChange={changeVisibility}
+                            disabled={savingVisibility}
                         />
                     ) : project.canRemix ? (
                         <button
+                            type="button"
                             className={styles.remixButton}
                             onClick={remix}
-                            disabled={!user}
-                            title={!user ? t('mw.community.project.signInToRemix', 'Sign in to remix') : null}
+                            disabled={userLoading}
+                            title={!user && !userLoading ? t('mw.community.project.signInToRemix', 'Sign in to remix') : null}
                         >
                             <GitFork size={16} />
                             {t('mw.community.project.remix', 'Remix')}
@@ -951,27 +1125,42 @@ const Project = () => {
                             {t('mw.community.project.seeInside', 'See inside')}
                         </a>
                     ) : null}
-                    <div
+                    <Dropdown
                         className={styles.menuWrap}
-                        ref={menuRef}
+                        menuClassName={styles.actionMenu}
+                        renderTrigger={({open, toggle}) => (
+                            <button
+                                type="button"
+                                className={styles.remixButton}
+                                title="More actions"
+                                aria-label="More actions"
+                                aria-expanded={open}
+                                aria-haspopup="menu"
+                                onClick={toggle}
+                            >
+                                <MoreHorizontal size={18} />
+                            </button>
+                        )}
                     >
-                        <button
-                            className={styles.remixButton}
-                            title={t('mw.community.project.moreActions', 'More actions')}
-                            aria-label={t('mw.community.project.moreActions', 'More actions')}
-                            onClick={() => setMenuOpen(open => !open)}
-                        >
-                            <MoreHorizontal size={18} />
-                        </button>
-                        {menuOpen ? (
-                            <div className={styles.actionMenu}>
-                                <button onClick={copyLink}>
+{({close}) => (
+                            <React.Fragment>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        close();
+                                        copyLink();
+                                    }}
+                                >
                                     <Link2 size={15} />
                                     {t('mw.community.project.copyLink', 'Copy link')}
                                 </button>
                                 {user ? (
                                     <button
-                                        onClick={toggleLibrary}
+                                        type="button"
+                                        onClick={() => {
+                                            close();
+                                            toggleLibrary();
+                                        }}
                                         disabled={savingLibrary}
                                     >
                                         {project.saved ? <BookmarkCheck size={15} /> : <Bookmark size={15} />}
@@ -980,10 +1169,23 @@ const Project = () => {
                                             t('mw.community.project.saveToLibrary', 'Save to library')}
                                     </button>
                                 ) : null}
+                                {user ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            close();
+                                            setCollectionOpen(true);
+                                        }}
+                                    >
+                                        <Library size={15} />
+                                        Save to collection
+                                    </button>
+                                ) : null}
+                                {project.isOwner ? <div className={styles.menuSeparator} role="separator" /> : null}
                                 {project.isOwner ? (
                                     <Link
                                         to={`/mystuff/project/${project.id}`}
-                                        onClick={() => setMenuOpen(false)}
+                                        onClick={close}
                                     >
                                         <SlidersHorizontal size={15} />
                                         {t('mw.community.project.manageAnalytics', 'Manage & analytics')}
@@ -991,7 +1193,11 @@ const Project = () => {
                                 ) : null}
                                 {project.isOwner ? (
                                     <button
-                                        onClick={menuRemix}
+                                        type="button"
+                                        onClick={() => {
+                                            close();
+                                            menuRemix();
+                                        }}
                                         disabled={!user}
                                     >
                                         <GitFork size={15} />
@@ -1000,7 +1206,11 @@ const Project = () => {
                                 ) : null}
                                 {project.isOwner && project.shared ? (
                                     <button
-                                        onClick={toggleFeatured}
+                                        type="button"
+                                        onClick={() => {
+                                            close();
+                                            toggleFeatured();
+                                        }}
                                         disabled={savingFeatured}
                                     >
                                         <Star
@@ -1012,36 +1222,160 @@ const Project = () => {
                                             t('mw.community.project.featureOnProfile', 'Feature on profile')}
                                     </button>
                                 ) : null}
-                                {project.isOwner ? (
-                                    <button onClick={menuComments}>
-                                        {project.commentsOff ?
-                                            <MessageSquare size={15} /> :
-                                            <MessageSquareOff size={15} />}
-                                        {project.commentsOff ?
-                                            t('mw.community.project.turnOnComments', 'Turn on comments') :
-                                            t('mw.community.project.turnOffComments', 'Turn off comments')}
-                                    </button>
-                                ) : null}
+{user && !sameUser(project.owner, user.username) ? <div className={styles.menuSeparator} role="separator" /> : null}
                                 {user && !sameUser(project.owner, user.username) ? (
-                                    <button onClick={menuReport}>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            close();
+                                            menuReport();
+                                        }}
+                                    >
                                         <Flag size={15} />
                                         {t('mw.community.project.report', 'Report')}
                                     </button>
                                 ) : null}
+                                {project.isOwner ? <div className={styles.menuSeparator} role="separator" /> : null}
                                 {project.isOwner ? (
                                     <button
+                                        type="button"
                                         className={styles.menuDanger}
-                                        onClick={removeProject}
+                                        onClick={() => {
+                                            close();
+                                            setActionError(null);
+                                            setDeleteConfirm(true);
+                                        }}
                                     >
                                         <Trash2 size={15} />
                                         {t('mw.community.project.deleteProject', 'Delete project')}
                                     </button>
                                 ) : null}
-                            </div>
-                        ) : null}
-                    </div>
+                            </React.Fragment>
+                        )}
+                    </Dropdown>
                 </div>
             </div>
+
+            {collectionOpen ? <CollectionSaveModal project={project} onClose={() => setCollectionOpen(false)} /> : null}
+
+            {deleteConfirm ? (
+                <Modal
+                    title="Delete project?"
+                    onClose={() => setDeleteConfirm(false)}
+                    dismissDisabled={deletingProject}
+                    actions={(
+                        <React.Fragment>
+                            <Button
+                                variant="secondary"
+                                className={styles.confirmCancel}
+                                disabled={deletingProject}
+                                onClick={() => setDeleteConfirm(false)}
+                            >Cancel</Button>
+                            <Button
+                                variant="danger"
+                                className={`${styles.confirmButton} ${styles.deleteConfirmButton}`}
+                                busy={deletingProject}
+                                busyLabel="Deleting…"
+                                onClick={removeProject}
+                            >
+                                <Trash2 size={15} />
+                                Delete project
+                            </Button>
+                        </React.Fragment>
+                    )}
+                >
+                    <p className={styles.confirmText}>
+                        <strong>{project.title}</strong> will be deleted permanently. This cannot be undone.
+                    </p>
+                    {actionError ? <p className={styles.confirmError}>{actionError}</p> : null}
+                </Modal>
+            ) : null}
+
+            {confirmUnsandboxed ? (
+                <Modal
+                    title="Run custom extensions without the sandbox?"
+                    onClose={() => setConfirmUnsandboxed(false)}
+                    actions={(
+                        <React.Fragment>
+                            <Button
+                                variant="secondary"
+                                className={styles.confirmCancel}
+                                onClick={() => setConfirmUnsandboxed(false)}
+                            >Keep sandbox</Button>
+                            <Button
+                                variant="primary"
+                                className={styles.confirmButton}
+                                onClick={confirmRunUnsandboxed}
+                            >
+                                <ShieldAlert size={15} />
+                                Run anyway
+                            </Button>
+                        </React.Fragment>
+                    )}
+                >
+                    <p className={styles.confirmText}>
+                        This gives the project full access to your MistWarp account. It could read your login
+                        session, act as you, or change your data. Continue only if you trust the creator.
+                    </p>
+                </Modal>
+            ) : null}
+
+            {forkSetup ? (
+                <Modal
+                    className={styles.forkModal}
+                    title="Set up your fork"
+                    onClose={() => setForkSetup(null)}
+                    dismissDisabled={creatingFork}
+                >
+                    <form onSubmit={createFork}>
+                        <p className={styles.forkIntro}>
+                            This creates a private working copy with the full MistWarp history. You can send its changes back as a pull request.
+                        </p>
+                        <label className={styles.forkField}>
+                            <span>Project name</span>
+                            <input
+                                value={forkSetup.title}
+                                disabled={creatingFork}
+                                maxLength={100}
+                                required
+                                autoFocus
+                                onChange={event => setForkSetup({...forkSetup, title: event.target.value})}
+                            />
+                        </label>
+                        <label className={styles.forkField}>
+                            <span>Working branch</span>
+                            <input
+                                value={forkSetup.branch}
+                                disabled={creatingFork}
+                                maxLength={100}
+                                required
+                                pattern="[A-Za-z0-9][A-Za-z0-9._/-]*"
+                                onChange={event => setForkSetup({...forkSetup, branch: event.target.value})}
+                            />
+                        </label>
+                        <dl className={styles.forkSummary}>
+                            <div><dt>Forked from</dt><dd>{project.owner}/{project.title}</dd></div>
+                            <div><dt>Base commit</dt><dd><code>{project.gitHead ? project.gitHead.slice(0, 7) : 'Current version'}</code></dd></div>
+                            <div><dt>Visibility</dt><dd>Private draft</dd></div>
+                        </dl>
+                        <div className={styles.confirmActions}>
+                            <Button className={styles.confirmCancel} onClick={() => setForkSetup(null)} disabled={creatingFork}>
+                                Cancel
+                            </Button>
+                            <Button
+                                variant="primary"
+                                className={styles.confirmButton}
+                                type="submit"
+                                busy={creatingFork}
+                                busyLabel="Creating fork…"
+                            >
+                                <GitFork size={15} />
+                                Create fork
+                            </Button>
+                        </div>
+                    </form>
+                </Modal>
+            ) : null}
 
             {reporting ? (
                 <ReportModal
@@ -1062,54 +1396,56 @@ const Project = () => {
                 />
             ) : null}
             {confirmBuy ? (
-                <div
-                    className={styles.confirmOverlay}
-                    onClick={() => setConfirmBuy(false)}
-                >
-                    <div
-                        className={styles.confirmModal}
-                        onClick={event => event.stopPropagation()}
-                        role="dialog"
-                        aria-modal="true"
-                    >
-                        <h3 className={styles.confirmTitle}>{t('mw.community.project.confirmPurchase', 'Confirm purchase')}</h3>
-                        <p className={styles.confirmText}>
-                            {t('mw.community.project.buyProjectPrompt', 'Buy {title} for {price} credits?', {
-                                title: project.title,
-                                price
-                            })}
-                        </p>
-                        {confirmBalance !== null ? (
-                            <p className={styles.confirmBalance}>{t('mw.community.project.yourBalance', 'Your balance: {balance} credits', {balance: confirmBalance})}</p>
-                        ) : null}
-                        <div className={styles.confirmActions}>
-                            <button
+                <Modal
+                    title={t('mw.community.project.confirmPurchase', 'Confirm purchase')}
+                    onClose={() => setConfirmBuy(false)}
+                    dismissDisabled={buying || checkoutBusy}
+                    actions={(
+                        <React.Fragment>
+                            <Button
+                                variant="secondary"
                                 className={styles.confirmCancel}
+                                disabled={buying || checkoutBusy}
                                 onClick={() => setConfirmBuy(false)}
-                            >{t('mw.community.project.cancel', 'Cancel')}</button>
+                            >{t('mw.community.project.cancel', 'Cancel')}</Button>
                             {confirmBalance !== null && confirmBalance < price ? (
-                                <a
+                                <Button
+                                    variant="primary"
                                     className={styles.confirmButton}
-                                    href={KO_FI_SHOP_URL}
+                                    onClick={openCheckout}
+                                    busy={checkoutBusy}
+                                    busyLabel="Opening…"
                                 >
                                     <Coins size={15} />
                                     {t('mw.community.project.buyCredits', 'Buy credits')}
-                                </a>
+                                </Button>
                             ) : (
-                                <button
+                                <Button
+                                    variant="primary"
                                     className={styles.confirmButton}
                                     onClick={doBuy}
-                                    disabled={buying}
+                                    busy={buying}
+                                    busyLabel="Processing…"
                                 >
                                     <Coins size={15} />
                                     {buying ?
                                         t('mw.community.project.processing', 'Processing…') :
                                         t('mw.community.project.payCredits', 'Pay {price} credits', {price})}
-                                </button>
+                                </Button>
                             )}
-                        </div>
-                    </div>
-                </div>
+                        </React.Fragment>
+                    )}
+                >
+                    <p className={styles.confirmText}>
+                        {t('mw.community.project.buyProjectPrompt', 'Buy {title} for {price} credits?', {
+                            title: project.title,
+                            price
+                        })}
+                    </p>
+                    {confirmBalance !== null ? (
+                        <p className={styles.confirmBalance}>{t('mw.community.project.yourBalance', 'Your balance: {balance} credits', {balance: confirmBalance})}</p>
+                    ) : null}
+                </Modal>
             ) : null}
             {actionError ? <div className={styles.actionError}>{actionError}</div> : null}
             {copied ? <div className={styles.actionSuccess}>{t('mw.community.project.linkCopied', 'Link copied to clipboard.')}</div> : null}
@@ -1153,6 +1489,7 @@ const Project = () => {
                     <span className={styles.themeNoticeText}>{t('mw.community.project.themeApplied',
                         'This project applied its own theme.')}</span>
                     <button
+                        type="button"
                         className={styles.themeNoticeButton}
                         onClick={() => {
                             setRevertTheme(true);
@@ -1201,6 +1538,7 @@ const Project = () => {
                                             'Buy once to play {title} whenever you like.', {title: project.title})}
                                     </p>
                                     <button
+                                        type="button"
                                         className={styles.paywallButton}
                                         onClick={openBuyConfirm}
                                         disabled={!user || buying}
@@ -1212,6 +1550,14 @@ const Project = () => {
                                         <p className={styles.paywallHint}>{t('mw.community.project.logInToBuy', 'Log in to buy this project.')}</p>
                                     ) : null}
                                 </div>
+                            ) : contentError ? (
+                                <div className={styles.paywall}>
+                                    <ShieldAlert size={32} />
+                                    <h2 className={styles.paywallTitle}>Project unavailable</h2>
+                                    <p className={styles.paywallText}>
+                                        The project file could not be loaded. The creator may need to save it again.
+                                    </p>
+                                </div>
                             ) : (
                                 <iframe
                                     key={`${unsandboxed ? 'u' : 's'}-${themeAllowed ? 't' : 'n'}`}
@@ -1221,6 +1567,7 @@ const Project = () => {
                                     title={project.title}
                                     onLoad={sendThemeToStage}
                                     allow="autoplay; fullscreen"
+                                    allowFullScreen
                                     sandbox={unsandboxed ?
                                         null :
                                         'allow-scripts allow-forms allow-pointer-lock allow-downloads ' +
@@ -1241,11 +1588,13 @@ const Project = () => {
                             </span>
                             {unsandboxed ? (
                                 <button
+                                    type="button"
                                     className={styles.sandboxButton}
                                     onClick={() => setUnsandboxed(false)}
                                 >{t('mw.community.project.backToSandbox', 'Back to sandbox')}</button>
                             ) : (
                                 <button
+                                    type="button"
                                     className={styles.sandboxButton}
                                     onClick={runUnsandboxed}
                                 >{t('mw.community.project.runUnsandboxed', 'Run without sandbox')}</button>
@@ -1253,34 +1602,16 @@ const Project = () => {
                         </div>
                     ) : null}
                     <div className={styles.statsBar}>
-                        <button
-                            className={project.myReaction === 'heart' ? styles.statOn : styles.statButton}
-                            onClick={() => react('heart')}
-                            disabled={!user || locked}
-                            title={locked ?
+                        <ReactionButtons
+                            variant="bordered"
+                            counts={{heart: project.loveCount || 0, brokenheart: project.brokenHeartCount || 0}}
+                            activeReaction={project.myReaction || ''}
+                            onReact={react}
+                            disabled={locked || reactionBusy}
+                            disabledTitle={locked ?
                                 t('mw.community.project.buyToReact', 'Buy this project to react') :
-                                (!user ? t('mw.community.project.signInToReact', 'Sign in to react') : null)}
-                        >
-                            <Heart
-                                size={16}
-                                fill={project.myReaction === 'heart' ? 'currentColor' : 'none'}
-                            />
-                            {project.loveCount || 0}
-                        </button>
-                        <button
-                            className={project.myReaction === 'brokenheart' ? styles.statOn : styles.statButton}
-                            onClick={() => react('brokenheart')}
-                            disabled={!user || locked}
-                            title={locked ?
-                                t('mw.community.project.buyToReact', 'Buy this project to react') :
-                                (!user ? t('mw.community.project.signInToReact', 'Sign in to react') : null)}
-                        >
-                            <ThumbsDown
-                                size={16}
-                                fill={project.myReaction === 'brokenheart' ? 'currentColor' : 'none'}
-                            />
-                            {project.brokenHeartCount || 0}
-                        </button>
+                                t('mw.community.project.saving', 'Saving…')}
+                        />
                         <span className={styles.statMuted}>
                             <Play size={15} />
                             {project.views || 0}
@@ -1291,6 +1622,7 @@ const Project = () => {
                                 {t('mw.community.project.blocksCount', '{count} blocks', {count: blockStats.total.toLocaleString()})}
                             </span>
                         ) : null}
+                        <ProjectCompatibility compatibility={project.compatibility} compact />
                         <span className={styles.statSpacer} />
                         {project.isOwner ? (
                             <div
@@ -1298,6 +1630,7 @@ const Project = () => {
                                 ref={thumbMenuRef}
                             >
                                 <button
+                                    type="button"
                                     className={styles.statButton}
                                     title={t('mw.community.project.setThumbnail', 'Set the project thumbnail')}
                                     disabled={thumbnailStatus === 'saving'}
@@ -1310,11 +1643,11 @@ const Project = () => {
                                 </button>
                                 {thumbnailMenu ? (
                                     <div className={styles.thumbnailMenu}>
-                                        <button onClick={useStageThumbnail}>
+                                        <button type="button" onClick={useStageThumbnail}>
                                             <MonitorPlay size={15} />
                                             {t('mw.community.project.useCurrentStage', 'Use current stage')}
                                         </button>
-                                        <button onClick={chooseThumbnailUpload}>
+                                        <button type="button" onClick={chooseThumbnailUpload}>
                                             <Upload size={15} />
                                             {t('mw.community.project.uploadImage', 'Upload image')}
                                         </button>
@@ -1348,10 +1681,11 @@ const Project = () => {
                             <nav className={styles.tabs}>
                                 {commentTabs.map(item => (
                                     <button
-                                        key={item.id}
-                                        className={item.id === tab ? styles.tabActive : styles.tab}
-                                        onClick={() => setTab(item.id)}
-                                    >{t(item.labelId, item.id)}</button>
+                                        type="button"
+                                        key={item}
+                                        className={item === tab ? styles.tabActive : styles.tab}
+                                        onClick={() => setTab(item)}
+                                    >{item}</button>
                                 ))}
                             </nav>
                         ) : (
@@ -1360,6 +1694,7 @@ const Project = () => {
                     </div>
                     {tab === 'Comments' && (
                         <CommentThread
+                            projectComments
                             source={commentSource}
                             canModerate={project.isOwner}
                             disabled={Boolean(project.commentsOff) || locked}
@@ -1367,14 +1702,53 @@ const Project = () => {
                                 t('mw.community.project.buyToComment', 'Buy this project to comment.') :
                                 t('mw.community.project.commentsOff', 'Comments are turned off.')}
                             reportContext={`project ${id}`}
+                            composerAction={project.isOwner ? (
+                                <button
+                                    type="button"
+                                    className={styles.commentsToggle}
+                                    onClick={toggleComments}
+                                    disabled={savingComments}
+                                >
+                                    {project.commentsOff ?
+                                        <MessageSquare size={14} /> :
+                                        <MessageSquareOff size={14} />}
+                                    {project.commentsOff ? 'Turn on comments' : 'Turn off comments'}
+                                </button>
+                            ) : null}
                         />
                     )}
-                    {tab === 'History' && <HistoryList id={id} />}
+                    {tab === 'History' && (
+                        <HistoryList
+                            id={id}
+                            history={versionHistory}
+                            canRestore={project.isOwner}
+                            onChange={load}
+                        />
+                    )}
+                    {tab === 'Reviews' && <ReviewPanel key={id} id={id} project={project} user={user} login={login} ownsProject={ownsProject} />}
+                    {tab === 'Releases' && (
+                        <ReleaseList
+                            key={id}
+                            id={id}
+                            isOwner={project.isOwner}
+                            viewerName={viewerName}
+                        />
+                    )}
                     {tab === 'Pull requests' && (
                         <PullList
                             id={id}
                             canMerge={project.isOwner}
                             onChange={load}
+                        />
+                    )}
+                    {tab === 'Contribute' && (
+                        <ContributionPanel
+                            key={`${id}:${project.remixParent || ''}`}
+                            id={project.remixParent || id}
+                            sourceProjectId={project.remixParent ? id : ''}
+                            user={user}
+                            viewerName={viewerName}
+                            login={login}
                         />
                     )}
                 </section>
@@ -1464,10 +1838,19 @@ const RemixTreeNode = ({node, childrenOf, currentId}) => (
 const RemixTree = ({id}) => {
     const intl = useIntl();
     const [tree, setTree] = useState(null);
+    const [failed, setFailed] = useState(false);
+    const [attempt, setAttempt] = useState(0);
     useEffect(() => {
+        let active = true;
         setTree(null);
-        api.remixTree(id).then(setTree).catch(() => setTree({nodes: []}));
-    }, [id]);
+        setFailed(false);
+        api.remixTree(id)
+            .then(data => active && setTree(data))
+            .catch(() => active && setFailed(true));
+        return () => {
+            active = false;
+        };
+    }, [attempt, id]);
     const childMap = useMemo(() => {
         const map = new Map();
         for (const node of (tree && tree.nodes) || []) {
@@ -1479,7 +1862,8 @@ const RemixTree = ({id}) => {
         }
         return map;
     }, [tree]);
-    if (!tree) return <p className={styles.status}>{intl.formatMessage({id: 'mw.community.project.loading', defaultMessage: 'Loading…'})}</p>;
+    if (!tree && !failed) return <p className={styles.status}>{intl.formatMessage({id: 'mw.community.project.loading', defaultMessage: 'Loading…'})}</p>;
+    if (failed) return <p className={styles.sideEmpty}>Could not load remixes. <button type="button" onClick={() => setAttempt(value => value + 1)}>Try again</button></p>;
     const nodes = tree.nodes || [];
     if (nodes.length < 2) return <p className={styles.sideEmpty}>{intl.formatMessage({id: 'mw.community.project.noRemixes', defaultMessage: 'No remixes yet.'})}</p>;
     const childrenOf = parentId => childMap.get(parentId) || [];
@@ -1496,14 +1880,100 @@ const RemixTree = ({id}) => {
     );
 };
 
-const HistoryList = ({id}) => {
-    const intl = useIntl();
-    const [commits, setCommits] = useState(null);
+const HistoryList = ({id, history, canRestore, onChange}) => {
+    const [restoring, setRestoring] = useState(null);
+    const [restoreError, setRestoreError] = useState(null);
+    const [restoreCandidate, setRestoreCandidate] = useState(null);
+    const restoreLocks = useRef(new Set());
+    const idRef = useRef(id);
+    idRef.current = id;
     useEffect(() => {
-        api.commits(id).then(d => setCommits(d.commits || [])).catch(() => setCommits([]));
+        restoreLocks.current.clear();
+        setRestoring(null);
+        setRestoreError(null);
+        setRestoreCandidate(null);
     }, [id]);
-    if (!commits) return <p className={styles.status}>{intl.formatMessage({id: 'mw.community.project.loading', defaultMessage: 'Loading…'})}</p>;
-    if (!commits.length) return <p className={styles.status}>{intl.formatMessage({id: 'mw.community.project.noCommitHistory', defaultMessage: 'No commit history available.'})}</p>;
+    const requestRestore = commit => {
+        if (restoring) return;
+        setRestoreError(null);
+        setRestoreCandidate(commit);
+    };
+    const restore = async commit => {
+        const actionId = id;
+        const lockId = `${actionId}\u0000${commit.sha}`;
+        if (restoreLocks.current.has(lockId)) return;
+        restoreLocks.current.add(lockId);
+        setRestoring(commit.sha);
+        setRestoreError(null);
+        try {
+            const {project} = await api.getProject(actionId);
+            if (!project.workspaceUrl) throw new Error('This project does not have a saved version archive');
+            const workspace = await fetchWorkspace(project.workspaceUrl);
+            const result = await restoreMwpVersion({workspace, oid: commit.sha});
+            await api.uploadProject(actionId, result.sb3, null, null, {
+                workspace: result.mwp,
+                git: result.manifest,
+                expectedHead: result.expectedHead
+            });
+            if (idRef.current !== actionId) return;
+            setRestoreCandidate(null);
+            if (onChange) await onChange();
+        } catch (error) {
+            if (idRef.current === actionId) {
+                setRestoreError(error.message || 'Could not restore this version.');
+            }
+        } finally {
+            restoreLocks.current.delete(lockId);
+            if (idRef.current === actionId) setRestoring(null);
+        }
+    };
+    if (!history) return <p className={styles.status}>Loading…</p>;
+    if (history.error) return <p className={styles.status}>Could not load version history. <button type="button" onClick={onChange}>Try again</button></p>;
+    const commits = history.commits || [];
+    if (!commits.length) return <p className={styles.status}>No version history available.</p>;
+    if (history.graph?.nodes?.length) {
+        return (
+            <>
+                {restoreError ? <p className={styles.status}>{restoreError}</p> : null}
+                <GitGraph
+                    graph={history.graph}
+                    currentBranch={history.branch}
+                    onRestore={canRestore ? requestRestore : null}
+                    restoring={restoring}
+                />
+                {restoreCandidate ? (
+                    <Modal
+                        title="Restore this version?"
+                        onClose={() => setRestoreCandidate(null)}
+                        dismissDisabled={Boolean(restoring)}
+                        actions={(
+                            <React.Fragment>
+                                <Button
+                                    variant="secondary"
+                                    className={styles.confirmCancel}
+                                    disabled={Boolean(restoring)}
+                                    onClick={() => setRestoreCandidate(null)}
+                                >Cancel</Button>
+                                <Button
+                                    variant="primary"
+                                    className={styles.confirmButton}
+                                    busy={Boolean(restoring)}
+                                    busyLabel="Restoring…"
+                                    onClick={() => restore(restoreCandidate)}
+                                >Restore version</Button>
+                            </React.Fragment>
+                        )}
+                    >
+                        <p className={styles.confirmText}>
+                            <strong>{(restoreCandidate.message || 'Saved version').split('\n')[0]}</strong>
+                            {' '}will become the current project. Newer versions will stay in the history.
+                        </p>
+                        {restoreError ? <p className={styles.confirmError}>{restoreError}</p> : null}
+                    </Modal>
+                ) : null}
+            </>
+        );
+    }
     return (
         <ul className={styles.commitList}>
             {commits.map(commit => (
@@ -1520,54 +1990,199 @@ const HistoryList = ({id}) => {
 const PullList = ({id, canMerge, onChange}) => {
     const intl = useIntl();
     const [pulls, setPulls] = useState(null);
+    const [loadError, setLoadError] = useState(false);
     const [openPull, setOpenPull] = useState(null);
     const [diff, setDiff] = useState(null);
     const [merging, setMerging] = useState(false);
     const [mergeError, setMergeError] = useState(null);
+    const [mergeSession, setMergeSession] = useState(null);
+    const actionLocks = useRef(new Set());
+    const idRef = useRef(id);
+    idRef.current = id;
+    const beginLoad = useLatest();
+    const beginView = useLatest();
+
+    const loadPullFiles = async data => {
+        const [target, source] = await Promise.all([
+            fetchWorkspace(data.targetWorkspaceUrl),
+            fetchWorkspace(data.sourceWorkspaceUrl)
+        ]);
+        return {target, source};
+    };
 
     const reload = useCallback(() => {
-        api.pulls(id).then(d => setPulls(d.pulls || [])).catch(() => setPulls([]));
-    }, [id]);
+        const fresh = beginLoad();
+        setPulls(null);
+        setLoadError(false);
+        api.pulls(id)
+            .then(fresh(d => setPulls(d.pulls || [])))
+            .catch(fresh(() => setLoadError(true)));
+    }, [beginLoad, id]);
 
-    useEffect(reload, [reload]);
+    useEffect(() => {
+        actionLocks.current.clear();
+        beginView();
+        setOpenPull(null);
+        setDiff(null);
+        setMerging(false);
+        setMergeError(null);
+        setMergeSession(null);
+        cancelMwpMerge().catch(() => {});
+        reload();
+        return () => {
+            beginView();
+            cancelMwpMerge().catch(() => {});
+        };
+    }, [beginView, id, reload]);
 
     const view = async pull => {
+        const viewLock = `view:${id}:${pull.index}`;
+        if (actionLocks.current.has(viewLock)) return;
+        actionLocks.current.add(viewLock);
+        const fresh = beginView();
         setOpenPull(pull);
         setDiff(null);
         setMergeError(null);
         try {
-            setDiff(await api.pullDiff(id, pull.index));
+            const data = await api.pullDiff(id, pull.index);
+            const files = await loadPullFiles(data);
+            const inspected = await inspectMwpPull({
+                ...files,
+                pullId: pull.index,
+                baseCommit: data.pull.baseCommit,
+                headCommit: data.pull.headCommit
+            });
+            fresh(setDiff)(inspected.diff || 'No textual changes.');
         } catch (e) {
-            setDiff(intl.formatMessage({id: 'mw.community.project.couldNotLoadDiff', defaultMessage: 'Could not load diff.'}));
+            fresh(setDiff)(intl.formatMessage({id: 'mw.community.project.couldNotLoadDiff', defaultMessage: 'Could not load diff.'}));
+        } finally {
+            actionLocks.current.delete(viewLock);
         }
+    };
+
+    const uploadMerge = async (pull, data, actionId) => {
+        const result = await finishMwpMerge();
+        if (idRef.current !== actionId) return;
+        await api.uploadPullMerge(actionId, {
+            sb3: result.sb3,
+            mwp: result.mwp,
+            git: result.manifest,
+            expectedHead: data.expectedHead,
+            pullId: pull.index
+        });
+        if (idRef.current !== actionId) return;
+        setMergeSession(null);
+        setOpenPull(null);
+        reload();
+        onChange();
     };
 
     const merge = async pull => {
-        if (merging) return;
+        const actionId = id;
+        const mergeLock = `merge:${actionId}`;
+        if (actionLocks.current.has(mergeLock)) return;
+        actionLocks.current.add(mergeLock);
         setMerging(true);
         setMergeError(null);
         try {
-            await api.mergePull(id, pull.index);
-            setOpenPull(null);
-            reload();
-            onChange();
+            const data = await api.mergePull(actionId, pull.index);
+            if (idRef.current !== actionId) return;
+            const files = await loadPullFiles(data);
+            if (idRef.current !== actionId) return;
+            const result = await startMwpMerge({
+                ...files,
+                pullId: pull.index,
+                baseCommit: data.pull.baseCommit,
+                headCommit: data.pull.headCommit
+            });
+            if (idRef.current !== actionId) {
+                await cancelMwpMerge();
+                return;
+            }
+            if (result.conflicts.length || result.binaryConflicts.length) {
+                setMergeSession({
+                    pull,
+                    data,
+                    conflicts: result.conflicts,
+                    binaryConflicts: result.binaryConflicts.map(path => ({path, choice: ''}))
+                });
+            } else {
+                await uploadMerge(pull, data, actionId);
+            }
         } catch (e) {
-            setMergeError(e.code === 'conflict' ?
-                intl.formatMessage({id: 'mw.community.project.conflictError',
-                    defaultMessage: 'This pull request has conflicts. Open it in the editor and pull to resolve.'}) :
-                intl.formatMessage({id: 'mw.community.project.mergeFailed', defaultMessage: 'Merge failed.'}));
+            await cancelMwpMerge();
+            if (idRef.current === actionId) {
+                setMergeError(e.code === 'conflict' ?
+                    intl.formatMessage({id: 'mw.community.project.conflictError',
+                        defaultMessage: 'This pull request has conflicts. Open it in the editor and pull to resolve.'}) :
+                    intl.formatMessage({id: 'mw.community.project.mergeFailed', defaultMessage: 'Merge failed.'}));
+            }
         } finally {
-            setMerging(false);
+            actionLocks.current.delete(mergeLock);
+            if (idRef.current === actionId) setMerging(false);
         }
     };
 
-    if (!pulls) return <p className={styles.status}>{intl.formatMessage({id: 'mw.community.project.loading', defaultMessage: 'Loading…'})}</p>;
+    const updateConflict = (path, content) => {
+        setMergeSession(session => ({
+            ...session,
+            conflicts: session.conflicts.map(file => (file.path === path ? {...file, content} : file))
+        }));
+    };
+
+    const resolveConflicts = async () => {
+        if (!mergeSession) return;
+        const actionId = id;
+        const mergeLock = `merge:${actionId}`;
+        if (actionLocks.current.has(mergeLock)) return;
+        actionLocks.current.add(mergeLock);
+        const session = mergeSession;
+        setMerging(true);
+        setMergeError(null);
+        try {
+            for (const file of session.conflicts) {
+                await updateMergeConflict(file.path, file.content);
+            }
+            for (const file of session.binaryConflicts) {
+                if (!file.choice) throw new Error(`Choose a version for ${file.path}`);
+                await chooseMergeBinary(file.path, file.choice);
+            }
+            if (idRef.current !== actionId) return;
+            await uploadMerge(session.pull, session.data, actionId);
+        } catch (e) {
+            if (idRef.current === actionId) {
+                setMergeError(e.message || 'The conflicts could not be resolved.');
+            }
+        } finally {
+            actionLocks.current.delete(mergeLock);
+            if (idRef.current === actionId) setMerging(false);
+        }
+    };
+
+    const closePull = async () => {
+        const closeLock = `close:${id}`;
+        if (actionLocks.current.has(`merge:${id}`) || actionLocks.current.has(closeLock)) return;
+        actionLocks.current.add(closeLock);
+        try {
+            await cancelMwpMerge();
+            if (idRef.current !== id) return;
+            setMergeSession(null);
+            setOpenPull(null);
+        } finally {
+            actionLocks.current.delete(closeLock);
+        }
+    };
+
+    if (!pulls && !loadError) return <p className={styles.status}>{intl.formatMessage({id: 'mw.community.project.loading', defaultMessage: 'Loading…'})}</p>;
+    if (loadError) return <p className={styles.status}>{intl.formatMessage({id: 'mw.community.project.couldNotLoadPulls', defaultMessage: 'Could not load pull requests.'})} <button type="button" onClick={reload}>{intl.formatMessage({id: 'mw.community.project.tryAgain', defaultMessage: 'Try again'})}</button></p>;
     if (openPull) {
         return (
             <div>
                 <button
+                    type="button"
                     className={styles.backLink}
-                    onClick={() => setOpenPull(null)}
+                    onClick={closePull}
+                    disabled={merging}
                 >
                     <ArrowLeft size={14} />
                     {intl.formatMessage({id: 'mw.community.project.backToPulls', defaultMessage: 'Back to pull requests'})}
@@ -1580,14 +2195,66 @@ const PullList = ({id, canMerge, onChange}) => {
                     }, {index: openPull.index, user: openPull.user, baseBranch: openPull.baseBranch})}
                 </p>
                 {mergeError ? <div className={styles.actionError}>{mergeError}</div> : null}
+                {mergeSession ? (
+                    <div className={styles.conflictEditor}>
+                        <h4>Resolve merge conflicts</h4>
+                        <p>Remove the conflict markers and leave the exact text this file should contain.</p>
+                        {mergeSession.conflicts.map(file => (
+                            <label key={file.path} className={styles.conflictFile}>
+                                <span>{file.path}</span>
+                                <textarea
+                                    value={file.content}
+                                    disabled={merging}
+                                    onChange={event => updateConflict(file.path, event.target.value)}
+                                    spellCheck={false}
+                                />
+                            </label>
+                        ))}
+                        {mergeSession.binaryConflicts.map(file => (
+                            <div key={file.path} className={styles.binaryConflict}>
+                                <span>{file.path}</span>
+                                <div>
+                                    <button
+                                        type="button"
+                                        className={file.choice === 'ours' ? styles.binaryChoiceActive : ''}
+                                        disabled={merging}
+                                        onClick={() => setMergeSession(session => ({
+                                            ...session,
+                                            binaryConflicts: session.binaryConflicts.map(item =>
+                                                (item.path === file.path ? {...item, choice: 'ours'} : item))
+                                        }))}
+                                    >Keep current project</button>
+                                    <button
+                                        type="button"
+                                        className={file.choice === 'theirs' ? styles.binaryChoiceActive : ''}
+                                        disabled={merging}
+                                        onClick={() => setMergeSession(session => ({
+                                            ...session,
+                                            binaryConflicts: session.binaryConflicts.map(item =>
+                                                (item.path === file.path ? {...item, choice: 'theirs'} : item))
+                                        }))}
+                                    >Use fork version</button>
+                                </div>
+                            </div>
+                        ))}
+                        <Button
+                            variant="primary"
+                            className={styles.primary}
+                            onClick={resolveConflicts}
+                            busy={merging}
+                            busyLabel="Finishing merge…"
+                        >Save resolutions and merge</Button>
+                    </div>
+                ) : null}
                 {canMerge && openPull.state === 'open' ? (
-                    <button
+                    <Button
+                        variant="primary"
                         className={styles.primary}
                         onClick={() => merge(openPull)}
-                        disabled={merging}
-                    >{merging ?
-                        intl.formatMessage({id: 'mw.community.project.merging', defaultMessage: 'Merging…'}) :
-                        intl.formatMessage({id: 'mw.community.project.merge', defaultMessage: 'Merge'})}</button>
+                        disabled={merging || Boolean(mergeSession)}
+                        busy={merging}
+                        busyLabel={intl.formatMessage({id: 'mw.community.project.merging', defaultMessage: 'Merging…'})}
+                    >{intl.formatMessage({id: 'mw.community.project.merge', defaultMessage: 'Merge'})}</Button>
                 ) : null}
                 <DiffView diff={diff} />
             </div>
@@ -1599,6 +2266,7 @@ const PullList = ({id, canMerge, onChange}) => {
             {pulls.map(pull => (
                 <li key={pull.index}>
                     <button
+                        type="button"
                         className={styles.linkButton}
                         onClick={() => view(pull)}
                     >
@@ -1618,4 +2286,368 @@ const PullList = ({id, canMerge, onChange}) => {
     );
 };
 
+const ReviewStars = ({rating, onChange}) => (
+    <div className={onChange ? styles.reviewStarPicker : styles.reviewStars} aria-label={`${rating} out of 5 stars`}>
+        {[1, 2, 3, 4, 5].map(value => {
+            if (onChange) {
+                return (
+                    <button key={value} type="button" aria-label={`${value} stars`} onClick={() => onChange(value)}>
+                        <Star size={20} fill={value <= rating ? 'currentColor' : 'none'} />
+                    </button>
+                );
+            }
+            return <Star key={value} size={15} fill={value <= rating ? 'currentColor' : 'none'} />;
+        })}
+    </div>
+);
+
+const ReviewPanel = ({id, user, login, ownsProject}) => {
+    const viewerName = (user && user.username) || '';
+    const reviewContext = `${id}\u0000${viewerName}`;
+    const reviewContextRef = useRef(reviewContext);
+    reviewContextRef.current = reviewContext;
+    const [reviews, setReviews] = useState(null);
+    const [summary, setSummary] = useState({average: 0, count: 0});
+    const [rating, setRating] = useState(0);
+    const [message, setMessage] = useState('');
+    const [hasReview, setHasReview] = useState(false);
+    const [status, setStatus] = useState('');
+    const [loadError, setLoadError] = useState(false);
+    const [busy, setBusy] = useState('');
+    const [deleteConfirm, setDeleteConfirm] = useState(false);
+    const actionLocks = useRef(new Set());
+    const beginLoad = useLatest();
+
+    const load = useCallback(() => {
+        const fresh = beginLoad();
+        setReviews(null);
+        setLoadError(false);
+        api.reviews(id)
+            .then(fresh(data => {
+                setReviews(data.reviews || []);
+                setSummary({average: Number(data.average) || 0, count: Number(data.count) || 0});
+                const mine = data.myReview && data.myReview._id ? data.myReview : null;
+                setHasReview(Boolean(mine));
+                setRating(mine ? Number(mine.rating) : 0);
+                setMessage(mine ? mine.message || '' : '');
+            }))
+            .catch(fresh(() => setLoadError(true)));
+    }, [beginLoad, id, viewerName]);
+
+    useEffect(() => {
+        actionLocks.current.clear();
+        setBusy('');
+        setStatus('');
+        setDeleteConfirm(false);
+        load();
+    }, [load]);
+
+    const submit = async event => {
+        event.preventDefault();
+        const actionContext = reviewContextRef.current;
+        if (actionLocks.current.has(actionContext)) return;
+        if (!user) {
+            login();
+            return;
+        }
+        if (!rating) {
+            setStatus('Choose a star rating first.');
+            return;
+        }
+        actionLocks.current.add(actionContext);
+        setBusy('save');
+        setStatus('');
+        try {
+            await api.saveReview(id, reviewPayload(rating, message));
+            if (reviewContextRef.current !== actionContext) return;
+            setStatus('Review saved.');
+            load();
+        } catch (e) {
+            if (reviewContextRef.current === actionContext) {
+                setStatus(e.message || 'Could not save your review.');
+            }
+        } finally {
+            actionLocks.current.delete(actionContext);
+            if (reviewContextRef.current === actionContext) setBusy('');
+        }
+    };
+
+    const remove = async () => {
+        const actionContext = reviewContextRef.current;
+        if (actionLocks.current.has(actionContext)) return;
+        actionLocks.current.add(actionContext);
+        setBusy('delete');
+        setStatus('');
+        try {
+            await api.deleteReview(id);
+            if (reviewContextRef.current !== actionContext) return;
+            setRating(0);
+            setMessage('');
+            setStatus('Review deleted.');
+            setDeleteConfirm(false);
+            load();
+        } catch (e) {
+            if (reviewContextRef.current === actionContext) {
+                setStatus(e.message || 'Could not delete your review.');
+            }
+        } finally {
+            actionLocks.current.delete(actionContext);
+            if (reviewContextRef.current === actionContext) setBusy('');
+        }
+    };
+
+    return (
+        <div className={styles.reviewPanel}>
+            <div className={styles.reviewSummary}>
+                <strong>{summary.count ? summary.average.toFixed(1) : '0.0'}</strong>
+                <div>
+                    <ReviewStars rating={Math.round(summary.average)} />
+                    <span>{summary.count} {summary.count === 1 ? 'review' : 'reviews'}</span>
+                </div>
+            </div>
+            {!ownsProject ? (
+                <form className={styles.reviewForm} onSubmit={submit}>
+                    <div>
+                        <h3>{hasReview ? 'Your review' : 'Review this project'}</h3>
+                        <ReviewStars rating={rating} onChange={busy ? null : setRating} />
+                    </div>
+                    <textarea value={message} disabled={Boolean(busy)} maxLength={2000} placeholder="What worked well? What should change?" onChange={event => setMessage(event.target.value)} />
+                    <div className={styles.reviewActions}>
+                        <Button
+                            type="submit"
+                            disabled={busy === 'delete'}
+                            busy={busy === 'save'}
+                            busyLabel="Saving…"
+                        >{user ? 'Save review' : 'Sign in to review'}</Button>
+                        {hasReview ? (
+                            <Button
+                                type="button"
+                                variant="secondary"
+                                disabled={Boolean(busy)}
+                                onClick={() => {
+                                    setStatus('');
+                                    setDeleteConfirm(true);
+                                }}
+                            >Delete</Button>
+                        ) : null}
+                        {status ? <span>{status}</span> : null}
+                    </div>
+                </form>
+            ) : <p className={styles.reviewOwnerHint}>You cannot review your own project.</p>}
+            {!reviews && !loadError ? <p className={styles.status}>Loading reviews…</p> : null}
+            {loadError ? <p className={styles.status}>Could not load reviews. <button type="button" onClick={load}>Try again</button></p> : null}
+            {reviews && !reviews.length ? <p className={styles.reviewEmpty}>No reviews yet.</p> : null}
+            {reviews && reviews.map(review => (
+                <article key={review._id} className={styles.reviewCard}>
+                    <Link to={`/users/${review.author}`}><Avatar username={review.author} size={34} /></Link>
+                    <div>
+                        <header>
+                            <Link to={`/users/${review.author}`}>{review.author}</Link>
+                            <span className={styles.reviewPlaytime}>{formatPlaytime(review.playtimeMs)}</span>
+                            <span>{timeAgo(review.edited || review.created)}</span>
+                        </header>
+                        <ReviewStars rating={review.rating} />
+                        {review.message ? <p><RichText text={review.message} /></p> : null}
+                    </div>
+                </article>
+            ))}
+            {deleteConfirm ? (
+                <Modal
+                    title="Delete your review?"
+                    onClose={() => setDeleteConfirm(false)}
+                    dismissDisabled={Boolean(busy)}
+                    actions={(
+                        <React.Fragment>
+                            <Button
+                                variant="secondary"
+                                className={styles.confirmCancel}
+                                disabled={Boolean(busy)}
+                                onClick={() => setDeleteConfirm(false)}
+                            >Cancel</Button>
+                            <Button
+                                variant="danger"
+                                className={`${styles.confirmButton} ${styles.deleteConfirmButton}`}
+                                busy={busy === 'delete'}
+                                busyLabel="Deleting…"
+                                onClick={remove}
+                            >Delete review</Button>
+                        </React.Fragment>
+                    )}
+                >
+                    <p className={styles.confirmText}>Your rating and review text will be removed.</p>
+                    {status ? <p className={styles.confirmError}>{status}</p> : null}
+                </Modal>
+            ) : null}
+        </div>
+    );
+};
+
+const ReleaseList = ({id, isOwner, viewerName}) => {
+    const actionContext = `${id}\u0000${viewerName}`;
+    const actionContextRef = useRef(actionContext);
+    actionContextRef.current = actionContext;
+    const [releases, setReleases] = useState(null);
+    const [form, setForm] = useState({version: '', channel: 'stable', notes: ''});
+    const [error, setError] = useState('');
+    const [loadError, setLoadError] = useState(false);
+    const [busy, setBusy] = useState(false);
+    const actionLocks = useRef(new Set());
+    const beginLoad = useLatest();
+    const updateForm = (field, value) => setForm(current => ({...current, [field]: value}));
+
+    const load = useCallback(() => {
+        const fresh = beginLoad();
+        setReleases(null);
+        setLoadError(false);
+        api.releases(id)
+            .then(fresh(data => setReleases(data.releases || [])))
+            .catch(fresh(() => setLoadError(true)));
+    }, [beginLoad, id, viewerName]);
+
+    useEffect(() => {
+        actionLocks.current.clear();
+        setForm({version: '', channel: 'stable', notes: ''});
+        setError('');
+        setBusy(false);
+        load();
+    }, [load]);
+
+    const create = async event => {
+        event.preventDefault();
+        const context = actionContextRef.current;
+        if (actionLocks.current.has(context)) return;
+        const payload = releasePayload(form);
+        if (!payload.version) {
+            setError('Enter a version before publishing.');
+            return;
+        }
+        actionLocks.current.add(context);
+        setBusy(true);
+        setError('');
+        try {
+            await api.createRelease(id, payload);
+            if (actionContextRef.current !== context) return;
+            setForm({version: '', channel: 'stable', notes: ''});
+            load();
+        } catch (e) {
+            if (actionContextRef.current === context) {
+                setError(e.message || 'Could not create the release.');
+            }
+        } finally {
+            actionLocks.current.delete(context);
+            if (actionContextRef.current === context) setBusy(false);
+        }
+    };
+
+    return (
+        <div className={styles.toolPanel}>
+            {isOwner ? (
+                <form className={styles.inlineForm} onSubmit={create}>
+                    <h3>Publish a release</h3>
+                    <div className={styles.inlineFields}>
+                        <input value={form.version} disabled={busy} required maxLength={50} placeholder="Version, such as 1.2.0" onChange={event => updateForm('version', event.target.value)} />
+                        <select value={form.channel} disabled={busy} onChange={event => updateForm('channel', event.target.value)}>
+                            <option value="stable">Stable</option>
+                            <option value="beta">Beta</option>
+                            <option value="development">Development</option>
+                        </select>
+                    </div>
+                    <textarea value={form.notes} disabled={busy} placeholder="What changed?" onChange={event => updateForm('notes', event.target.value)} />
+                    <Button type="submit" disabled={busy}>{busy ? 'Publishing…' : 'Publish release'}</Button>
+                    {error ? <p className={styles.actionError}>{error}</p> : null}
+                </form>
+            ) : null}
+            {!releases && !loadError ? <p className={styles.status}>Loading releases…</p> : null}
+            {loadError ? <p className={styles.status}>Could not load releases. <button type="button" onClick={load}>Try again</button></p> : null}
+            {releases && !releases.length ? <p className={styles.status}>No releases yet.</p> : null}
+            {releases && releases.map(release => (
+                <article className={styles.release} key={release._id}>
+                    <div><strong>{release.version}</strong> <span className={styles.releaseChannel}>{release.channel}</span></div>
+                    <span className={styles.muted}>{timeAgo(release.created)}</span>
+                    {release.notes ? <RichText text={release.notes} /> : null}
+                    {release.jsonUrl ? <a className={styles.primary} href={embedUrl({id, projectJsonUrl: release.jsonUrl, assetsBase: release.assetsBase})}>Play this release</a> : null}
+                </article>
+            ))}
+        </div>
+    );
+};
+
+const ContributionPanel = ({id, sourceProjectId, user, viewerName, login}) => {
+    const actionContext = `${id}\u0000${sourceProjectId}\u0000${viewerName}`;
+    const actionContextRef = useRef(actionContext);
+    actionContextRef.current = actionContext;
+    const [remixProjectId, setRemixProjectId] = useState(sourceProjectId);
+    const [title, setTitle] = useState('');
+    const [body, setBody] = useState('');
+    const [status, setStatus] = useState('');
+    const [busy, setBusy] = useState(false);
+    const actionLocks = useRef(new Set());
+
+    useEffect(() => {
+        actionLocks.current.clear();
+        setRemixProjectId(sourceProjectId);
+        setTitle('');
+        setBody('');
+        setStatus('');
+        setBusy(false);
+    }, [id, sourceProjectId, viewerName]);
+
+    const submit = async event => {
+        event.preventDefault();
+        const context = actionContextRef.current;
+        if (actionLocks.current.has(context)) return;
+        if (!user) {
+            login();
+            return;
+        }
+        const payload = contributionPayload(remixProjectId, title, body);
+        if (!payload.remixProjectId || !payload.title) {
+            setStatus('Add a fork project ID and title before sending.');
+            return;
+        }
+        actionLocks.current.add(context);
+        setBusy(true);
+        setStatus('');
+        try {
+            const data = await api.contribute(id, payload);
+            if (actionContextRef.current !== context) return;
+            setStatus(`Contribution #${data.pull.index} sent.`);
+            setTitle('');
+            setBody('');
+        } catch (e) {
+            if (actionContextRef.current === context) {
+                setStatus(e.message || 'Could not send the contribution.');
+            }
+        } finally {
+            actionLocks.current.delete(context);
+            if (actionContextRef.current === context) setBusy(false);
+        }
+    };
+
+    return (
+        <form className={styles.inlineForm} onSubmit={submit}>
+            <h3>Send changes back</h3>
+            <p className={styles.muted}>
+                {sourceProjectId ?
+                    'Describe the changes on this fork and send them to its parent project.' :
+                    'Fork this project, make your changes, save them, then enter the fork project ID here.'}
+            </p>
+            {!sourceProjectId ? (
+                <input
+                    value={remixProjectId}
+                    disabled={busy}
+                    required
+                    placeholder="Your fork project ID"
+                    onChange={event => setRemixProjectId(event.target.value)}
+                />
+            ) : null}
+            <input value={title} disabled={busy} required maxLength={200} placeholder="What did you change?" onChange={event => setTitle(event.target.value)} />
+            <textarea value={body} disabled={busy} placeholder="Anything the creator should know" onChange={event => setBody(event.target.value)} />
+            <Button type="submit" disabled={busy}>{busy ? 'Sending…' : user ? 'Send contribution' : 'Sign in to contribute'}</Button>
+            {status ? <p className={styles.muted}>{status}</p> : null}
+        </form>
+    );
+};
+
+export {HistoryList, PullList, ReviewPanel};
 export default Project;

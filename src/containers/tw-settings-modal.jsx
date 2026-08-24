@@ -1,7 +1,6 @@
 import PropTypes from 'prop-types';
 import {getItem as getStorageItem} from '../lib/utils/safe-storage.js';
 import React from 'react';
-import {defineMessages, injectIntl, intlShape} from 'react-intl';
 import bindAll from 'lodash.bindall';
 import {connect} from 'react-redux';
 import {closeSettingsModal} from '../reducers/modals';
@@ -17,14 +16,8 @@ import {applyTheme} from '../lib/themes/themePersistance';
 import {getHideOperatorArrows, setHideOperatorArrows} from '../lib/mw-operator-arrows';
 import {getVanillaPalette, setVanillaPalette} from '../lib/mw-vanilla-palette';
 import WindowManager from '../addons/window-system/window-manager';
+import {normalizeCustomFramerate} from '../lib/utils/framerate';
 
-const messages = defineMessages({
-    newFramerate: {
-        defaultMessage: 'New framerate:',
-        description: 'Prompt shown to choose a new framerate',
-        id: 'tw.menuBar.newFramerate'
-    }
-});
 
 class UsernameModal extends React.Component {
     constructor (props) {
@@ -97,12 +90,9 @@ class UsernameModal extends React.Component {
     handleFramerateChange (e) {
         this.props.vm.setFramerate(e.target.checked ? 60 : 30);
     }
-    async handleCustomizeFramerate () {
-        // prompt() returns Promise in desktop app
-        // eslint-disable-next-line no-alert
-        const newFramerate = await prompt(this.props.intl.formatMessage(messages.newFramerate), this.props.framerate);
-        const parsed = parseFloat(newFramerate);
-        if (isFinite(parsed) && parsed > 0 && parsed <= 500) {
+    handleCustomizeFramerate (value) {
+        const parsed = normalizeCustomFramerate(value);
+        if (parsed !== null) {
             this.props.vm.setFramerate(parsed);
         }
     }
@@ -408,7 +398,6 @@ handleWindowAnimationChange (e) {
 }
 
 UsernameModal.propTypes = {
-    intl: intlShape,
     onClose: PropTypes.func,
     vm: PropTypes.shape({
         renderer: PropTypes.shape({
@@ -469,7 +458,7 @@ const mapDispatchToProps = dispatch => ({
     }
 });
 
-export default injectIntl(connect(
+export default connect(
     mapStateToProps,
     mapDispatchToProps
-)(UsernameModal));
+)(UsernameModal);

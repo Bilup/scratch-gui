@@ -52,7 +52,7 @@ const Footer = () => (
                     </Link>
                 </div>
                 <div className={styles.column}>
-                    <span className={styles.columnTitle}>
+<span className={styles.columnTitle}>
                         <FormattedMessage
                             defaultMessage="Community"
                             description="Footer column title"
@@ -66,6 +66,8 @@ const Footer = () => (
                             id="mw.community.nav.explore"
                         />
                     </Link>
+                    <Link to="/spaces">Spaces and challenges</Link>
+                    <Link to="/roadmap">Roadmap</Link>
                     <Link to="/leaderboard">
                         <FormattedMessage
                             defaultMessage="Leaderboard"
@@ -96,6 +98,8 @@ const Footer = () => (
                             id="mw.community.footer.more"
                         />
                     </span>
+                    <a href="/docs/">Documentation</a>
+                    <a href="https://packager.warp.mistium.com/">Packager</a>
                     <a
                         href="https://github.com/bilup"
                         target="_blank"
@@ -117,6 +121,12 @@ const Footer = () => (
                             id="mw.community.footer.credits"
                         />
                     </Link>
+                </div>
+                <div className={styles.column}>
+                    <span className={styles.columnTitle}>Help and safety</span>
+                    <Link to="/support">Support</Link>
+                    <Link to="/trust">Trust, privacy, and terms</Link>
+                    <Link to="/status">Service status</Link>
                 </div>
             </div>
         </div>

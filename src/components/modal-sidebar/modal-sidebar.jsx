@@ -67,6 +67,14 @@ const ModalSidebarItem = ({
     label,
     onClick,
     selected,
+const ModalSidebarItem = ({
+    badge,
+    count,
+    icon: Icon,
+    iconSize = 18,
+    label,
+    onClick,
+    selected,
     statusDot,
     title,
     trailingAction
@@ -127,7 +135,7 @@ ModalSidebarItem.propTypes = {
     label: PropTypes.node.isRequired,
     onClick: PropTypes.func.isRequired,
     selected: PropTypes.bool,
-    statusDot: PropTypes.node,
+statusDot: PropTypes.node,
     title: PropTypes.string,
     trailingAction: PropTypes.node
 };

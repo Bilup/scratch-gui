@@ -1,13 +1,13 @@
 import bindAll from 'lodash.bindall';
 import PropTypes from 'prop-types';
 import React from 'react';
-import {injectIntl, intlShape, defineMessages} from 'react-intl';
+import {injectIntl, intlShape} from 'react-intl';
 
 import LibraryItemComponent from '../components/library-item/library-item.jsx';
 import storage from '../lib/persistence/storage.js';
 
 
-class LibraryItem extends React.PureComponent {
+export class LibraryItem extends React.PureComponent {
     constructor (props) {
         super(props);
         bindAll(this, [
@@ -15,7 +15,7 @@ class LibraryItem extends React.PureComponent {
             'handleClick',
             'handleFavorite',
             'handleFocus',
-            'handleKeyPress',
+            'handleKeyDown',
             'handleMouseEnter',
             'handleMouseLeave',
             'handlePlay',
@@ -59,10 +59,9 @@ class LibraryItem extends React.PureComponent {
             this.handleMouseEnter(id);
         }
     }
-    handleKeyPress (e) {
+    handleKeyDown (e) {
         if (e.key === ' ' || e.key === 'Enter') {
-            e.preventDefault();
-            this.props.onSelect(this.props.id);
+            this.handleClick(e);
         }
     }
     handleMouseEnter () {
@@ -154,7 +153,7 @@ class LibraryItem extends React.PureComponent {
                 onBlur={this.handleBlur}
                 onClick={this.handleClick}
                 onFocus={this.handleFocus}
-                onKeyPress={this.handleKeyPress}
+                onKeyDown={this.handleKeyDown}
                 onMouseEnter={this.handleMouseEnter}
                 onMouseLeave={this.handleMouseLeave}
                 onPlay={this.handlePlay}
@@ -186,7 +185,6 @@ LibraryItem.propTypes = {
         })
     ),
     id: PropTypes.number.isRequired,
-    incompatibleWithScratch: PropTypes.bool,
     insetIconURL: PropTypes.string,
     internetConnectionRequired: PropTypes.bool,
     isBackdrop: PropTypes.bool,
