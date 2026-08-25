@@ -68,9 +68,13 @@ const SECTIONS = [
     {key: 'data', labelKey: 'mw.community.settings.section.data', labelDefault: 'Your data', icon: Database},
     {key: 'identity', labelKey: 'mw.community.settings.section.identity', labelDefault: 'Identity', icon: User}
 ];
-const settingsSection = value => {
-    if (SECTIONS.some(section => section.key === value)) return value;
-    return SECTIONS[0].key;
+
+const DESKTOP_HIDDEN_SECTIONS = new Set(['biluptheme', 'identity', 'presence']);
+
+const MENU_BAR_TEXT_LABEL_KEYS = {
+    auto: 'mw.community.settings.menuBarText.auto',
+    light: 'mw.community.settings.menuBarText.light',
+    dark: 'mw.community.settings.menuBarText.dark'
 };
 const settingsThemeTab = value => {
     if (THEME_TABS.some(tab => tab.key === value)) return value;
