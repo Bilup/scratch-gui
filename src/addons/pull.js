@@ -179,7 +179,7 @@ const normalizeManifest = (id, manifest) => {
         'beta',
         'danger'
     ];
-    manifest.tags = manifest.tags.filter(i => KEEP_TAGS.includes(i));
+    manifest.tags = (manifest.tags || []).filter(i => KEEP_TAGS.includes(i));
     if (newAddons.includes(id)) {
         manifest.tags.push('new');
     }
