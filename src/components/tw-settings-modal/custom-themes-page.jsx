@@ -254,25 +254,19 @@ class CustomThemesPage extends React.Component {
         }
     };
 
-    handleDeleteTheme = (themeUuid, themeName) => {
-        this.setState({
-            pendingDelete: {uuid: themeUuid, name: themeName},
-            deleteError: ''
-        });
-    };
-
-    handleConfirmDeleteTheme = () => {
-        const {pendingDelete} = this.state;
-        if (!pendingDelete) return;
-        try {
-            customThemeManager.removeTheme(pendingDelete.uuid);
-            this.setState({
-                pendingDelete: null,
-                deleteError: '',
-                statusMessage: `“${pendingDelete.name}” deleted.`
-            });
-        } catch (error) {
-            this.setState({deleteError: error.message || 'Could not delete this theme.'});
+    handleDeleteTheme = async (themeUuid, themeName) => {
+        // eslint-disable-next-line no-alert
+        if (confirm(`Delete “${themeName}”? This cannot be undone.`)) {
+            try {
+                customThemeManager.removeTheme(themeUuid);
+                this.setState({statusMessage: `“${themeName}” deleted.`});
+            } catch (error) {
+                await showAlert(this.props.intl.formatMessage({
+                    id: 'tw.customThemes.delete.failed',
+                    defaultMessage: 'Failed to delete theme: {error}',
+                    values: {error: error.message}
+                }));
+            }
         }
     };
 
@@ -298,7 +292,11 @@ class CustomThemesPage extends React.Component {
             );
             this.setState({statusMessage: 'Exported all themes.'});
         } catch (error) {
-            await showAlert(`Failed to export themes: ${error.message}`);
+            await showAlert(this.props.intl.formatMessage({
+                id: 'tw.customThemes.export.failed',
+                defaultMessage: 'Failed to export theme: {error}',
+                values: {error: error.message}
+            }));
         }
     };
 
@@ -762,7 +760,7 @@ class CustomThemesPage extends React.Component {
                         </h3>
                         <p className={styles.detail}>
                             <FormattedMessage
-                                defaultMessage="Load themes from a Bilup or NitroBolt JSON file."
+                                defaultMessage="Load themes from a Bilup file."
                                 id="mw.customThemes.import.hint"
                             />
                         </p>
