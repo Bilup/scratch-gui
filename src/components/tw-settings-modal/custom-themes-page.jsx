@@ -257,7 +257,11 @@ class CustomThemesPage extends React.Component {
                 customThemeManager.removeTheme(themeUuid);
                 this.setState({statusMessage: `“${themeName}” deleted.`});
             } catch (error) {
-                await showAlert(`Failed to delete theme: ${error.message}`);
+                await showAlert(this.props.intl.formatMessage({
+                    id: 'tw.customThemes.delete.failed',
+                    defaultMessage: 'Failed to delete theme: {error}',
+                    values: {error: error.message}
+                }));
             }
         }
     };
@@ -284,7 +288,11 @@ class CustomThemesPage extends React.Component {
             );
             this.setState({statusMessage: 'Exported all themes.'});
         } catch (error) {
-            await showAlert(`Failed to export themes: ${error.message}`);
+            await showAlert(this.props.intl.formatMessage({
+                id: 'tw.customThemes.export.failed',
+                defaultMessage: 'Failed to export theme: {error}',
+                values: {error: error.message}
+            }));
         }
     };
 
@@ -715,7 +723,7 @@ class CustomThemesPage extends React.Component {
                         </h3>
                         <p className={styles.detail}>
                             <FormattedMessage
-                                defaultMessage="Load themes from a Bilup or NitroBolt JSON file."
+                                defaultMessage="Load themes from a Bilup file."
                                 id="mw.customThemes.import.hint"
                             />
                         </p>

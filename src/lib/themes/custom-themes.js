@@ -3,6 +3,10 @@
  * Handles creation, storage, and management of user-defined themes including custom gradients and accents
  */
 
+import defaultsDeep from 'lodash.defaultsdeep';
+import * as blocksThree from './blocks/three.js';
+import * as blocksHighContrast from './blocks/high-contrast.js';
+import * as blocksDark from './blocks/dark.js';
 import {Theme, GUI_MAP} from './index.js';
 import {getItem as getStorageItem} from '../utils/safe-storage.js';
 import {mergeStoredAppearance} from './appearance.js';
@@ -370,9 +374,6 @@ class CustomTheme extends Theme {
      */
     getGuiColors () {
         if (this.customAccent) {
-            // Use dynamic imports to avoid circular dependency issues
-            const defaultsDeep = require('lodash.defaultsdeep');
-
             // Get the base GUI colors directly without importing from index.js
             let baseGuiColors = {};
 
@@ -432,9 +433,6 @@ class CustomTheme extends Theme {
      */
     getBlockColors () {
         if (this.customAccent) {
-            // Use dynamic imports to avoid circular dependency issues
-            const defaultsDeep = require('lodash.defaultsdeep');
-
             // Get base block colors directly without importing from index.js
             let baseGuiColors = {};
             let baseBlockColors = {};
@@ -442,13 +440,10 @@ class CustomTheme extends Theme {
             try {
                 // Import block theme modules directly
                 if (this.blocks === 'high-contrast') {
-                    const blocksHighContrast = require('./blocks/high-contrast.js');
                     baseBlockColors = blocksHighContrast.blockColors || {};
                 } else if (this.blocks === 'dark') {
-                    const blocksDark = require('./blocks/dark.js');
                     baseBlockColors = blocksDark.blockColors || {};
                 } else {
-                    const blocksThree = require('./blocks/three.js');
                     baseBlockColors = blocksThree.blockColors || {};
                 }
  
