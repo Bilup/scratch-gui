@@ -106,6 +106,7 @@ const {supported: supportedAddons, unsupported: unsupportedAddons} = filterAddon
 const getAllTags = () => {
     const tags = new Set();
     for (const manifest of Object.values(supportedAddons)) {
+        if (!Array.isArray(manifest.tags)) continue;
         for (const tag of manifest.tags) {
             tags.add(tag);
         }
@@ -874,10 +875,12 @@ const addonToSearchItem = ({id, manifest}) => {
             addText(0.1, addonTranslations[`${id}/@preset-description-${preset.id}`]);
         }
     }
-    for (const tag of manifest.tags) {
-        const key = `tags.${tag}`;
-        if (settingsTranslations[key]) {
-            addText(0.25, settingsTranslations[key]);
+    if (Array.isArray(manifest.tags)) {
+        for (const tag of manifest.tags) {
+            const key = `tags.${tag}`;
+            if (settingsTranslations[key]) {
+                addText(0.25, settingsTranslations[key]);
+            }
         }
     }
     if (manifest.info) {
