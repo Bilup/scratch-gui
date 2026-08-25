@@ -412,6 +412,7 @@ const applyGuiColors = theme => {
     let menuBarBackground;
     if (accentMenuBar) {
         menuBarBackground = guiColors['looks-secondary'] || guiColors['menu-bar-background'];
+        doc.style.setProperty('--menu-bar-background-image', guiColors['menu-bar-background-image'] || 'none');
     } else {
         const baseColors = (GUI_MAP[theme.gui] && GUI_MAP[theme.gui].guiColors) || {};
         menuBarBackground = baseColors['menu-bar-background'] || guiColors['menu-bar-background'];

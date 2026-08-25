@@ -49,7 +49,7 @@ const ALL_SECTIONS = [
     {key: 'identity', labelKey: 'mw.community.settings.section.identity', labelDefault: 'Identity', icon: User}
 ];
 
-const DESKTOP_HIDDEN_SECTIONS = new Set(['biluptheme', 'identity', 'menu-bar', 'presence']);
+const DESKTOP_HIDDEN_SECTIONS = new Set(['biluptheme', 'identity', 'presence']);
 
 const MENU_BAR_TEXT_LABEL_KEYS = {
     auto: 'mw.community.settings.menuBarText.auto',
