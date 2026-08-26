@@ -128,7 +128,7 @@ jobs:
         # The web branch is what com.bilup.org is served from (via Cloudflare
         # Pages), so the functions/ directory must live at the repo root there
         # for /api/proxy and _middleware.js to actually execute.
-        rm -rf /tmp/web-build /tmp/functions
+        rm -rf /tmp/web-build /tmp/functions /tmp/old-web-js
         mkdir -p /tmp/web-build
         cp -r /tmp/build/* /tmp/web-build/
         cp -r functions /tmp/functions
@@ -139,6 +139,13 @@ jobs:
         # Create orphan web branch if not exists, otherwise checkout
         if git show-ref --verify --quiet refs/remotes/origin/web; then
           git checkout web
+          # Save old JS files before cleaning, so browsers that loaded an older
+          # index.html can still load their referenced chunk files.
+          mkdir -p /tmp/old-web-js
+          find . -name '*.js' -type f | while read f; do
+            mkdir -p "/tmp/old-web-js/$(dirname "$f")"
+            cp "$f" "/tmp/old-web-js/$f"
+          done
         else
           git checkout --orphan web
         fi
@@ -148,6 +155,18 @@ jobs:
 
         # Copy build contents directly to root
         cp -r /tmp/web-build/* .
+
+        # Restore old JS files that are not in the new build, so in-flight page
+        # loads with a stale index.html still resolve their chunk references.
+        if [ -d /tmp/old-web-js ]; then
+          find /tmp/old-web-js -name '*.js' -type f | while read f; do
+            rel="${f#/tmp/old-web-js/}"
+            if [ ! -f "$rel" ]; then
+              mkdir -p "$(dirname "$rel")"
+              cp "$f" "$rel"
+            fi
+          done
+        fi
 
         # Copy Cloudflare Pages functions into the deployed branch.
         # The web branch is an orphan/clean branch, so functions/ won't exist
