@@ -126,7 +126,13 @@ const LIMITS = {
     // A sprite-add carries one ref per costume and sound, so this has to
     // clear a realistically fat sprite, not just a costume or two.
     MAX_ASSET_REFS: 512,
-    MAX_USERS: 128
+    MAX_USERS: 128,
+    // Custom extensions can be loaded from arbitrarily long URLs (GitHub
+    // raw links with query strings, data URLs, ...). The snapshot shares the
+    // host's loaded-extension list; if the URL cap is too tight the whole
+    // BEGIN message fails validation and onboarding never happens, so peers
+    // silently keep different projects. Allow plenty of slack.
+    MAX_EXTENSION_URL: 16 * 1024
 };
 
 const isPlainObject = value =>
@@ -406,8 +412,8 @@ const PAYLOAD_VALIDATORS = {
             }
             for (const entry of payload.extensions) {
                 if (!isPlainObject(entry) ||
-                    !isNonEmptyString(entry.id, LIMITS.MAX_STRING) ||
-                    !isOptionalString(entry.url, LIMITS.MAX_STRING)) {
+                    !isNonEmptyString(entry.id, LIMITS.MAX_EXTENSION_URL) ||
+                    !isOptionalString(entry.url, LIMITS.MAX_EXTENSION_URL)) {
                     return 'snapshot-begin invalid extensions entry';
                 }
             }

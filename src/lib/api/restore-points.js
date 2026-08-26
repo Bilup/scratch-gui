@@ -269,25 +269,49 @@ const removeExtraneousRestorePoints = () => openDB().then(db => new Promise((res
 // eslint-disable-next-line valid-jsdoc
 /**
  * @param {VirtualMachine} vm scratch-vm instance
- * @returns {Promise<{type: string; data: ArrayBuffer;}>} Thumbnail data
+ * @returns {Promise<{type: string; data: ArrayBuffer;}|null>} Thumbnail data,
+ * or null when the renderer cannot produce a snapshot (never rejects).
  */
 const generateThumbnail = vm => new Promise(resolve => {
     // Piggyback off of the next draw if we can, otherwise just force it to render
     const drawTimeout = setTimeout(() => {
-        vm.renderer.draw();
+        if (vm.renderer && typeof vm.renderer.draw === 'function') {
+            vm.renderer.draw();
+        }
     }, 100);
+
+    if (!vm.renderer || typeof vm.renderer.requestSnapshot !== 'function') {
+        clearTimeout(drawTimeout);
+        resolve(null);
+        return;
+    }
+
+    // The renderer may never call back (e.g. a hidden/headless canvas or a
+    // paused WebGL context). Restore-point creation -- and therefore
+    // collaboration onboarding, which awaits it before applying the host's
+    // project -- must never hang on the thumbnail, so settle with null after
+    // a grace period.
+    const snapshotTimeout = setTimeout(() => {
+        clearTimeout(drawTimeout);
+        resolve(null);
+    }, 5000);
 
     vm.renderer.requestSnapshot(dataURL => {
         clearTimeout(drawTimeout);
+        clearTimeout(snapshotTimeout);
 
-        const index = dataURL.indexOf(',');
-        const base64 = dataURL.substring(index + 1);
-        const arrayBuffer = base64ToArrayBuffer(base64);
-        const type = 'image/png';
-        resolve({
-            type,
-            data: arrayBuffer
-        });
+        try {
+            const index = dataURL.indexOf(',');
+            const base64 = dataURL.substring(index + 1);
+            const arrayBuffer = base64ToArrayBuffer(base64);
+            const type = 'image/png';
+            resolve({
+                type,
+                data: arrayBuffer
+            });
+        } catch (error) {
+            resolve(null);
+        }
     });
 });
 
@@ -314,6 +338,16 @@ const createRestorePoint = (
     vm.emit('RESTORE_POINT_START');
 
     generateThumbnail(vm).then(thumbnailData => {
+        if (!thumbnailData) {
+            // Renderer unavailable; a 1x1 transparent PNG keeps the restore
+            // point valid and non-zero-sized.
+            thumbnailData = {
+                type: 'image/png',
+                data: base64ToArrayBuffer(
+                    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
+                )
+            };
+        }
         const transaction = db.transaction(ALL_STORES, 'readwrite');
         transaction.onerror = event => {
             vm.emit('RESTORE_POINT_END'); // Ensure end is emitted on error

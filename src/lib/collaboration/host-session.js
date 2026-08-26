@@ -160,19 +160,39 @@ class HostSession extends Emitter {
 
     denyJoinRequest (requesterId, reason = 'Host denied your request') {
         const request = this.pendingJoinRequests.get(requesterId);
-        if (!request) return;
+        // Always tear down the pending connection — even when the request is
+        // already gone, the requester must not be left hanging (or redialing).
         this.pendingJoinRequests.delete(requesterId);
         this.transport.send(requesterId, makeCtrl(CTRL.JOIN_DENIED, {reason}));
         this.transport.closeConnection(requesterId);
+        if (request) {
+            this.emit('join-request-cancelled', {
+                requesterId,
+                requesterUsername: request.username
+            });
+        }
     }
 
     kickUser (peerId, reason = 'You were removed from the room') {
-        if (!this.isClientApproved(peerId)) return;
-        // Remember the kick so a reconnect racing the channel close (or a
+        // Never allow kicking the room owner.
+        if (peerId === this.id) return;
+        // Ban before closing so a reconnect racing the channel close (or a
         // lost KICK message) cannot re-join.
         this._bannedPeers.set(peerId, Date.now() + BAN_DURATION_MS);
         this.transport.send(peerId, makeCtrl(CTRL.KICK, {reason}));
         this.transport.closeConnection(peerId);
+        // If the peer was still awaiting approval (e.g. the host kicked a
+        // pending request), drop the pending request as well.
+        const request = this.pendingJoinRequests.get(peerId);
+        if (request) {
+            this.pendingJoinRequests.delete(peerId);
+            this.emit('join-request-cancelled', {
+                requesterId: peerId,
+                requesterUsername: request.username
+            });
+        }
+        // _removeClient no-ops for peers that are not in the users list, so
+        // kicking a pending requester is safe.
         this._removeClient(peerId);
     }
 

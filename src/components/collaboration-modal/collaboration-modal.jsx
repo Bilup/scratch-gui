@@ -257,6 +257,11 @@ class CollaborationModal extends Component {
 
     handleKickUser(userId) {
         this.props.onKickUser(userId);
+        // In case the kicked peer still had a pending join request, drop it
+        // from the local list immediately as well.
+        this.setState(prevState => ({
+            pendingRequests: prevState.pendingRequests.filter(req => req.id !== userId)
+        }));
     }
 
     handleCopyRoomUrl() {
@@ -379,24 +384,30 @@ class CollaborationModal extends Component {
     async handleApproveRequest(requesterId, requesterUsername) {
         try {
             await this.props.onApproveJoinRequest(requesterId, requesterUsername);
-            this.setState(prevState => ({
-                pendingRequests: prevState.pendingRequests.filter(req => req.id !== requesterId)
-            }));
         } catch (error) {
             console.error('Failed to approve join request:', error);
             this.setState({ error: 'Failed to approve join request' });
+        } finally {
+            // Remove the request from the local list no matter what, so the
+            // host never gets stuck with a request that is already gone.
+            this.setState(prevState => ({
+                pendingRequests: prevState.pendingRequests.filter(req => req.id !== requesterId)
+            }));
         }
     }
 
     async handleDenyRequest(requesterId) {
         try {
             await this.props.onDenyJoinRequest(requesterId);
-            this.setState(prevState => ({
-                pendingRequests: prevState.pendingRequests.filter(req => req.id !== requesterId)
-            }));
         } catch (error) {
             console.error('Failed to deny join request:', error);
             this.setState({ error: 'Failed to deny join request' });
+        } finally {
+            // Remove the request from the local list no matter what, so the
+            // host never gets stuck with a request that is already gone.
+            this.setState(prevState => ({
+                pendingRequests: prevState.pendingRequests.filter(req => req.id !== requesterId)
+            }));
         }
     }
 
@@ -772,7 +783,20 @@ class CollaborationModal extends Component {
     renderConnectedStep() {
         const users = this.props.connectedUsers || [];
         const currentUser = users.find(user => user.id === this.props.currentUserId);
-        const isHost = currentUser && currentUser.isHost;
+        // Trust the connection state over the users list: the host may not
+        // appear in connectedUsers yet (or currentUserId may be momentarily
+        // null), and losing the host badge would hide the kick / approve /
+        // deny / privacy controls entirely.
+        let serviceIsHost = false;
+        try {
+            const service = CollaborationService.getInstance();
+            if (service && typeof service.isCurrentUserHost === 'function') {
+                serviceIsHost = Boolean(service.isCurrentUserHost());
+            }
+        } catch (error) {
+            // Fall through to the users-list check below.
+        }
+        const isHost = serviceIsHost || Boolean(currentUser && currentUser.isHost);
 
         return (
             <Box className={styles.content}>
