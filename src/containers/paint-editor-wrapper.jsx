@@ -74,7 +74,14 @@ class PaintEditorWrapper extends React.Component {
         }
     }
     fontInlineFn (svgString) {
-        return inlineSvgFonts(svgString, this.props.vm.renderer.customFonts);
+        try {
+            const customFonts = this.props.vm.renderer && this.props.vm.renderer.customFonts;
+            if (!customFonts) return svgString;
+            return inlineSvgFonts(svgString, customFonts);
+        } catch (e) {
+            console.warn('Font inlining failed, continuing with original SVG:', e);
+            return svgString;
+        }
     }
     render () {
         if (!this.props.imageId) return null;
