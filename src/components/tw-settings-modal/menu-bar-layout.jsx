@@ -31,7 +31,6 @@ const LABELS = {
     'mode': 'mw.menuBar.mode',
     'block-count': 'mw.menuBar.blockCount',
     'media-recorder': 'mw.settings.menuBar.videoRecorder',
-    'nova': 'mw.menuBar.nova',
     'save-status': 'mw.menuBar.saveStatus',
     'addons': 'mw.menuBar.addons',
     'settings': 'mw.menuBar.settings',
