@@ -90,12 +90,12 @@ const FontModal = props => (
             ) : props.screen === 'system' ? (
                 <AddSystemFont
                     fontManager={props.fontManager}
-                    onClose={props.onClose}
+                    onClose={props.onCancelAddFont}
                 />
             ) : props.screen === 'custom' ? (
                 <AddCustomFont
                     fontManager={props.fontManager}
-                    onClose={props.onClose}
+                    onClose={props.onCancelAddFont}
                 />
             ) : (
                 // Should never happen
@@ -160,7 +160,8 @@ FontModal.propTypes = {
     ]),
     onOpenSystemFonts: PropTypes.func.isRequired,
     // onOpenLibraryFonts: PropTypes.func.isRequired,
-    onOpenCustomFonts: PropTypes.func.isRequired
+    onOpenCustomFonts: PropTypes.func.isRequired,
+    onCancelAddFont: PropTypes.func.isRequired
 };
 
 export default injectIntl(FontModal);

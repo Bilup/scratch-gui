@@ -8,10 +8,44 @@ const RECEIVE_TIMEOUT_MS = 60 * 1000;
 // stops re-downloading in a loop and surfaces a real error instead.
 const MAX_RESYNC_ATTEMPTS = 5;
 
+/**
+ * Convert an ArrayBuffer to a base64 string. PeerJS serializes objects as
+ * JSON, which loses embedded ArrayBuffer fields — base64 encoding keeps
+ * binary data intact through the JSON transport.
+ * @param {ArrayBuffer} buffer Binary data.
+ * @returns {string} Base64-encoded string.
+ */
+const arrayBufferToBase64 = buffer => {
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+};
+
+/**
+ * Convert a base64 string back to an ArrayBuffer.
+ * @param {string} base64 Base64-encoded string.
+ * @returns {ArrayBuffer} Decoded binary data.
+ */
+const base64ToArrayBuffer = base64 => {
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes.buffer;
+};
+
 const toArrayBuffer = data => {
     if (data instanceof ArrayBuffer) return data;
     if (ArrayBuffer.isView(data)) {
         return data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
+    }
+    // Support base64-encoded strings (PeerJS JSON serialization safe).
+    if (typeof data === 'string') {
+        return base64ToArrayBuffer(data);
     }
     throw new Error('snapshot data must be binary');
 };
@@ -142,7 +176,10 @@ class HostSnapshotService extends Emitter {
         if (transfer.nextIndex >= transfer.chunkCount) return;
         const index = transfer.nextIndex++;
         const start = index * CHUNK_SIZE;
-        const data = transfer.buffer.slice(start, Math.min(start + CHUNK_SIZE, transfer.buffer.byteLength));
+        const raw = transfer.buffer.slice(start, Math.min(start + CHUNK_SIZE, transfer.buffer.byteLength));
+        // Encode as base64: PeerJS serializes objects as JSON, which would
+        // lose the embedded ArrayBuffer. The protocol allows string data.
+        const data = arrayBufferToBase64(raw);
         this.transport.send(peerId, makeSnapshot(SNAPSHOT.CHUNK, {
             transferId: transfer.transferId,
             index,

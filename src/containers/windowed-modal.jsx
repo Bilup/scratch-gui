@@ -28,6 +28,7 @@ class WindowedModal extends React.Component {
         this.createdWindow = false;
         this.windowId = this.props.id || 'modal-window';
         this.blocklyWidgetRepositionRaf_ = null;
+        this._resizeContentRafPending = false;
         this.addEventListeners();
     }
     
@@ -96,6 +97,7 @@ class WindowedModal extends React.Component {
             window.cancelAnimationFrame(this.blocklyWidgetRepositionRaf_);
             this.blocklyWidgetRepositionRaf_ = null;
         }
+        this._resizeContentRafPending = false;
         if (this.window) {
             // If the window is already being destroyed by the window system
             // (e.g. its close button was clicked), don't hide it again here or
@@ -142,7 +144,12 @@ class WindowedModal extends React.Component {
         if (!this.window || !this.contentContainer) return;
         if (this.props.id !== 'mwProjectThemeModal' && this.props.id !== 'simpleDialog') return;
 
+        // Avoid queuing multiple RAF callbacks when called rapidly
+        if (this._resizeContentRafPending) return;
+        this._resizeContentRafPending = true;
+
         window.requestAnimationFrame(() => {
+            this._resizeContentRafPending = false;
             if (!this.window || !this.contentContainer) return;
 
             const headerHeight = this.window.headerElement ? this.window.headerElement.offsetHeight : 0;
@@ -150,6 +157,10 @@ class WindowedModal extends React.Component {
             const desiredHeight = Math.max(0, headerHeight + contentHeight);
 
             if (!desiredHeight || !Number.isFinite(desiredHeight)) return;
+
+            // Skip if height hasn't changed to avoid unnecessary layout recalculations
+            const currentHeight = this.window.height;
+            if (desiredHeight === currentHeight) return;
 
             this.window.height = desiredHeight;
             this.window.element.style.height = `${desiredHeight}px`;
@@ -192,10 +203,7 @@ class WindowedModal extends React.Component {
                 this.window.show();
             }
             this.forceUpdate();
-            
-            setTimeout(() => {
-                this.resizeToContentIfNeeded();
-            }, 50);
+            this.resizeToContentIfNeeded();
             
             return;
         }

@@ -10,10 +10,44 @@ const CHUNK_SIZE = 64 * 1024;
 const MAX_BUFFERED_BYTES = 128 * 1024;
 const DRAIN_POLL_MS = 50;
 
+/**
+ * Convert an ArrayBuffer to a base64 string. PeerJS serializes objects as
+ * JSON, which loses embedded ArrayBuffer fields — base64 encoding keeps
+ * binary data intact through the JSON transport.
+ * @param {ArrayBuffer} buffer Binary data.
+ * @returns {string} Base64-encoded string.
+ */
+const arrayBufferToBase64 = buffer => {
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+};
+
+/**
+ * Convert a base64 string back to an ArrayBuffer.
+ * @param {string} base64 Base64-encoded string.
+ * @returns {ArrayBuffer} Decoded binary data.
+ */
+const base64ToArrayBuffer = base64 => {
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes.buffer;
+};
+
 const toArrayBuffer = data => {
     if (data instanceof ArrayBuffer) return data;
     if (ArrayBuffer.isView(data)) {
         return data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
+    }
+    // Support base64-encoded strings (PeerJS JSON serialization safe).
+    if (typeof data === 'string') {
+        return base64ToArrayBuffer(data);
     }
     throw new Error('asset data must be binary');
 };
@@ -94,10 +128,13 @@ class AssetChannel extends Emitter {
             await this._waitForDrain(peerId);
             if (this._destroyed) return false;
             const start = index * CHUNK_SIZE;
+            const raw = buffer.slice(start, Math.min(start + CHUNK_SIZE, buffer.byteLength));
+            // Encode as base64: PeerJS serializes objects as JSON, which
+            // would lose the embedded ArrayBuffer.
             send(makeAsset(ASSET.CHUNK, {
                 md5ext,
                 index,
-                data: buffer.slice(start, Math.min(start + CHUNK_SIZE, buffer.byteLength))
+                data: arrayBufferToBase64(raw)
             }));
         }
         return true;

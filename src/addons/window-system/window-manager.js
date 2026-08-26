@@ -131,11 +131,13 @@ window.addEventListener('pagehide', () => {
 });
 
 const copyStylesInto = doc => {
+    const fragment = doc.createDocumentFragment();
     for (const node of document.querySelectorAll('head style, head link[rel="stylesheet"], body style')) {
         const clone = doc.importNode(node, true);
         clone.setAttribute('data-mw-copied-style', '');
-        doc.head.appendChild(clone);
+        fragment.appendChild(clone);
     }
+    doc.head.appendChild(fragment);
 };
 
 const copyRootAttributesInto = doc => {
@@ -147,18 +149,31 @@ const copyRootAttributesInto = doc => {
 
 let styleObserver = null;
 let resyncScheduled = false;
+let resyncDebounceTimer = null;
+
+const RESYNC_DEBOUNCE_MS = 50;
 
 const scheduleResync = () => {
     if (resyncScheduled) return;
     resyncScheduled = true;
-    requestAnimationFrame(() => {
-        resyncScheduled = false;
-        for (const win of activeWindows.values()) {
-            if (win.resyncStyles) {
-                win.resyncStyles();
+
+    // Debounce: if multiple mutations arrive within a short window, batch them
+    // into a single RAF callback. This avoids expensive style re-copying when
+    // many style changes happen in rapid succession (e.g. theme switching).
+    if (resyncDebounceTimer) {
+        clearTimeout(resyncDebounceTimer);
+    }
+    resyncDebounceTimer = setTimeout(() => {
+        resyncDebounceTimer = null;
+        requestAnimationFrame(() => {
+            resyncScheduled = false;
+            for (const win of activeWindows.values()) {
+                if (win.resyncStyles) {
+                    win.resyncStyles();
+                }
             }
-        }
-    });
+        });
+    }, RESYNC_DEBOUNCE_MS);
 };
 
 const ensureStyleObserver = () => {
@@ -219,6 +234,10 @@ class AddonWindow {
         this.resizePointerId = null;
         this.resizeHandle = null;
         this.savedState = null; // For maximize/restore
+        this._pendingDragPos = null; // RAF-batched drag position
+        this._dragRaf = null; // Pending drag RAF id
+        this._pendingResize = null; // RAF-batched resize state
+        this._resizeRaf = null; // Pending resize RAF id
         
         this.createWindow();
         activeWindows.set(this.id, this);
@@ -488,19 +507,45 @@ class AddonWindow {
         const minY = 0;
         const maxY = window.innerHeight - minVisiblePixels;
         
-        this.x = Math.max(minX, Math.min(newX, maxX));
-        this.y = Math.max(minY, Math.min(newY, maxY));
+        const clampedX = Math.max(minX, Math.min(newX, maxX));
+        const clampedY = Math.max(minY, Math.min(newY, maxY));
         
-        this.element.style.left = `${this.x}px`;
-        this.element.style.top = `${this.y}px`;
-        
-        this.onMove(this.x, this.y);
+        // Batch position update via RAF to avoid layout thrashing
+        this._pendingDragPos = {x: clampedX, y: clampedY};
+        if (!this._dragRaf) {
+            this._dragRaf = window.requestAnimationFrame(() => {
+                this._dragRaf = null;
+                if (this._pendingDragPos) {
+                    const pos = this._pendingDragPos;
+                    this._pendingDragPos = null;
+                    this.x = pos.x;
+                    this.y = pos.y;
+                    this.element.style.left = `${pos.x}px`;
+                    this.element.style.top = `${pos.y}px`;
+                    this.onMove(pos.x, pos.y);
+                }
+            });
+        }
     };
     
     handleDragEnd = e => {
         if (e && this.dragPointerId !== null && e.pointerId !== this.dragPointerId) return;
 
         this.isDragging = false;
+        // Flush any pending RAF-batched position
+        if (this._dragRaf) {
+            window.cancelAnimationFrame(this._dragRaf);
+            this._dragRaf = null;
+        }
+        if (this._pendingDragPos) {
+            const pos = this._pendingDragPos;
+            this._pendingDragPos = null;
+            this.x = pos.x;
+            this.y = pos.y;
+            this.element.style.left = `${pos.x}px`;
+            this.element.style.top = `${pos.y}px`;
+            this.onMove(pos.x, pos.y);
+        }
         if (this.dragPointerId !== null) {
             try {
                 this.headerElement.releasePointerCapture(this.dragPointerId);
@@ -689,24 +734,50 @@ class AddonWindow {
             newY = this.resizeStart.top + (this.resizeStart.height - newHeight);
         }
         
-        // Update dimensions
-        this.width = newWidth;
-        this.height = newHeight;
-        this.x = newX;
-        this.y = newY;
-        
-        this.element.style.width = `${newWidth}px`;
-        this.element.style.height = `${newHeight}px`;
-        this.element.style.left = `${newX}px`;
-        this.element.style.top = `${newY}px`;
-        
-        this.onResize(newWidth, newHeight);
+        // Batch resize update via RAF to avoid layout thrashing
+        this._pendingResize = {width: newWidth, height: newHeight, x: newX, y: newY};
+        if (!this._resizeRaf) {
+            this._resizeRaf = window.requestAnimationFrame(() => {
+                this._resizeRaf = null;
+                if (this._pendingResize) {
+                    const r = this._pendingResize;
+                    this._pendingResize = null;
+                    this.width = r.width;
+                    this.height = r.height;
+                    this.x = r.x;
+                    this.y = r.y;
+                    this.element.style.width = `${r.width}px`;
+                    this.element.style.height = `${r.height}px`;
+                    this.element.style.left = `${r.x}px`;
+                    this.element.style.top = `${r.y}px`;
+                    this.onResize(r.width, r.height);
+                }
+            });
+        }
     };
     
     handleResizeEnd = e => {
         if (e && this.resizePointerId !== null && e.pointerId !== this.resizePointerId) return;
 
         this.isResizing = false;
+        // Flush any pending RAF-batched resize
+        if (this._resizeRaf) {
+            window.cancelAnimationFrame(this._resizeRaf);
+            this._resizeRaf = null;
+        }
+        if (this._pendingResize) {
+            const r = this._pendingResize;
+            this._pendingResize = null;
+            this.width = r.width;
+            this.height = r.height;
+            this.x = r.x;
+            this.y = r.y;
+            this.element.style.width = `${r.width}px`;
+            this.element.style.height = `${r.height}px`;
+            this.element.style.left = `${r.x}px`;
+            this.element.style.top = `${r.y}px`;
+            this.onResize(r.width, r.height);
+        }
         const handle = this.resizeHandle;
         if (handle && this.resizePointerId !== null) {
             try {
@@ -884,6 +955,18 @@ class AddonWindow {
         if (this._animTimer) {
             clearTimeout(this._animTimer);
             this._animTimer = null;
+        }
+
+        // Cancel any pending drag/resize RAF
+        if (this._dragRaf) {
+            window.cancelAnimationFrame(this._dragRaf);
+            this._dragRaf = null;
+            this._pendingDragPos = null;
+        }
+        if (this._resizeRaf) {
+            window.cancelAnimationFrame(this._resizeRaf);
+            this._resizeRaf = null;
+            this._pendingResize = null;
         }
 
         // Ask the window's owner whether closing is allowed. If the owner
