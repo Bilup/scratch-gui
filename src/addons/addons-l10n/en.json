@@ -865,5 +865,16 @@
   "project-size-display/stage": "Stage",
   "project-size-display/stage-size": "Stage Size",
   "project-size-display/sprite-size": "Sprite Size",
-  "project-size-display/unknown": "Unknown"
+  "project-size-display/unknown": "Unknown",
+  "resize-selected-item/resize": "Resize",
+  "resize-selected-item/width": "Width",
+  "resize-selected-item/height": "Height",
+  "resize-selected-item/constrainProportions": "Constrain proportions",
+  "resize-selected-item/apply": "Apply",
+  "resize-selected-item/size": "Size",
+  "resize-selected-item/x": "X",
+  "resize-selected-item/y": "Y",
+  "resize-selected-item/position": "Position",
+  "resize-selected-item/@name": "Resize selected item",
+  "resize-selected-item/@description": "Adds a button to the paint editor to resize selected items with precise width, height, and position values."
 }
