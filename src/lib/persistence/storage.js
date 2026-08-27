@@ -66,16 +66,6 @@ class Storage extends ScratchStorage {
                         .catch(() => null)
             });
         }
-        this.addWebStore(
-            [
-                this.AssetType.ImageVector,
-                this.AssetType.ImageBitmap,
-                this.AssetType.Sound,
-                this.AssetType.Font,
-                this.AssetType.CustomAsset
-            ],
-            asset => `${this.mistwarpAssetsBase}/${asset.assetId}.${asset.dataFormat}`
-        );
     }
     setProjectHost (projectHost) {
         this.projectHost = projectHost;

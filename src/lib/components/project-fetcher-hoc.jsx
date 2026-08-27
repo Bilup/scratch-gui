@@ -90,8 +90,9 @@ const fetchArrayBuffer = url => cachedFetchBuffer(url);
 
 const loadPlatformProject = async (id, source) => {
     const project = source || (await getMistWarpEditorProject(id)).project;
-    if (project.assetsBase && isHttpUrl(project.assetsBase)) {
-        storage.addMistWarpAssetStore(project.assetsBase);
+    const assetsBase = project.assetsCDN || project.assetsBase;
+    if (assetsBase && isHttpUrl(assetsBase)) {
+        storage.addMistWarpAssetStore(assetsBase);
     }
     rememberPlatformProject(project);
     const data = hasBridge() ?
