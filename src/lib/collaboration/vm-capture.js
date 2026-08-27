@@ -91,7 +91,7 @@ const wrapVmMethods = ({vm, patcher, isSuppressed, onLocalOp}) => {
         const result = original(...args);
         if (!isSuppressed() && result && result.then) {
             result.then(() => {
-                if (!isSuppressed()) captureNewTarget();
+                captureNewTarget();
             });
         }
         return result;
@@ -101,7 +101,7 @@ const wrapVmMethods = ({vm, patcher, isSuppressed, onLocalOp}) => {
         const result = original(...args);
         if (!isSuppressed() && result && result.then) {
             result.then(() => {
-                if (!isSuppressed()) captureNewTarget();
+                captureNewTarget();
             });
         }
         return result;
@@ -139,7 +139,6 @@ const wrapVmMethods = ({vm, patcher, isSuppressed, onLocalOp}) => {
     const captureCostumeAdd = (result, optTargetId) => {
         if (isSuppressed() || !result || !result.then) return;
         result.then(() => {
-            if (isSuppressed()) return;
             const targetId = optTargetId || editingTargetId();
             const target = targetId ? runtime.getTargetById(targetId) : null;
             if (!target) return;
@@ -207,7 +206,6 @@ const wrapVmMethods = ({vm, patcher, isSuppressed, onLocalOp}) => {
         const result = original(soundObject, optTargetId);
         if (!isSuppressed() && result && result.then) {
             result.then(() => {
-                if (isSuppressed()) return;
                 const targetId = optTargetId || editingTargetId();
                 const target = targetId ? runtime.getTargetById(targetId) : null;
                 if (!target) return;
