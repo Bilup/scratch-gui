@@ -516,5 +516,7 @@
   "todo/@name": "待办",
   "todo/@description": "记录作品的待办!",
   "project-size-display/@name": "项目大小显示",
-  "project-size-display/@description": "在角色栏底部显示作品大小、代码数量和选中角色/舞台的大小。"
+  "project-size-display/@description": "在角色栏底部显示作品大小、代码数量和选中角色/舞台的大小。",
+  "resize-selected-item/@name": "造型数据调整",
+  "resize-selected-item/@description": "在造型编辑器中添加一个按钮，用来调整选中素材的具体大小，位置"
 }
