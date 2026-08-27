@@ -4,7 +4,7 @@ const ZONES = [
         id: 'left',
         items: [
             '__errors', 'file', 'edit', 'mode', 'tools', 'bookmarks', 'settings',
-            '__divider', 'project-title', '__view-counter', 'media-recorder', 'nova', 'block-count',
+            '__divider', 'project-title', '__view-counter', 'media-recorder', 'block-count',
             'share', 'remix'
         ],
         extras: []

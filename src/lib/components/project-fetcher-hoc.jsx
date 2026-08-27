@@ -104,11 +104,15 @@ const fetchArrayBuffer = url => cachedFetchBuffer(url);
 
 const loadPlatformProject = async (id, source) => {
     const project = source || (await getMistWarpEditorProject(id)).project;
-    const [data, workspace] = await Promise.all([
-        hasBridge() ? bridgeFetch(project.projectJsonUrl) : fetchArrayBuffer(project.projectJsonUrl),
-        project.workspaceUrl ? fetchWorkspace(project.workspaceUrl) : Promise.resolve(null)
-    ]);
-    return {data, title: project.title, platformProject: project, workspace};
+    const assetsBase = project.assetsCDN || project.assetsBase;
+    if (assetsBase && isHttpUrl(assetsBase)) {
+        storage.addMistWarpAssetStore(assetsBase);
+    }
+    rememberPlatformProject(project);
+    const data = hasBridge() ?
+        await bridgeFetch(project.projectJsonUrl).catch(() => fetchArrayBuffer(project.projectJsonUrl)) :
+        await fetchArrayBuffer(project.projectJsonUrl);
+    return {data, title: project.title};
 };
 
 // TW: Temporary hack for project tokens

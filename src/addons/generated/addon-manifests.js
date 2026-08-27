@@ -86,7 +86,6 @@ import _show_fps from "../addons/show-fps/_manifest_entry.js";
 import _simple_project_analyzer from "../addons/simple-project-analyzer/_manifest_entry.js";
 import _background from "../addons/background/_manifest_entry.js";
 import _todo from "../addons/todo/_manifest_entry.js";
-import _novatheai from "../addons/novatheai/_manifest_entry.js";
 import _calculator from "../addons/calculator/_manifest_entry.js";
 import _project_size_display from "../addons/project-size-display/_manifest_entry.js";
 export default {
@@ -177,7 +176,6 @@ export default {
   "simple-project-analyzer": _simple_project_analyzer,
   "background": _background,
   "todo": _todo,
-  "novatheai": _novatheai,
   "calculator": _calculator,
   "project-size-display": _project_size_display,
 };

@@ -514,16 +514,31 @@ class CollabService extends Emitter {
 
     // ----- Host controls -----
 
+    /**
+     * Whether the current peer created (and therefore owns) the room.
+     * Derived directly from the connection state instead of from the
+     * connected-users list, so the host UI never loses the host badge (and
+     * the kick/approve/deny controls that depend on it) because of a stale
+     * users list.
+     * @returns {boolean} True when this peer is the room host.
+     */
+    isCurrentUserHost () {
+        return Boolean(this.isHost);
+    }
+
     kickUser (userId) {
-        if (this._session && this.isHost) this._session.kickUser(userId);
+        if (this._session && this.isHost) return this._session.kickUser(userId);
+        return false;
     }
 
     approveJoinRequest (requesterId) {
-        if (this._session && this.isHost) this._session.approveJoinRequest(requesterId);
+        if (this._session && this.isHost) return this._session.approveJoinRequest(requesterId);
+        return false;
     }
 
     denyJoinRequest (requesterId, reason) {
-        if (this._session && this.isHost) this._session.denyJoinRequest(requesterId, reason);
+        if (this._session && this.isHost) return this._session.denyJoinRequest(requesterId, reason);
+        return false;
     }
 
     changeRoomPrivacy (privacy) {
