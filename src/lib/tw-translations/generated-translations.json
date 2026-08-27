@@ -1281,6 +1281,7 @@
         "mw.settingsModal.menuBar.roturAccount": "Bilup Accounts 账号",
         "mw.settings.wallpaperUrl": "图片网址",
         "mw.settings.wallpaperPlaceholder": "输入图片网址...",
+        "mw.settings.wallpaperUpload": "上传图片",
         "mw.settings.removeWallpaper": "移除壁纸",
         "mw.settings.removeFont": "移除字体",
         "mw.settings.themeMoved": "主题和强调色适用于整个 Bilup，保存在您的 Bilup 设置中。",
@@ -1641,6 +1642,7 @@
         "gui.gui.findBlocks": "Find Blocks",
         "gui.stageHeader.stageHidden": "Hide the stage",
         "block-count/blocks": "{num, plural, one {1 block} other {# blocks}}",
-        "block-count/open-analysis": "Open project complexity analysis"
+        "block-count/open-analysis": "Open project complexity analysis",
+        "mw.settings.wallpaperUpload": "Upload Image"
     }
 }

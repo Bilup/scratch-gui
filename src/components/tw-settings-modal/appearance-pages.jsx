@@ -203,6 +203,7 @@ class UnconnectedWallpaperPage extends React.Component {
         this.state = {
             url: ''
         };
+        this.fileInputRef = React.createRef();
     }
     setWallpaper (patch) {
         const {theme, onChangeTheme} = this.props;
@@ -222,6 +223,18 @@ class UnconnectedWallpaperPage extends React.Component {
             history: (wallpaper.history || []).filter(u => u !== url),
             ...(wallpaper.url === url ? {url: ''} : null)
         });
+    };
+    handleFileUpload = e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = loadEvent => {
+            const dataUrl = loadEvent.target.result;
+            const history = [dataUrl, ...(this.props.theme.wallpaper.history || []).filter(u => u !== dataUrl)].slice(0, 10);
+            this.setWallpaper({url: dataUrl, history});
+        };
+        reader.readAsDataURL(file);
+        e.target.value = '';
     };
     render () {
         const {theme} = this.props;
@@ -268,6 +281,24 @@ class UnconnectedWallpaperPage extends React.Component {
                                 id="tw.wallpaper.add"
                             />
                         </button>
+                        <button
+                            type="button"
+                            className={styles.button}
+                            onClick={() => this.fileInputRef.current.click()}
+                        >
+                            <FormattedMessage
+                                defaultMessage="Upload Image"
+                                description="Button to upload a wallpaper image from local file"
+                                id="mw.settings.wallpaperUpload"
+                            />
+                        </button>
+                        <input
+                            ref={this.fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            style={{display: 'none'}}
+                            onChange={this.handleFileUpload}
+                        />
                     </div>
                 </form>
 
