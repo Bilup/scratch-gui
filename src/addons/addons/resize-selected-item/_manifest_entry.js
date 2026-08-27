@@ -19,7 +19,7 @@ const manifest = {
       "url": "style.css"
     }
   ],
-  "tags": ["new"],
+  "tags": ["new","recommended"],
   "dynamicDisable": true,
   "enabledByDefault": true
 };

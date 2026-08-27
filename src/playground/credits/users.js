@@ -102,11 +102,11 @@ const extensionDevelopers = [
         username: '勇敢的菠萝🍍',
         userID:'521949499',
     },
-    {
-        userUrlType: 'github',
-        username: 'Kimos Frontender',
-        userID: '180540701'
-    }
+    // {
+    //     userUrlType: 'github',
+    //     username: 'Kimos Frontender',
+    //     userID: '180540701'
+    // }
 ].map(fromHardcoded);
 
 const docs = [
