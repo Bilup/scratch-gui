@@ -1,135 +1,17 @@
-import {defineMessages, FormattedMessage, intlShape, injectIntl} from 'react-intl';
+import {FormattedMessage, injectIntl} from 'react-intl';
 import PropTypes from 'prop-types';
 import React from 'react';
 import classNames from 'classnames';
-import bindAll from 'lodash.bindall';
 import Box from '../box/box.jsx';
-import FancyCheckbox from '../tw-fancy-checkbox/checkbox.jsx';
 import Input from '../forms/input.jsx';
 import BufferedInputHOC from '../forms/buffered-input-hoc.jsx';
-import DocumentationLink from '../tw-documentation-link/documentation-link.jsx';
 import styles from './settings-modal.css';
-import helpIcon from './help-icon.svg';
 import {APP_NAME} from '../../lib/constants/brand.js';
+import {BooleanSetting, LearnMore, Setting} from './setting.jsx';
 
 /* eslint-disable react/no-multi-comp */
 
 const BufferedInput = BufferedInputHOC(Input);
-
-const messages = defineMessages({
-    title: {
-        defaultMessage: 'Project Settings',
-        description: 'Title of settings modal',
-        id: 'tw.settingsModal.title'
-    },
-    help: {
-        defaultMessage: 'Click for help',
-        description: 'Hover text of help icon in settings',
-        id: 'tw.settingsModal.help'
-    },
-    cloudServerPlaceholder: {
-        defaultMessage: 'ws://localhost:8000',
-        id: 'mw.settings.cloudServerPlaceholder'
-    }
-});
-
-const LearnMore = props => (
-    <React.Fragment>
-        {' '}
-        <DocumentationLink {...props}>
-            <FormattedMessage
-                defaultMessage="Learn more."
-                id="gui.alerts.cloudInfoLearnMore"
-            />
-        </DocumentationLink>
-    </React.Fragment>
-);
-
-class UnwrappedSetting extends React.Component {
-    constructor (props) {
-        super(props);
-        bindAll(this, [
-            'handleClickHelp'
-        ]);
-        this.state = {
-            helpVisible: false
-        };
-    }
-    componentDidUpdate (prevProps) {
-        if (this.props.active && !prevProps.active) {
-            // eslint-disable-next-line react/no-did-update-set-state
-            this.setState({
-                helpVisible: true
-            });
-        }
-    }
-    handleClickHelp () {
-        this.setState(prevState => ({
-            helpVisible: !prevState.helpVisible
-        }));
-    }
-    render () {
-        return (
-            <div
-                className={classNames(styles.setting, {
-                    [styles.active]: this.props.active
-                })}
-            >
-                <div className={styles.label}>
-                    {this.props.primary}
-                    <button
-                        className={styles.helpIcon}
-                        onClick={this.handleClickHelp}
-                        title={this.props.intl.formatMessage(messages.help)}
-                    >
-                        <img
-                            src={helpIcon}
-                            draggable={false}
-                        />
-                    </button>
-                </div>
-                {this.state.helpVisible && (
-                    <div className={styles.detail}>
-                        {this.props.help}
-                        {this.props.slug && <LearnMore slug={this.props.slug} />}
-                    </div>
-                )}
-                {this.props.secondary}
-            </div>
-        );
-    }
-}
-UnwrappedSetting.propTypes = {
-    intl: intlShape,
-    active: PropTypes.bool,
-    help: PropTypes.node,
-    primary: PropTypes.node,
-    secondary: PropTypes.node,
-    slug: PropTypes.string
-};
-const Setting = injectIntl(UnwrappedSetting);
-
-const BooleanSetting = ({value, onChange, label, ...props}) => (
-    <Setting
-        {...props}
-        active={value}
-        primary={
-            <label className={styles.label}>
-                <FancyCheckbox
-                    className={styles.checkbox}
-                    checked={value}
-                    onChange={onChange}
-                />
-                {label}
-            </label>
-        }
-    />
-);
-BooleanSetting.propTypes = {
-    onChange: PropTypes.func.isRequired,
-    value: PropTypes.bool.isRequired,
-    label: PropTypes.node.isRequired
-};
 
 const HighQualityPen = props => (
     <BooleanSetting
@@ -172,16 +54,17 @@ const CustomFPS = props => (
                 id="tw.settingsModal.fpsHelp"
                 values={{
                     customFramerate: (
-                        <a
+                        <button
+                            type="button"
+                            className={styles.inlineLinkButton}
                             onClick={props.onCustomizeFramerate}
-                            tabIndex="0"
                         >
                             <FormattedMessage
                                 defaultMessage="Click to use a framerate other than 30 or 60"
                                 description="FPS settings help"
                                 id="tw.settingsModal.fpsHelp.customFramerate"
                             />
-                        </a>
+                        </button>
                     )
                 }}
             />
@@ -277,7 +160,7 @@ const RemoveMiscLimits = props => (
                 id="tw.settingsModal.removeMiscLimitsHelp"
             />
         }
-        slug="remove-limits"
+        slug="remove-misc-limits"
     />
 );
 
@@ -347,7 +230,7 @@ const CaseSensitiveLists = props => (
 );
 
 CaseSensitiveLists.propTypes = {
-    value: PropTypes.string,
+    value: PropTypes.bool,
     onChange: PropTypes.func.isRequired
 };
 
@@ -374,7 +257,7 @@ const RealLayerIndexes = props => (
 );
 
 RealLayerIndexes.propTypes = {
-    value: PropTypes.string,
+    value: PropTypes.bool,
     onChange: PropTypes.func.isRequired
 };
 
@@ -472,47 +355,11 @@ CustomStageSize.propTypes = {
     onStageHeightChange: PropTypes.func
 };
 
-const CloudVariableServer = props => (
-    <Setting
-        primary={
-            <div className={classNames(styles.label, styles['cloud-variable-server'])}>
-                <FormattedMessage
-                    defaultMessage="Cloud Variable Server"
-                    description="Cloud Variable Server setting"
-                    id="tw.settingsModal.cloudVariableServer"
-                />
-                <BufferedInput
-                    value={props.cloudVariableServer}
-                    onSubmit={props.onCloudVariableServerChange}
-                    className={styles['cloud-variable-server-input']}
-                    type="text"
-                    placeholder={props.intl.formatMessage(messages.cloudServerPlaceholder)}
-                />
-            </div>
-        }
-        help={
-            <FormattedMessage
-                // eslint-disable-next-line max-len
-                defaultMessage="Changes the server used for cloud variables. The URL must start with ws:// or wss://."
-                description="Cloud Variable Server setting help"
-                id="tw.settingsModal.cloudVariableServerHelp"
-            />
-        }
-    />
-);
-
-CloudVariableServer.propTypes = {
-    cloudVariableServer: PropTypes.string,
-    onCloudVariableServerChange: PropTypes.func,
-    intl: intlShape
-};
-
-const InjectedCloudVariableServer = injectIntl(CloudVariableServer);
-
 const StoreProjectOptions = ({onStoreProjectOptions}) => (
     <div className={styles.setting}>
         <div>
             <button
+                type="button"
                 onClick={onStoreProjectOptions}
                 className={styles.button}
             >
@@ -525,10 +372,7 @@ const StoreProjectOptions = ({onStoreProjectOptions}) => (
             <p>
                 <FormattedMessage
                     // eslint-disable-next-line max-len
-                    defaultMessage="Stores the selected settings in the project so they will be automatically applied when {APP_NAME} loads this project. Warp timer and disable compiler will not be saved."
-                    values={{
-                        APP_NAME
-                    }}
+                    defaultMessage="Stores the selected settings in the project so they will be automatically applied when TurboWarp loads this project. Warp timer and disable compiler will not be saved."
                     description="Help text for the store settings in project button"
                     id="tw.settingsModal.storeProjectOptionsHelp"
                 />
@@ -598,17 +442,6 @@ const SettingsContent = props => (
         />
         <Header>
             <FormattedMessage
-                defaultMessage="Cloud Service"
-                description="Settings modal section"
-                id="tw.settingsModal.cloud"
-            />
-        </Header>
-        <InjectedCloudVariableServer
-            cloudVariableServer={props.cloudVariableServer}
-            onCloudVariableServerChange={props.onCloudVariableServerChange}
-        />
-        <Header>
-            <FormattedMessage
                 defaultMessage="Danger Zone"
                 description="Settings modal section"
                 id="tw.settingsModal.dangerZone"
@@ -673,10 +506,9 @@ SettingsContent.propTypes = {
     onStageWidthChange: PropTypes.func,
     stageHeight: PropTypes.number,
     onStageHeightChange: PropTypes.func,
-    onStoreProjectOptions: PropTypes.func,
-    cloudVariableServer: PropTypes.string,
-    onCloudVariableServerChange: PropTypes.func
+    onStoreProjectOptions: PropTypes.func
 };
 
 export {BooleanSetting};
+export {CustomFPS};
 export default injectIntl(SettingsContent);

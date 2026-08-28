@@ -1,53 +1,30 @@
 import PropTypes from 'prop-types';
-import {getItem as getStorageItem} from '../lib/utils/safe-storage.js';
 import React from 'react';
-import {defineMessages, injectIntl, intlShape} from 'react-intl';
 import bindAll from 'lodash.bindall';
 import {connect} from 'react-redux';
 import {closeSettingsModal} from '../reducers/modals';
-import {setCloudHost} from '../reducers/tw';
 import {setTheme} from '../reducers/theme';
 import SettingsModalComponent from '../components/tw-settings-modal/settings-modal.jsx';
 import {defaultStageSize} from '../reducers/custom-stage-size';
 import {CustomTheme} from '../lib/themes/custom-themes.js';
-import {setSearchParams} from '../lib/utils/navigation';
 import {getAppearanceSetting, setAppearanceSetting} from '../lib/mw-appearance-settings';
 import {getStyleSetting, getStyleSettings, setStyleSetting} from '../lib/mw-style-settings';
 import {applyTheme} from '../lib/themes/themePersistance';
 import {getHideOperatorArrows, setHideOperatorArrows} from '../lib/mw-operator-arrows';
 import {getVanillaPalette, setVanillaPalette} from '../lib/mw-vanilla-palette';
-import WindowManager from '../addons/window-system/window-manager';
+import {normalizeCustomFramerate} from '../lib/utils/framerate';
 
-const messages = defineMessages({
-    newFramerate: {
-        defaultMessage: 'New framerate:',
-        description: 'Prompt shown to choose a new framerate',
-        id: 'tw.menuBar.newFramerate'
-    }
-});
 
 class UsernameModal extends React.Component {
     constructor (props) {
         super(props);
 
-        // 隐私模式/存储被禁用的 WebView 中 localStorage 访问会抛 SecurityError，
-        // 必须安全读取，否则设置弹窗组件渲染失败导致白屏。
-        const safeGetItem = key => {
-            try {
-                return getStorageItem(key);
-            } catch (e) {
-                return null;
-            }
-        };
-
         this.state = {
-            optimizeAnimations: safeGetItem('mw:optimize-animations') === 'true',
-            debugMode: safeGetItem('mw:debug-mode') === 'true',
-            showFPSCounter: safeGetItem('mw:show-fps-counter') === 'true',
-            viewCompiledMode: safeGetItem('mw:view-compiled-mode') === 'true',
-            storeThemeInProject: safeGetItem('mw:store-theme-in-project') === 'true',
-            enableStageResize: safeGetItem('mw:enable-stage-resize') !== 'false',
-            windowAnimation: safeGetItem('mw:window-animation') !== 'false',
+            optimizeAnimations: localStorage.getItem('mw:optimize-animations') === 'true',
+            debugMode: localStorage.getItem('mw:debug-mode') === 'true',
+            showFPSCounter: localStorage.getItem('mw:show-fps-counter') === 'true',
+            viewCompiledMode: localStorage.getItem('mw:view-compiled-mode') === 'true',
+            storeThemeInProject: localStorage.getItem('mw:store-theme-in-project') === 'true',
             hideOperatorArrows: getHideOperatorArrows(),
             vanillaPalette: getVanillaPalette(),
             squareStageCorners: getAppearanceSetting('square-stage-corners'),
@@ -78,9 +55,6 @@ class UsernameModal extends React.Component {
             'handleShowFPSCounterChange',
             'handleViewCompiledModeChange',
             'handleStoreThemeInProjectChange',
-            'handleEnableStageResizeChange',
-            'handleCloudVariableServerChange',
-            'handleWindowAnimationChange',
             'handleHideOperatorArrowsChange',
             'handleVanillaPaletteChange',
             'handleSquareStageCornersChange',
@@ -97,12 +71,9 @@ class UsernameModal extends React.Component {
     handleFramerateChange (e) {
         this.props.vm.setFramerate(e.target.checked ? 60 : 30);
     }
-    async handleCustomizeFramerate () {
-        // prompt() returns Promise in desktop app
-        // eslint-disable-next-line no-alert
-        const newFramerate = await prompt(this.props.intl.formatMessage(messages.newFramerate), this.props.framerate);
-        const parsed = parseFloat(newFramerate);
-        if (isFinite(parsed) && parsed > 0 && parsed <= 500) {
+    handleCustomizeFramerate (value) {
+        const parsed = normalizeCustomFramerate(value);
+        if (parsed !== null) {
             this.props.vm.setFramerate(parsed);
         }
     }
@@ -182,7 +153,7 @@ class UsernameModal extends React.Component {
             return;
         }
 
-        const bilupTheme = (() => {
+        const mistwarpTheme = (() => {
             if (theme instanceof CustomTheme) {
                 return {
                     version: 1,
@@ -206,7 +177,7 @@ class UsernameModal extends React.Component {
         })();
 
         this.props.vm.storeProjectOptions({
-            bilupTheme
+            mistwarpTheme
         });
     }
 
@@ -253,32 +224,6 @@ class UsernameModal extends React.Component {
         } catch (err) {
             // ignore
         }
-    }
-
-    handleEnableStageResizeChange (e) {
-        this.setState({enableStageResize: e.target.checked});
-        try {
-            localStorage.setItem('mw:enable-stage-resize', e.target.checked);
-        } catch (err) {
-            // ignore
-        }
-    }
-
-    handleCloudVariableServerChange (value) {
-        if (value && !value.startsWith('ws://') && !value.startsWith('wss://')) {
-            return;
-        }
-
-        const currentUrl = new URL(window.location.href);
-        currentUrl.searchParams.set('cloud_host', value);
-        setSearchParams(currentUrl.searchParams);
-        this.props.onSetCloudHost(value);
-    }
-
-handleWindowAnimationChange (e) {
-        const enabled = e.target.checked;
-        this.setState({windowAnimation: enabled});
-        WindowManager.setAnimationsEnabled(enabled);
     }
 
     handleHideOperatorArrowsChange (e) {
@@ -370,9 +315,6 @@ handleWindowAnimationChange (e) {
                 onShowFPSCounterChange={this.handleShowFPSCounterChange}
                 onViewCompiledModeChange={this.handleViewCompiledModeChange}
                 onStoreThemeInProjectChange={this.handleStoreThemeInProjectChange}
-                onEnableStageResizeChange={this.handleEnableStageResizeChange}
-                onCloudVariableServerChange={this.handleCloudVariableServerChange}
-                onWindowAnimationChange={this.handleWindowAnimationChange}
                 onHideOperatorArrowsChange={this.handleHideOperatorArrowsChange}
                 hideOperatorArrows={this.state.hideOperatorArrows}
                 onVanillaPaletteChange={this.handleVanillaPaletteChange}
@@ -398,8 +340,6 @@ handleWindowAnimationChange (e) {
                 showFPSCounter={this.state.showFPSCounter}
                 viewCompiledMode={this.state.viewCompiledMode}
                 storeThemeInProject={this.state.storeThemeInProject}
-                enableStageResize={this.state.enableStageResize}
-                windowAnimation={this.state.windowAnimation}
                 theme={this.props.theme}
                 {...props}
             />
@@ -408,7 +348,6 @@ handleWindowAnimationChange (e) {
 }
 
 UsernameModal.propTypes = {
-    intl: intlShape,
     onClose: PropTypes.func,
     vm: PropTypes.shape({
         renderer: PropTypes.shape({
@@ -456,20 +395,18 @@ const mapStateToProps = state => ({
     // Handle possible undefined value for caseSensitiveLists
     caseSensitiveLists: !!state.scratchGui.tw.runtimeOptions.caseSensitiveLists,
     realLayerIndexes: !!state.scratchGui.tw.runtimeOptions.realLayerIndexes,
-    theme: state.scratchGui.theme?.theme,
-    cloudVariableServer: state.scratchGui.tw.cloudHost
+    theme: state.scratchGui.theme?.theme
 });
 
 const mapDispatchToProps = dispatch => ({
     onClose: () => dispatch(closeSettingsModal()),
-    onSetCloudHost: cloudHost => dispatch(setCloudHost(cloudHost)),
     onChangeTheme: theme => {
         dispatch(setTheme(theme));
         applyTheme(theme);
     }
 });
 
-export default injectIntl(connect(
+export default connect(
     mapStateToProps,
     mapDispatchToProps
-)(UsernameModal));
+)(UsernameModal);

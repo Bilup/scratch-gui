@@ -1,12 +1,6 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import {connect} from 'react-redux';
-import {
-    defineMessages,
-    FormattedMessage,
-    injectIntl,
-    intlShape
-} from 'react-intl';
 import VM from 'scratch-vm';
 import {
     BarChart3,
@@ -29,7 +23,7 @@ import {
 } from '../components/modal-sidebar/modal-sidebar.jsx';
 import {closeProjectMetadataModal} from '../reducers/modals';
 import {getLoadedProjectMeta} from '../lib/mw-project-metadata';
-import {getProject} from '../lib/community/api';
+import {getPerks, getProject} from '../lib/community/api';
 import {getRememberedPlatformProject} from '../lib/community/publish';
 
 import styles from '../components/mw-project-metadata/project-metadata-modal.css';
@@ -41,60 +35,6 @@ const LIMITS = {
     asset: 10 * MB,
     expandedJson: 1024 * MB
 };
-
-const messages = defineMessages({
-    notRecorded: {id: 'mw.projectMeta.notRecorded', defaultMessage: 'Not recorded'},
-    loading: {id: 'mw.projectMeta.loading', defaultMessage: 'Loading...'},
-    notUploaded: {id: 'mw.projectMeta.notUploaded', defaultMessage: 'Not uploaded'},
-    editorEstimate: {id: 'mw.projectMeta.editorEstimate', defaultMessage: 'Editor estimate'},
-    storedOnBilup: {id: 'mw.projectMeta.storedOnBilup', defaultMessage: 'Stored on Bilup'},
-    serverUsage: {id: 'mw.projectMeta.serverUsage', defaultMessage: 'Server usage'},
-    totalStored: {id: 'mw.projectMeta.totalStored', defaultMessage: 'Total stored'},
-    projectData: {id: 'mw.projectMeta.projectData', defaultMessage: 'Project data'},
-    assetsLabel: {id: 'mw.projectMeta.assets', defaultMessage: 'Assets'},
-    uploadLimits: {id: 'mw.projectMeta.uploadLimits', defaultMessage: 'Upload limits'},
-    compressedProjectData: {id: 'mw.projectMeta.compressedProjectData', defaultMessage: 'Compressed project data on server'},
-    exactSizeFromUpload: {id: 'mw.projectMeta.exactSizeFromUpload', defaultMessage: 'Exact size from the last upload'},
-    assetsInEditor: {id: 'mw.projectMeta.assetsInEditor', defaultMessage: 'Assets in the editor'},
-    assetsEditorNote: {id: 'mw.projectMeta.assetsEditorNote', defaultMessage: 'Costumes, sounds, fonts and custom assets'},
-    largestSingleAsset: {id: 'mw.projectMeta.largestSingleAsset', defaultMessage: 'Largest single asset'},
-    expandedProjectData: {id: 'mw.projectMeta.expandedProjectData', defaultMessage: 'Expanded project data on server'},
-    variableDataInEditor: {id: 'mw.projectMeta.variableDataInEditor', defaultMessage: 'Variable and list data in the editor'},
-    fastEstimateFromVM: {id: 'mw.projectMeta.fastEstimateFromVM', defaultMessage: 'Fast lower-bound estimate from the VM'},
-    storageDescription: {id: 'mw.projectMeta.storageDescription', defaultMessage: 'Current size, server usage and upload limits.'},
-    vmSizeNote: {id: 'mw.projectMeta.vmSizeNote', defaultMessage: 'Sizes in the editor come directly from the VM. Final compression is measured during upload.'},
-    bilupLimits: {id: 'mw.projectMeta.bilupLimits', defaultMessage: 'Bilup allows 20 MB of compressed project data, 1 GB expanded, 50 MB of assets, and 10 MB per asset.'},
-    sprites: {id: 'mw.projectMeta.sprites', defaultMessage: 'Sprites'},
-    costumes: {id: 'mw.projectMeta.costumes', defaultMessage: 'Costumes'},
-    sounds: {id: 'mw.projectMeta.sounds', defaultMessage: 'Sounds'},
-    blocks: {id: 'mw.projectMeta.blocks', defaultMessage: 'Blocks'},
-    extensions: {id: 'mw.projectMeta.extensions', defaultMessage: 'Extensions'},
-    none: {id: 'mw.projectMeta.none', defaultMessage: 'None'},
-    breakdownDescription: {id: 'mw.projectMeta.breakdownDescription', defaultMessage: 'A fast estimate from live assets, variables and lists in the VM.'},
-    largestParts: {id: 'mw.projectMeta.largestParts', defaultMessage: 'Largest parts'},
-    projectOverview: {id: 'mw.projectMeta.projectOverview', defaultMessage: 'Project overview'},
-    titleLabel: {id: 'mw.projectMeta.titleLabel', defaultMessage: 'Title'},
-    author: {id: 'mw.projectMeta.author', defaultMessage: 'Author'},
-    created: {id: 'mw.projectMeta.created', defaultMessage: 'Created'},
-    lastEdited: {id: 'mw.projectMeta.lastEdited', defaultMessage: 'Last edited'},
-    format: {id: 'mw.projectMeta.format', defaultMessage: 'Format'},
-    untitled: {id: 'mw.projectMeta.untitled', defaultMessage: 'Untitled'},
-    saveToAddAuthor: {id: 'mw.projectMeta.saveToAddAuthor', defaultMessage: 'Save this project to add @{roturUsername} as its author.'},
-    signInToAddAuthor: {id: 'mw.projectMeta.signInToAddAuthor', defaultMessage: 'Sign in to Bilup Accounts and save this project to add authorship.'},
-    authorId: {id: 'mw.projectMeta.authorId', defaultMessage: 'Author ID'},
-    platform: {id: 'mw.projectMeta.platform', defaultMessage: 'Platform'},
-    version: {id: 'mw.projectMeta.version', defaultMessage: 'Version'},
-    vmLabel: {id: 'mw.projectMeta.vm', defaultMessage: 'VM'},
-    userAgent: {id: 'mw.projectMeta.userAgent', defaultMessage: 'User agent'},
-    refreshing: {id: 'mw.projectMeta.refreshing', defaultMessage: 'Refreshing...'},
-    maxSizeExceeded: {id: 'mw.projectMeta.maxSizeExceeded', defaultMessage: 'Project exceeds storage limits'},
-    largeSizeWarning: {id: 'mw.projectMeta.largeSizeWarning', defaultMessage: 'Project is large'},
-    sizeOK: {id: 'mw.projectMeta.sizeOK', defaultMessage: 'Within storage limits'},
-    contentLabel: {id: 'mw.projectMeta.contentLabel', defaultMessage: 'Project details'},
-    sectionsAriaLabel: {id: 'mw.projectMeta.sectionsAriaLabel', defaultMessage: 'Project details sections'},
-    groupProject: {id: 'mw.projectMeta.groupProject', defaultMessage: 'Project'},
-    groupAnalysis: {id: 'mw.projectMeta.groupAnalysis', defaultMessage: 'Analysis'}
-});
 
 const formatTime = iso => {
     if (!iso) return null;
@@ -131,7 +71,7 @@ const variableValueSize = value => {
     return Math.round(size * value.length / samples);
 };
 
-const buildSizeReport = vm => {
+const buildSizeReport = (vm, limits = LIMITS) => {
     const entries = new Map();
     const addAsset = (asset, category, label) => {
         if (!asset) return;
@@ -199,9 +139,9 @@ const buildSizeReport = vm => {
         localAssetSize,
         variableDataSize,
         largestAsset,
-        overAssetLimit: largestAsset > LIMITS.asset,
-        overAssetsLimit: localAssetSize > LIMITS.assets,
-        overExpandedLimit: variableDataSize > LIMITS.expandedJson,
+        overAssetLimit: largestAsset > limits.asset,
+        overAssetsLimit: localAssetSize > limits.assets,
+        overExpandedLimit: variableDataSize > limits.expandedJson,
         contents: {
             sprites,
             costumes,
@@ -225,12 +165,7 @@ const Row = ({label, value}) => (
         <span className={styles.label}>{label}</span>
         <span className={styles.value}>
             {value === null || typeof value === 'undefined' || value === '' ? (
-                <span className={styles.emptyValue}>
-                    <FormattedMessage
-                        defaultMessage="Not recorded"
-                        id="mw.projectMeta.notRecorded"
-                    />
-                </span>
+                <span className={styles.emptyValue}>{'Not recorded'}</span>
             ) : value}
         </span>
     </div>
@@ -283,17 +218,33 @@ Meter.propTypes = {
     note: PropTypes.string
 };
 
-const ProjectMetadataModal = ({initialView, intl, onRequestClose, projectTitle, roturUsername, vm}) => {
+const ProjectMetadataModal = ({initialView, onRequestClose, projectTitle, roturUsername, vm}) => {
     const [view, setView] = React.useState(initialView);
     const [refresh, setRefresh] = React.useState(0);
     const [serverProject, setServerProject] = React.useState(null);
     const [serverLoading, setServerLoading] = React.useState(false);
+    const [perks, setPerks] = React.useState(null);
     const handleRefresh = React.useCallback(() => setRefresh(value => value + 1), []);
-    const report = React.useMemo(() => buildSizeReport(vm), [vm, refresh]);
+    const limits = React.useMemo(() => ({
+        ...LIMITS,
+        asset: perks?.mistwarp?.maxProjectAssetBytes || LIMITS.asset,
+        assets: perks?.mistwarp?.maxProjectAssetsBytes || LIMITS.assets
+    }), [perks]);
+    const report = React.useMemo(() => buildSizeReport(vm, limits), [vm, refresh, limits]);
     const meta = getLoadedProjectMeta() || {};
     const author = meta.author;
     const platform = meta.platform;
     const projectId = getRememberedPlatformProject();
+
+    React.useEffect(() => {
+        let active = true;
+        getPerks()
+            .then(data => active && setPerks(data.current || null))
+            .catch(() => active && setPerks(null));
+        return () => {
+            active = false;
+        };
+    }, [roturUsername]);
 
     React.useEffect(() => {
         if (!projectId) return;
@@ -316,26 +267,30 @@ const ProjectMetadataModal = ({initialView, intl, onRequestClose, projectTitle, 
 
     const serverStoredJson = serverProject && serverProject.storedJsonBytes;
     const hasLocalProblem = report.overAssetLimit || report.overAssetsLimit || report.overExpandedLimit;
-    const hasServerProblem = serverStoredJson > LIMITS.storedJson;
+    const hasServerProblem = serverStoredJson > limits.storedJson;
     const storageStatus = hasLocalProblem || hasServerProblem ?
-        intl.formatMessage(messages.maxSizeExceeded) :
+        'This project is over a MistWarp upload limit.' :
         serverProject ?
-            intl.formatMessage(messages.sizeOK) :
-            intl.formatMessage(messages.largeSizeWarning);
+            'The saved project is within MistWarp’s storage limits.' :
+            'MistWarp checks compressed project data when you upload.';
+    const perkSummary = perks ?
+        `${formatSize(limits.assets)} of assets per project, ${formatSize(limits.asset)} per asset, ` +
+            `${formatSize(perks.mistwarp.weeklyUploadBytes)} of uploads each week.` :
+        '';
     const groups = [
         {
-            label: intl.formatMessage(messages.groupProject),
+            label: 'Project',
             items: [
-                {id: 'project', label: intl.formatMessage({id: 'mw.projectMeta.overview', defaultMessage: 'Overview'}), icon: Info},
-                {id: 'contents', label: intl.formatMessage({id: 'mw.projectMeta.contents', defaultMessage: 'Contents'}), icon: BarChart3},
-                {id: 'technical', label: intl.formatMessage({id: 'mw.projectMeta.technical', defaultMessage: 'Technical metadata'}), icon: FileText}
+                {id: 'project', label: 'Overview', icon: Info},
+                {id: 'contents', label: 'Contents', icon: BarChart3},
+                {id: 'technical', label: 'Technical metadata', icon: FileText}
             ]
         },
         {
-            label: intl.formatMessage(messages.groupAnalysis),
+            label: 'Analysis',
             items: [
-                {id: 'optimiser', label: intl.formatMessage({id: 'mw.projectMeta.storage', defaultMessage: 'Bilup storage'}), icon: Gauge},
-                {id: 'breakdown', label: intl.formatMessage({id: 'mw.projectMeta.breakdown', defaultMessage: 'Size breakdown'}), icon: HardDrive}
+                {id: 'optimiser', label: 'MistWarp storage', icon: Gauge},
+                {id: 'breakdown', label: 'Size breakdown', icon: HardDrive}
             ]
         }
     ].map(group => Object.assign({}, group, {
@@ -349,109 +304,99 @@ const ProjectMetadataModal = ({initialView, intl, onRequestClose, projectTitle, 
             <React.Fragment>
                 <div className={styles.pageTitle}>
                     <div>
-                        <Header>
-                            <FormattedMessage
-                                defaultMessage="Bilup storage"
-                                id="mw.projectMeta.storage"
-                            />
-                        </Header>
-                        <p>{intl.formatMessage(messages.storageDescription)}</p>
+                        <Header>{'MistWarp storage'}</Header>
+                        <p>{'Current size, server usage and upload limits.'}</p>
                     </div>
                     <button
                         className={styles.refresh}
                         onClick={handleRefresh}
                     >
                         <RefreshCw size={16} />
-                        <FormattedMessage
-                            defaultMessage="Refresh"
-                            id="mw.projectMeta.refresh"
-                        />
+                        {'Refresh'}
                     </button>
                 </div>
                 <div className={hasLocalProblem || hasServerProblem ? styles.statusBad : styles.statusGood}>
                     <strong>{storageStatus}</strong>
                     <span>
-                        {intl.formatMessage(messages.vmSizeNote)}
+                        {'Sizes in the editor come directly from the VM. Final compression is measured during upload.'}
                     </span>
                 </div>
+                {perks && (
+                    <div className={styles.perkNotice}>
+                        <strong>{`${perks.tier} Rotur benefits are active`}</strong>
+                        <span>{perkSummary}</span>
+                    </div>
+                )}
                 <div className={styles.summary}>
                     <div>
-                        <span>{intl.formatMessage(messages.editorEstimate)}</span>
+                        <span>{'Editor estimate'}</span>
                         <strong>{formatSize(report.localEstimate)}</strong>
                     </div>
                     <div>
-                        <span>{intl.formatMessage(messages.storedOnBilup)}</span>
+                        <span>{'Stored on MistWarp'}</span>
                         <strong>
                             {serverProject ? formatSize(serverProject.sizeBytes || 0) :
-                                serverLoading ? intl.formatMessage(messages.loading) : intl.formatMessage(messages.notUploaded)}
+                                serverLoading ? 'Loading...' : 'Not uploaded'}
                         </strong>
                     </div>
                 </div>
                 {serverProject && (
                     <React.Fragment>
-                        <Header>
-                            <FormattedMessage
-                                defaultMessage="Server usage"
-                                id="mw.projectMeta.serverUsage"
-                            />
-                        </Header>
+                        <Header>{'Server usage'}</Header>
                         <Row
-                            label={intl.formatMessage(messages.totalStored)}
+                            label="Total stored"
                             value={formatSize(serverProject.sizeBytes || 0)}
                         />
                         <Row
-                            label={intl.formatMessage(messages.projectData)}
+                            label="Project data"
                             value={typeof serverProject.storedJsonBytes === 'number' ?
                                 formatSize(serverProject.storedJsonBytes) :
                                 null}
                         />
                         <Row
-                            label={intl.formatMessage(messages.assetsLabel)}
+                            label="Assets"
                             value={typeof serverProject.assetBytes === 'number' ?
                                 formatSize(serverProject.assetBytes) :
                                 null}
                         />
                     </React.Fragment>
                 )}
-                <Header>
-                    <FormattedMessage
-                        defaultMessage="Upload limits"
-                        id="mw.projectMeta.uploadLimits"
-                    />
-                </Header>
+                <Header>{'Upload limits'}</Header>
                 {typeof serverStoredJson === 'number' && (
                     <Meter
                         current={serverStoredJson}
-                        label={intl.formatMessage(messages.compressedProjectData)}
-                        limit={LIMITS.storedJson}
-                        note={intl.formatMessage(messages.exactSizeFromUpload)}
+                        label="Compressed project data on server"
+                        limit={limits.storedJson}
+                        note="Exact size from the last upload"
                     />
                 )}
                 <Meter
                     current={report.localAssetSize}
-                    label={intl.formatMessage(messages.assetsInEditor)}
-                    limit={LIMITS.assets}
-                    note={intl.formatMessage(messages.assetsEditorNote)}
+                    label="Assets in the editor"
+                    limit={limits.assets}
+                    note="Costumes, sounds, fonts and custom assets"
                 />
                 <Meter
                     current={report.largestAsset}
-                    label={intl.formatMessage(messages.largestSingleAsset)}
-                    limit={LIMITS.asset}
+                    label="Largest single asset"
+                    limit={limits.asset}
                 />
                 <Meter
                     current={serverProject && typeof serverProject.jsonBytes === 'number' ?
                         serverProject.jsonBytes :
                         report.variableDataSize}
                     label={serverProject && typeof serverProject.jsonBytes === 'number' ?
-                        intl.formatMessage(messages.expandedProjectData) :
-                        intl.formatMessage(messages.variableDataInEditor)}
-                    limit={LIMITS.expandedJson}
+                        'Expanded project data on server' :
+                        'Variable and list data in the editor'}
+                    limit={limits.expandedJson}
                     note={serverProject && typeof serverProject.jsonBytes === 'number' ?
-                        intl.formatMessage(messages.exactSizeFromUpload) :
-                        intl.formatMessage(messages.fastEstimateFromVM)}
+                        'Exact size from the last upload' :
+                        'Fast lower-bound estimate from the VM'}
                 />
                 <p className={styles.detail}>
-                    {intl.formatMessage(messages.bilupLimits)}
+                    {`Your current limits are ${formatSize(limits.storedJson)} of compressed project data, ` +
+                        `${formatSize(limits.expandedJson)} expanded, ${formatSize(limits.assets)} of assets, ` +
+                        `and ${formatSize(limits.asset)} per asset.`}
                 </p>
             </React.Fragment>
         );
@@ -459,33 +404,28 @@ const ProjectMetadataModal = ({initialView, intl, onRequestClose, projectTitle, 
     case 'contents':
         page = (
             <React.Fragment>
-                <Header>
-                    <FormattedMessage
-                        defaultMessage="Contents"
-                        id="mw.projectMeta.contents"
-                    />
-                </Header>
+                <Header>{'Contents'}</Header>
                 <Row
-                    label={intl.formatMessage(messages.sprites)}
+                    label="Sprites"
                     value={String(report.contents.sprites)}
                 />
                 <Row
-                    label={intl.formatMessage(messages.costumes)}
+                    label="Costumes"
                     value={String(report.contents.costumes)}
                 />
                 <Row
-                    label={intl.formatMessage(messages.sounds)}
+                    label="Sounds"
                     value={String(report.contents.sounds)}
                 />
                 <Row
-                    label={intl.formatMessage(messages.blocks)}
+                    label="Blocks"
                     value={String(report.contents.blocks)}
                 />
                 <Row
-                    label={intl.formatMessage(messages.extensions)}
+                    label="Extensions"
                     value={report.contents.extensions.length ?
                         report.contents.extensions.join(', ') :
-                        intl.formatMessage(messages.none)}
+                        'None'}
                 />
             </React.Fragment>
         );
@@ -493,14 +433,9 @@ const ProjectMetadataModal = ({initialView, intl, onRequestClose, projectTitle, 
     case 'breakdown':
         page = (
             <React.Fragment>
-                <Header>
-                    <FormattedMessage
-                        defaultMessage="Size breakdown"
-                        id="mw.projectMeta.breakdown"
-                    />
-                </Header>
+                <Header>{'Size breakdown'}</Header>
                 <p className={styles.detail}>
-                    {intl.formatMessage(messages.breakdownDescription)}
+                    {'A fast estimate from live assets, variables and lists in the VM.'}
                 </p>
                 <div className={styles.breakdown}>
                     {report.categories.map(category => (
@@ -521,12 +456,7 @@ const ProjectMetadataModal = ({initialView, intl, onRequestClose, projectTitle, 
                         </div>
                     ))}
                 </div>
-                <Header>
-                    <FormattedMessage
-                        defaultMessage="Largest parts"
-                        id="mw.projectMeta.largestParts"
-                    />
-                </Header>
+                <Header>{'Largest parts'}</Header>
                 <div className={styles.largest}>
                     {report.largest.map(entry => (
                         <div
@@ -547,34 +477,29 @@ const ProjectMetadataModal = ({initialView, intl, onRequestClose, projectTitle, 
     case 'technical':
         page = (
             <React.Fragment>
-                <Header>
-                    <FormattedMessage
-                        defaultMessage="Technical metadata"
-                        id="mw.projectMeta.technical"
-                    />
-                </Header>
+                <Header>{'Technical metadata'}</Header>
                 <Row
-                    label={intl.formatMessage(messages.authorId)}
+                    label="Author ID"
                     value={author && author.id}
                 />
                 <Row
-                    label={intl.formatMessage(messages.platform)}
+                    label="Platform"
                     value={platform && platform.name}
                 />
                 <Row
-                    label={intl.formatMessage(messages.version)}
+                    label="Version"
                     value={platform && platform.version}
                 />
                 <Row
-                    label={intl.formatMessage(messages.format)}
+                    label="Format"
                     value={meta.semver}
                 />
                 <Row
-                    label={intl.formatMessage(messages.vmLabel)}
+                    label="VM"
                     value={meta.vm}
                 />
                 <Row
-                    label={intl.formatMessage(messages.userAgent)}
+                    label="User agent"
                     value={meta.agent}
                 />
             </React.Fragment>
@@ -583,37 +508,32 @@ const ProjectMetadataModal = ({initialView, intl, onRequestClose, projectTitle, 
     default:
         page = (
             <React.Fragment>
-                <Header>
-                    <FormattedMessage
-                        defaultMessage="Project overview"
-                        id="mw.projectMeta.projectOverview"
-                    />
-                </Header>
+                <Header>{'Project overview'}</Header>
                 <Row
-                    label={intl.formatMessage(messages.titleLabel)}
-                    value={projectTitle || intl.formatMessage(messages.untitled)}
+                    label="Title"
+                    value={projectTitle || 'Untitled'}
                 />
                 <Row
-                    label={intl.formatMessage(messages.author)}
+                    label="Author"
                     value={author ? `@${author.username}` : null}
                 />
                 <Row
-                    label={intl.formatMessage(messages.created)}
+                    label="Created"
                     value={formatTime(meta.created || meta.createdAt)}
                 />
                 <Row
-                    label={intl.formatMessage(messages.lastEdited)}
+                    label="Last edited"
                     value={formatTime(meta.edited || meta.savedAt)}
                 />
                 <Row
-                    label={intl.formatMessage(messages.format)}
+                    label="Format"
                     value={meta.semver}
                 />
                 {!author && !meta.edited && !meta.savedAt && (
                     <p className={styles.detail}>
                         {roturUsername ?
-                            intl.formatMessage(messages.saveToAddAuthor, {roturUsername}) :
-                            intl.formatMessage(messages.signInToAddAuthor)}
+                            `Save this project to add @${roturUsername} as its author.` :
+                            'Sign in to Rotur and save this project to add authorship.'}
                     </p>
                 )}
             </React.Fragment>
@@ -623,7 +543,7 @@ const ProjectMetadataModal = ({initialView, intl, onRequestClose, projectTitle, 
     return (
         <Modal
             className={styles.modalContent}
-            contentLabel={intl.formatMessage(messages.contentLabel)}
+            contentLabel="Project details"
             id="projectMetadataModal"
             onRequestClose={onRequestClose}
             width={880}
@@ -631,7 +551,7 @@ const ProjectMetadataModal = ({initialView, intl, onRequestClose, projectTitle, 
         >
             <ModalSidebarLayout>
                 <ModalSidebar
-                    ariaLabel={intl.formatMessage(messages.sectionsAriaLabel)}
+                    ariaLabel="Project details sections"
                     width="wide"
                 >
                     {groups.map(group => (
@@ -659,7 +579,6 @@ const ProjectMetadataModal = ({initialView, intl, onRequestClose, projectTitle, 
 
 ProjectMetadataModal.propTypes = {
     initialView: PropTypes.string.isRequired,
-    intl: intlShape,
     onRequestClose: PropTypes.func.isRequired,
     projectTitle: PropTypes.string,
     roturUsername: PropTypes.string,
@@ -667,7 +586,7 @@ ProjectMetadataModal.propTypes = {
 };
 
 export {buildSizeReport, formatSize, LIMITS};
-export default injectIntl(connect(
+export default connect(
     state => ({
         initialView: state.scratchGui.modals.projectMetadataView || 'project',
         projectTitle: state.scratchGui.projectTitle,
@@ -677,4 +596,4 @@ export default injectIntl(connect(
     dispatch => ({
         onRequestClose: () => dispatch(closeProjectMetadataModal())
     })
-)(ProjectMetadataModal));
+)(ProjectMetadataModal);

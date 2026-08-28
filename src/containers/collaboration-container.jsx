@@ -7,6 +7,7 @@ import {defineMessages, injectIntl} from 'react-intl';
 import CollaborationModal from '../components/collaboration-modal/collaboration-modal.jsx';
 import CollaborationService from '../lib/collaboration/index.js';
 import NotificationSystem from '../lib/notification-manager.js';
+import api from '../community/api.js';
 
 const messages = defineMessages({
     chatPlaceholder: {
@@ -235,13 +236,30 @@ class CollaborationContainer extends Component {
         try {
             this.props.onSetError(null);
 
-            await this.collaborationService.connectToRoom(roomId, username, true, privacy, this.props.roturHandle);
+            let maxUsers = 3;
+            let tier = 'Free';
+            try {
+                const perks = await api.perks();
+                maxUsers = perks.current?.mistwarp?.collaborationLimit || maxUsers;
+                tier = perks.current?.tier || tier;
+            } catch (e) {
+                // The free room limit is the safe fallback when perks cannot be checked.
+            }
+            await this.collaborationService.connectToRoom(
+                roomId,
+                username,
+                true,
+                privacy,
+                this.props.roturHandle,
+                maxUsers
+            );
 
             // For hosts, set connected immediately since they're always connected
             this.props.onSetConnected(true);
             this.props.onSetRoomId(roomId);
             this.props.onSetRoomPrivacy(privacy);
             this.updateUsersList();
+            NotificationSystem.info(`Your ${tier} Rotur plan allows up to ${maxUsers} people in this room.`, 4500);
 
             // Try to attach to workspace if it exists
             this.tryAttachToWorkspace();

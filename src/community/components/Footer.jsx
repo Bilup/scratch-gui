@@ -1,9 +1,8 @@
 import React from 'react';
 import {Link} from 'react-router-dom';
-import {FormattedMessage} from 'react-intl';
 import {Github} from 'lucide-react';
 import {editorUrl} from '../api';
-import logo from '../assets/bilup-logo.svg';
+import logo from '../assets/mistwarp-logo.png';
 import styles from './Footer.module.css';
 
 const Footer = () => (
@@ -16,88 +15,35 @@ const Footer = () => (
                     alt=""
                 />
                 <div>
-                    <span className={styles.wordmark}>Bilup</span>
-                    <p className={styles.tagline}>
-                        <FormattedMessage
-                            defaultMessage="Elevate your creation."
-                            description="Footer tagline"
-                            id="mw.community.footer.tagline"
-                        />
-                    </p>
+                    <span className={styles.wordmark}>MistWarp</span>
+                    <p className={styles.tagline}>Build, share, and remix projects together.</p>
                 </div>
             </div>
 
             <div className={styles.columns}>
                 <div className={styles.column}>
-                    <span className={styles.columnTitle}>
-                        <FormattedMessage
-                            defaultMessage="Create"
-                            description="Footer column title"
-                            id="mw.community.nav.create"
-                        />
-                    </span>
-                    <a href={editorUrl()}>
-                        <FormattedMessage
-                            defaultMessage="Editor"
-                            description="Footer link to the editor"
-                            id="mw.community.footer.editor"
-                        />
-                    </a>
-                    <Link to="/mystuff">
-                        <FormattedMessage
-                            defaultMessage="My stuff"
-                            description="Footer link to user projects"
-                            id="mw.community.nav.myStuff"
-                        />
-                    </Link>
+                    <span className={styles.columnTitle}>Create</span>
+                    <a href={editorUrl()}>Editor</a>
+                    <Link to="/mystuff">My stuff</Link>
                 </div>
                 <div className={styles.column}>
-                    <span className={styles.columnTitle}>
-                        <FormattedMessage
-                            defaultMessage="Community"
-                            description="Footer column title"
-                            id="mw.community.footer.community"
-                        />
-                    </span>
-                    <Link to="/explore">
-                        <FormattedMessage
-                            defaultMessage="Explore"
-                            description="Footer link to explore"
-                            id="mw.community.nav.explore"
-                        />
-                    </Link>
-                    <Link to="/leaderboard">
-                        <FormattedMessage
-                            defaultMessage="Leaderboard"
-                            description="Footer link to the leaderboard"
-                            id="mw.community.footer.leaderboard"
-                        />
-                    </Link>
-                    <Link to="/news">
-                        <FormattedMessage
-                            defaultMessage="News"
-                            description="Footer link to news"
-                            id="mw.community.footer.news"
-                        />
-                    </Link>
-                    <a href="mailto:support@bilup.org">
-                        <FormattedMessage
-                            defaultMessage="Report a bug"
-                            description="Footer link to report a bug"
-                            id="mw.community.footer.reportBug"
-                        />
-                    </a>
+                    <span className={styles.columnTitle}>Community</span>
+                    <Link to="/explore">Explore</Link>
+                    <Link to="/spaces?kind=studio">Studios</Link>
+                    <Link to="/spaces?kind=challenge">Challenges</Link>
+                    <Link to="/themes">Themes</Link>
+                    <Link to="/leaderboard">Leaderboard</Link>
+                    <Link to="/news">News</Link>
+                    <Link to="/roadmap">Roadmap</Link>
+                    <Link to="/roadmap?new=bug">Report a bug</Link>
                 </div>
                 <div className={styles.column}>
-                    <span className={styles.columnTitle}>
-                        <FormattedMessage
-                            defaultMessage="More"
-                            description="Footer column title"
-                            id="mw.community.footer.more"
-                        />
-                    </span>
+                    <span className={styles.columnTitle}>More</span>
+                    <Link to="/perks">Paid perks</Link>
+                    <a href="/docs/">Documentation</a>
+                    <a href="https://packager.warp.mistium.com/">Packager</a>
                     <a
-                        href="https://github.com/bilup"
+                        href="https://github.com/mistwarp"
                         target="_blank"
                         rel="noreferrer"
                         className={styles.iconRow}
@@ -106,26 +52,22 @@ const Footer = () => (
                         GitHub
                     </a>
                     <a
-                        href="https://accounts.bilup.org"
+                        href="https://rotur.dev"
                         target="_blank"
                         rel="noreferrer"
-                    >Bilup Accounts</a>
-                    <Link to="/credits">
-                        <FormattedMessage
-                            defaultMessage="Credits"
-                            description="Footer link to credits"
-                            id="mw.community.footer.credits"
-                        />
-                    </Link>
+                    >Rotur</a>
+                    <a href="/credits">Credits</a>
+                </div>
+                <div className={styles.column}>
+                    <span className={styles.columnTitle}>Help and safety</span>
+                    <Link to="/support">Support</Link>
+                    <Link to="/trust">Trust, privacy, and terms</Link>
+                    <Link to="/status">Service status</Link>
                 </div>
             </div>
         </div>
         <div className={styles.legal}>
-            <FormattedMessage
-                defaultMessage="Bilup is a mod of TurboWarp and Scratch. Not affiliated with Scratch or the Scratch Foundation."
-                description="Footer legal text"
-                id="mw.community.footer.legal"
-            />
+            MistWarp is a mod of TurboWarp and Scratch. Not affiliated with Scratch or the Scratch Foundation.
         </div>
     </footer>
 );

@@ -1,23 +1,19 @@
 import React, {useState} from 'react';
-import {getItem as getStorageItem} from '../../lib/utils/safe-storage.js';
-import {FormattedMessage} from 'react-intl';
 import {Link} from 'react-router-dom';
 import {FlaskConical, X} from 'lucide-react';
-import {useIntl} from '../../lib/tw-use-intl.jsx';
 import styles from './BetaBanner.module.css';
 
 const DISMISS_KEY = 'mw:beta-banner-dismissed';
 
 const wasDismissed = () => {
     try {
-        return getStorageItem(DISMISS_KEY) === 'true';
+        return localStorage.getItem(DISMISS_KEY) === 'true';
     } catch (e) {
         return false;
     }
 };
 
 const BetaBanner = () => {
-    const intl = useIntl();
     const [dismissed, setDismissed] = useState(wasDismissed);
     if (dismissed) {
         return null;
@@ -37,17 +33,13 @@ const BetaBanner = () => {
                 className={styles.icon}
             />
             <span className={styles.text}>
-                <FormattedMessage
-                    defaultMessage="The new Bilup is a beta. Expect bugs, and please report them via {mailto}."
-                    id="mw.community.betaBanner.text"
-                    values={{
-                        mailto: <a href="mailto:support@bilup.org">support@bilup.org</a>
-                    }}
-                />
+                The new MistWarp is a beta. Expect bugs, and please report them on{' '}
+                <Link to="/roadmap?new=bug">the bug tracker</Link>.
             </span>
             <button
+                type="button"
                 className={styles.dismiss}
-                aria-label={intl.formatMessage({id: 'mw.community.betaBanner.dismiss', defaultMessage: 'Dismiss'})}
+                aria-label="Dismiss"
                 onClick={dismiss}
             >
                 <X size={15} />

@@ -66,7 +66,9 @@ const applyThemeFonts = async fonts => {
         '.scratch-render-overlays',
         '.scratch-render-overlays *',
         '.xterm',
-        '.xterm *'
+        '.xterm *',
+        '.monaco-editor',
+        '.monaco-editor *'
     ].map(selector => `:not(${selector})`).join('');
 
     // Create style element
@@ -85,8 +87,10 @@ const applyThemeFonts = async fonts => {
         [class*="gui_"],
         [class*="menu-bar_"],
         [class*="settings-menu_"],
+        [class*="blocklyText"],
+        .blocklyText,
         .blocklyHtmlInput,
-        button, input, textarea[class^="paint-editor_text-area_*"], select,
+        button, input, textarea, select,
         .menu-bar, .menu-item {
             font-family: inherit !important;
         }

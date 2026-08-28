@@ -1,6 +1,7 @@
 import LazyScratchBlocks from './tw-lazy-scratch-blocks';
 import {defaultBlockColors} from './themes';
 import {getVanillaPalette} from './mw-vanilla-palette';
+import {MULTIPLAYER_ENABLED} from './mistwarp-games/config.js';
 
 const categorySeparator = '<sep gap="36"/>';
 
@@ -962,7 +963,8 @@ const makeToolboxXML = function (isInitialSetup, isStage = true, targetId, categ
     backdropName = xmlEscape(backdropName);
     soundName = xmlEscape(soundName);
 
-    categoriesXML = categoriesXML.slice();
+    categoriesXML = categoriesXML.filter(categoryInfo =>
+        MULTIPLAYER_ENABLED || categoryInfo.id !== 'mistwarpMultiplayer');
     const moveCategory = categoryId => {
         const index = categoriesXML.findIndex(categoryInfo => categoryInfo.id === categoryId);
         if (index >= 0) {
@@ -983,15 +985,18 @@ const makeToolboxXML = function (isInitialSetup, isStage = true, targetId, categ
     const operatorsXML = moveCategory('operators') ||
         operators(isInitialSetup, isStage, targetId, colors.operators, vanilla);
     const stringsXML = strings(isInitialSetup, isStage, targetId, colors.strings, vanilla);
-    const patchingXML = moveCategory('patching');
     const variablesXML = moveCategory('data') || variables(isInitialSetup, isStage, targetId, colors.data);
     const myBlocksXML = moveCategory('procedures') || myBlocks(isInitialSetup, isStage, targetId, colors.more);
 
-    // Always display TurboWarp blocks as the first extension, if it exists,
-    // and also add an "is compiled?" block to the top.
-    let turbowarpXML = moveCategory('tw');
-    if (turbowarpXML && !turbowarpXML.includes(extraTurboWarpBlocks)) {
-        turbowarpXML = turbowarpXML.replace('<block', `${extraTurboWarpBlocks}<block`);
+    // Add MistWarp's extra reporters without removing the category from the extension order.
+    const turbowarpIndex = categoriesXML.findIndex(categoryInfo => categoryInfo.id === 'tw');
+    if (turbowarpIndex >= 0 && vanilla) {
+        categoriesXML.splice(turbowarpIndex, 1);
+    } else if (turbowarpIndex >= 0 && !categoriesXML[turbowarpIndex].xml.includes(extraTurboWarpBlocks)) {
+        categoriesXML[turbowarpIndex] = {
+            ...categoriesXML[turbowarpIndex],
+            xml: categoriesXML[turbowarpIndex].xml.replace('<block', `${extraTurboWarpBlocks}<block`)
+        };
     }
 
     const everything = [
@@ -1005,14 +1010,9 @@ const makeToolboxXML = function (isInitialSetup, isStage = true, targetId, categ
         sensingXML, gap,
         operatorsXML, gap,
         stringsXML, gap,
-        ...(patchingXML ? [patchingXML, gap] : []),
         variablesXML, gap,
         myBlocksXML
     ];
-
-    if (turbowarpXML && !vanilla) {
-        everything.push(gap, turbowarpXML);
-    }
 
     for (const extensionCategory of categoriesXML) {
         everything.push(gap, extensionCategory.xml);

@@ -12,9 +12,28 @@ import log from './utils/log.js';
  * there was no '.' in the string (e.g. 'my_image')
  */
 const extractFileName = function (nameExt) {
-    // There could be multiple dots, but get the stuff before the first .
-    const nameParts = nameExt.split('.', 1); // we only care about the first .
-    return nameParts[0];
+    const extensionIndex = nameExt.lastIndexOf('.');
+    return extensionIndex > 0 ? nameExt.slice(0, extensionIndex) : nameExt;
+};
+
+const inferFileType = name => {
+    const extension = name.includes('.') ? name.slice(name.lastIndexOf('.') + 1).toLowerCase() : '';
+    return {
+        aac: 'audio/aac',
+        bmp: 'image/bmp',
+        flac: 'audio/flac',
+        gif: 'image/gif',
+        jpeg: 'image/jpeg',
+        jpg: 'image/jpeg',
+        m4a: 'audio/mp4',
+        mp3: 'audio/mpeg',
+        oga: 'audio/ogg',
+        ogg: 'audio/ogg',
+        png: 'image/png',
+        svg: 'image/svg+xml',
+        wav: 'audio/wav',
+        webp: 'image/webp'
+    }[extension] || '';
 };
 
 /**
@@ -23,9 +42,11 @@ const extractFileName = function (nameExt) {
  * @param {Input} fileInput The <input/> element that contains the file being loaded
  * @param {Function} onload The function that handles loading the file
  * @param {Function} onerror The function that handles any error loading the file
+ * @returns {number} number of selected files
  */
 const handleFileUpload = function (fileInput, onload, onerror) {
-    const readFile = (i, files) => {
+    const files = fileInput.files;
+    const readFile = i => {
         if (i === files.length) {
             // Reset the file input value now that we have everything we need
             // so that the user can upload the same sound multiple times if
@@ -36,15 +57,32 @@ const handleFileUpload = function (fileInput, onload, onerror) {
         const file = files[i];
         const reader = new FileReader();
         reader.onload = () => {
-            const fileType = file.type;
-            const fileName = extractFileName(file.name);
-            onload(reader.result, fileType, fileName, i, files.length);
-            readFile(i + 1, files);
+            try {
+                const fileType = file.type || inferFileType(file.name);
+                const fileName = extractFileName(file.name);
+                onload(reader.result, fileType, fileName, i, files.length);
+            } catch (error) {
+                onerror(error, i, files.length);
+            } finally {
+                readFile(i + 1);
+            }
         };
-        reader.onerror = onerror;
-        reader.readAsArrayBuffer(file);
+        reader.onerror = error => {
+            try {
+                onerror(error, i, files.length);
+            } finally {
+                readFile(i + 1);
+            }
+        };
+        try {
+            reader.readAsArrayBuffer(file);
+        } catch (error) {
+            onerror(error, i, files.length);
+            readFile(i + 1);
+        }
     };
-    readFile(0, fileInput.files);
+    readFile(0);
+    return files.length;
 };
 
 /**
@@ -214,6 +252,13 @@ const soundUpload = function (fileData, fileType, storage, handleSound, handleEr
     case 'audio/mp3':
     case 'audio/mpeg': {
         soundFormat = storage.DataFormat.MP3;
+        break;
+    }
+    case 'application/ogg':
+    case 'audio/ogg': {
+        // OGG is already compressed and Web Audio can decode it directly. Converting it to
+        // uncompressed PCM WAV can make the asset more than ten times larger.
+        soundFormat = storage.DataFormat.OGG || 'ogg';
         break;
     }
     case 'audio/wav':

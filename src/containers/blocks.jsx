@@ -18,7 +18,7 @@ import {BLOCKS_DEFAULT_SCALE, STAGE_DISPLAY_SIZES} from '../lib/constants/layout
 import DropAreaHOC from '../lib/components/drop-area-hoc.jsx';
 import DragConstants from '../lib/constants/drag-constants';
 import SettingsStore from '../addons/settings-store-singleton';
-import {getVanillaPalette, VANILLA_PALETTE_CHANGED} from '../lib/mw-vanilla-palette';
+import {VANILLA_PALETTE_CHANGED} from '../lib/mw-vanilla-palette';
 import defineDynamicBlock from '../lib/utils/define-dynamic-block';
 import {Theme} from '../lib/themes';
 import {injectExtensionBlockTheme, injectExtensionCategoryTheme} from '../lib/themes/blockHelpers';
@@ -37,6 +37,7 @@ import {activateCustomProcedures, deactivateCustomProcedures} from '../reducers/
 import {setConnectionModalExtensionId} from '../reducers/connection-modal';
 import {updateMetrics} from '../reducers/workspace-metrics';
 import {isTimeTravel2020} from '../reducers/time-travel';
+import {showStandardAlert} from '../reducers/alerts';
 
 import installSystemClipboardForBlocks from '../lib/mw/system-clipboard.js';
 
@@ -92,21 +93,7 @@ const DroppableBlocks = DropAreaHOC([
     DragConstants.BACKPACK_CODE
 ])(BlocksComponent);
 
-// Virtualized (deferred) workspace rendering is cheap enough that it pays off
-// well below the original 100-block threshold, so load any non-trivial project
-// through it. This avoids a one-time full synchronous render of every block,
-// which is what causes the visible freeze when opening big projects.
-const DEFERRED_WORKSPACE_LOAD_MIN_BLOCKS = 40;
-
-/**
- * Returns true when the workspace is mounted, alive, and not disposed.
- * Every method that touches this.workspace MUST gate on this check to
- * prevent crashes when the workspace has been destroyed asynchronously
- * (tab switch, project load, unmount) before a callback fires.
- */
-const workspaceIsAlive = (ctx) => {
-    return !ctx.unmounted && ctx.workspace && !ctx.workspace.isDisposed;
-};
+const DEFERRED_WORKSPACE_LOAD_MIN_BLOCKS = 100;
 
 class Blocks extends React.Component {
     constructor (props) {
@@ -118,7 +105,7 @@ class Blocks extends React.Component {
         AddonHooks.blocklyCallbacks.forEach(i => i());
         AddonHooks.blocklyCallbacks.length = [];
 
-        installSystemClipboardForBlocks(this.ScratchBlocks, props.vm);
+        installSystemClipboardForBlocks(this.ScratchBlocks, props.vm, props.onShowImportError);
 
         bindAll(this, [
             'attachVM',
@@ -178,11 +165,6 @@ class Blocks extends React.Component {
         this.deferredWorkspaceLoad = null;
         this.toolboxStateUpdateTimeout = null;
         this.workspaceVisibilityRaf = null;
-        this.workspaceResizeRaf = null;
-        this.blocksResizeObserver = null;
-        this.lastBlocksWidth = null;
-        this.lastBlocksHeight = null;
-        this._toolboxXMLCache = null;
     }
     componentDidMount () {
         SettingsStore.addEventListener('setting-changed', this.handleAddonSettingChanged);
@@ -193,19 +175,10 @@ class Blocks extends React.Component {
         this.ScratchBlocks.statusButtonCallback = this.handleConnectionModalStart;
         this.ScratchBlocks.recordSoundCallback = this.handleOpenSoundRecorder;
 
-        installSystemClipboardForBlocks(this.ScratchBlocks, this.props.vm);
+        installSystemClipboardForBlocks(this.ScratchBlocks, this.props.vm, this.props.onShowImportError);
 
         this.ScratchBlocks.FieldColourSlider.activateEyedropper_ = this.props.onActivateColorPicker;
         this.ScratchBlocks.Procedures.externalProcedureDefCallback = this.props.onActivateCustomProcedures;
-        // Global (cross-target) procedures are defined in the stage. When one
-        // is edited from any target, the new mutation must be pushed back into
-        // the VM's stage blocks and broadcast so every flyout/workspace picks
-        // it up (the prototype lives in the stage, not the current workspace).
-        this.ScratchBlocks.Procedures.externalGlobalProcedureEditCallback =
-            (procCode, mutation) => {
-                const xml = this.ScratchBlocks.Xml.domToText(mutation);
-                this.props.vm.updateGlobalProcedure(procCode, xml);
-            };
         this.ScratchBlocks.ScratchMsgs.setLocale(this.props.locale);
 
         const Msg = this.ScratchBlocks.Msg;
@@ -236,34 +209,15 @@ class Blocks extends React.Component {
         );
         
         const startTime = performance.now();
-        try {
-            this.workspace = this.ScratchBlocks.inject(this.blocks, workspaceConfig);
-        } catch (injectError) {
-            // ScratchBlocks.inject() can fail if the DOM container is in an
-            // unexpected state (e.g. resized to 0x0 while the tab was hidden,
-            // or a race with the CSS transition that hides the blocks area).
-            // Log the error so it is debuggable, but don't crash the entire
-            // editor; the blocks area will be re-mounted when the user
-            // re-selects the blocks tab.
-            console.error('[Blocks] Failed to inject ScratchBlocks workspace:', injectError);
-            this.workspace = null;
-            return;
-        }
+        this.workspace = this.ScratchBlocks.inject(this.blocks, workspaceConfig);
         const injectTime = performance.now() - startTime;
-        if (process.env.DEBUG) console.log(`🧩 Blocks workspace injected in ${injectTime.toFixed(2)}ms`);
+        console.log(`🧩 Blocks workspace injected in ${injectTime.toFixed(2)}ms`);
         AddonHooks.blocklyWorkspace = this.workspace;
 
         // Register buttons under new callback keys for creating variables,
         // lists, and procedures from extensions.
 
-        let toolboxWorkspace;
-        try {
-            toolboxWorkspace = this.workspace.getFlyout().getWorkspace();
-        } catch (e) {
-            // Flyout may not be available yet; callbacks will be registered
-            // on the next workspace update.
-            console.warn('[Blocks] Could not get flyout workspace for button callbacks:', e);
-        }
+        const toolboxWorkspace = this.workspace.getFlyout().getWorkspace();
 
         try {
             const initialFlyoutWidth = this.workspace.getFlyout().getWidth();
@@ -282,24 +236,22 @@ class Blocks extends React.Component {
             this.ScratchBlocks.Procedures.createProcedureDefCallback_(this.workspace);
         };
 
-        if (toolboxWorkspace) {
-            toolboxWorkspace.registerButtonCallback('MAKE_A_VARIABLE', varListButtonCallback(''));
-            toolboxWorkspace.registerButtonCallback('MAKE_A_LIST', varListButtonCallback('list'));
-            toolboxWorkspace.registerButtonCallback('MAKE_A_PROCEDURE', procButtonCallback);
-            toolboxWorkspace.registerButtonCallback('OPEN_ASSETS_MODAL', () => {
-                this.props.onOpenAssetsModal();
-            });
-            toolboxWorkspace.registerButtonCallback('EXTENSION_CALLBACK', block => {
-                this.props.vm.handleExtensionButtonPress(block.callbackData_);
-            });
-            toolboxWorkspace.registerButtonCallback('OPEN_EXTENSION_DOCS', block => {
-                const docsURI = block.callbackData_;
-                const url = new URL(docsURI);
-                if (url.protocol === 'http:' || url.protocol === 'https:') {
-                    window.open(docsURI, '_blank');
-                }
-            });
-        }
+        toolboxWorkspace.registerButtonCallback('MAKE_A_VARIABLE', varListButtonCallback(''));
+        toolboxWorkspace.registerButtonCallback('MAKE_A_LIST', varListButtonCallback('list'));
+        toolboxWorkspace.registerButtonCallback('MAKE_A_PROCEDURE', procButtonCallback);
+        toolboxWorkspace.registerButtonCallback('OPEN_ASSETS_MODAL', () => {
+            this.props.onOpenAssetsModal();
+        });
+        toolboxWorkspace.registerButtonCallback('EXTENSION_CALLBACK', block => {
+            this.props.vm.handleExtensionButtonPress(block.callbackData_);
+        });
+        toolboxWorkspace.registerButtonCallback('OPEN_EXTENSION_DOCS', block => {
+            const docsURI = block.callbackData_;
+            const url = new URL(docsURI);
+            if (url.protocol === 'http:' || url.protocol === 'https:') {
+                window.open(docsURI, '_blank');
+            }
+        });
 
         // Store the xml of the toolbox that is actually rendered.
         // This is used in componentDidUpdate instead of prevProps, because
@@ -311,9 +263,7 @@ class Blocks extends React.Component {
         // componentDidUpdate so the toolbox will still correctly be updated
         this.setToolboxRefreshEnabled = this.workspace.setToolboxRefreshEnabled.bind(this.workspace);
         this.workspace.setToolboxRefreshEnabled = () => {
-            if (this.setToolboxRefreshEnabled) {
-                this.setToolboxRefreshEnabled(false);
-            }
+            this.setToolboxRefreshEnabled(false);
         };
 
         // @todo change this when blockly supports UI events
@@ -345,17 +295,10 @@ class Blocks extends React.Component {
         gentlyRequestPersistentStorage();
 
         setTimeout(() => {
-            if (!workspaceIsAlive(this)) return;
-            if (this.ScratchBlocks.Field && this.ScratchBlocks.Field.prewarmFontCache) {
+            if (!this.unmounted && this.ScratchBlocks.Field && this.ScratchBlocks.Field.prewarmFontCache) {
                 this.ScratchBlocks.Field.prewarmFontCache();
             }
         }, 0);
-
-        // Keep Blockly's layout in sync with the actual container size. Window
-        // resize events miss many real changes (CSS transitions, flex layout
-        // shifts from stage resizing, tab switches, addons resizing the pane),
-        // any of which can leave the blocks area misaligned or clipped.
-        this.setupBlocksResizeObserver();
     }
     shouldComponentUpdate (nextProps, nextState) {
         return (
@@ -374,10 +317,6 @@ class Blocks extends React.Component {
         );
     }
     componentDidUpdate (prevProps) {
-        // If workspace injection failed in componentDidMount, there is nothing
-        // to update. The component will re-mount on the next tab switch.
-        if (!this.workspace) return;
-
         // Update block colors when theme changes (check properties, not just reference)
         const prevTheme = prevProps.theme;
         const currentTheme = this.props.theme;
@@ -427,21 +366,18 @@ class Blocks extends React.Component {
 
                 // Check for pending procedure returns request
                 if (this.props.vm && this.props.vm._pendingProcedureReturns) {
-                    if (process.env.DEBUG) {
-                        console.log('Blocks: Detected pending procedure returns request, enabling...');
-                    }
+                    console.log('Blocks: Detected pending procedure returns request, enabling...');
                     this.props.vm._pendingProcedureReturns = false;
 
                     // Enable procedure returns after workspace is ready
                     setTimeout(() => {
-                        if (!workspaceIsAlive(this)) return;
                         this.handleEnableProcedureReturns();
 
                         // Also handle pending category selection
                         if (this.props.vm._pendingCategorySelection) {
                             const categoryId = this.props.vm._pendingCategorySelection;
                             this.props.vm._pendingCategorySelection = null;
-                            if (process.env.DEBUG) console.log('Blocks: Selecting pending category:', categoryId);
+                            console.log('Blocks: Selecting pending category:', categoryId);
                             this.handleCategorySelected(categoryId);
                         }
                     }, 100);
@@ -461,11 +397,11 @@ class Blocks extends React.Component {
             window.cancelAnimationFrame(this.workspaceVisibilityRaf);
             this.workspaceVisibilityRaf = window.requestAnimationFrame(() => {
                 this.workspaceVisibilityRaf = null;
-                if (workspaceIsAlive(this)) {
+                if (this.workspace && !this.unmounted) {
                     if (!localeChanged) {
                         this.workspace.refreshToolboxSelection_();
                     }
-                    this.resizeBlocksWorkspace();
+                    this.workspace.resize();
                 }
             });
         } else {
@@ -480,22 +416,10 @@ class Blocks extends React.Component {
         this.detachVM();
         this.unmounted = true;
         this.cancelDeferredWorkspaceLoad();
-        // Guard: workspace may not have been created if componentDidMount
-        // threw before ScratchBlocks.inject() completed.
-        if (this.workspace) {
-            this.workspace.dispose();
-        }
+        this.workspace.dispose();
         clearTimeout(this.toolboxUpdateTimeout);
         clearTimeout(this.toolboxStateUpdateTimeout);
         window.cancelAnimationFrame(this.workspaceVisibilityRaf);
-        if (this.workspaceResizeRaf) {
-            window.cancelAnimationFrame(this.workspaceResizeRaf);
-            this.workspaceResizeRaf = null;
-        }
-        if (this.blocksResizeObserver) {
-            this.blocksResizeObserver.disconnect();
-            this.blocksResizeObserver = null;
-        }
 
         // Cancel any pending debounced calls
         this.onTargetsUpdate.cancel();
@@ -718,7 +642,6 @@ class Blocks extends React.Component {
     requestToolboxUpdate () {
         clearTimeout(this.toolboxUpdateTimeout);
         this.toolboxUpdateTimeout = setTimeout(() => {
-            if (!workspaceIsAlive(this)) return;
             this.updateToolbox();
         }, 0);
     }
@@ -726,27 +649,13 @@ class Blocks extends React.Component {
         this.ScratchBlocks.ScratchMsgs.setLocale(this.props.locale);
         this.props.vm.setLocale(this.props.locale, this.props.messages)
             .then(() => {
-                // The workspace may have been disposed or destroyed while the
-                // locale was being applied asynchronously (tab switch, project
-                // load, or component unmount). Guard against stale callbacks.
-                if (!workspaceIsAlive(this)) return;
-                try {
-                    this.workspace.getFlyout().setRecyclingEnabled(false);
-                    this.props.vm.refreshWorkspace();
-                    this.requestToolboxUpdate();
-                    // The initial toolbox in the redux store is generated before
-                    // scratch-blocks finishes loading, so block text (operators,
-                    // strings, etc.) falls back to English. Rebuild it now that
-                    // the translated block messages are available.
-                    this.requestToolboxStateUpdate();
-                    this.withToolboxUpdates(() => {
-                        this.workspace.getFlyout().setRecyclingEnabled(true);
-                    });
-                } catch (e) {
-                    // The workspace may have been disposed while the locale was
-                    // being applied. Don't let a stray error crash the editor.
-                    log.error(e);
-                }
+                if (this.unmounted) return;
+                this.workspace.getFlyout().setRecyclingEnabled(false);
+                this.props.vm.refreshWorkspace();
+                this.requestToolboxUpdate();
+                this.withToolboxUpdates(() => {
+                    this.workspace.getFlyout().setRecyclingEnabled(true);
+                });
             });
     }
 
@@ -889,7 +798,7 @@ class Blocks extends React.Component {
             this.requestToolboxUpdate();
 
             setTimeout(() => {
-                if (workspaceIsAlive(this)) {
+                if (this.workspace && !this.unmounted) {
                     this.workspace.refreshToolboxSelection_();
                     if (typeof this.workspace.markDraggedBlockAsDirty === 'function') {
                         this.workspace.markDraggedBlockAsDirty();
@@ -941,7 +850,7 @@ class Blocks extends React.Component {
 
             // Additional retry to ensure colors stick after all re-renders
             setTimeout(() => {
-                if (workspaceIsAlive(this)) {
+                if (this.workspace && !this.unmounted) {
                     if (newColors.toolbox) {
                         const toolboxSvg = document.querySelector('svg.blocklyToolbox');
                         const toolboxBackground = document.querySelector(
@@ -976,11 +885,6 @@ class Blocks extends React.Component {
 
     updateToolbox () {
         this.toolboxUpdateTimeout = false;
-
-        // The toolbox may not be initialized yet, or the workspace may have been
-        // disposed while a toolbox update was queued. Guard against both so a
-        // stray update cannot crash the blocks area.
-        if (this.unmounted || !this.workspace || !this.workspace.toolbox_) return;
 
         const categoryId = this.workspace.toolbox_.getSelectedCategoryId();
         const offset = this.workspace.toolbox_.getCategoryScrollOffset();
@@ -1029,19 +933,11 @@ class Blocks extends React.Component {
 
     attachVM () {
         this.workspace.addChangeListener(this.props.vm.blockListener);
-        try {
-            this.flyoutWorkspace = this.workspace
-                .getFlyout()
-                .getWorkspace();
-            this.flyoutWorkspace.addChangeListener(this.props.vm.flyoutBlockListener);
-            this.flyoutWorkspace.addChangeListener(this.props.vm.monitorBlockListener);
-        } catch (e) {
-            // Flyout may not be available yet (e.g. workspace was injected
-            // but the flyout is still initializing). The VM listeners will
-            // still be attached, and the flyout listeners will be re-attached
-            // on the next workspace update.
-            console.warn('[Blocks] Could not attach flyout listeners:', e);
-        }
+        this.flyoutWorkspace = this.workspace
+            .getFlyout()
+            .getWorkspace();
+        this.flyoutWorkspace.addChangeListener(this.props.vm.flyoutBlockListener);
+        this.flyoutWorkspace.addChangeListener(this.props.vm.monitorBlockListener);
         this.props.vm.addListener('SCRIPT_GLOW_ON', this.onScriptGlowOn);
         this.props.vm.addListener('SCRIPT_GLOW_OFF', this.onScriptGlowOff);
         this.props.vm.addListener('BLOCK_GLOW_ON', this.onBlockGlowOn);
@@ -1058,8 +954,6 @@ class Blocks extends React.Component {
         this.props.vm.addListener('PERIPHERAL_DISCONNECTED', this.handleStatusButtonUpdate);
     }
     detachVM () {
-        // VM listeners must always be cleaned up, even if the workspace was
-        // never created (componentDidMount threw before inject()).
         this.props.vm.removeListener('SCRIPT_GLOW_ON', this.onScriptGlowOn);
         this.props.vm.removeListener('SCRIPT_GLOW_OFF', this.onScriptGlowOff);
         this.props.vm.removeListener('BLOCK_GLOW_ON', this.onBlockGlowOn);
@@ -1074,9 +968,6 @@ class Blocks extends React.Component {
         this.props.vm.removeListener('EXTENSIONS_REORDERED', this.handleExtensionsChanged);
         this.props.vm.removeListener('PERIPHERAL_CONNECTED', this.handleStatusButtonUpdate);
         this.props.vm.removeListener('PERIPHERAL_DISCONNECTED', this.handleStatusButtonUpdate);
-        // Workspace operations are only safe if the workspace was created.
-        if (!this.workspace) return;
-        this.workspace.removeChangeListener(this.props.vm.blockListener);
     }
 
     updateToolboxBlockValue (id, value) {
@@ -1099,56 +990,7 @@ class Blocks extends React.Component {
             });
         }
     }
-    // Build a <mutation> DOM element from a VM procedure mutation object so it can
-    // be handed to scratch-blocks for the "我的积木" flyout category.
-    procedureMutationToDom (mutation) {
-        const el = document.createElement('mutation');
-        el.setAttribute('proccode', String(mutation.proccode || ''));
-        el.setAttribute('argumentids', String(mutation.argumentids || '[]'));
-        el.setAttribute('argumentnames', String(mutation.argumentnames || '[]'));
-        el.setAttribute('argumentdefaults', String(mutation.argumentdefaults || '[]'));
-        el.setAttribute('warp', String(mutation.warp === undefined ? 'false' : mutation.warp));
-        if (mutation.global) {
-            el.setAttribute('global', 'true');
-        }
-        if (mutation.customcolor) {
-            el.setAttribute('customcolor', String(mutation.customcolor));
-        }
-        if (mutation.customFolder) {
-            el.setAttribute('customFolder', String(mutation.customFolder));
-        }
-        return el;
-    }
-    // Collect the global (cross-target) procedure definitions stored in the stage
-    // so they can be surfaced in every target's "我的积木" flyout.
-    getGlobalProcedureMutations () {
-        const stage = this.props.vm.runtime.getTargetForStage();
-        if (!stage || !stage.blocks || !stage.blocks._blocks) {
-            return [];
-        }
-        const mutations = [];
-        const blocks = stage.blocks._blocks;
-        for (const blockId in blocks) {
-            if (!Object.prototype.hasOwnProperty.call(blocks, blockId)) continue;
-            const block = blocks[blockId];
-            if (block.opcode !== 'procedures_prototype' || !block.mutation) continue;
-            const global = block.mutation.global;
-            if (global !== true && global !== 'true') continue;
-            mutations.push(this.procedureMutationToDom(block.mutation));
-        }
-        return mutations;
-    }
-    updateGlobalProcedures () {
-        if (!this.ScratchBlocks || !this.ScratchBlocks.Procedures ||
-            typeof this.ScratchBlocks.Procedures.setGlobalProcedureMutations !== 'function') {
-            return;
-        }
-        this.ScratchBlocks.Procedures.setGlobalProcedureMutations(
-            this.getGlobalProcedureMutations()
-        );
-    }
     onWorkspaceMetricsChange () {
-        if (!workspaceIsAlive(this)) return;
         const target = this.props.vm.editingTarget;
         if (target && target.id) {
             this.props.updateMetrics({
@@ -1162,23 +1004,18 @@ class Blocks extends React.Component {
     // The workspace records glow state by id whether or not the block is
     // rendered, so a script that is offscreen still comes back glowing.
     onScriptGlowOn (data) {
-        if (!workspaceIsAlive(this)) return;
         this.workspace.glowStack(data.id, true);
     }
     onScriptGlowOff (data) {
-        if (!workspaceIsAlive(this)) return;
         this.workspace.glowStack(data.id, false);
     }
     onBlockGlowOn (data) {
-        if (!workspaceIsAlive(this)) return;
         this.workspace.glowBlock(data.id, true);
     }
     onBlockGlowOff (data) {
-        if (!workspaceIsAlive(this)) return;
         this.workspace.glowBlock(data.id, false);
     }
     onVisualReport (data) {
-        if (!workspaceIsAlive(this)) return;
         if (!this.workspace.getBlockById(data.id)) return;
         this.workspace.reportValue(data.id, data.value, data.fullValue);
     }
@@ -1194,45 +1031,23 @@ class Blocks extends React.Component {
             const stageCostumes = stage.getCostumes();
             const targetCostumes = target.getCostumes();
             const targetSounds = target.getSounds();
-            const costumeName = targetCostumes[targetCostumes.length - 1].name;
-            const backdropName = stageCostumes[stageCostumes.length - 1].name;
-            const soundName = targetSounds.length > 0 ? targetSounds[targetSounds.length - 1].name : '';
-            const customAssets = runtime.assetManager.assets;
-            const assetName = customAssets.length > 0 ? customAssets[0].name : '';
-
-            // Building the toolbox XML walks every block of the current target
-            // (runtime.getBlocksXML) and is expensive for big projects. It only
-            // needs to change when one of its inputs changes, so memoize it.
-            // The block count is included so adding/removing variables, custom
-            // blocks or other flyout-affecting blocks still rebuilds.
-            const blocksCount = target.blocks && target.blocks._blocks ?
-                Object.keys(target.blocks._blocks).length : 0;
-            const key = `${target.id}|${target.isStage}|${this.props.theme.id}|` +
-                `${costumeName}|${backdropName}|${soundName}|${assetName}|` +
-                `${blocksCount}|${runtime._blockInfo.length}|${getVanillaPalette()}`;
-            if (this._toolboxXMLCache && this._toolboxXMLCache.key === key) {
-                return this._toolboxXMLCache.xml;
-            }
-
             const dynamicBlocksXML = injectExtensionCategoryTheme(
-                runtime.getBlocksXML(target),
+                this.props.vm.runtime.getBlocksXML(target),
                 this.props.theme
             );
-            const toolboxXML = makeToolboxXML(false, target.isStage, target.id, dynamicBlocksXML,
-                costumeName, backdropName, soundName,
+            const customAssets = runtime.assetManager.assets;
+            return makeToolboxXML(false, target.isStage, target.id, dynamicBlocksXML,
+                targetCostumes[targetCostumes.length - 1].name,
+                stageCostumes[stageCostumes.length - 1].name,
+                targetSounds.length > 0 ? targetSounds[targetSounds.length - 1].name : '',
                 this.props.theme.getBlockColors(),
-                assetName);
-            this._toolboxXMLCache = {key, xml: toolboxXML};
-            return toolboxXML;
+                customAssets.length > 0 ? customAssets[0].name : ''
+            );
         } catch {
             return null;
         }
     }
     onWorkspaceUpdate (data) {
-        // Refresh the cross-target procedure list before the toolbox rebuild so
-        // the "我的积木" flyout always shows the latest global definitions.
-        this.updateGlobalProcedures();
-
         // Batch this with target-dependent extension updates. A sprite switch
         // should describe and rebuild the toolbox once, not once per event.
         this.requestToolboxStateUpdate();
@@ -1242,68 +1057,24 @@ class Blocks extends React.Component {
         }
 
         // Remove and reattach the workspace listener (but allow flyout events)
-        if (!workspaceIsAlive(this)) return;
         this.cancelDeferredWorkspaceLoad();
         this.workspace.removeChangeListener(this.props.vm.blockListener);
-
-        // The VM hands over blocks as plain descriptions to avoid the cost of
-        // serializing every block to XML and parsing it back into a DOM. Use
-        // them directly when the deferred (virtualized) loader is available;
-        // only the lightweight header (variables / comments / frames) needs to
-        // go through the XML DOM. Fall back to the full XML path otherwise.
-        const hasDescs = !!data.blocks && !!data.blocks.blocks;
-        const blockCount = hasDescs ? Object.keys(data.blocks.blocks).length : 0;
+        const dom = this.ScratchBlocks.Xml.textToDom(data.xml);
         const useDeferredLoad = !!this.ScratchBlocks.Xml.clearWorkspaceAndLoadFromXmlDeferred &&
-            (blockCount >= DEFERRED_WORKSPACE_LOAD_MIN_BLOCKS ||
+            (dom.getElementsByTagName('block').length >= DEFERRED_WORKSPACE_LOAD_MIN_BLOCKS ||
                 Object.keys(this.workspace.blockDB_ || {}).length >= DEFERRED_WORKSPACE_LOAD_MIN_BLOCKS);
-        // Re-apply the workspace layout once the (possibly asynchronous) load
-        // finishes. The container may have been resized (stage zoom, tab switch,
-        // window resize) while the blocks were loading, which would otherwise
-        // leave the blocks area misaligned or clipped.
-        const relayoutAfterLoad = () => {
-            window.requestAnimationFrame(() => {
-                if (!workspaceIsAlive(this)) return;
-                if (!this.props.isVisible) return;
-                this.resizeBlocksWorkspace();
-            });
-        };
-        // A deferred (lazy) load that fails partway can leave the workspace
-        // cleared but only partially populated, which looks like the blocks
-        // area disappeared on big projects. Fall back to the synchronous
-        // full-XML loader so the blocks are always restored.
-        const fallbackToSyncLoad = () => {
-            this.deferredWorkspaceLoad = null;
-            if (this.workspace && this.workspace.cancelDeferredRender) {
-                this.workspace.cancelDeferredRender();
-            }
-            try {
-                const dom = this.ScratchBlocks.Xml.textToDom(data.xml);
-                this.ScratchBlocks.Xml.clearWorkspaceAndLoadFromXml(dom, this.workspace);
-            } catch (fallbackError) {
-                // Both load paths failed. Keep the error logged so it is
-                // debuggable, but don't crash the editor.
-                if (fallbackError.message) {
-                    fallbackError.message = `Workspace Update Fallback Error: ${fallbackError.message}`;
-                }
-                log.error(fallbackError);
-            }
-        };
         try {
             if (useDeferredLoad) {
-                const headerDom = this.ScratchBlocks.Xml.textToDom(data.headerXml || data.xml);
                 this.deferredWorkspaceLoad = this.ScratchBlocks.Xml.clearWorkspaceAndLoadFromXmlDeferred(
-                    headerDom,
+                    dom,
                     this.workspace,
                     {
                         onDone: () => {
                             this.deferredWorkspaceLoad = null;
-                            relayoutAfterLoad();
                         }
-                    },
-                    hasDescs ? data.blocks : undefined
+                    }
                 );
             } else {
-                const dom = this.ScratchBlocks.Xml.textToDom(data.xml);
                 this.ScratchBlocks.Xml.clearWorkspaceAndLoadFromXml(dom, this.workspace);
             }
         } catch (error) {
@@ -1320,16 +1091,7 @@ class Blocks extends React.Component {
                 error.message = `Workspace Update Error: ${error.message}`;
             }
             log.error(error);
-            // The deferred loader clears the workspace up front, so an
-            // exception from it (e.g. malformed variables/comments/frames in a
-            // large project) would otherwise leave the blocks area blank. Rebuild
-            // from the full XML to restore the blocks instead of letting them
-            // disappear.
-            if (useDeferredLoad) {
-                fallbackToSyncLoad();
-            }
         }
-        if (!workspaceIsAlive(this)) return; // workspace may have been disposed during fallback load
         this.workspace.addChangeListener(this.props.vm.blockListener);
 
         if (this.props.vm.editingTarget && this.props.workspaceMetrics.targets[this.props.vm.editingTarget.id]) {
@@ -1345,24 +1107,12 @@ class Blocks extends React.Component {
         // workspace to be 'undone' here.
         this.workspace.clearUndo();
 
-        // Large projects take a while to render. The container may have been
-        // resized (stage zoom, window resize, tab switch) before every block
-        // finished laying out, so re-run the layout once the current frame is
-        // done. This keeps the scrollbars and block positions consistent and
-        // prevents the blocks area from being misaligned or clipped.
-        window.requestAnimationFrame(() => {
-            if (!workspaceIsAlive(this)) return;
-            if (!this.props.isVisible) return;
-            this.resizeBlocksWorkspace();
-        });
-
         this.workspace.toolboxRefreshEnabled_ = true;
     }
     handleMonitorsUpdate (monitors) {
         // Update the checkboxes of the relevant monitors.
         // TODO: What about monitors that have fields? See todo in scratch-vm blocks.js changeBlock:
         // https://github.com/LLK/scratch-vm/blob/2373f9483edaf705f11d62662f7bb2a57fbb5e28/src/engine/blocks.js#L569-L576
-        if (!workspaceIsAlive(this) || !this.workspace.getFlyout) return;
         const flyout = this.workspace.getFlyout();
         for (const monitor of monitors.values()) {
             const blockId = monitor.get('id');
@@ -1430,9 +1180,6 @@ class Blocks extends React.Component {
         this.requestToolboxStateUpdate();
     }
     requestToolboxStateUpdate () {
-        // Debounce across the burst of events that a sprite switch / workspace
-        // update triggers so the toolbox XML is only described and rebuilt once
-        // per logical change instead of once per event.
         clearTimeout(this.toolboxStateUpdateTimeout);
         this.toolboxStateUpdateTimeout = setTimeout(() => {
             this.toolboxStateUpdateTimeout = null;
@@ -1441,7 +1188,7 @@ class Blocks extends React.Component {
             if (toolboxXML) {
                 this.props.updateToolboxState(toolboxXML);
             }
-        }, 100);
+        }, 0);
     }
     handleCategorySelected (categoryId) {
         const extension = extensionData.find(ext => ext.extensionId === categoryId);
@@ -1456,54 +1203,9 @@ class Blocks extends React.Component {
     setBlocks (blocks) {
         this.blocks = blocks;
     }
-    resizeBlocksWorkspace () {
-        if (!workspaceIsAlive(this)) return;
-        // Blockly's resize() repositions toolbox/flyout/scrollbars but does NOT
-        // reset the SVG width/height attributes. If the workspace was resized
-        // while hidden (e.g. the stage was dragged while on the costumes/sounds
-        // tab), svgResize reads a 0-sized container and leaves the SVG at 0x0,
-        // so switching back shows an empty blocks area. Re-apply the SVG size
-        // from the (now visible) container before laying out.
-        if (typeof this.ScratchBlocks.svgResize === 'function') {
-            const svg = this.workspace.getParentSvg && this.workspace.getParentSvg();
-            const container = svg ? svg.parentNode : null;
-            if (container && container.offsetWidth > 0 && container.offsetHeight > 0) {
-                this.ScratchBlocks.svgResize(this.workspace);
-                return;
-            }
-        }
-        this.workspace.resize();
-    }
-    setupBlocksResizeObserver () {
-        if (!this.blocks || typeof ResizeObserver === 'undefined') return;
-        this.blocksResizeObserver = new ResizeObserver(() => {
-            this.handleBlocksResize();
-        });
-        this.blocksResizeObserver.observe(this.blocks);
-    }
-    handleBlocksResize () {
-        if (!workspaceIsAlive(this)) return;
-        if (!this.blocks) return;
-        if (!this.props.isVisible) return;
-        // Only react to meaningful size changes to avoid wasted work during
-        // every frame of a CSS transition.
-        const rect = this.blocks.getBoundingClientRect();
-        const width = Math.round(rect.width);
-        const height = Math.round(rect.height);
-        if (this.lastBlocksWidth === width && this.lastBlocksHeight === height) return;
-        this.lastBlocksWidth = width;
-        this.lastBlocksHeight = height;
-        if (this.workspaceResizeRaf) return;
-        this.workspaceResizeRaf = window.requestAnimationFrame(() => {
-            this.workspaceResizeRaf = null;
-            if (!workspaceIsAlive(this)) return;
-            if (!this.props.isVisible) return;
-            this.resizeBlocksWorkspace();
-        });
-    }
     cancelDeferredWorkspaceLoad () {
         this.deferredWorkspaceLoad = null;
-        if (this.workspace && typeof this.workspace.cancelDeferredRender === 'function') {
+        if (this.workspace && this.workspace.cancelDeferredRender) {
             this.workspace.cancelDeferredRender();
         }
     }
@@ -1524,7 +1226,6 @@ class Blocks extends React.Component {
         this.props.onOpenConnectionModal(extensionId);
     }
     handleStatusButtonUpdate () {
-        if (!workspaceIsAlive(this)) return;
         this.ScratchBlocks.refreshStatusButtons(this.workspace);
     }
     handleOpenSoundRecorder () {
@@ -1555,46 +1256,57 @@ class Blocks extends React.Component {
         }
 
         this.props.onRequestCloseCustomProcedures(data);
-        if (!workspaceIsAlive(this)) return;
         const ws = this.workspace;
         ws.refreshToolboxSelection_();
         ws.toolbox_.scrollToCategoryById('myBlocks');
     }
-    handleDrop (dragInfo) {
-        fetch(dragInfo.payload.bodyUrl)
-            .then(response => response.json())
-            .then(payload => {
-                if (!workspaceIsAlive(this)) return;
-                // based on https://github.com/ScratchAddons/ScratchAddons/pull/7028
-                const metrics = this.props.workspaceMetrics.targets[this.props.vm.editingTarget.id];
-                if (metrics) {
-                    const {x, y} = dragInfo.currentOffset;
-                    const {left, right} = this.workspace.scrollbar.hScroll.outerSvg_.getBoundingClientRect();
-                    const {top} = this.workspace.scrollbar.vScroll.outerSvg_.getBoundingClientRect();
-                    offsetToPosition(
-                        payload,
-                        (this.props.isRtl ? metrics.scrollX - x + right : -metrics.scrollX + x - left) /
-                            metrics.scale,
-                        (-metrics.scrollY - top + y) / metrics.scale
-                    );
-                }
-                return this.props.vm.shareBlocksToTarget(payload, this.props.vm.editingTarget.id);
-            })
-            .then(() => {
+    async handleDrop (dragInfo) {
+        const targetId = this.props.vm.editingTarget && this.props.vm.editingTarget.id;
+        if (!targetId) {
+            this.props.onShowImportError();
+            return false;
+        }
+
+        try {
+            const response = await fetch(dragInfo.payload.bodyUrl);
+            if (response.ok === false) throw new Error(`Backpack request failed with status ${response.status}`);
+            const payload = await response.json();
+            if (!payload || typeof payload !== 'object') throw new Error('Backpack code payload is invalid');
+
+            // based on https://github.com/ScratchAddons/ScratchAddons/pull/7028
+            const metrics = this.props.workspaceMetrics.targets[targetId];
+            if (metrics) {
+                const {x, y} = dragInfo.currentOffset;
+                const {left, right} = this.workspace.scrollbar.hScroll.outerSvg_.getBoundingClientRect();
+                const {top} = this.workspace.scrollbar.vScroll.outerSvg_.getBoundingClientRect();
+                offsetToPosition(
+                    payload,
+                    (this.props.isRtl ? metrics.scrollX - x + right : -metrics.scrollX + x - left) /
+                        metrics.scale,
+                    (-metrics.scrollY - top + y) / metrics.scale
+                );
+            }
+            await this.props.vm.shareBlocksToTarget(payload, targetId);
+
+            if (this.props.vm.editingTarget && this.props.vm.editingTarget.id === targetId) {
                 this.props.vm.refreshWorkspace();
                 this.updateToolbox(); // To show new variables/custom blocks
-            });
+            }
+            return true;
+        } catch (error) {
+            log.error(error);
+            this.props.onShowImportError();
+            return false;
+        }
     }
     handleEnableProcedureReturns () {
-        if (!workspaceIsAlive(this)) return;
-        if (process.env.DEBUG) console.log('handleEnableProcedureReturns called');
+        console.log('handleEnableProcedureReturns called');
         this.workspace.enableProcedureReturns();
         this.requestToolboxUpdate();
         
         // Force immediate toolbox refresh to show return blocks
         setTimeout(() => {
-            if (!workspaceIsAlive(this)) return;
-            if (process.env.DEBUG) console.log('Executing delayed toolbox refresh');
+            console.log('Executing delayed toolbox refresh');
             if (this.workspace.getFlyout) {
                 const flyout = this.workspace.getFlyout();
                 if (flyout && flyout.getWorkspace) {
@@ -1631,6 +1343,7 @@ class Blocks extends React.Component {
             onOpenConnectionModal,
             onOpenSoundRecorder,
             onOpenCustomExtensionModal,
+            onShowImportError,
             reduxOnOpenCustomExtensionModal,
             updateToolboxState,
             onActivateCustomProcedures,
@@ -1673,11 +1386,9 @@ class Blocks extends React.Component {
 
                 {customProceduresVisible ? (
                     <CustomProcedures
-                        isStage={vm.runtime.getEditingTarget().isStage}
                         options={{
                             media: options.media
                         }}
-                        vm={vm}
                         onRequestClose={this.handleCustomProceduresClose}
                     />
                 ) : null}
@@ -1707,6 +1418,7 @@ Blocks.propTypes = {
     onOpenConnectionModal: PropTypes.func,
     onOpenSoundRecorder: PropTypes.func,
     onOpenCustomExtensionModal: PropTypes.func,
+    onShowImportError: PropTypes.func,
     reduxOnOpenCustomExtensionModal: PropTypes.func,
     onRequestCloseCustomProcedures: PropTypes.func,
     onRequestCloseExtensionLibrary: PropTypes.func,
@@ -1792,7 +1504,7 @@ const mapDispatchToProps = dispatch => ({
         dispatch(deactivateCustomProcedures(data));
     },
     onActivateBlocksTab: () => {
-        if (process.env.DEBUG) console.log('onActivateBlocksTab called');
+        console.log('onActivateBlocksTab called');
         dispatch(activateTab(BLOCKS_TAB_INDEX));
     },
     updateToolboxState: toolboxXML => {
@@ -1800,7 +1512,8 @@ const mapDispatchToProps = dispatch => ({
     },
     updateMetrics: metrics => {
         dispatch(updateMetrics(metrics));
-    }
+    },
+    onShowImportError: () => dispatch(showStandardAlert('blockImportError'))
 });
 
 export default injectIntl(errorBoundaryHOC('Blocks')(
@@ -1809,3 +1522,5 @@ export default injectIntl(errorBoundaryHOC('Blocks')(
         mapDispatchToProps
     )(LoadScratchBlocksHOC(Blocks))
 ));
+
+export {Blocks};

@@ -27,20 +27,20 @@ import storage from '../persistence/storage.js';
 
 import VM from 'scratch-vm';
 import {fetchProjectMeta} from './tw-project-meta-fetcher-hoc.jsx';
+import {cloneRepo, deleteRepo} from '../git/browser-git.js';
+import {checkoutMwpBranch, importMwp} from '../git/mwp.js';
+import {markProjectHistoryLoading, preloadProjectHistory} from '../git/project-history.js';
+import {buildSb3FromFractchTree} from '../git/fractch-tree.js';
 import {getAuth as getRoturGitAuth} from '../rotur/git-api.js';
 import {rememberPlatformProject} from '../community/publish.js';
-import {getEditorProject as getMistWarpEditorProject} from '../community/api.js';
+import {
+    fetchWorkspace,
+    getEditorProject as getMistWarpEditorProject
+} from '../community/api.js';
 import {hasBridge, bridgeFetch} from '../community/embed-bridge.js';
 import {cachedFetchBuffer} from '../community/cached-fetch.js';
 
 const cloneProjectFromRepo = async url => {
-    const [
-        {cloneRepo},
-        {buildSb3FromFractchTree}
-    ] = await Promise.all([
-        import('../git/browser-git.js'),
-        import('../git/fractch-tree.js')
-    ]);
     const {fs, dir} = await cloneRepo({url, onAuth: getRoturGitAuth});
     const sb3 = await buildSb3FromFractchTree({fs, dir});
     return {data: sb3 instanceof ArrayBuffer ? sb3 : await sb3.arrayBuffer()};
@@ -49,6 +49,13 @@ const cloneProjectFromRepo = async url => {
 const isHttpUrl = url => /^https?:\/\//.test(url);
 
 let fetchInitiatedLoad = false;
+let projectHistoryLoadQueue = Promise.resolve();
+
+const queueProjectHistoryLoad = task => {
+    const result = projectHistoryLoadQueue.then(task, task);
+    projectHistoryLoadQueue = result.catch(() => {});
+    return result;
+};
 
 const clearProjectSourceFromUrl = () => {
     if (typeof location === 'undefined' || typeof URLSearchParams === 'undefined') return;
@@ -60,7 +67,7 @@ const clearProjectSourceFromUrl = () => {
             changed = true;
         }
     }
-    const hasMwHash = /^#bl-/.test(location.hash);
+    const hasMwHash = /^#mw-/.test(location.hash);
     if (!changed && !hasMwHash) return;
     const query = params.toString();
     const hash = hasMwHash ? '' : location.hash;
@@ -90,15 +97,11 @@ const fetchArrayBuffer = url => cachedFetchBuffer(url);
 
 const loadPlatformProject = async (id, source) => {
     const project = source || (await getMistWarpEditorProject(id)).project;
-    const assetsBase = project.assetsCDN || project.assetsBase;
-    if (assetsBase && isHttpUrl(assetsBase)) {
-        storage.addMistWarpAssetStore(assetsBase);
-    }
-    rememberPlatformProject(project);
-    const data = hasBridge() ?
-        await bridgeFetch(project.projectJsonUrl).catch(() => fetchArrayBuffer(project.projectJsonUrl)) :
-        await fetchArrayBuffer(project.projectJsonUrl);
-    return {data, title: project.title};
+    const [data, workspace] = await Promise.all([
+        hasBridge() ? bridgeFetch(project.projectJsonUrl) : fetchArrayBuffer(project.projectJsonUrl),
+        project.workspaceUrl ? fetchWorkspace(project.workspaceUrl) : Promise.resolve(null)
+    ]);
+    return {data, title: project.title, platformProject: project, workspace};
 };
 
 // TW: Temporary hack for project tokens
@@ -121,58 +124,8 @@ const fetchProjectToken = async projectId => {
         return metadata.project_token;
     } catch (e) {
         log.error(e);
-        throw new Error('Cannot access project token. Project is probably unshared. See https://docs.bilup.org/advanced/unshared-projects');
+        throw new Error('Cannot access project token. Project is probably unshared. See https://docs.turbowarp.org/unshared-projects');
     }
-};
-
-// TW: Determine asset host based on project source
-const SCRATCH_ASSET_HOST = 'https://assets.scratch.mit.edu';
-const BILUP_ASSET_HOST = 'https://assets.r2.bilup.org';
-
-const determineAssetHost = (projectUrl, projectId) => {
-    // If loading from project_url, determine based on URL domain
-    if (projectUrl) {
-        try {
-            const url = new URL(projectUrl);
-            const hostname = url.hostname;
-            
-            // Scratch official sources
-            if (hostname === 'scratch.mit.edu' || 
-                hostname.endsWith('.scratch.mit.edu') ||
-                hostname === 'projects.scratch.mit.edu') {
-                return SCRATCH_ASSET_HOST;
-            }
-            
-            // Bilup sources
-            if (hostname === 'bilup.org' || 
-                hostname.endsWith('.bilup.org')) {
-                return BILUP_ASSET_HOST;
-            }
-            
-            // TurboWarp sources - use Scratch assets as fallback
-            if (hostname === 'turbowarp.org' || 
-                hostname.endsWith('.turbowarp.org')) {
-                return SCRATCH_ASSET_HOST;
-            }
-            
-            // For other URLs, use default Bilup CDN (may not work for all)
-            return BILUP_ASSET_HOST;
-        } catch (e) {
-            // Invalid URL, use default
-            return BILUP_ASSET_HOST;
-        }
-    }
-    
-    // If loading by projectId (from Scratch API), use Scratch assets
-    if (projectId && projectId !== '0') {
-        // Numeric project IDs are from Scratch
-        if (/^\d+$/.test(projectId)) {
-            return SCRATCH_ASSET_HOST;
-        }
-    }
-    
-    // Default to Bilup CDN
-    return BILUP_ASSET_HOST;
 };
 
 /* Higher Order Component to provide behavior for loading projects by id. If
@@ -192,9 +145,10 @@ const ProjectFetcherHOC = function (WrappedComponent) {
             storage.setAssetHost(props.assetHost);
             storage.setTranslatorFunction(props.intl.formatMessage);
             clearProjectSourceOnForeignLoads(props.vm);
+            this.fetchGeneration = 0;
             if (typeof location !== 'undefined' && typeof URLSearchParams !== 'undefined') {
                 const initialPlatformId = new URLSearchParams(location.search).get('platform_project') ||
-                    (location.hash.match(/^#bl-([\w-]+)/) || [])[1];
+                    (location.hash.match(/^#mw-([\w-]+)/) || [])[1];
                 rememberPlatformProject(initialPlatformId ? {id: initialPlatformId} : null);
             }
             // props.projectId might be unset, in which case we use our default;
@@ -229,12 +183,16 @@ const ProjectFetcherHOC = function (WrappedComponent) {
                 this.props.onActivateTab(BLOCKS_TAB_INDEX);
             }
         }
+        componentWillUnmount () {
+            this.fetchGeneration++;
+        }
         fetchProject (projectId, loadingState) {
-            // tw: clear and stop the VM before fetching
-            // these will also happen later after the project is fetched, but fetching may take a while and
-            // the project shouldn't be running while fetching the new project
-            this.props.vm.clear();
+            const fetchGeneration = ++this.fetchGeneration;
+            // Stop scripts while fetching, but keep the current project intact until replacement data exists.
             this.props.vm.quit();
+            markProjectHistoryLoading();
+            this.props.vm._mwPrepareProjectHistory = null;
+            this.props.vm._mwHistoryBootstrapError = null;
 
             const isInitialFetch = !this.hasFetchedProject;
             this.hasFetchedProject = true;
@@ -250,9 +208,8 @@ const ProjectFetcherHOC = function (WrappedComponent) {
             const platformProject = searchParams && searchParams.get('platform_project');
             const hashMatch = typeof location === 'undefined' ?
                 null :
-                location.hash.match(/^#bl-([\w-]+)/);
+                location.hash.match(/^#mw-([\w-]+)/);
             const hashProjectId = hashMatch && hashMatch[1];
-            rememberPlatformProject(platformProject ? {id: platformProject} : null);
             const mistwarpAssets = searchParams && searchParams.get('mw_assets');
             let mistwarpTrustedExtensions = [];
             try {
@@ -264,7 +221,9 @@ const ProjectFetcherHOC = function (WrappedComponent) {
                 storage.addMistWarpAssetStore(mistwarpAssets);
             }
             let projectUrl = searchParams && searchParams.get('project_url');
+            let sourceProvidesHistory = false;
             if (hashProjectId || platformProject) {
+                sourceProvidesHistory = true;
                 const id = hashProjectId || platformProject;
                 const source = this.props.isEmbedded && platformProject && !hashProjectId && projectUrl ? {
                     id,
@@ -274,7 +233,15 @@ const ProjectFetcherHOC = function (WrappedComponent) {
                 } : null;
                 assetPromise = loadPlatformProject(id, source);
             } else if (cloneUrl) {
-                assetPromise = cloneProjectFromRepo(cloneUrl);
+                sourceProvidesHistory = true;
+                assetPromise = queueProjectHistoryLoad(async () => {
+                    if (fetchGeneration !== this.fetchGeneration) return null;
+                    rememberPlatformProject(null);
+                    const projectAsset = await cloneProjectFromRepo(cloneUrl);
+                    return fetchGeneration === this.fetchGeneration ?
+                        {...projectAsset, historyPrepared: true} :
+                        null;
+                });
             } else if (projectUrl) {
                 if (
                     !projectUrl.startsWith('http:') &&
@@ -284,16 +251,9 @@ const ProjectFetcherHOC = function (WrappedComponent) {
                     projectUrl = `https://${projectUrl}`;
                 }
                 const jsonUrl = projectUrl;
-                assetPromise = (hasBridge() ?
-                    bridgeFetch(jsonUrl).catch(() => fetchArrayBuffer(jsonUrl)) :
-                    fetchArrayBuffer(jsonUrl)
-                ).then(buffer => ({data: buffer}));
+                assetPromise = (hasBridge() ? bridgeFetch(jsonUrl) : fetchArrayBuffer(jsonUrl))
+                    .then(buffer => ({data: buffer}));
             } else {
-                // TW: Determine asset host based on project ID source
-                const determinedAssetHost = determineAssetHost(null, projectId);
-                storage.setAssetHost(determinedAssetHost);
-                log.info(`Project from ID ${projectId}, using asset host: ${determinedAssetHost}`);
-                
                 // TW: Temporary hack for project tokens
                 assetPromise = fetchProjectToken(projectId)
                     .then(token => {
@@ -303,9 +263,35 @@ const ProjectFetcherHOC = function (WrappedComponent) {
             }
 
             return assetPromise
-                .then(projectAsset => {
+                .then(async projectAsset => {
+                    if (fetchGeneration !== this.fetchGeneration) return;
                     if (projectAsset) {
+                        if (!projectAsset.historyPrepared) {
+                            const historyReady = await queueProjectHistoryLoad(async () => {
+                                if (fetchGeneration !== this.fetchGeneration) return false;
+                                if (projectAsset.platformProject) {
+                                    const project = projectAsset.platformProject;
+                                    if (project.assetsBase && isHttpUrl(project.assetsBase)) {
+                                        storage.addMistWarpAssetStore(project.assetsBase);
+                                    }
+                                    rememberPlatformProject(project);
+                                    if (projectAsset.workspace) {
+                                        await importMwp(projectAsset.workspace);
+                                        if (project.gitBranch) await checkoutMwpBranch(project.gitBranch);
+                                    } else {
+                                        await deleteRepo();
+                                    }
+                                } else if (!sourceProvidesHistory) {
+                                    rememberPlatformProject(null);
+                                    await deleteRepo();
+                                }
+                                return fetchGeneration === this.fetchGeneration;
+                            });
+                            if (!historyReady || fetchGeneration !== this.fetchGeneration) return;
+                        }
                         fetchInitiatedLoad = true;
+                        this.props.vm._mwPrepareProjectHistory = () =>
+                            preloadProjectHistory(this.props.vm, {force: true});
                         if (projectAsset.title) {
                             this.props.onSetProjectTitle(projectAsset.title);
                         }
@@ -317,6 +303,8 @@ const ProjectFetcherHOC = function (WrappedComponent) {
                     }
                 })
                 .catch(err => {
+                    if (fetchGeneration !== this.fetchGeneration) return;
+                    this.props.vm._mwPrepareProjectHistory = null;
                     this.props.onError(err);
                     log.error(err);
                 });
@@ -371,7 +359,7 @@ const ProjectFetcherHOC = function (WrappedComponent) {
         vm: PropTypes.instanceOf(VM)
     };
     ProjectFetcherComponent.defaultProps = {
-        assetHost: 'https://assets.r2.bilup.org',
+        assetHost: 'https://assets.scratch.mit.edu',
         projectHost: 'https://projects.scratch.mit.edu'
     };
 

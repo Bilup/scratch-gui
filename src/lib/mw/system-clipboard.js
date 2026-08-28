@@ -45,9 +45,12 @@ const encodeBase64Utf8 = value => {
     }
 };
 
-const installSystemClipboardForBlocks = (ScratchBlocks, vm) => {
-    if (!ScratchBlocks || ScratchBlocks.__bilupSystemBlocksClipboardInstalled) return;
-    ScratchBlocks.__bilupSystemBlocksClipboardInstalled = true;
+const installSystemClipboardForBlocks = (ScratchBlocks, vm, onImportError) => {
+    if (ScratchBlocks) {
+        ScratchBlocks.__mistwarpSystemBlocksClipboardImportError = onImportError;
+    }
+    if (!ScratchBlocks || ScratchBlocks.__mistwarpSystemBlocksClipboardInstalled) return;
+    ScratchBlocks.__mistwarpSystemBlocksClipboardInstalled = true;
 
     let readAccessDenied = false;
     let writeAccessDenied = false;
@@ -116,11 +119,11 @@ const installSystemClipboardForBlocks = (ScratchBlocks, vm) => {
             if (meta) {
                 const encoded = encodeBase64Utf8(JSON.stringify(meta));
                 if (encoded) {
-                    return `<!--bilup-extensions-base64:${encoded}-->${xmlText}`;
+                    return `<!--mistwarp-extensions-base64:${encoded}-->${xmlText}`;
                 }
             }
 
-            return `<!--bilup-->${xmlText}`;
+            return `<!--mistwarp-->${xmlText}`;
         } catch (e) {
             return null;
         }
@@ -174,7 +177,7 @@ const installSystemClipboardForBlocks = (ScratchBlocks, vm) => {
         const trimmed = text.trim();
         if (!trimmed) return null;
 
-        if (!trimmed.startsWith('<!--bilup')) return null;
+        if (!trimmed.startsWith('<!--mistwarp')) return null;
 
         try {
             const xmlDom = ScratchBlocks.Xml.textToDom(`<xml>${trimmed}</xml>`);
@@ -182,7 +185,7 @@ const installSystemClipboardForBlocks = (ScratchBlocks, vm) => {
             for (let child = xmlDom.firstChild; child; child = child.nextSibling) {
                 if (child.nodeType === 8) {
                     const value = child.nodeValue || '';
-                    const prefix = 'bilup-extensions-base64:';
+                    const prefix = 'mistwarp-extensions-base64:';
                     const idx = value.indexOf(prefix);
                     if (idx !== -1) {
                         const encoded = value.slice(idx + prefix.length).trim();
@@ -217,14 +220,10 @@ const installSystemClipboardForBlocks = (ScratchBlocks, vm) => {
             if (vm.extensionManager.isExtensionLoaded(id)) continue;
 
             const url = urls[id];
-            try {
-                if (url) {
-                    await vm.extensionManager.loadExtensionURL(url);
-                } else {
-                    vm.extensionManager.loadExtensionIdSync(id);
-                }
-            } catch (e) {
-                // ignore
+            if (url) {
+                await vm.extensionManager.loadExtensionURL(url);
+            } else {
+                vm.extensionManager.loadExtensionIdSync(id);
             }
         }
     };
@@ -236,8 +235,11 @@ const installSystemClipboardForBlocks = (ScratchBlocks, vm) => {
         if (!workspace) return;
         if (workspace.isFlyout) workspace = workspace.targetWorkspace;
         ScratchBlocks.Events.setGroup(true);
-        workspace.paste(ScratchBlocks.clipboardXml_);
-        ScratchBlocks.Events.setGroup(false);
+        try {
+            workspace.paste(ScratchBlocks.clipboardXml_);
+        } finally {
+            ScratchBlocks.Events.setGroup(false);
+        }
     };
 
     const originalCopy = ScratchBlocks.copy_;
@@ -245,11 +247,11 @@ const installSystemClipboardForBlocks = (ScratchBlocks, vm) => {
     const originalOnKeyDown = ScratchBlocks.onKeyDown_;
 
     ScratchBlocks.duplicate_ = function (...args) {
-        ScratchBlocks.__bilupSkipSystemBlocksClipboardWrite = true;
+        ScratchBlocks.__mistwarpSkipSystemBlocksClipboardWrite = true;
         try {
             return originalDuplicate.apply(this, args);
         } finally {
-            ScratchBlocks.__bilupSkipSystemBlocksClipboardWrite = false;
+            ScratchBlocks.__mistwarpSkipSystemBlocksClipboardWrite = false;
         }
     };
 
@@ -258,7 +260,7 @@ const installSystemClipboardForBlocks = (ScratchBlocks, vm) => {
 
         if (
             systemClipboardActive ||
-            ScratchBlocks.__bilupSkipSystemBlocksClipboardWrite ||
+            ScratchBlocks.__mistwarpSkipSystemBlocksClipboardWrite ||
             !canWriteText() ||
             writeAccessDenied
         ) {
@@ -266,7 +268,7 @@ const installSystemClipboardForBlocks = (ScratchBlocks, vm) => {
         }
 
         const meta = getExtensionMetaForXml(ScratchBlocks.clipboardXml_);
-        ScratchBlocks.__bilupSystemClipboardExtensionMeta = meta;
+        ScratchBlocks.__mistwarpSystemClipboardExtensionMeta = meta;
         const text = serializeClipboardXmlToText(ScratchBlocks.clipboardXml_, meta);
 
         if (text) {
@@ -301,11 +303,10 @@ const installSystemClipboardForBlocks = (ScratchBlocks, vm) => {
 
         systemClipboardActive = true;
 
-        navigator.clipboard.readText()
+        const pasteSystemClipboard = navigator.clipboard.readText()
             .then(async text => {
                 const parsed = parseClipboardTextToBlockXml(text);
                 if (!parsed || !parsed.xml) {
-                    systemClipboardActive = false;
                     return pasteFromCurrentClipboardXml();
                 }
 
@@ -313,20 +314,26 @@ const installSystemClipboardForBlocks = (ScratchBlocks, vm) => {
 
                 ScratchBlocks.clipboardXml_ = xml;
                 ScratchBlocks.clipboardSource_ = ScratchBlocks.mainWorkspace;
-                ScratchBlocks.__bilupSystemClipboardExtensionMeta =
+                ScratchBlocks.__mistwarpSystemClipboardExtensionMeta =
                 meta || guessExtensionMetaForXml(xml);
 
                 await ensureExtensionsLoaded(
-                    ScratchBlocks.__bilupSystemClipboardExtensionMeta
+                    ScratchBlocks.__mistwarpSystemClipboardExtensionMeta
                 );
 
                 pasteFromCurrentClipboardXml();
-            })
-            .catch(err => {
+            }, err => {
                 if (err.name === 'NotAllowedError') {
                     readAccessDenied = true;
                 }
                 pasteFromCurrentClipboardXml();
+            });
+
+        pasteSystemClipboard
+            .catch(() => {
+                if (typeof ScratchBlocks.__mistwarpSystemBlocksClipboardImportError === 'function') {
+                    ScratchBlocks.__mistwarpSystemBlocksClipboardImportError();
+                }
             })
             .finally(() => {
                 systemClipboardActive = false;

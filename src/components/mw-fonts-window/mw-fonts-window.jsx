@@ -1,7 +1,6 @@
 import PropTypes from 'prop-types';
 import React from 'react';
-import {FormattedMessage, injectIntl, intlShape} from 'react-intl';
-import {useIntl} from '../../lib/tw-use-intl.jsx';
+import {FormattedMessage} from 'react-intl';
 import {connect} from 'react-redux';
 import classNames from 'classnames';
 
@@ -21,12 +20,15 @@ import localFontsStyles from '../tw-fonts-modal/fonts-modal.css';
 import AddSystemFont from '../tw-fonts-modal/add-system-font.jsx';
 import AddCustomFont from '../tw-fonts-modal/add-custom-font.jsx';
 import ManageFont from '../tw-fonts-modal/manage-font.jsx';
+import systemIcon from '../tw-fonts-modal/system.svg';
+import customIcon from '../tw-fonts-modal/custom.svg';
 
 const getFontFamily = font => (typeof font === 'string' ? font : font.family);
 
 // Reusable Font List Item
-const FontListItem = ({family, onClick}) => (
-    <div
+export const FontListItem = ({family, onClick}) => (
+    <button
+        type="button"
         className={styles.fontItem}
         data-family={family}
         onClick={onClick}
@@ -34,7 +36,7 @@ const FontListItem = ({family, onClick}) => (
         title={family}
     >
         {family}
-    </div>
+    </button>
 );
 
 FontListItem.propTypes = {
@@ -64,63 +66,56 @@ FontSection.propTypes = {
 };
 
 // New: Selected Font Display
-const SelectedFontDisplay = ({selectedFont, onReset, onRemove}) => {
-    const intl = useIntl();
-    return (
-        <div className={styles.fontSection}>
-            <div className={styles.fontSectionTitle}>
-                <div className={styles.fontSectionTitleLeft}>
-                    <Check className={styles.icon} />
+const SelectedFontDisplay = ({selectedFont, onReset, onRemove}) => (
+    <div className={styles.fontSection}>
+        <div className={styles.fontSectionTitle}>
+            <div className={styles.fontSectionTitleLeft}>
+                <Check className={styles.icon} />
+                <FormattedMessage
+                    defaultMessage="Selected font"
+                    id="tw.fonts.selectedFont"
+                />
+            </div>
+            <button
+                type="button"
+                className={styles.resetButton}
+                onClick={onReset}
+                title="Reset to default font"
+            >
+                <RotateCcw
+                    size={14}
+                    className={styles.inlineIcon}
+                />
+                <FormattedMessage
+                    defaultMessage="Reset"
+                    id="tw.fonts.reset"
+                />
+            </button>
+        </div>
+        <div className={styles.selectedFontsList}>
+            {selectedFont ? (
+                <div className={styles.selectedFont}>
+                    <span style={{fontFamily: selectedFont}}>{selectedFont}</span>
+                    <button
+                        type="button"
+                        className={styles.removeButton}
+                        onClick={onRemove}
+                        title="Remove font"
+                    >
+                        {'×'}
+                    </button>
+                </div>
+            ) : (
+                <div className={styles.fontHint}>
                     <FormattedMessage
-                        defaultMessage="Selected font"
-                        id="tw.fonts.selectedFont"
+                        defaultMessage="Default"
+                        id="tw.fonts.default"
                     />
                 </div>
-                <button
-                    className={styles.resetButton}
-                    onClick={onReset}
-                    title={intl.formatMessage({
-                        defaultMessage: 'Reset to default font',
-                        id: 'mw.fonts.resetToDefault'
-                    })}
-                >
-                    <RotateCcw
-                        size={14}
-                        className={styles.inlineIcon}
-                    />
-                    <FormattedMessage
-                        defaultMessage="Reset"
-                        id="tw.fonts.reset"
-                    />
-                </button>
-            </div>
-            <div className={styles.selectedFontsList}>
-                {selectedFont ? (
-                    <div className={styles.selectedFont}>
-                        <span style={{fontFamily: selectedFont}}>{selectedFont}</span>
-                        <button
-                            className={styles.removeButton}
-                            onClick={onRemove}
-                            title={intl.formatMessage({
-                                defaultMessage: 'Remove font',
-                                id: 'mw.fonts.removeFont'
-                            })}
-                        >
-                            {'×'}
-                        </button>
-                    </div>
-                ) : (
-                    <div className={styles.fontHint}>
-                        <FormattedMessage
-                            defaultMessage="Default"
-                            id="tw.fonts.default"
-                        />
-                    </div>
-                )}
-            </div>
+            )}
         </div>
-    );
-};
+    </div>
+);
 
 SelectedFontDisplay.propTypes = {
     selectedFont: PropTypes.string,
@@ -179,7 +174,7 @@ class MWFontsWindow extends React.Component {
         this.props.onChangeTheme(this.props.theme.set('fonts', newFonts));
     };
 
-    resetFonts = () => this.setSelectedFont({google: [], system: []});
+    handleResetFonts = () => this.setSelectedFont({google: [], system: []});
 
     getSelectedFontName = () =>
         this.props.theme.fonts.google[0] || this.props.theme.fonts.system[0] || null;
@@ -198,6 +193,10 @@ class MWFontsWindow extends React.Component {
         } catch {
             this.setSelectedFont({system: [family], historyFont: family});
         }
+    };
+
+    handleHistoryFontClick = event => {
+        this.selectFromHistory(event.currentTarget.dataset.family);
     };
 
     // DRY: Google Fonts handling
@@ -238,6 +237,10 @@ class MWFontsWindow extends React.Component {
         }
     };
 
+    handleGoogleFontClick = event => {
+        this.addGoogleFont(event.currentTarget.dataset.family);
+    };
+
     handleGoogleInputKeyDown = e => {
         if (e.key === 'Enter' && this.getGoogleDisplayFonts().length > 0) {
             this.addGoogleFont(getFontFamily(this.getGoogleDisplayFonts()[0]));
@@ -272,7 +275,7 @@ class MWFontsWindow extends React.Component {
                     <FontListItem
                         key={getFontFamily(font)}
                         family={getFontFamily(font)}
-                        onClick={() => this.addGoogleFont(getFontFamily(font))}
+                        onClick={this.handleGoogleFontClick}
                     />
                 ))}
             </div>
@@ -282,7 +285,7 @@ class MWFontsWindow extends React.Component {
     // DRY: Local/System font handling
     handleSystemFontInputChange = e => this.setState({systemFontInput: e.target.value});
 
-    addSystemFont = () => {
+    handleAddSystemFont = () => {
         const family = this.state.systemFontInput.trim();
         if (family) {
             this.setSelectedFont({system: [family], historyFont: family});
@@ -291,8 +294,14 @@ class MWFontsWindow extends React.Component {
     };
 
     handleSystemInputKeyDown = e => {
-        if (e.key === 'Enter') this.addSystemFont();
+        if (e.key === 'Enter') this.handleAddSystemFont();
     };
+
+    handleCloseLocalScreen = () => this.setState({localScreen: ''});
+
+    handleOpenSystemFonts = () => this.setState({localScreen: 'system'});
+
+    handleOpenCustomFonts = () => this.setState({localScreen: 'custom'});
 
     // Local fonts manager (unchanged structure, but extracted for clarity)
     renderLocalFontsManager = () => {
@@ -302,13 +311,13 @@ class MWFontsWindow extends React.Component {
         if (this.state.localScreen === 'system') {
             return (<AddSystemFont
                 fontManager={fontManager}
-                onClose={() => this.setState({localScreen: ''})}
+                onClose={this.handleCloseLocalScreen}
             />);
         }
         if (this.state.localScreen === 'custom') {
             return (<AddCustomFont
                 fontManager={fontManager}
-                onClose={() => this.setState({localScreen: ''})}
+                onClose={this.handleCloseLocalScreen}
             />);
         }
 
@@ -318,11 +327,15 @@ class MWFontsWindow extends React.Component {
                 <div className={localFontsStyles.openButtons}>
                     {/* ... buttons unchanged ... */}
                     <button
+                        type="button"
                         className={localFontsStyles.openButton}
-                        onClick={() => this.setState({localScreen: 'system'})}
+                        onClick={this.handleOpenSystemFonts}
                     >
-                        <div
+                        <img
                             className={classNames(localFontsStyles.openButtonImage, localFontsStyles.systemImage)}
+                            src={systemIcon}
+                            alt=""
+                            draggable={false}
                         />
                         <div className={localFontsStyles.openButtonText}>
                             <div className={localFontsStyles.openButtonTextMain}><FormattedMessage
@@ -336,11 +349,15 @@ class MWFontsWindow extends React.Component {
                         </div>
                     </button>
                     <button
+                        type="button"
                         className={localFontsStyles.openButton}
-                        onClick={() => this.setState({localScreen: 'custom'})}
+                        onClick={this.handleOpenCustomFonts}
                     >
-                        <div
+                        <img
                             className={classNames(localFontsStyles.openButtonImage, localFontsStyles.customImage)}
+                            src={customIcon}
+                            alt=""
+                            draggable={false}
                         />
                         <div className={localFontsStyles.openButtonText}>
                             <div className={localFontsStyles.openButtonTextMain}><FormattedMessage
@@ -391,8 +408,8 @@ class MWFontsWindow extends React.Component {
             <div className={styles.fontsContainer}>
                 <SelectedFontDisplay
                     selectedFont={selectedFont}
-                    onReset={this.resetFonts}
-                    onRemove={this.resetFonts}
+                    onReset={this.handleResetFonts}
+                    onRemove={this.handleResetFonts}
                 />
 
                 <FontSection
@@ -410,7 +427,7 @@ class MWFontsWindow extends React.Component {
                                 <FontListItem
                                     key={font}
                                     family={font}
-                                    onClick={() => this.selectFromHistory(font)}
+                                    onClick={this.handleHistoryFontClick}
                                 />
                             ))}
                         </div>
@@ -437,11 +454,7 @@ class MWFontsWindow extends React.Component {
                         <input
                             type="text"
                             className={styles.fontInput}
-                            placeholder={this.props.intl.formatMessage({
-                                defaultMessage: 'Search Google Fonts...',
-                                description: 'Placeholder text for Google Fonts search input',
-                                id: 'tw.fonts.googleFontsSearch'
-                            })}
+                            placeholder="Search Google Fonts..."
                             value={this.state.googleFontInput}
                             onChange={this.handleGoogleFontInputChange}
                             onKeyDown={this.handleGoogleInputKeyDown}
@@ -463,18 +476,15 @@ class MWFontsWindow extends React.Component {
                         <input
                             type="text"
                             className={styles.fontInput}
-                            placeholder={this.props.intl.formatMessage({
-                                defaultMessage: 'Enter font name...',
-                                description: 'Placeholder text for local font search input',
-                                id: 'mw.fonts.systemFontSearch'
-                            })}
+                            placeholder="Enter font name..."
                             value={this.state.systemFontInput}
                             onChange={this.handleSystemFontInputChange}
                             onKeyDown={this.handleSystemInputKeyDown}
                         />
                         <button
+                            type="button"
                             className={styles.addButton}
-                            onClick={this.addSystemFont}
+                            onClick={this.handleAddSystemFont}
                             disabled={!this.state.systemFontInput.trim()}
                         >
                             <Check
@@ -495,7 +505,6 @@ class MWFontsWindow extends React.Component {
 }
 
 MWFontsWindow.propTypes = {
-    intl: intlShape.isRequired,
     onChangeTheme: PropTypes.func.isRequired,
     theme: PropTypes.instanceOf(Theme),
     vm: PropTypes.object
@@ -513,4 +522,4 @@ const mapDispatchToProps = dispatch => ({
     }
 });
 
-export default injectIntl(connect(mapStateToProps, mapDispatchToProps)(MWFontsWindow));
+export default connect(mapStateToProps, mapDispatchToProps)(MWFontsWindow);

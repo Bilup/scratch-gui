@@ -1,9 +1,9 @@
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import React from 'react';
-import {FormattedMessage, injectIntl, intlShape} from 'react-intl';
+import {FormattedMessage} from 'react-intl';
 import {connect} from 'react-redux';
-import locales from '@bilup/scratch-l10n';
+import locales from '@turbowarp/scratch-l10n';
 
 import Box from '../box/box.jsx';
 import Input from '../forms/input.jsx';
@@ -117,35 +117,6 @@ const UnconnectedThemePage = ({theme, onChangeTheme}) => (
     <Box className={styles.body}>
         <PageHeader>
             <FormattedMessage
-                defaultMessage="Theme"
-                description="Label for menu to choose theme"
-                id="tw.menuBar.theme"
-            />
-        </PageHeader>
-        <div className={styles.setting}>
-            <FormattedMessage
-                defaultMessage="Theme and accent colors apply across all of Bilup and live in your Bilup settings."
-                description="Explains that global theming moved to the Bilup site settings"
-                id="mw.settings.themeMoved"
-            />
-        </div>
-        <div className={styles.setting}>
-            <button
-                type="button"
-                className={styles.button}
-                onClick={() => window.open('/settings', '_blank')}
-            >
-                <FormattedMessage
-                    defaultMessage="Edit my Bilup settings"
-                    id="mw.settings.editCommunitySettings"
-                />
-                {' '}
-                <ExternalLink size={14} />
-            </button>
-        </div>
-
-        <PageHeader>
-            <FormattedMessage
                 defaultMessage="Block Colors"
                 description="Label for to choose what color blocks should be, eg. original or high contrast"
                 id="tw.menuBar.blockColors"
@@ -177,6 +148,7 @@ const UnconnectedThemePage = ({theme, onChangeTheme}) => (
         </div>
         <div className={styles.setting}>
             <button
+                type="button"
                 className={styles.button}
                 onClick={openBlocksAddonSettings}
             >
@@ -197,13 +169,12 @@ UnconnectedThemePage.propTypes = {
 };
 export const ThemePage = connect(themeStateToProps, themeDispatchToProps)(UnconnectedThemePage);
 
-class UnconnectedWallpaperPage extends React.Component {
+export class UnconnectedWallpaperPage extends React.Component {
     constructor (props) {
         super(props);
         this.state = {
             url: ''
         };
-        this.fileInputRef = React.createRef();
     }
     setWallpaper (patch) {
         const {theme, onChangeTheme} = this.props;
@@ -224,17 +195,11 @@ class UnconnectedWallpaperPage extends React.Component {
             ...(wallpaper.url === url ? {url: ''} : null)
         });
     };
-    handleFileUpload = e => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = loadEvent => {
-            const dataUrl = loadEvent.target.result;
-            const history = [dataUrl, ...(this.props.theme.wallpaper.history || []).filter(u => u !== dataUrl)].slice(0, 10);
-            this.setWallpaper({url: dataUrl, history});
-        };
-        reader.readAsDataURL(file);
-        e.target.value = '';
+    handleSelectWallpaper = e => {
+        this.setWallpaper({url: e.currentTarget.value});
+    };
+    handleRemoveWallpaper = e => {
+        this.handleRemove(e.currentTarget.value);
     };
     render () {
         const {theme} = this.props;
@@ -263,10 +228,7 @@ class UnconnectedWallpaperPage extends React.Component {
                         <Input
                             type="url"
                             className={styles.textInput}
-                            placeholder={this.props.intl.formatMessage({
-                                id: 'mw.settings.wallpaperPlaceholder',
-                                defaultMessage: 'Enter image URL...'
-                            })}
+                            placeholder="Enter image URL..."
                             value={this.state.url}
                             onChange={e => this.setState({url: e.target.value})}
                         />
@@ -281,24 +243,6 @@ class UnconnectedWallpaperPage extends React.Component {
                                 id="tw.wallpaper.add"
                             />
                         </button>
-                        <button
-                            type="button"
-                            className={styles.button}
-                            onClick={() => this.fileInputRef.current.click()}
-                        >
-                            <FormattedMessage
-                                defaultMessage="Upload Image"
-                                description="Button to upload a wallpaper image from local file"
-                                id="mw.settings.wallpaperUpload"
-                            />
-                        </button>
-                        <input
-                            ref={this.fileInputRef}
-                            type="file"
-                            accept="image/*"
-                            style={{display: 'none'}}
-                            onChange={this.handleFileUpload}
-                        />
                     </div>
                 </form>
 
@@ -362,22 +306,29 @@ class UnconnectedWallpaperPage extends React.Component {
                         className={classNames(styles.wallpaperItem, {
                             [styles.wallpaperItemSelected]: !wallpaper.url
                         })}
-                        onClick={() => this.setWallpaper({url: ''})}
                     >
-                        <div className={styles.wallpaperThumb}>
-                            <FormattedMessage
-                                defaultMessage="None"
-                                description="Label for no wallpaper option"
-                                id="tw.wallpaper.none"
-                            />
-                        </div>
-                        <span className={styles.wallpaperItemUrl}>
-                            <FormattedMessage
-                                defaultMessage="No wallpaper"
-                                description="Label for no wallpaper selected"
-                                id="tw.wallpaper.noWallpaper"
-                            />
-                        </span>
+                        <button
+                            type="button"
+                            className={styles.wallpaperChoice}
+                            aria-pressed={!wallpaper.url}
+                            value=""
+                            onClick={this.handleSelectWallpaper}
+                        >
+                            <div className={styles.wallpaperThumb}>
+                                <FormattedMessage
+                                    defaultMessage="None"
+                                    description="Label for no wallpaper option"
+                                    id="tw.wallpaper.none"
+                                />
+                            </div>
+                            <span className={styles.wallpaperItemUrl}>
+                                <FormattedMessage
+                                    defaultMessage="No wallpaper"
+                                    description="Label for no wallpaper selected"
+                                    id="tw.wallpaper.noWallpaper"
+                                />
+                            </span>
+                        </button>
                     </div>
                     {(wallpaper.history || []).map(url => (
                         <div
@@ -385,38 +336,37 @@ class UnconnectedWallpaperPage extends React.Component {
                             className={classNames(styles.wallpaperItem, {
                                 [styles.wallpaperItemSelected]: wallpaper.url === url
                             })}
-                            onClick={() => this.setWallpaper({url})}
                         >
-                            <div className={styles.wallpaperThumb}>
-                                <img
-                                    src={url}
-                                    alt=""
-                                    onError={e => {
-                                        e.target.style.display = 'none';
-                                    }}
-                                />
-                            </div>
-                            <span
-                                className={styles.wallpaperItemUrl}
-                                title={url}
+                            <button
+                                type="button"
+                                className={styles.wallpaperChoice}
+                                aria-pressed={wallpaper.url === url}
+                                value={url}
+                                onClick={this.handleSelectWallpaper}
                             >
-                                {url}
-                            </span>
+                                <div className={styles.wallpaperThumb}>
+                                    <img
+                                        src={url}
+                                        alt=""
+                                        onError={e => {
+                                            e.target.style.display = 'none';
+                                        }}
+                                    />
+                                </div>
+                                <span
+                                    className={styles.wallpaperItemUrl}
+                                    title={url}
+                                >
+                                    {url}
+                                </span>
+                            </button>
                             <button
                                 type="button"
                                 className={styles.iconButton}
-                                title={this.props.intl.formatMessage({
-                                    id: 'mw.settings.removeWallpaper',
-                                    defaultMessage: 'Remove wallpaper'
-                                })}
-                                aria-label={this.props.intl.formatMessage({
-                                    id: 'mw.settings.removeWallpaper',
-                                    defaultMessage: 'Remove wallpaper'
-                                })}
-                                onClick={e => {
-                                    e.stopPropagation();
-                                    this.handleRemove(url);
-                                }}
+                                title="Remove wallpaper"
+                                aria-label="Remove wallpaper"
+                                value={url}
+                                onClick={this.handleRemoveWallpaper}
                             >
                                 <Trash size={16} />
                             </button>
@@ -429,11 +379,9 @@ class UnconnectedWallpaperPage extends React.Component {
 }
 UnconnectedWallpaperPage.propTypes = {
     theme: PropTypes.instanceOf(Theme),
-    onChangeTheme: PropTypes.func,
-    intl: intlShape
+    onChangeTheme: PropTypes.func
 };
-const InjectedWallpaperPage = injectIntl(UnconnectedWallpaperPage);
-export const WallpaperPage = connect(themeStateToProps, themeDispatchToProps)(InjectedWallpaperPage);
+export const WallpaperPage = connect(themeStateToProps, themeDispatchToProps)(UnconnectedWallpaperPage);
 
 class UnconnectedFontsPage extends React.Component {
     static contextTypes = {
@@ -516,10 +464,7 @@ class UnconnectedFontsPage extends React.Component {
                                 type="button"
                                 className={styles.iconButton}
                                 onClick={this.handleReset}
-                                title={this.props.intl.formatMessage({
-                                    id: 'mw.settings.removeFont',
-                                    defaultMessage: 'Remove font'
-                                })}
+                                title="Remove font"
                             >
                                 {'×'}
                             </button>
@@ -534,6 +479,7 @@ class UnconnectedFontsPage extends React.Component {
                         </p>
                     )}
                     <button
+                        type="button"
                         className={styles.button}
                         onClick={this.handleOpenFontsWindow}
                     >
@@ -555,8 +501,9 @@ class UnconnectedFontsPage extends React.Component {
                     {history.length > 0 ? (
                         <div className={styles.fontList}>
                             {history.map(font => (
-                                <div
+                                <button
                                     key={font}
+                                    type="button"
                                     className={styles.fontRow}
                                     data-family={font}
                                     style={{fontFamily: font, cursor: 'pointer'}}
@@ -564,7 +511,7 @@ class UnconnectedFontsPage extends React.Component {
                                     onClick={this.handleRecentFontClick}
                                 >
                                     {font}
-                                </div>
+                                </button>
                             ))}
                         </div>
                     ) : (
@@ -586,10 +533,8 @@ UnconnectedFontsPage.propTypes = {
     onChangeTheme: PropTypes.func,
     locale: PropTypes.string,
     messages: PropTypes.object,
-    vm: PropTypes.object,
-    intl: intlShape
+    vm: PropTypes.object
 };
-const InjectedFontsPage = injectIntl(UnconnectedFontsPage);
 export const FontsPage = connect(
     state => ({
         theme: state.scratchGui.theme.theme,
@@ -598,4 +543,4 @@ export const FontsPage = connect(
         vm: state.scratchGui.vm
     }),
     themeDispatchToProps
-)(InjectedFontsPage);
+)(UnconnectedFontsPage);

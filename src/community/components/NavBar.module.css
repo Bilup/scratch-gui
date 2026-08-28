@@ -66,6 +66,14 @@
     align-items: center;
 }
 
+.mobileSearch {
+    display: none;
+}
+
+.mobileDock {
+    display: none;
+}
+
 .searchIcon {
     position: absolute;
     left: 13px;
@@ -131,6 +139,14 @@
     text-align: left;
 }
 
+.suggestionStatus {
+    margin: 0;
+    padding: 12px;
+    color: var(--text-dim);
+    font-size: 13px;
+    line-height: 1.4;
+}
+
 .suggestion:hover {
     background: var(--accent-softer);
 }
@@ -164,6 +180,17 @@
     font-size: 9px;
     color: var(--text-dim);
     overflow: hidden;
+}
+
+.suggestionSpaceIcon {
+    display: inline-grid;
+    width: 28px;
+    height: 28px;
+    place-items: center;
+    border-radius: 8px;
+    color: var(--accent-strong);
+    background: var(--accent-soft);
+    flex-shrink: 0;
 }
 
 .account {
@@ -232,6 +259,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 7px;
     height: 100%;
     padding: 0 12px;
     border: none;
@@ -239,6 +267,11 @@
     color: var(--menu-bar-foreground, #fff);
     opacity: 0.94;
     cursor: pointer;
+}
+
+.signInLabel {
+    font-weight: 600;
+    white-space: nowrap;
 }
 
 .signIn:hover {
@@ -273,47 +306,180 @@
     cursor: pointer;
 }
 
-@media (max-width: 680px) {
-    .inner {
-        gap: 8px;
-        padding: 0 10px;
+@media (max-width: 760px) {
+    :global(body) {
+        padding-bottom: calc(60px + env(safe-area-inset-bottom));
     }
 
-    .linkLabel {
+    .inner {
+        height: 56px;
+        gap: 8px;
+        padding: 0 max(10px, env(safe-area-inset-right)) 0 max(10px, env(safe-area-inset-left));
+    }
+
+    .links {
         display: none;
     }
 
-    .link {
-        padding: 0 10px;
+    .brand {
+        min-width: 0;
+    }
+
+    .wordmark {
+        display: none;
     }
 
     .iconLink {
         display: none;
     }
 
-    .search {
-        min-width: 0;
+    .account .bellLink:last-of-type {
+        display: flex;
+        width: 44px;
+        padding: 0;
     }
 
-    .searchInput {
-        height: 36px;
-        padding-left: 34px;
+    .desktopSearch {
+        display: none;
     }
 
-    .suggestions {
+    .mobileSearch {
+        position: absolute;
+        top: 8px;
+        right: max(108px, calc(env(safe-area-inset-right) + 98px));
+        left: max(58px, calc(env(safe-area-inset-left) + 48px));
+        z-index: 55;
+        display: flex;
+        box-sizing: border-box;
+        width: auto;
+        max-width: none;
+        height: 40px;
+        padding: 0;
+        background: transparent;
+    }
+
+    .mobileSearchLoggedIn {
+        right: max(132px, calc(env(safe-area-inset-right) + 122px));
+    }
+
+    .mobileSearch .searchIcon {
+        left: 12px;
+        color: var(--text-faint);
+    }
+
+    .mobileSearch .searchInput {
+        height: 40px;
+        padding-left: 38px;
+        border-color: var(--border-soft);
+        color: var(--mw-text);
+        background: var(--bg-raised);
+    }
+
+    .mobileSearch .searchInput::placeholder {
+        color: var(--text-faint);
+    }
+
+    .mobileSearch .suggestions {
         position: fixed;
-        top: 54px;
-        left: 10px;
-        right: 10px;
+        top: 61px;
+        right: max(10px, env(safe-area-inset-right));
+        left: max(10px, env(safe-area-inset-left));
+        max-height: min(420px, calc(100dvh - 140px));
+        overflow-y: auto;
+        overscroll-behavior: contain;
     }
 
     .suggestionMeta {
         display: none;
     }
+
+    .suggestion {
+        min-height: 48px;
+        padding: 9px 12px;
+    }
+
+    .mobileDock {
+        position: fixed;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 80;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        height: calc(60px + env(safe-area-inset-bottom));
+        padding: 4px max(4px, env(safe-area-inset-right)) env(safe-area-inset-bottom) max(4px, env(safe-area-inset-left));
+        border-top: 1px solid var(--border);
+        background: color-mix(in srgb, var(--bg-card) 94%, transparent);
+        box-shadow: 0 -5px 18px rgba(0, 0, 0, .2);
+        backdrop-filter: blur(14px);
+    }
+
+    .mobileDockItem {
+        position: relative;
+        display: flex;
+        min-width: 0;
+        min-height: 52px;
+        padding: 4px 2px 3px;
+        border: 0;
+        border-radius: 10px;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 3px;
+        color: var(--text-faint);
+        background: transparent;
+        font: inherit;
+        font-size: 10.5px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .mobileDockItemActive {
+        color: var(--accent-strong);
+        background: transparent;
+    }
+
+    .mobileDockItemActive::before {
+        position: absolute;
+        top: -4px;
+        width: 28px;
+        height: 3px;
+        border-radius: 0 0 3px 3px;
+        background: var(--accent);
+        content: '';
+    }
+
+    .mobileCreate {
+        color: var(--mw-text);
+    }
+
+    .mobileCreateIcon {
+        display: grid;
+        width: 32px;
+        height: 32px;
+        margin-top: -9px;
+        place-items: center;
+        border-radius: 12px;
+        color: var(--accent-contrast);
+        background: var(--accent);
+        box-shadow: 0 4px 12px var(--accent-shadow);
+    }
 }
 
-@media (max-width: 480px) {
-    .wordmark {
+@media (max-width: 900px) {
+    .signInLabel {
         display: none;
+    }
+}
+
+@media (max-width: 360px) {
+    .mobileSearch {
+        right: max(98px, calc(env(safe-area-inset-right) + 88px));
+        left: max(52px, calc(env(safe-area-inset-left) + 42px));
+    }
+
+
+    .mobileSearchLoggedIn {
+        right: max(124px, calc(env(safe-area-inset-right) + 114px));
     }
 }

@@ -5,44 +5,22 @@ import classNames from 'classnames';
 import styles from './toast-notification.css';
 
 const ToastNotificationComponent = props => {
-    const {message, type = 'info', visible, onClose} = props;
+    const {message, sequence, type = 'info', visible, onClose} = props;
     const intl = props.intl;
 
-    const [closing, setClosing] = React.useState(false);
-
-    const handleClose = React.useCallback(() => {
-        setClosing(true);
-    }, []);
-
     React.useEffect(() => {
-        if (!visible || !message) {
-            setClosing(false);
-            return;
-        }
-        const timeout = setTimeout(() => {
-            setClosing(true);
-        }, 3000);
-        return () => clearTimeout(timeout);
-    }, [visible, message, type]);
-
-    React.useEffect(() => {
-        if (!closing) return () => {};
+        if (!visible || !message) return () => {};
         const timeout = setTimeout(() => {
             onClose();
-            setClosing(false);
-        }, 300);
+        }, 3000);
         return () => clearTimeout(timeout);
-    }, [closing, onClose]);
+    }, [visible, message, sequence, type, onClose]);
 
     if (!visible || !message) return null;
 
     return (
         <div
-            className={classNames(
-                styles.toast,
-                styles[type],
-                closing ? styles.closing : null
-            )}
+            className={classNames(styles.toast, styles[type])}
             role="alert"
             aria-live="polite"
         >
@@ -50,8 +28,9 @@ const ToastNotificationComponent = props => {
                 {message}
             </span>
             <button
+                type="button"
                 className={styles.closeButton}
-                onClick={handleClose}
+                onClick={onClose}
                 aria-label={intl.formatMessage({
                     defaultMessage: 'Close notification',
                     id: 'tw.toast.close'
@@ -66,9 +45,14 @@ const ToastNotificationComponent = props => {
 ToastNotificationComponent.propTypes = {
     intl: intlShape,
     message: PropTypes.oneOfType([PropTypes.string, PropTypes.node]),
+    sequence: PropTypes.number,
     type: PropTypes.oneOf(['success', 'error', 'info', 'warning']),
     visible: PropTypes.bool,
     onClose: PropTypes.func.isRequired
+};
+
+export {
+    ToastNotificationComponent
 };
 
 export default injectIntl(ToastNotificationComponent);

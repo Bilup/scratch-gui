@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import omit from 'lodash.omit';
 import {connect} from 'react-redux';
 import {setFontsLoaded} from '../../reducers/fonts-loaded';
 import {loadFonts} from 'scratch-render-fonts';
@@ -26,7 +25,9 @@ const FontLoaderHOC = function (WrappedComponent) {
                 });
         }
         render () {
-            const componentProps = omit(this.props, ['onSetFontsLoaded']);
+            const componentProps = {...this.props};
+            delete componentProps.fontsLoaded;
+            delete componentProps.onSetFontsLoaded;
             return (
                 <WrappedComponent
                     {...componentProps}

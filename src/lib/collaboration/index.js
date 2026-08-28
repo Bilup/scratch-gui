@@ -29,13 +29,6 @@ class CollabService extends Emitter {
         this.roomId = null;
         this.username = null;
         this.handle = null;
-        // shortcut id -> key combo map (e.g. {collaborationChat: 'Shift+C'}).
-        // The collaboration container assigns this directly; the cursor
-        // overlay reads it lazily on every keydown so edits apply live.
-        this.customShortcuts = {};
-        // i18n strings (e.g. {chatPlaceholder}) assigned by the collaboration
-        // container; the cursor overlay reads them when building the chat input.
-        this.translations = {};
 
         this._transport = null;
         this._session = null;
@@ -62,10 +55,11 @@ class CollabService extends Emitter {
      * @param {string} username Display name.
      * @param {boolean} isHost Create (true) or join (false).
      * @param {string} [privacy] 'public' | 'private' (host only).
-     * @param {string} [handle] Bilup Accounts handle, for avatars.
+     * @param {string} [handle] Rotur handle, for avatars.
+     * @param {number} [maxUsers] Maximum number of people in a hosted room.
      * @returns {Promise<string>} Our peer id.
      */
-    async connectToRoom (roomId, username, isHost = false, privacy = 'public', handle = null) {
+    async connectToRoom (roomId, username, isHost = false, privacy = 'public', handle = null, maxUsers = 3) {
         if (!roomId) throw new Error('roomId is required to connect to a room');
         if (!this.vm) throw new Error('CollabService.init(vm) must be called first');
         if (this._transport) this.disconnect();
@@ -95,7 +89,7 @@ class CollabService extends Emitter {
 
         try {
             const id = isHost ?
-                await this._connectAsHost(roomId, privacy) :
+                await this._connectAsHost(roomId, privacy, maxUsers) :
                 await this._connectAsClient(roomId);
             this.isConnected = true;
             if (this._workspace) this._adapter.attach(this._workspace);
@@ -106,14 +100,15 @@ class CollabService extends Emitter {
         }
     }
 
-    async _connectAsHost (roomId, privacy) {
+    async _connectAsHost (roomId, privacy, maxUsers) {
         const session = new HostSession({
             transport: this._transport,
             applier: this._applier,
             roomId,
             username: this.username,
             handle: this.handle,
-            privacy
+            privacy,
+            maxUsers
         });
         this._session = session;
 
@@ -214,10 +209,6 @@ class CollabService extends Emitter {
         session.on('join-denied', reason => {
             this.emit('approval-resolved');
             this.emit('join-denied', reason);
-            // Fully tear down: a denied client must not keep its transport
-            // (which would auto-reconnect and re-request admission in a
-            // loop). Tear down quietly — the denial error is already shown.
-            this._teardown();
         });
         session.on('kicked', () => {
             this.emit('kicked-from-room', {});
@@ -272,8 +263,6 @@ class CollabService extends Emitter {
         this._cursorOverlay = new CursorOverlay({
             vm: this.vm,
             presence: this._presence,
-            getCustomShortcuts: () => this.customShortcuts,
-            getTranslations: () => this.translations,
             getUsername: userId => {
                 const user = session.users.get(userId);
                 return user ? user.username : '';
@@ -514,31 +503,16 @@ class CollabService extends Emitter {
 
     // ----- Host controls -----
 
-    /**
-     * Whether the current peer created (and therefore owns) the room.
-     * Derived directly from the connection state instead of from the
-     * connected-users list, so the host UI never loses the host badge (and
-     * the kick/approve/deny controls that depend on it) because of a stale
-     * users list.
-     * @returns {boolean} True when this peer is the room host.
-     */
-    isCurrentUserHost () {
-        return Boolean(this.isHost);
-    }
-
     kickUser (userId) {
-        if (this._session && this.isHost) return this._session.kickUser(userId);
-        return false;
+        if (this._session && this.isHost) this._session.kickUser(userId);
     }
 
     approveJoinRequest (requesterId) {
-        if (this._session && this.isHost) return this._session.approveJoinRequest(requesterId);
-        return false;
+        if (this._session && this.isHost) this._session.approveJoinRequest(requesterId);
     }
 
     denyJoinRequest (requesterId, reason) {
-        if (this._session && this.isHost) return this._session.denyJoinRequest(requesterId, reason);
-        return false;
+        if (this._session && this.isHost) this._session.denyJoinRequest(requesterId, reason);
     }
 
     changeRoomPrivacy (privacy) {

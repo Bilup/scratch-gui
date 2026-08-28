@@ -1,19 +1,19 @@
 import PropTypes from 'prop-types';
 import React, {useEffect, useState} from 'react';
 import {Link} from 'react-router-dom';
-import {FormattedMessage} from 'react-intl';
-import {useIntl} from '../../lib/tw-use-intl.jsx';
 import {
-    AppWindow, AtSign, Coins, Flag, GitFork, Heart, Megaphone,
-    MessageCircle, Reply, ShieldAlert, UserPlus
+    AppWindow, AtSign, Coins, Flag, Gavel, GitFork, Heart, Megaphone,
+    MessageCircle, Reply, ShieldAlert, UserPlus, GitPullRequest, Layers3, Lightbulb, Star, Users
 } from 'lucide-react';
 import {projectUrl} from '../api';
 import Avatar from '../components/Avatar.jsx';
 import Button from '../components/ui/Button.jsx';
+import RichText from '../components/RichText.jsx';
 import {useUser} from '../UserContext.jsx';
 import {fetchNotifications, markNotificationsRead, subscribeNotifications} from '../../lib/rotur/client.js';
 import {timeAgo} from '../format';
 import styles from './Notifications.module.css';
+import {getNotificationPreferences, categoryForNotification} from '../notification-preferences';
 
 const ICONS = {
     love: Heart,
@@ -41,6 +41,19 @@ const ICONS = {
     moderation: ShieldAlert,
     news: Megaphone,
     report_update: Flag,
+    contribution: GitPullRequest,
+    space_project: Layers3,
+    space_comment: MessageCircle,
+    space_curator_invite: UserPlus,
+    space_curator_accepted: Users,
+    space_curator_declined: Users,
+    space_curator_removed: ShieldAlert,
+    challenge_judge_invite: Gavel,
+    challenge_judge_accepted: Gavel,
+    challenge_join: UserPlus,
+    project_feedback: Lightbulb,
+    project_review: Star,
+    roadmap_comment: Lightbulb,
     notification: AppWindow
 };
 
@@ -64,23 +77,15 @@ const commentAnchor = n => (n.commentId ? `#comment-id-${n.commentId}` : '');
 const groupUrl = n => (n.group_tag ? `https://rotur.dev/groups/${encodeURIComponent(n.group_tag)}` : null);
 
 const REPORT_OUTCOMES = {
-    dismiss: 'mw.community.notifications.outcome.dismiss',
-    warn_user: 'mw.community.notifications.outcome.warnUser',
-    ban_user: 'mw.community.notifications.outcome.banUser',
-    unshare_project: 'mw.community.notifications.outcome.unshareProject'
+    dismiss: 'reviewed; no action was taken',
+    warn_user: 'actioned with a warning',
+    ban_user: 'actioned with a ban',
+    unshare_project: 'actioned; the project was unshared'
 };
 
 const escapeRegex = s => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-// Split text into plain segments and clickable URL segments.
-const linkify = text => {
-    const parts = String(text || '').split(/(https?:\/\/[^\s]+)/g);
-    return parts.map((part, i) => (
-        /^https?:\/\//.test(part) ? (
-            <a key={i} href={part} target="_blank" rel="noreferrer" className={styles.link}>{part}</a>
-        ) : part
-    ));
-};
+const linkify = text => <RichText text={text} />;
 
 // Generic notifications carry the sender in `title` (MistWarp posts
 // title = actor) and the full sentence in `body`; drop the duplicated
@@ -92,6 +97,23 @@ const stripSender = (sender, text) => {
     return text.replace(new RegExp(`^${escapeRegex(sender)}[\\s:.,\\u2014-]*`, 'i'), '');
 };
 
+const mergeNotifications = (...lists) => {
+    const seen = new Set();
+    const merged = [];
+    for (const list of lists) {
+        for (const item of list || []) {
+            if (!item) continue;
+            const key = item.id || `${item.type}:${item.created || item.timestamp}:${item.actor || item.title || ''}`;
+            if (seen.has(key)) continue;
+            seen.add(key);
+            merged.push(item);
+        }
+    }
+    return merged;
+};
+
+const markItemsRead = items => (items || []).map(item => ({...item, read: true}));
+
 // Prefer a username-shaped title (real actor) over the app account that
 // posted the notification ("MistWarp"). Returns null when no actor is known.
 const actorFor = n => {
@@ -102,171 +124,78 @@ const actorFor = n => {
     return n.actor || n.from || title || null;
 };
 
-const describe = (n, intl) => {
+const describe = n => {
     switch (n.type) {
     case 'love': return n.projectTitle ?
-        <FormattedMessage
-            id="mw.community.notifications.love"
-            defaultMessage="loved {title}"
-            values={{title: <strong>{n.projectTitle}</strong>}}
-        /> :
+        <span>loved <strong>{n.projectTitle}</strong></span> :
         <span>loved your project</span>;
     case 'comment': return n.projectTitle ?
-        <FormattedMessage
-            id="mw.community.notifications.comment"
-            defaultMessage="commented on {title}"
-            values={{title: <strong>{n.projectTitle}</strong>}}
-        /> :
+        <span>commented on <strong>{n.projectTitle}</strong></span> :
         <span>commented on your project</span>;
-    case 'profile_comment': return <FormattedMessage
-        id="mw.community.notifications.profileComment"
-        defaultMessage="commented on your profile"
-    />;
+    case 'profile_comment': return <span>commented on your profile</span>;
     case 'reply': return n.post_id ?
-        <FormattedMessage
-            id="mw.community.notifications.replyPost"
-            defaultMessage="replied to your post"
-        /> :
+        <span>replied to your post</span> :
         n.projectTitle ?
-            <FormattedMessage
-                id="mw.community.notifications.replyOn"
-                defaultMessage="replied to your comment on {title}"
-                values={{title: <strong>{n.projectTitle}</strong>}}
-            /> :
-            <FormattedMessage
-                id="mw.community.notifications.reply"
-                defaultMessage="replied to your comment"
-            />;
+            <span>replied to your comment on <strong>{n.projectTitle}</strong></span> :
+            <span>replied to your comment</span>;
     case 'purchase': return (
-        <FormattedMessage
-            id="mw.community.notifications.purchase"
-            defaultMessage="bought {title} for {amount} credits"
-            values={{title: <strong>{n.projectTitle || 'your project'}</strong>, amount: n.amount}}
-        />
+        <span>
+            bought {n.projectTitle ? <strong>{n.projectTitle}</strong> : 'your project'}
+            {n.amount ? ` for ${n.amount} credits` : ''}
+        </span>
     );
     case 'donation': return (
-        <FormattedMessage
-            id="mw.community.notifications.donation"
-            defaultMessage="donated {amount} credits to you"
-            values={{amount: n.amount}}
-        />
+        <span>donated {n.amount ? `${n.amount} credits` : 'credits'} to you</span>
     );
     case 'remix': return n.projectTitle ?
-        <FormattedMessage
-            id="mw.community.notifications.remix"
-            defaultMessage="remixed {title}"
-            values={{title: <strong>{n.projectTitle}</strong>}}
-        /> :
+        <span>remixed <strong>{n.projectTitle}</strong></span> :
         <span>remixed your project</span>;
-    case 'follow': return <FormattedMessage
-        id="mw.community.notifications.follow"
-        defaultMessage="followed you"
-    />;
+    case 'follow': return <span>followed you</span>;
     case 'mention': return n.post_id ?
-        <FormattedMessage
-            id="mw.community.notifications.mentionPost"
-            defaultMessage="mentioned you in a post"
-        /> :
+        <span>mentioned you in a post</span> :
         n.projectTitle ?
-            <FormattedMessage
-                id="mw.community.notifications.mentionOn"
-                defaultMessage="mentioned you on {title}"
-                values={{title: <strong>{n.projectTitle}</strong>}}
-            /> :
-            <FormattedMessage
-                id="mw.community.notifications.mention"
-                defaultMessage="mentioned you in a comment"
-            />;
-    case 'like': return <FormattedMessage
-        id="mw.community.notifications.like"
-        defaultMessage="liked your post"
-    />;
-    case 'repost': return <FormattedMessage
-        id="mw.community.notifications.repost"
-        defaultMessage="reposted your post"
-    />;
-    case 'group_invite': return <FormattedMessage
-        id="mw.community.notifications.groupInvite"
-        defaultMessage="invited you to join {group}"
-        values={{group: <strong>{n.group_name}</strong>}}
-    />;
-    case 'group_request_accepted': return <FormattedMessage
-        id="mw.community.notifications.groupRequestAccepted"
-        defaultMessage="accepted your request to join {group}"
-        values={{group: <strong>{n.group_name}</strong>}}
-    />;
-    case 'group_request_declined': return <FormattedMessage
-        id="mw.community.notifications.groupRequestDeclined"
-        defaultMessage="declined your request to join {group}"
-        values={{group: <strong>{n.group_name}</strong>}}
-    />;
-    case 'group_kicked': return <FormattedMessage
-        id="mw.community.notifications.groupKicked"
-        defaultMessage="removed you from {group}"
-        values={{group: <strong>{n.group_name}</strong>}}
-    />;
-    case 'group_banned': return <FormattedMessage
-        id="mw.community.notifications.groupBanned"
-        defaultMessage="banned you from {group}"
-        values={{group: <strong>{n.group_name}</strong>}}
-    />;
-    case 'group_ownership_transferred': return <FormattedMessage
-        id="mw.community.notifications.groupOwnershipTransferred"
-        defaultMessage="transferred {group} to you"
-        values={{group: <strong>{n.group_name}</strong>}}
-    />;
-    case 'cosmetic_gift': return <FormattedMessage
-        id="mw.community.notifications.cosmeticGift"
-        defaultMessage="sent you {cosmetic}"
-        values={{cosmetic: <strong>{n.cosmetic_name}</strong>}}
-    />;
-    case 'item_received': return <FormattedMessage
-        id="mw.community.notifications.itemReceived"
-        defaultMessage="sent you {item}"
-        values={{item: <strong>{n.item_name}</strong>}}
-    />;
-    case 'item_sold': return <FormattedMessage
-        id="mw.community.notifications.itemSold"
-        defaultMessage="bought {item} from you"
-        values={{item: <strong>{n.item_name}</strong>}}
-    />;
-    case 'item_purchased': return <FormattedMessage
-        id="mw.community.notifications.itemPurchased"
-        defaultMessage="you bought {item}"
-        values={{item: <strong>{n.item_name}</strong>}}
-    />;
+            <span>mentioned you on <strong>{n.projectTitle}</strong></span> :
+            <span>mentioned you in a comment</span>;
+    case 'like': return <span>liked your post</span>;
+    case 'repost': return <span>reposted your post</span>;
+    case 'group_invite': return <span>invited you to join <strong>{n.group_name}</strong></span>;
+    case 'group_request_accepted': return <span>accepted your request to join <strong>{n.group_name}</strong></span>;
+    case 'group_request_declined': return <span>declined your request to join <strong>{n.group_name}</strong></span>;
+    case 'group_kicked': return <span>removed you from <strong>{n.group_name}</strong></span>;
+    case 'group_banned': return <span>banned you from <strong>{n.group_name}</strong></span>;
+    case 'group_ownership_transferred': return <span>transferred <strong>{n.group_name}</strong> to you</span>;
+    case 'cosmetic_gift': return <span>sent you <strong>{n.cosmetic_name}</strong></span>;
+    case 'item_received': return <span>sent you <strong>{n.item_name}</strong></span>;
+    case 'item_sold': return <span>bought <strong>{n.item_name}</strong> from you</span>;
+    case 'item_purchased': return <span>you bought <strong>{n.item_name}</strong></span>;
     case 'standing': return n.reason ?
-        <FormattedMessage
-            id="mw.community.notifications.standingReason"
-            defaultMessage="Your account standing is now {level}: {reason}"
-            values={{level: <strong>{n.level}</strong>, reason: n.reason}}
-        /> :
-        <FormattedMessage
-            id="mw.community.notifications.standing"
-            defaultMessage="Your account standing is now {level}."
-            values={{level: <strong>{n.level}</strong>}}
-        />;
-    case 'moderation': return <FormattedMessage
-        id="mw.community.notifications.moderatorMessage"
-        defaultMessage="A moderator sent you a message."
-    />;
-    case 'news': return <FormattedMessage
-        id="mw.community.notifications.news"
-        defaultMessage="New announcement: {title}"
-        values={{title: <strong>{n.title}</strong>}}
-    />;
-    case 'report_update': return <FormattedMessage
-        id="mw.community.notifications.reportOutcome"
-        defaultMessage="Your report was {outcome}."
-        values={{outcome: intl.formatMessage({
-            id: (n.action && REPORT_OUTCOMES[n.action]) || 'mw.community.notifications.outcome.dismiss',
-            defaultMessage: 'reviewed; no action was taken'
-        })}}
-    />;
-    default: return <FormattedMessage
-        id="mw.community.notifications.didSomething"
-        defaultMessage="did something"
-    />;
+        <span>Your account standing is now <strong>{n.level}</strong>: {n.reason}</span> :
+        <span>Your account standing is now <strong>{n.level}</strong>.</span>;
+    case 'moderation': return <span>{n.message || 'A moderator sent you a message.'}</span>;
+    case 'news': return <span>New announcement: <strong>{n.title}</strong></span>;
+    case 'report_update': return <span>Your report was {REPORT_OUTCOMES[n.action] || 'reviewed'}.</span>;
+    case 'contribution': return <span>sent changes for <strong>{n.projectTitle}</strong></span>;
+    case 'space_project': return (
+        <span>added <strong>{n.projectTitle}</strong> to <strong>{n.spaceTitle}</strong></span>
+    );
+    case 'space_comment': return <span>commented on <strong>{n.spaceTitle}</strong></span>;
+    case 'space_curator_invite': return <span>invited you to curate <strong>{n.spaceTitle}</strong></span>;
+    case 'space_curator_accepted': return (
+        <span>accepted your invitation to curate <strong>{n.spaceTitle}</strong></span>
+    );
+    case 'space_curator_declined': return (
+        <span>declined your invitation to curate <strong>{n.spaceTitle}</strong></span>
+    );
+    case 'space_curator_removed': return <span>removed you as a curator of <strong>{n.spaceTitle}</strong></span>;
+    case 'challenge_judge_invite': return <span>invited you to judge <strong>{n.spaceTitle}</strong></span>;
+    case 'challenge_judge_accepted': return (
+        <span>accepted your invitation to judge <strong>{n.spaceTitle}</strong></span>
+    );
+    case 'challenge_join': return <span>joined <strong>{n.spaceTitle}</strong></span>;
+    case 'project_feedback': return <span>sent {n.feedbackType} feedback for <strong>{n.projectTitle}</strong></span>;
+    case 'project_review': return <span>rated <strong>{n.projectTitle}</strong> {n.rating} out of 5</span>;
+    case 'roadmap_comment': return <span>commented on <strong>{n.roadmapTitle}</strong></span>;
+    default: return <span>did something</span>;
     }
 };
 
@@ -341,25 +270,27 @@ GenericNotification.propTypes = {
 };
 
 const Notifications = ({hideHeading}) => {
-    const intl = useIntl();
-    const {user, loading} = useUser();
+    const {user, loading, login} = useUser();
+    const viewerName = (user && user.username) || '';
     const [items, setItems] = useState(null);
+    const [preferences, setPreferences] = useState(getNotificationPreferences());
+
+    useEffect(() => {
+        const update = () => setPreferences(getNotificationPreferences());
+        window.addEventListener('mw:notification-preferences', update);
+        return () => window.removeEventListener('mw:notification-preferences', update);
+    }, []);
     const [failed, setFailed] = useState(false);
     const [attempt, setAttempt] = useState(0);
 
     useEffect(() => {
-        if (!user) {
+        if (!viewerName) {
             return () => {};
         }
         return subscribeNotifications(notification => {
-            setItems(prev => {
-                if (!prev || prev.some(item => item.id === notification.id)) {
-                    return prev;
-                }
-                return [notification, ...prev];
-            });
+            setItems(prev => mergeNotifications([notification], prev || []));
         });
-    }, [user]);
+    }, [viewerName]);
 
     useEffect(() => {
         const onRemoved = event => {
@@ -374,40 +305,61 @@ const Notifications = ({hideHeading}) => {
     }, []);
 
     useEffect(() => {
-        if (!user) {
-            return;
-        }
+        setItems(null);
         setFailed(false);
+        if (!viewerName) {
+            return () => {};
+        }
+        let cancelled = false;
         fetchNotifications()
             .then(list => {
-                setItems(list);
+                if (cancelled) return;
+                setItems(current => mergeNotifications(current || [], list));
                 markNotificationsRead()
-                    .then(() => window.dispatchEvent(new Event('mw:notifications-read')))
+                    .then(marked => {
+                        if (!marked || cancelled) return;
+                        setItems(markItemsRead);
+                        window.dispatchEvent(new Event('mw:notifications-read'));
+                    })
                     .catch(() => {});
             })
-            .catch(() => setFailed(true));
-    }, [user, attempt]);
+            .catch(() => {
+                if (!cancelled) setFailed(true);
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [attempt, viewerName]);
 
     if (loading) {
-        return <main className={styles.page}><p className={styles.status}>{intl.formatMessage({id: 'mw.community.notifications.loading', defaultMessage: 'Loading…'})}</p></main>;
+        return <main className={styles.page}><p className={styles.status}>Loading…</p></main>;
     }
     if (!user) {
-        return <main className={styles.page}><p className={styles.status}>{intl.formatMessage({id: 'mw.community.notifications.signIn', defaultMessage: 'Sign in to see your notifications.'})}</p></main>;
+        return (
+            <main className={styles.page}>
+                <p className={styles.status}>
+                    Sign in to see your notifications. <Button onClick={login}>Sign in</Button>
+                </p>
+            </main>
+        );
     }
+    const visibleItems = (items || [])
+        .filter(item => preferences[categoryForNotification(item.type)] !== false);
 
     return (
         <main className={styles.page}>
-            {hideHeading ? null : <h1>{intl.formatMessage({id: 'mw.community.notifications.title', defaultMessage: 'Notifications'})}</h1>}
+            {hideHeading ? null : <h1>Notifications</h1>}
             {failed ? (
                 <p className={styles.status}>
-                    {intl.formatMessage({id: 'mw.community.notifications.couldNotLoad', defaultMessage: 'Couldn\'t load.'})}{' '}
-                    <Button onClick={() => setAttempt(a => a + 1)}>{intl.formatMessage({id: 'mw.community.notifications.tryAgain', defaultMessage: 'Try again'})}</Button>
+                    {items === null ? 'Couldn\'t load notifications.' : 'Some notifications may be missing.'}{' '}
+                    <Button onClick={() => setAttempt(a => a + 1)}>Try again</Button>
                 </p>
-            ) : items === null ? (
-                <p className={styles.status}>{intl.formatMessage({id: 'mw.community.notifications.loading', defaultMessage: 'Loading…'})}</p>
-            ) : items.length ? (
+            ) : null}
+            {items === null ? (!failed ? (
+                <p className={styles.status}>Loading…</p>
+            ) : null) : visibleItems.length ? (
                 <div className={styles.list}>
-                    {items.map(n => {
+                    {visibleItems.map(n => {
                         const Icon = ICONS[n.type] || Heart;
                         const ts = n.created || n.timestamp;
                         const time = timeAgo(ts);
@@ -427,9 +379,9 @@ const Notifications = ({hideHeading}) => {
                                     <span className={styles.sysAvatar}><Icon size={20} /></span>
                                     <div className={styles.text}>
                                         {n.type === 'news' && n.newsId ? (
-                                            <Link to="/news" className={styles.body}>{describe(n, intl)}</Link>
+                                            <Link to="/news" className={styles.body}>{describe(n)}</Link>
                                         ) : (
-                                            <span className={styles.body}>{describe(n, intl)}</span>
+                                            <span className={styles.body}>{describe(n)}</span>
                                         )}
                                     </div>
                                     <span className={styles.time}>{time}</span>
@@ -444,9 +396,9 @@ const Notifications = ({hideHeading}) => {
                         const groupLink = GROUP_TYPES.includes(n.type) ? groupUrl(n) : null;
                         const body = groupLink ? (
                             <a href={groupLink} target="_blank" rel="noreferrer" className={styles.body}>
-                                {describe(n, intl)}
+                                {describe(n)}
                             </a>
-                        ) : describe(n, intl);
+                        ) : describe(n);
                         return (
                             <div key={n.id} className={n.read ? styles.item : styles.itemUnread}>
                                 <span className={styles.avatarWrap}>
@@ -458,7 +410,17 @@ const Notifications = ({hideHeading}) => {
                                 <div className={styles.text}>
                                     <Link to={`/users/${actor}`} className={styles.actor}>{actor}</Link>
                                     {' '}
-                                    {n.projectId ? (
+                                    {n.spaceId ? (
+                                        <Link
+                                            to={`/spaces/${n.spaceId}`}
+                                            className={styles.body}
+                                        >{body}</Link>
+                                    ) : n.roadmapId ? (
+                                        <Link
+                                            to={`/roadmap#idea-${n.roadmapId}`}
+                                            className={styles.body}
+                                        >{body}</Link>
+                                    ) : n.projectId ? (
                                         <Link
                                             to={`${projectUrl(n.projectId)}${commentAnchor(n)}`}
                                             className={styles.body}
@@ -475,8 +437,13 @@ const Notifications = ({hideHeading}) => {
                         );
                     })}
                 </div>
+            ) : items.length ? (
+                <p className={styles.status}>
+                    Your notification preferences hide all current activity.{' '}
+                    <Link to="/settings?section=notifications">Change preferences</Link>
+                </p>
             ) : (
-                <p className={styles.status}>{intl.formatMessage({id: 'mw.community.notifications.empty', defaultMessage: 'Nothing yet. Activity on your projects shows up here.'})}</p>
+                <p className={styles.status}>Nothing yet. Activity on your projects shows up here.</p>
             )}
         </main>
     );
@@ -486,4 +453,5 @@ Notifications.propTypes = {
     hideHeading: PropTypes.bool
 };
 
+export {markItemsRead, mergeNotifications};
 export default Notifications;

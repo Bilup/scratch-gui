@@ -21,34 +21,47 @@ import {
     accountMenuOpen
 } from '../../reducers/menus.js';
 import {openRoturLoginModal} from '../../reducers/modals.js';
-import isScratchDesktop from '../../lib/utils/isScratchDesktop.js';
+
+const logout = onLogout => {
+    if (onLogout) {
+        onLogout();
+        return;
+    }
+    const api = getRoturSessionApi();
+    if (api && api.logout) api.logout();
+};
 
 const RoturAccount = props => {
-    if (!props.username && !isScratchDesktop()) {
+    const handleSwitchAccount = React.useCallback(() => {
+        const authUrl = buildAuthUrl();
+        props.onCloseMenu();
+        logout(props.onLogout);
+        window.location.href = authUrl;
+    }, [props.onCloseMenu, props.onLogout]);
+
+    const handleLogout = React.useCallback(() => {
+        props.onCloseMenu();
+        logout(props.onLogout);
+    }, [props.onCloseMenu, props.onLogout]);
+
+    if (!props.username) {
         return (
-            <div
-                className={classNames(menuBarStyles.menuBarItem, menuBarStyles.hoverable)}
+            <button
+                type="button"
+                className={classNames(
+                    menuBarStyles.menuBarItem,
+                    menuBarStyles.hoverable,
+                    accountNavStyles.loginButton
+                )}
                 onClick={props.onOpenLogin}
-                role="button"
-                tabIndex={0}
-                onKeyDown={e => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        props.onOpenLogin();
-                    }
-                }}
             >
                 <FormattedMessage
                     defaultMessage="Login"
-                    description="Menu bar item to open Bilup Accounts login when signed out"
+                    description="Menu bar item to open Rotur login when signed out"
                     id="mw.rotur.menuBar.login"
                 />
-            </div>
+            </button>
         );
-    }
-
-    if (!props.username && isScratchDesktop()) {
-        return null;
     }
 
     const go = path => () => {
@@ -56,17 +69,9 @@ const RoturAccount = props => {
         window.location.href = path;
     };
 
-    const doLogout = () => {
-        if (props.onLogout) {
-            props.onLogout();
-            return;
-        }
-        const api = getRoturSessionApi();
-        if (api && api.logout) api.logout();
-    };
-
     return (
         <MenuLabel
+            ariaLabel={props.username}
             open={props.menuOpen}
             onOpen={props.onOpenMenu}
             onClose={props.onCloseMenu}
@@ -98,7 +103,7 @@ const RoturAccount = props => {
                         <Trophy />
                         <FormattedMessage
                             defaultMessage="Leaderboard"
-                            description="Text to link to the leaderboard, in the Bilup Accounts account navigation menu"
+                            description="Text to link to the leaderboard, in the Rotur account navigation menu"
                             id="mw.rotur.accountMenu.leaderboard"
                         />
                     </MenuItemContainer>
@@ -107,31 +112,23 @@ const RoturAccount = props => {
                     <Settings />
                     <FormattedMessage
                         defaultMessage="Settings"
-                        description="Text to link to settings, in the Bilup Accounts account navigation menu"
+                        description="Text to link to settings, in the Rotur account navigation menu"
                         id="mw.rotur.accountMenu.settings"
                     />
                 </MenuItemContainer>
                 <MenuSection>
                     <MenuItemContainer
-                        onClick={() => {
-                            const authUrl = buildAuthUrl();
-                            props.onCloseMenu();
-                            doLogout();
-                            window.location.href = authUrl;
-                        }}
+                        onClick={handleSwitchAccount}
                     >
                         <Users />
                         <FormattedMessage
                             defaultMessage="Switch account"
-                            description="Account menu item that signs out and opens the Bilup Accounts auth page"
+                            description="Account menu item that signs out and opens the Rotur auth page"
                             id="mw.rotur.accountMenu.switchAccount"
                         />
                     </MenuItemContainer>
                     <MenuItemContainer
-                        onClick={() => {
-                            props.onCloseMenu();
-                            doLogout();
-                        }}
+                        onClick={handleLogout}
                     >
                         <LogOut />
                         <FormattedMessage

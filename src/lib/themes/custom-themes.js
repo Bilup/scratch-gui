@@ -1,14 +1,9 @@
 /**
- * Custom theme management for Bilup
+ * Custom theme management for Mistwarp
  * Handles creation, storage, and management of user-defined themes including custom gradients and accents
  */
 
-import defaultsDeep from 'lodash.defaultsdeep';
-import * as blocksThree from './blocks/three.js';
-import * as blocksHighContrast from './blocks/high-contrast.js';
-import * as blocksDark from './blocks/dark.js';
 import {Theme, GUI_MAP} from './index.js';
-import {getItem as getStorageItem} from '../utils/safe-storage.js';
 import {mergeStoredAppearance} from './appearance.js';
 
 const CUSTOM_THEMES_STORAGE_KEY = 'tw:custom-themes';
@@ -330,7 +325,7 @@ class GradientUtils {
 class CustomTheme extends Theme {
     constructor (
         name, description, accent, gui, blocks, menuBarAlign, wallpaper, fonts, author = 'User',
-        appearance = {}
+        appearance = {}, sourceId = ''
     ) {
         // If accent is an object (custom gradient),
         // pass a default string to parent and store the custom accent separately
@@ -343,6 +338,8 @@ class CustomTheme extends Theme {
         this.description = description;
         /** @readonly */
         this.author = author;
+        /** @readonly */
+        this.sourceId = sourceId;
         /** @readonly */
         this.createdAt = new Date().toISOString();
         /** @readonly */
@@ -374,6 +371,9 @@ class CustomTheme extends Theme {
      */
     getGuiColors () {
         if (this.customAccent) {
+            // Use dynamic imports to avoid circular dependency issues
+            const defaultsDeep = require('lodash.defaultsdeep');
+
             // Get the base GUI colors directly without importing from index.js
             let baseGuiColors = {};
 
@@ -421,7 +421,8 @@ class CustomTheme extends Theme {
             options.wallpaper,
             options.fonts,
             this.author,
-            options.appearance
+            options.appearance,
+            this.sourceId
         );
         theme.createdAt = this.createdAt;
         return theme;
@@ -433,6 +434,9 @@ class CustomTheme extends Theme {
      */
     getBlockColors () {
         if (this.customAccent) {
+            // Use dynamic imports to avoid circular dependency issues
+            const defaultsDeep = require('lodash.defaultsdeep');
+
             // Get base block colors directly without importing from index.js
             let baseGuiColors = {};
             let baseBlockColors = {};
@@ -440,10 +444,13 @@ class CustomTheme extends Theme {
             try {
                 // Import block theme modules directly
                 if (this.blocks === 'high-contrast') {
+                    const blocksHighContrast = require('./blocks/high-contrast.js');
                     baseBlockColors = blocksHighContrast.blockColors || {};
                 } else if (this.blocks === 'dark') {
+                    const blocksDark = require('./blocks/dark.js');
                     baseBlockColors = blocksDark.blockColors || {};
                 } else {
+                    const blocksThree = require('./blocks/three.js');
                     baseBlockColors = blocksThree.blockColors || {};
                 }
  
@@ -488,6 +495,7 @@ class CustomTheme extends Theme {
             name: this.name,
             description: this.description,
             author: this.author,
+            sourceId: this.sourceId || null,
             accent: accentExport || (typeof this.originalAccent === 'string' ? this.originalAccent : null),
             menuBarForeground: menuBarForeground || null,
             gui: this.gui,
@@ -703,7 +711,8 @@ class CustomTheme extends Theme {
             data.appearance || {
                 menuBarLayout: data.menuBarLayout || null,
                 styles: data.styleSettings || null
-            }
+            },
+            data.sourceId || ''
         );
 
         // Preserve original UUID and creation date if available
@@ -759,9 +768,8 @@ class CustomThemeManager {
      */
     loadCustomThemes () {
         try {
-            const stored = getStorageItem(CUSTOM_THEMES_STORAGE_KEY);
+            const stored = localStorage.getItem(CUSTOM_THEMES_STORAGE_KEY);
             if (!stored) {
-                console.log('No custom themes found in storage');
                 return;
             }
 
@@ -771,20 +779,14 @@ class CustomThemeManager {
                 return;
             }
 
-            console.log(`Loading ${themesData.length} custom themes from storage`);
-
-            let loadedCount = 0;
             for (const themeData of themesData) {
                 try {
                     const theme = CustomTheme.import(themeData);
                     this.themes.set(theme.uuid, theme);
-                    loadedCount++;
                 } catch (e) {
                     console.warn(`Failed to load custom theme "${themeData?.name || 'unknown'}":`, e);
                 }
             }
-
-            console.log(`Successfully loaded ${loadedCount}/${themesData.length} custom themes`);
         } catch (e) {
             console.error('Failed to load custom themes from storage:', e);
         }
@@ -799,7 +801,6 @@ class CustomThemeManager {
 
             if (themesData.length === 0) {
                 localStorage.removeItem(CUSTOM_THEMES_STORAGE_KEY);
-                console.log('Cleared custom themes storage (no themes)');
                 try {
                     require('../rotur/cloud-sync.js').notifyLocalChange();
                 } catch (_) {
@@ -817,8 +818,6 @@ class CustomThemeManager {
 
             localStorage.setItem(CUSTOM_THEMES_STORAGE_KEY, jsonString);
 
-            console.log(`Saved ${themesData.length} custom themes to storage (${jsonString.length} bytes)`);
-
             try {
                 require('../rotur/cloud-sync.js').notifyLocalChange();
             } catch (_) {
@@ -830,15 +829,9 @@ class CustomThemeManager {
             console.error('Failed to save custom themes to storage:', e);
 
             if (e.name === 'QuotaExceededError') {
-                // 备份现有数据时可能因隐私模式/存储被禁再次抛异常，必须兜住，
-                // 否则会把"备份失败"误当主错误抛出，且异常逃逸会导致流程中断
-                try {
-                    const currentData = getStorageItem(CUSTOM_THEMES_STORAGE_KEY);
-                    if (currentData) {
-                        localStorage.setItem(`${CUSTOM_THEMES_STORAGE_KEY}_backup`, currentData);
-                    }
-                } catch (_) {
-                    // 备份失败可忽略，主题仍在内存中
+                const currentData = localStorage.getItem(CUSTOM_THEMES_STORAGE_KEY);
+                if (currentData) {
+                    localStorage.setItem(`${CUSTOM_THEMES_STORAGE_KEY}_backup`, currentData);
                 }
                 throw new Error('Storage quota exceeded - try deleting some themes');
             }
@@ -926,7 +919,8 @@ class CustomThemeManager {
             updates.wallpaper || existingTheme.wallpaper,
             updates.fonts || existingTheme.fonts,
             existingTheme.author,
-            updates.appearance || existingTheme.appearance
+            updates.appearance || existingTheme.appearance,
+            existingTheme.sourceId
         );
 
         // Preserve original UUID and creation date
@@ -967,7 +961,8 @@ class CustomThemeManager {
             existingTheme.wallpaper,
             existingTheme.fonts,
             existingTheme.author,
-            existingTheme.appearance
+            existingTheme.appearance,
+            existingTheme.sourceId
         );
 
         // Preserve original UUID and creation date
@@ -1116,7 +1111,7 @@ class CustomThemeManager {
         const themes = this.getAllThemes().map(theme => theme.export());
         return {
             version: '2.0',
-            platform: 'Bilup',
+            platform: 'MistWarp',
             timestamp: Date.now(),
             themes: themes
         };
@@ -1209,7 +1204,7 @@ class CustomThemeManager {
 
         let themesToImport;
         if (data && Array.isArray(data.themes)) {
-            themesToImport = data.themes.map(t => ({kind: 'bilup', data: t}));
+            themesToImport = data.themes.map(t => ({kind: 'mistwarp', data: t}));
         } else if (Array.isArray(data) && data.every(looksLikeNitroboltTheme)) {
             themesToImport = data.map(t => ({kind: 'nitrobolt', data: t}));
         } else if (looksLikeNitroboltTheme(data)) {
@@ -1226,7 +1221,7 @@ class CustomThemeManager {
 
         for (const entry of themesToImport) {
             try {
-                const theme = entry.kind === 'bilup' ?
+                const theme = entry.kind === 'mistwarp' ?
                     CustomTheme.import(entry.data) :
                     importNitroboltTheme(entry.data);
 
@@ -1358,10 +1353,10 @@ class CustomThemeManager {
     }
 
     /**
-     * Add a theme from BilupTheme / Bilup export JSON into the local library.
+     * Add a MistWarp export JSON theme into the local library.
      * Always assigns a fresh UUID so marketplace ids never collide with local ones.
      * @param {object} data export payload ({themes:[…]}) or a single theme object
-     * @param {object} [meta] optional overrides {name, description, author}
+     * @param {object} [meta] optional overrides {name, description, author, sourceId}
      * @returns {CustomTheme} the saved theme
      */
     addFromExportData (data, meta = {}) {
@@ -1387,7 +1382,8 @@ class CustomThemeManager {
             ...rest,
             name,
             description,
-            author
+            author,
+            sourceId: meta.sourceId || config.sourceId || ''
         });
 
         this.addTheme(theme);
@@ -1400,7 +1396,7 @@ class CustomThemeManager {
      */
     getStorageInfo () {
         try {
-            const stored = getStorageItem(CUSTOM_THEMES_STORAGE_KEY);
+            const stored = localStorage.getItem(CUSTOM_THEMES_STORAGE_KEY);
             const size = stored ? new Blob([stored]).size : 0;
             const parsed = stored ? JSON.parse(stored) : [];
 
@@ -1419,7 +1415,7 @@ class CustomThemeManager {
         } catch (e) {
             return {
                 error: e.message,
-                hasData: !!getStorageItem(CUSTOM_THEMES_STORAGE_KEY)
+                hasData: !!localStorage.getItem(CUSTOM_THEMES_STORAGE_KEY)
             };
         }
     }

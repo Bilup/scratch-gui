@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import React from 'react';
-import {defineMessages, injectIntl, intlShape} from 'react-intl';
+import {injectIntl, intlShape} from 'react-intl';
 import {
     CircleAlert,
     Download,
@@ -16,7 +16,8 @@ import {
 } from 'lucide-react';
 
 import AddonWindow from '../../addons/window-system/window.jsx';
-import downloadBlob from '../../addons/libraries/common/cs/download-blob.js';
+import downloadBlob from '../../lib/utils/download-blob.js';
+import {projectFilename} from '../../lib/utils/safe-filename.js';
 import styles from './media-recorder.css';
 
 const MIME_TYPES = [
@@ -24,145 +25,6 @@ const MIME_TYPES = [
     'video/webm',
     'video/mp4'
 ];
-
-const messages = defineMessages({
-    title: {
-        id: 'mw.mediaRecorder.title',
-        defaultMessage: 'Project Video Recorder'
-    },
-    captureStage: {
-        id: 'mw.mediaRecorder.captureStage',
-        defaultMessage: 'Capture the stage'
-    },
-    captureStageDescription: {
-        id: 'mw.mediaRecorder.captureStageDescription',
-        defaultMessage: 'Save the stage as a .{extension} video. Variable and list monitors are not included.'
-    },
-    timing: {
-        id: 'mw.mediaRecorder.timing',
-        defaultMessage: 'Timing'
-    },
-    duration: {
-        id: 'mw.mediaRecorder.duration',
-        defaultMessage: 'Duration'
-    },
-    startDelay: {
-        id: 'mw.mediaRecorder.startDelay',
-        defaultMessage: 'Start delay'
-    },
-    seconds: {
-        id: 'mw.mediaRecorder.seconds',
-        defaultMessage: 'seconds'
-    },
-    captureOptions: {
-        id: 'mw.mediaRecorder.captureOptions',
-        defaultMessage: 'Capture options'
-    },
-    includeProjectAudio: {
-        id: 'mw.mediaRecorder.includeProjectAudio',
-        defaultMessage: 'Include project audio'
-    },
-    includeMicrophoneAudio: {
-        id: 'mw.mediaRecorder.includeMicrophoneAudio',
-        defaultMessage: 'Include microphone audio'
-    },
-    waitForFlag: {
-        id: 'mw.mediaRecorder.waitForFlag',
-        defaultMessage: 'Wait for the green flag'
-    },
-    stopWhenProjectStops: {
-        id: 'mw.mediaRecorder.stopWhenProjectStops',
-        defaultMessage: 'Stop when the project stops'
-    },
-    cancel: {
-        id: 'mw.mediaRecorder.cancel',
-        defaultMessage: 'Cancel'
-    },
-    startRecording: {
-        id: 'mw.mediaRecorder.startRecording',
-        defaultMessage: 'Start recording'
-    },
-    waitingForFlag: {
-        id: 'mw.mediaRecorder.waitingForFlag',
-        defaultMessage: 'Waiting for the green flag'
-    },
-    startingShortly: {
-        id: 'mw.mediaRecorder.startingShortly',
-        defaultMessage: 'Starting shortly'
-    },
-    recordingStage: {
-        id: 'mw.mediaRecorder.recordingStage',
-        defaultMessage: 'Recording the stage'
-    },
-    waitingDescription: {
-        id: 'mw.mediaRecorder.waitingDescription',
-        defaultMessage: 'Recording will begin when the project starts.'
-    },
-    startingIn: {
-        id: 'mw.mediaRecorder.startingIn',
-        defaultMessage: 'Starting in {countdown} seconds.'
-    },
-    keepOpenDescription: {
-        id: 'mw.mediaRecorder.keepOpenDescription',
-        defaultMessage: 'Keep this window open or return to the editor while the capture runs.'
-    },
-    elapsed: {
-        id: 'mw.mediaRecorder.elapsed',
-        defaultMessage: 'Elapsed'
-    },
-    captured: {
-        id: 'mw.mediaRecorder.captured',
-        defaultMessage: 'Captured'
-    },
-    discard: {
-        id: 'mw.mediaRecorder.discard',
-        defaultMessage: 'Discard'
-    },
-    stopAndSave: {
-        id: 'mw.mediaRecorder.stopAndSave',
-        defaultMessage: 'Stop and save'
-    },
-    recordingStatus: {
-        id: 'mw.mediaRecorder.recordingStatus',
-        defaultMessage: 'Recording status'
-    },
-    recordProjectVideo: {
-        id: 'mw.mediaRecorder.recordProjectVideo',
-        defaultMessage: 'Record project video'
-    },
-    recording: {
-        id: 'mw.mediaRecorder.recording',
-        defaultMessage: 'Recording'
-    },
-    record: {
-        id: 'mw.mediaRecorder.record',
-        defaultMessage: 'Record'
-    },
-    errorUnsupportedFormat: {
-        id: 'mw.mediaRecorder.errorUnsupportedFormat',
-        defaultMessage: 'This browser cannot encode a supported video format.'
-    },
-    errorMicFailed: {
-        id: 'mw.mediaRecorder.errorMicFailed',
-        defaultMessage: 'Microphone access failed.'
-    },
-    errorMicUnavailable: {
-        id: 'mw.mediaRecorder.errorMicUnavailable',
-        defaultMessage: 'Microphone access was unavailable. Recording will continue without it.'
-    },
-    errorNoVideoTrack: {
-        id: 'mw.mediaRecorder.errorNoVideoTrack',
-        defaultMessage: 'The stage could not provide a video track.'
-    },
-    errorRecordingFailed: {
-        id: 'mw.mediaRecorder.errorRecordingFailed',
-        defaultMessage: 'Recording failed.'
-    },
-    errorRecordingStart: {
-        id: 'mw.mediaRecorder.errorRecordingStart',
-        defaultMessage: 'Recording could not start.'
-    }
-});
 
 const formatBytes = bytes => {
     if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
@@ -184,7 +46,8 @@ class MediaRecorderButton extends React.Component {
             elapsed: 0,
             bytes: 0,
             countdown: 0,
-            error: ''
+            error: '',
+            starting: false
         };
         this.recorder = null;
         this.chunks = [];
@@ -199,15 +62,19 @@ class MediaRecorderButton extends React.Component {
         this.mixContext = null;
         this.projectAudioDestination = null;
         this.startedAt = 0;
+        this.starting = false;
+        this.startRequest = 0;
         this.unmounted = false;
     }
 
     componentWillUnmount () {
         this.unmounted = true;
+        this.startRequest++;
         this.cancelRecording();
     }
 
     getMimeType () {
+        if (typeof window.MediaRecorder !== 'function') return '';
         return MIME_TYPES.find(type => window.MediaRecorder.isTypeSupported(type)) || '';
     }
 
@@ -276,7 +143,13 @@ class MediaRecorderButton extends React.Component {
     };
 
     handleClose = () => {
-        this.setState({open: false});
+        if (this.starting) {
+            this.startRequest++;
+            this.starting = false;
+            this.setState({open: false, starting: false});
+        } else {
+            this.setState({open: false});
+        }
     };
 
     handleNumberChange = event => {
@@ -292,36 +165,48 @@ class MediaRecorderButton extends React.Component {
     };
 
     handleStart = async () => {
+        if (this.starting) return;
         if (!this.getMimeType()) {
-            this.setState({error: this.props.intl.formatMessage(messages.errorUnsupportedFormat)});
+            this.setState({error: 'This browser cannot encode a supported video format.'});
             return;
         }
-        this.setState({error: '', elapsed: 0, bytes: 0});
+        this.starting = true;
+        const request = ++this.startRequest;
+        this.setState({error: '', elapsed: 0, bytes: 0, starting: true});
         if (this.state.microphone) {
             try {
                 this.micStream = await navigator.mediaDevices.getUserMedia({audio: true});
             } catch (error) {
+                if (request !== this.startRequest || this.unmounted) return;
                 const unavailable = error.name === 'NotAllowedError' || error.name === 'NotFoundError';
                 if (!unavailable) {
-                    this.setState({error: error.message || this.props.intl.formatMessage(messages.errorMicFailed)});
+                    this.starting = false;
+                    this.setState({
+                        error: error.message || 'Microphone access failed.',
+                        starting: false
+                    });
                     return;
                 }
                 this.setState({microphone: false,
-                    error: this.props.intl.formatMessage(messages.errorMicUnavailable)});
+                    error:
+                    'Microphone access was unavailable. Recording will continue without it.'});
             }
         }
-        if (this.unmounted) {
+        if (request !== this.startRequest || this.unmounted) {
+            this.starting = false;
             this.releaseStreams();
             return;
         }
+        this.starting = false;
         if (this.state.startOnFlag) {
-            this.setState({phase: 'waiting'});
+            this.setState({phase: 'waiting', starting: false});
             this.flagListener = () => {
                 this.flagListener = null;
                 this.beginDelay();
             };
             this.props.vm.runtime.once('PROJECT_START', this.flagListener);
         } else {
+            this.setState({starting: false});
             this.beginDelay();
         }
     };
@@ -351,7 +236,7 @@ class MediaRecorderButton extends React.Component {
             this.captureStream = new MediaStream();
             const stageStream = runtime.renderer.canvas.captureStream();
             const videoTrack = stageStream.getVideoTracks()[0];
-            if (!videoTrack) throw new Error(this.props.intl.formatMessage(messages.errorNoVideoTrack));
+            if (!videoTrack) throw new Error('The stage could not provide a video track.');
             this.captureStream.addTrack(videoTrack);
 
             if (this.state.projectAudio || this.micStream) {
@@ -379,7 +264,7 @@ class MediaRecorderButton extends React.Component {
                 }
             };
             this.recorder.onerror = event => {
-                this.setState({error: event.error?.message || this.props.intl.formatMessage(messages.errorRecordingFailed)});
+                this.setState({error: event.error?.message || 'Recording failed.'});
                 this.stopRecording(false);
             };
             this.recorder.onstop = this.handleRecorderStopped;
@@ -396,7 +281,7 @@ class MediaRecorderButton extends React.Component {
             }
         } catch (error) {
             this.cleanupCapture();
-            this.setState({phase: 'options', error: error.message || this.props.intl.formatMessage(messages.errorRecordingStart)});
+            this.setState({phase: 'options', error: error.message || 'Recording could not start.'});
         }
     }
 
@@ -406,7 +291,7 @@ class MediaRecorderButton extends React.Component {
         const mimeType = this.getMimeType();
         this.cleanupCapture();
         if (shouldSave && chunks.length) {
-            const filename = `${this.props.projectTitle || 'video'}.${this.getExtension()}`;
+            const filename = projectFilename(this.props.projectTitle, 'video', this.getExtension());
             downloadBlob(filename, new Blob(chunks, {type: mimeType}));
         }
         if (!this.unmounted) this.setState({phase: 'options', elapsed: 0, bytes: 0, countdown: 0});
@@ -436,19 +321,18 @@ class MediaRecorderButton extends React.Component {
                 <div className={styles.intro}>
                     <Video size={22} />
                     <div>
-                        <strong>{this.props.intl.formatMessage(messages.captureStage)}</strong>
+                        <strong>{'Capture the stage'}</strong>
                         <span>
-                            {this.props.intl.formatMessage(messages.captureStageDescription, {
-                                extension: this.getExtension()
-                            })}
+                            {`Save the stage as a .${this.getExtension()} video. ` +
+                                'Variable and list monitors are not included.'}
                         </span>
                     </div>
                 </div>
                 <section className={styles.section}>
-                    <h3><Timer size={17} /> {this.props.intl.formatMessage(messages.timing)}</h3>
+                    <h3><Timer size={17} /> {'Timing'}</h3>
                     <div className={styles.fieldGrid}>
                         <label>
-                            <span>{this.props.intl.formatMessage(messages.duration)}</span>
+                            <span>{'Duration'}</span>
                             <div className={styles.inputWithUnit}>
                                 <input
                                     data-field="duration"
@@ -458,11 +342,11 @@ class MediaRecorderButton extends React.Component {
                                     value={this.state.duration}
                                     onChange={this.handleNumberChange}
                                 />
-                                <span>{this.props.intl.formatMessage(messages.seconds)}</span>
+                                <span>{'seconds'}</span>
                             </div>
                         </label>
                         <label>
-                            <span>{this.props.intl.formatMessage(messages.startDelay)}</span>
+                            <span>{'Start delay'}</span>
                             <div className={styles.inputWithUnit}>
                                 <input
                                     data-field="delay"
@@ -473,17 +357,17 @@ class MediaRecorderButton extends React.Component {
                                     value={this.state.delay}
                                     onChange={this.handleNumberChange}
                                 />
-                                <span>{this.props.intl.formatMessage(messages.seconds)}</span>
+                                <span>{'seconds'}</span>
                             </div>
                         </label>
                     </div>
                 </section>
                 <section className={styles.section}>
-                    <h3><Settings2 size={17} /> {this.props.intl.formatMessage(messages.captureOptions)}</h3>
-                    {this.renderToggle('projectAudio', Volume2, this.props.intl.formatMessage(messages.includeProjectAudio))}
-                    {this.renderToggle('microphone', Mic, this.props.intl.formatMessage(messages.includeMicrophoneAudio))}
-                    {this.renderToggle('startOnFlag', Flag, this.props.intl.formatMessage(messages.waitForFlag))}
-                    {this.renderToggle('stopOnStop', Square, this.props.intl.formatMessage(messages.stopWhenProjectStops))}
+                    <h3><Settings2 size={17} /> {'Capture options'}</h3>
+                    {this.renderToggle('projectAudio', Volume2, 'Include project audio')}
+                    {this.renderToggle('microphone', Mic, 'Include microphone audio')}
+                    {this.renderToggle('startOnFlag', Flag, 'Wait for the green flag')}
+                    {this.renderToggle('stopOnStop', Square, 'Stop when the project stops')}
                 </section>
                 {this.state.error && (
                     <div className={styles.notice}>
@@ -493,18 +377,21 @@ class MediaRecorderButton extends React.Component {
                 )}
                 <div className={styles.actions}>
                     <button
+                        type="button"
                         className={styles.secondaryButton}
                         onClick={this.handleClose}
                     >
                         <X size={17} />
-                        {this.props.intl.formatMessage(messages.cancel)}
+                        {'Cancel'}
                     </button>
                     <button
+                        type="button"
                         className={styles.primaryButton}
+                        disabled={this.state.starting}
                         onClick={this.handleStart}
                     >
                         <Video size={17} />
-                        {this.props.intl.formatMessage(messages.startRecording)}
+                        {this.state.starting ? 'Starting…' : 'Start recording'}
                     </button>
                 </div>
             </React.Fragment>
@@ -541,18 +428,15 @@ class MediaRecorderButton extends React.Component {
                     {waiting ? <Flag size={30} /> : delaying ? <Timer size={30} /> : <Video size={30} />}
                 </div>
                 <h2>
-                    {waiting ? this.props.intl.formatMessage(messages.waitingForFlag) :
-                        delaying ? this.props.intl.formatMessage(messages.startingShortly) :
-                            this.props.intl.formatMessage(messages.recordingStage)}
+                    {waiting ? 'Waiting for the green flag' :
+                        delaying ? 'Starting shortly' : 'Recording the stage'}
                 </h2>
                 <p>
                     {waiting ?
-                        this.props.intl.formatMessage(messages.waitingDescription) :
+                        'Recording will begin when the project starts.' :
                         delaying ?
-                            this.props.intl.formatMessage(messages.startingIn, {
-                                countdown: this.state.countdown.toFixed(1)
-                            }) :
-                            this.props.intl.formatMessage(messages.keepOpenDescription)}
+                            `Starting in ${this.state.countdown.toFixed(1)} seconds.` :
+                            'Keep this window open or return to the editor while the capture runs.'}
                 </p>
                 {!waiting && !delaying && (
                     <React.Fragment>
@@ -562,12 +446,12 @@ class MediaRecorderButton extends React.Component {
                         <div className={styles.stats}>
                             <div>
                                 <Timer size={18} />
-                                <span>{this.props.intl.formatMessage(messages.elapsed)}</span>
+                                <span>{'Elapsed'}</span>
                                 <strong>{`${elapsed.toFixed(1)}s / ${this.state.duration}s`}</strong>
                             </div>
                             <div>
                                 <Download size={18} />
-                                <span>{this.props.intl.formatMessage(messages.captured)}</span>
+                                <span>{'Captured'}</span>
                                 <strong>{formatBytes(this.state.bytes)}</strong>
                             </div>
                         </div>
@@ -581,19 +465,21 @@ class MediaRecorderButton extends React.Component {
                 )}
                 <div className={styles.actions}>
                     <button
+                        type="button"
                         className={styles.secondaryButton}
                         onClick={this.handleCancel}
                     >
                         <X size={17} />
-                        {this.props.intl.formatMessage(messages.discard)}
+                        {'Discard'}
                     </button>
                     {!waiting && !delaying && (
                         <button
+                            type="button"
                             className={styles.primaryButton}
                             onClick={this.handleStopAndSave}
                         >
                             <Square size={17} />
-                            {this.props.intl.formatMessage(messages.stopAndSave)}
+                            {'Stop and save'}
                         </button>
                     )}
                 </div>
@@ -610,16 +496,12 @@ class MediaRecorderButton extends React.Component {
                         [styles.menuButtonActive]: active
                     })}
                     data-mw-item="media-recorder"
-                    title={active ? this.props.intl.formatMessage(messages.recordingStatus) :
-                        this.props.intl.formatMessage(messages.recordProjectVideo)}
+                    title={active ? 'Recording status' : 'Record project video'}
                     type="button"
                     onClick={this.handleOpen}
                 >
                     {active ? <Square size={20} /> : <Video size={20} />}
-                    <span className={this.props.labelClassName}>
-                        {active ? this.props.intl.formatMessage(messages.recording) :
-                            this.props.intl.formatMessage(messages.record)}
-                    </span>
+                    <span className={this.props.labelClassName}>{active ? 'Recording' : 'Record'}</span>
                 </button>
                 {this.state.open && (
                     <AddonWindow
@@ -631,7 +513,10 @@ class MediaRecorderButton extends React.Component {
                         minHeight={430}
                         minWidth={380}
                         resizable
-                        title={this.props.intl.formatMessage(messages.title)}
+                        title={this.props.intl.formatMessage({
+                            id: 'mw.mediaRecorder.title',
+                            defaultMessage: 'Project Video Recorder'
+                        })}
                         width={480}
                         onClose={this.handleClose}
                     >
@@ -654,3 +539,4 @@ MediaRecorderButton.propTypes = {
 };
 
 export default injectIntl(MediaRecorderButton);
+export {MediaRecorderButton};

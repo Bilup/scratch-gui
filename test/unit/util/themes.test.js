@@ -6,7 +6,7 @@ import {
     HIGH_CONTRAST_THEME
 } from '../../../src/lib/themes';
 import {injectExtensionBlockTheme, injectExtensionCategoryTheme} from '../../../src/lib/themes/blockHelpers';
-import {detectTheme, persistTheme} from '../../../src/lib/themes/themePersistance';
+import {applyTheme, detectTheme, persistTheme, THEME_CHANGE_EVENT} from '../../../src/lib/themes/themePersistance';
 
 describe('themes', () => {
     let serializeToString;
@@ -157,6 +157,16 @@ describe('themes', () => {
             persistTheme(DEFAULT_THEME);
 
             expect(window.document.cookie).toEqual('scratchtheme=');
+        });
+
+        test('announces explicit theme changes in the current tab', () => {
+            const listener = jest.fn();
+            window.addEventListener(THEME_CHANGE_EVENT, listener);
+
+            applyTheme(Theme.defaults.dark);
+
+            expect(listener).toHaveBeenCalledTimes(1);
+            window.removeEventListener(THEME_CHANGE_EVENT, listener);
         });
     });
 });

@@ -10,11 +10,26 @@
     border-radius: var(--radius-sm);
     border: 1px solid var(--border);
     cursor: pointer;
+    min-height: 38px;
 }
 
 .button:disabled {
     opacity: 0.6;
     cursor: default;
+}
+
+.button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.busyIndicator {
+    width: 12px;
+    height: 12px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spin 650ms linear infinite;
 }
 
 .secondary {
@@ -44,4 +59,23 @@
 
 .danger:hover:not(:disabled) {
     background: color-mix(in srgb, #e25555 10%, transparent);
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .busyIndicator {
+        animation: none;
+    }
+}
+
+@media (max-width: 760px) {
+    .button {
+        min-height: 44px;
+        padding: 10px 15px;
+    }
 }

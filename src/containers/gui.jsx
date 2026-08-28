@@ -24,6 +24,8 @@ import {STAGE_SIZE_MODES} from '../lib/constants/layout-constants';
 import {setStageSize} from '../reducers/stage-size';
 import {setProjectUnchanged} from '../reducers/project-changed';
 import {setFullScreen} from '../reducers/mode';
+import {setRestore} from '../reducers/restore-deletion';
+import {showStandardAlert} from '../reducers/alerts';
 
 import {
     closeCostumeLibrary,
@@ -33,8 +35,6 @@ import {
     openExtensionLibrary,
     closeExtensionLibrary,
     openCustomExtensionModal,
-    openCustomGalleryModal,
-    closeCustomGalleryModal,
     openExtensionManagerModal,
     openSpriteLibrary,
     openCostumeLibrary,
@@ -55,17 +55,15 @@ import storage from '../lib/persistence/storage';
 import vmListenerHOC from '../lib/components/vm-listener-hoc.jsx';
 import vmManagerHOC from '../lib/components/vm-manager-hoc.jsx';
 import cloudManagerHOC from '../lib/components/cloud-manager-hoc.jsx';
-import CollaborationService from '../lib/collaboration/index.js';
 
 import GUIComponent from '../components/gui/gui.jsx';
 import {setIsScratchDesktop} from '../lib/utils/isScratchDesktop.js';
 import TWFullScreenResizerHOC from '../lib/components/tw-fullscreen-resizer-hoc.jsx';
 import TWThemeManagerHOC from './tw-theme-manager-hoc.jsx';
-import {initialize as initializeShortcuts, updateShortcuts} from
+import {dispose as disposeShortcuts, initialize as initializeShortcuts} from
     '../lib/shortcuts/event-router.js';
 import startFractchLiveReload from '../lib/fractch-live';
 import smartSave from '../lib/mw/smart-save.js';
-import {getItem as getStorageItem} from '../lib/utils/safe-storage.js';
 
 const {RequestMetadata, setMetadata, unsetMetadata} = storage.scratchFetch;
 
@@ -82,14 +80,10 @@ const setProjectIdMetadata = projectId => {
 class GUI extends React.Component {
     constructor (props) {
         super(props);
-        setIsScratchDesktop(this.props.isScratchDesktop);
-        this.state = {
-            enableStageResize: getStorageItem('mw:enable-stage-resize', 'true') !== 'false'
-        };
-        this.handleStorageChange = this.handleStorageChange.bind(this);
+        this.restoreDeletionPromise = null;
     }
-
     componentDidMount () {
+        setIsScratchDesktop(this.props.isScratchDesktop);
         this.props.onStorageInit(storage);
         this.props.onVmInit(this.props.vm);
         setProjectIdMetadata(this.props.projectId);
@@ -117,6 +111,9 @@ class GUI extends React.Component {
                 }),
                 loadFromComputer: this.props.onStartSelectingFileUpload,
                 openPackager: this.props.onClickPackager,
+                duplicateSprite: () => this.props.onDuplicateEditingSprite(this.props.vm),
+                deleteSprite: () => this.props.onDeleteEditingSprite(this.props.vm),
+                undo: () => this.handleUndo(),
                 toggleStageSize: () => {
                     this.props.onSetStageSize(
                         this.props.stageSizeMode === STAGE_SIZE_MODES.large 
@@ -125,43 +122,13 @@ class GUI extends React.Component {
                     );
                 },
                 setFullScreen: () => {
-                    // Toggle browser fullscreen (F11 style), not stage fullscreen
-                    if (!document.fullscreenElement) {
-                        document.documentElement.requestFullscreen().catch(e => {
-                            console.warn('Failed to enter fullscreen:', e);
-                        });
-                    } else {
-                        document.exitFullscreen().catch(e => {
-                            console.warn('Failed to exit fullscreen:', e);
-                        });
-                    }
+                    this.props.onSetFullScreen(!this.props.isFullScreen);
                 }
             }
         );
 
-        // 监听localStorage变化
-        window.addEventListener('storage', this.handleStorageChange);
-
         this.fractchLiveReloadDispose = startFractchLiveReload(this.props.vm);
     }
-
-    componentWillUnmount () {
-        window.removeEventListener('storage', this.handleStorageChange);
-        if (this.fractchLiveReloadDispose) {
-            this.fractchLiveReloadDispose();
-            this.fractchLiveReloadDispose = null;
-        }
-    }
-
-    handleStorageChange () {
-        try {
-            const newValue = getStorageItem('mw:enable-stage-resize', 'false') === 'true';
-            this.setState({enableStageResize: newValue});
-        } catch (e) {
-            // ignore
-        }
-    }
-
     componentDidUpdate (prevProps) {
         if (this.props.projectId !== prevProps.projectId) {
             if (this.props.projectId !== null) {
@@ -174,33 +141,53 @@ class GUI extends React.Component {
             // At this time the project view in www doesn't need to know when a project is unloaded
 
             // Log total loading time
-            if (window.BILUP_LOAD_START_TIME) {
-                const totalLoadTime = Date.now() - window.BILUP_LOAD_START_TIME;
-                console.log(`🚀 Bilup project loaded in ${totalLoadTime}ms (${(totalLoadTime / 1000).toFixed(2)}s)`);
+            if (window.MISTWARP_LOAD_START_TIME) {
+                const totalLoadTime = Date.now() - window.MISTWARP_LOAD_START_TIME;
+                console.log(`🚀 MistWarp project loaded in ${totalLoadTime}ms (${(totalLoadTime / 1000).toFixed(2)}s)`);
 
                 // Also use Performance API if available
                 if (window.performance && window.performance.mark && window.performance.measure) {
-                    window.performance.mark('bilup-load-end');
-                    window.performance.measure('bilup-total-load', 'bilup-load-start', 'bilup-load-end');
+                    window.performance.mark('mistwarp-load-end');
+                    window.performance.measure('mistwarp-total-load', 'mistwarp-load-start', 'mistwarp-load-end');
                 }
             }
 
             this.props.onProjectLoaded();
         }
 
-        // Sync costume when tab changes from costumes tab
-        if (prevProps.activeTabIndex === COSTUMES_TAB_INDEX &&
-            this.props.activeTabIndex !== COSTUMES_TAB_INDEX) {
-            const collaborationService = CollaborationService.getInstance();
-            if (collaborationService && collaborationService.syncCurrentCostume) {
-                collaborationService.syncCurrentCostume();
-            }
+    }
+    componentWillUnmount () {
+        disposeShortcuts();
+        if (this.fractchLiveReloadDispose) {
+            this.fractchLiveReloadDispose();
+            this.fractchLiveReloadDispose = null;
+        }
+    }
+    handleUndo () {
+        if (this.restoreDeletionPromise) return this.restoreDeletionPromise;
+        const restore = this.props.restoreDeletion && this.props.restoreDeletion.restoreFun;
+        if (typeof restore !== 'function') {
+            if (this.props.vm.postUndo) this.props.vm.postUndo();
+            return Promise.resolve(false);
         }
 
-        // Update shortcuts when customShortcuts change
-        if (prevProps.customShortcuts !== this.props.customShortcuts) {
-            updateShortcuts(this.props.customShortcuts);
-        }
+        this.restoreDeletionPromise = Promise.resolve()
+            .then(() => restore())
+            .then(() => {
+                if (this.props.restoreDeletion.restoreFun === restore) {
+                    this.props.onClearDeletionRestore();
+                }
+                return true;
+            })
+            .catch(() => {
+                this.props.onShowRestoreError();
+                return false;
+            })
+            .then(result => {
+                this.restoreDeletionPromise = null;
+                return result;
+            });
+        return this.restoreDeletionPromise;
     }
     render () {
         if (this.props.isError) {
@@ -216,7 +203,11 @@ class GUI extends React.Component {
             isScratchDesktop,
             isShowingProject,
             manualUpdateProject,
+            onClearDeletionRestore,
+            onDeleteEditingSprite,
+            onDuplicateEditingSprite,
             onProjectLoaded,
+            onShowRestoreError,
             onStorageInit,
             onUpdateProjectId,
             onVmInit,
@@ -230,6 +221,7 @@ class GUI extends React.Component {
             projectId,
             projectTitle,
             requestNewProject,
+            restoreDeletion,
             saveProjectAsCopy,
             onProjectUnchanged,
             /* eslint-enable no-unused-vars */
@@ -242,7 +234,6 @@ class GUI extends React.Component {
         return (
             <GUIComponent
                 loading={fetchingProject || isLoading || loadingStateVisible}
-                enableStageResize={this.state.enableStageResize}
                 {...componentProps}
             >
                 {children}
@@ -267,6 +258,10 @@ GUI.propTypes = {
     isTotallyNormal: PropTypes.bool,
     loadingStateVisible: PropTypes.bool,
     onProjectLoaded: PropTypes.func,
+    onDeleteEditingSprite: PropTypes.func,
+    onDuplicateEditingSprite: PropTypes.func,
+    onClearDeletionRestore: PropTypes.func,
+    onShowRestoreError: PropTypes.func,
     onSeeCommunity: PropTypes.func,
     onStorageInit: PropTypes.func,
     onUpdateProjectId: PropTypes.func,
@@ -274,11 +269,14 @@ GUI.propTypes = {
     projectHost: PropTypes.string,
     projectId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     projectTitle: PropTypes.string,
+    restoreDeletion: PropTypes.shape({
+        deletedItem: PropTypes.string,
+        restoreFun: PropTypes.func
+    }),
     onProjectUnchanged: PropTypes.func,
     telemetryModalVisible: PropTypes.bool,
     vm: PropTypes.instanceOf(VM).isRequired,
-    activeTabIndex: PropTypes.number,
-    customShortcuts: PropTypes.object
+    activeTabIndex: PropTypes.number
 };
 
 GUI.defaultProps = {
@@ -312,6 +310,7 @@ const mapStateToProps = state => {
         loadingStateVisible: state.scratchGui.modals.loadingProject,
         projectId: state.scratchGui.projectState.projectId,
         projectTitle: state.scratchGui.projectTitle,
+        restoreDeletion: state.scratchGui.restoreDeletion,
         soundLibraryVisible: state.scratchGui.modals.soundLibrary,
         soundsTabVisible: state.scratchGui.editorTab.activeTabIndex === SOUNDS_TAB_INDEX,
         targetIsStage: (
@@ -323,27 +322,22 @@ const mapStateToProps = state => {
         usernameModalVisible: state.scratchGui.modals.usernameModal,
         settingsModalVisible: state.scratchGui.modals.settingsModal,
         customExtensionModalVisible: state.scratchGui.modals.customExtensionModal,
-        customGalleryModalVisible: state.scratchGui.modals.customGalleryModal,
         fontsModalVisible: state.scratchGui.modals.fontsModal,
         assetsModalVisible: state.scratchGui.modals.assetsModal,
         unknownPlatformModalVisible: state.scratchGui.modals.unknownPlatformModal,
         invalidProjectModalVisible: state.scratchGui.modals.invalidProjectModal,
         gitModalVisible: state.scratchGui.modals.gitModal,
         projectMetadataModalVisible: state.scratchGui.modals.projectMetadataModal,
-        vm: state.scratchGui.vm,
-        customShortcuts: state.scratchGui.shortcuts.customShortcuts
+        vm: state.scratchGui.vm
     };
 };
 
-const mapDispatchToProps = dispatch => ({
+export const mapDispatchToProps = dispatch => ({
     onExtensionButtonClick: () => dispatch(openExtensionLibrary()),
     onActivateTab: tab => dispatch(activateTab(tab)),
-    onActivateCostumesTab: () => dispatch(activateTab(COSTUMES_TAB_INDEX)),
-    onActivateSoundsTab: () => dispatch(activateTab(SOUNDS_TAB_INDEX)),
     onOpenExtensionLibrary: () => dispatch(openExtensionLibrary()),
     onOpenExtensionManagerModal: () => dispatch(openExtensionManagerModal()),
     onOpenCustomExtensionModal: () => dispatch(openCustomExtensionModal()),
-    onOpenCustomGalleryModal: () => dispatch(openCustomGalleryModal()),
     onRequestCloseBackdropLibrary: () => dispatch(closeBackdropLibrary()),
     onRequestCloseCostumeLibrary: () => dispatch(closeCostumeLibrary()),
     onRequestCloseSoundLibrary: () => dispatch(closeSoundLibrary()),
@@ -361,7 +355,38 @@ const mapDispatchToProps = dispatch => ({
     openSoundLibrary: () => dispatch(openSoundLibrary()),
     openExtensionManagerModal: () => dispatch(openExtensionManagerModal()),
     openSettingsModal: () => dispatch(openSettingsModal()),
-    openRestorePointModal: () => dispatch(openRestorePointModal())
+    openRestorePointModal: () => dispatch(openRestorePointModal()),
+    onClearDeletionRestore: () => dispatch(setRestore({restoreFun: null, deletedItem: ''})),
+    onShowRestoreError: () => dispatch(showStandardAlert('assetRestoreError')),
+    onDuplicateEditingSprite: vm => {
+        const target = vm && vm.editingTarget;
+        if (!target || target.isStage || typeof vm.duplicateSprite !== 'function') return Promise.resolve(false);
+        return Promise.resolve()
+            .then(() => vm.duplicateSprite(target.id))
+            .then(() => true)
+            .catch(() => {
+                dispatch(showStandardAlert('assetImportError'));
+                return false;
+            });
+    },
+    onDeleteEditingSprite: vm => {
+        const target = vm && vm.editingTarget;
+        if (!target || target.isStage || typeof vm.deleteSprite !== 'function') return false;
+        try {
+            const restoreSprite = vm.deleteSprite(target.id);
+            if (typeof restoreSprite !== 'function') return false;
+            dispatch(setRestore({
+                restoreFun: () => Promise.resolve()
+                    .then(() => restoreSprite())
+                    .then(() => dispatch(activateTab(BLOCKS_TAB_INDEX))),
+                deletedItem: 'Sprite'
+            }));
+            return true;
+        } catch (error) {
+            dispatch(showStandardAlert('assetDeleteError'));
+            return false;
+        }
+    }
 });
 
 const ConnectedGUI = injectIntl(connect(
@@ -390,4 +415,5 @@ const WrappedGui = compose(
 )(ConnectedGUI);
 
 WrappedGui.setAppElement = ReactModal.setAppElement;
+export {GUI};
 export default WrappedGui;

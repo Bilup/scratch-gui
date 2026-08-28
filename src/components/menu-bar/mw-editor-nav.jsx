@@ -6,60 +6,45 @@ import {FolderOpen} from 'lucide-react';
 
 import menuBarStyles from './menu-bar.css';
 import MwNotifications from './mw-notifications.jsx';
-import MyStuffPage from '../../community/pages/MyStuff.jsx';
-import openMistWarpCommunityWindow from '../../lib/mw/open-mw-community-window.jsx';
-import {useIntl} from '../../lib/tw-use-intl.jsx';
 
-const openMyStuff = title => openMistWarpCommunityWindow({
-    id: 'mw-mystuff-window',
-    title,
-    initialPath: '/mystuff',
-    element: <MyStuffPage />
-});
-
-const NavItem = ({title, icon: Icon, onClick}) => {
-    const handleKeyDown = e => {
-        if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            onClick();
-        }
-    };
+export const NavItem = ({title, icon: Icon, href, onClick, value}) => {
+    const Element = href ? 'a' : 'button';
     return (
-        <div
-            className={classNames(menuBarStyles.menuBarItem, menuBarStyles.hoverable)}
+        <Element
+            {...(href ? {href} : {type: 'button'})}
+            className={classNames(
+                menuBarStyles.menuBarItem,
+                menuBarStyles.hoverable,
+                menuBarStyles.navButton
+            )}
             title={title}
             aria-label={title}
-            role="button"
-            tabIndex={0}
+            value={value}
             onClick={onClick}
-            onKeyDown={handleKeyDown}
         >
             <Icon size={18} />
-        </div>
+        </Element>
     );
 };
 
 NavItem.propTypes = {
+    href: PropTypes.string,
     icon: PropTypes.elementType.isRequired,
-    onClick: PropTypes.func.isRequired,
-    title: PropTypes.string.isRequired
+    onClick: PropTypes.func,
+    title: PropTypes.string.isRequired,
+    value: PropTypes.string
 };
 
 const MwEditorNav = ({username}) => {
-    const intl = useIntl();
     if (!username) {
         return null;
     }
-    const myStuffTitle = intl.formatMessage({
-        id: 'mw.menuBar.myStuff',
-        defaultMessage: 'My Stuff'
-    });
     return (
         <React.Fragment>
             <NavItem
-                title={myStuffTitle}
+                title="My Stuff"
                 icon={FolderOpen}
-                onClick={() => openMyStuff(myStuffTitle)}
+                href="/mystuff"
             />
             <MwNotifications />
         </React.Fragment>

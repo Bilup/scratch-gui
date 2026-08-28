@@ -8,7 +8,6 @@ import Modal from '../../containers/windowed-modal.jsx';
 import FancyCheckbox from '../tw-fancy-checkbox/checkbox.jsx';
 import Input from '../forms/input.jsx';
 import BufferedInputHOC from '../forms/buffered-input-hoc.jsx';
-import DocumentationLink from '../tw-documentation-link/documentation-link.jsx';
 import {
     ModalSidebar,
     ModalSidebarContent,
@@ -18,7 +17,6 @@ import {
     ModalSidebarLayout
 } from '../modal-sidebar/modal-sidebar.jsx';
 import styles from './settings-modal.css';
-import helpIcon from './help-icon.svg';
 import {APP_NAME} from '../../lib/constants/brand.js';
 import {STYLE_GROUPS} from '../../lib/mw-style-settings';
 import StylePreview from './style-preview.jsx';
@@ -28,13 +26,10 @@ import {LanguagePage, ThemePage, WallpaperPage, FontsPage} from './appearance-pa
 import LoadingScreenPage from './loading-screen-page.jsx';
 import ShortcutManager from '../shortcut-manager/shortcut-manager.jsx';
 import {takeSettingsModalInitialView} from '../../lib/settings/modal-view.js';
-import isScratchDesktop from '../../lib/utils/isScratchDesktop.js';
 
-import {Settings, Zap, Blocks, Palette, PanelTop, Bug, GitBranch, Variable, Radio,
+import {Settings, Zap, Blocks, Palette, PanelTop, Bug, GitBranch, Variable,
     Globe, SunMoon, Wallpaper, Type, Monitor, Keyboard, ChevronLeft,
     Hourglass} from 'lucide-react';
-import {connect} from 'react-redux';
-
 import {DEFINITIONS as DEBUGGER_SETTINGS, getSetting as getDebuggerSetting,
     setSetting as setDebuggerSetting} from '../../lib/debugger/settings.js';
 import {DEFINITIONS as VARIABLE_MANAGER_SETTINGS, getSetting as getVariableManagerSetting,
@@ -43,13 +38,7 @@ import {
     getAuthorName, getAuthorEmail, setAuthorName, setAuthorEmail,
     getDefaultBranch, setDefaultBranch, getAutoCommit, setAutoCommit
 } from '../../lib/git/config.js';
-import {
-    getRoturSettings,
-    setRoturSetting,
-    formatActivityTitle,
-    formatActivityStatus
-} from '../../lib/rotur/settings.js';
-import {readActivityGrants, writeActivityGrants} from '../../lib/rotur/extension-bridge.js';
+import {BooleanSetting, LearnMore, Setting} from './setting.jsx';
 
 const BufferedInput = BufferedInputHOC(Input);
 
@@ -58,36 +47,6 @@ const messages = defineMessages({
         defaultMessage: 'Settings',
         description: 'Title of settings modal',
         id: 'tw.settingsModal.title'
-    },
-    help: {
-        defaultMessage: 'Click for help',
-        description: 'Hover text of help icon in settings',
-        id: 'tw.settingsModal.help'
-    },
-    settingsSectionsAria: {
-        defaultMessage: 'Settings sections',
-        description: 'Aria label for the settings sidebar',
-        id: 'mw.settings.ariaLabel'
-    },
-    desktopSystemDefault: {
-        defaultMessage: 'System default',
-        id: 'mw.settingsModal.desktop.systemDefault'
-    },
-    desktopUpdateAll: {
-        defaultMessage: 'All updates, including betas',
-        id: 'mw.settingsModal.desktop.updateAll'
-    },
-    desktopUpdateStable: {
-        defaultMessage: 'Stable updates',
-        id: 'mw.settingsModal.desktop.updateStable'
-    },
-    desktopUpdateSecurity: {
-        defaultMessage: 'Security updates only',
-        id: 'mw.settingsModal.desktop.updateSecurity'
-    },
-    desktopUpdateNever: {
-        defaultMessage: 'Never',
-        id: 'mw.settingsModal.desktop.updateNever'
     },
     headerFeatured: {
         defaultMessage: 'Featured',
@@ -103,11 +62,6 @@ const messages = defineMessages({
         defaultMessage: 'Danger Zone',
         description: 'Settings modal section',
         id: 'tw.settingsModal.dangerZone'
-    },
-    headerCloud: {
-        defaultMessage: 'Cloud Service',
-        description: 'Settings modal section',
-        id: 'tw.settingsModal.cloud'
     },
     headerExperimental: {
         defaultMessage: 'Experimental',
@@ -160,48 +114,8 @@ const messages = defineMessages({
     headerVariableManager: {
         defaultMessage: 'Variable Manager',
         id: 'mw.settings.variableManagerHeader'
-    },
-    headerRotur: {
-        defaultMessage: 'Rotur',
-        id: 'mw.settings.roturHeader'
-    },
-    activitySharingAsk: {
-        defaultMessage: 'Ask each project',
-        id: 'mw.settings.rotur.activitySharing.ask'
-    },
-    activitySharingAll: {
-        defaultMessage: 'Always allow',
-        id: 'mw.settings.rotur.activitySharing.all'
-    },
-    activitySharingOff: {
-        defaultMessage: 'Never',
-        id: 'mw.settings.rotur.activitySharing.off'
-    },
-    cloudServerPlaceholder: {
-        defaultMessage: 'ws://localhost:8000',
-        id: 'mw.settings.cloudServerPlaceholder'
-    },
-    authorEmailPlaceholder: {
-        defaultMessage: 'user@example.com',
-        id: 'mw.settings.vc.authorEmailPlaceholder'
-    },
-    defaultBranchPlaceholder: {
-        defaultMessage: 'main',
-        id: 'mw.settings.vc.defaultBranchPlaceholder'
     }
 });
-
-const LearnMore = props => (
-    <React.Fragment>
-        {' '}
-        <DocumentationLink {...props}>
-            <FormattedMessage
-                defaultMessage="Learn more."
-                id="gui.alerts.cloudInfoLearnMore"
-            />
-        </DocumentationLink>
-    </React.Fragment>
-);
 
 const Header = ({children}) => (
     <div className={styles.header}>
@@ -211,98 +125,6 @@ const Header = ({children}) => (
 );
 Header.propTypes = {
     children: PropTypes.node
-};
-
-class UnwrappedSetting extends React.Component {
-    constructor (props) {
-        super(props);
-        bindAll(this, [
-            'handleClickHelp'
-        ]);
-        this.state = {
-            helpVisible: false
-        };
-    }
-    componentDidUpdate (prevProps) {
-        if (this.props.active && !prevProps.active) {
-            // eslint-disable-next-line react/no-did-update-set-state
-            this.setState({
-                helpVisible: true
-            });
-        }
-    }
-    handleClickHelp () {
-        this.setState(prevState => ({
-            helpVisible: !prevState.helpVisible
-        }));
-    }
-    render () {
-        const {active, primary, secondary, help, slug, intl} = this.props;
-        const {helpVisible} = this.state;
-
-        return (
-            <div
-                className={classNames(styles.setting, {
-                    [styles.active]: this.props.active
-                })}
-            >
-                <div className={styles.label}>
-                    {primary}
-                    <button
-                        className={styles.helpIcon}
-                        onClick={this.handleClickHelp}
-                        title={intl.formatMessage(messages.help)}
-                    >
-                        <img
-                            src={helpIcon}
-                            draggable={false}
-                        />
-                    </button>
-                </div>
-                {helpVisible && (
-                    <div className={styles.detail}>
-                        {help}
-                        {slug && <LearnMore slug={slug} />}
-                    </div>
-                )}
-                {secondary}
-            </div>
-        );
-    }
-}
-
-UnwrappedSetting.propTypes = {
-    intl: intlShape,
-    active: PropTypes.bool,
-    help: PropTypes.node,
-    primary: PropTypes.node,
-    secondary: PropTypes.node,
-    slug: PropTypes.string
-};
-
-const Setting = injectIntl(UnwrappedSetting);
-
-const BooleanSetting = ({value, onChange, label, ...props}) => (
-    <Setting
-        {...props}
-        active={value}
-        primary={
-            <label className={styles.label}>
-                <FancyCheckbox
-                    className={styles.checkbox}
-                    checked={value}
-                    onChange={onChange}
-                />
-                {label}
-            </label>
-        }
-    />
-);
-
-BooleanSetting.propTypes = {
-    onChange: PropTypes.func.isRequired,
-    value: PropTypes.bool.isRequired,
-    label: PropTypes.node.isRequired
 };
 
 const settingDefinitions = {
@@ -372,21 +194,7 @@ const settingDefinitions = {
             description: 'Remove Miscellaneous Limits setting help',
             id: 'tw.settingsModal.removeMiscLimitsHelp'
         },
-        slug: 'remove-limits'
-    },
-    disableCompiler: {
-        label: {
-            defaultMessage: 'Disable Compiler',
-            description: 'Disable Compiler setting',
-            id: 'tw.settingsModal.disableCompiler'
-        },
-        help: {
-            // eslint-disable-next-line max-len
-            defaultMessage: 'Disables the {APP_NAME} compiler. You may want to enable this while editing projects so that scripts update immediately. Otherwise, you should never enable this.',
-            description: 'Disable Compiler help',
-            id: 'tw.settingsModal.disableCompilerHelp'
-        },
-        slug: 'disable-compiler'
+        slug: 'remove-misc-limits'
     },
     warpTimer: {
         label: {
@@ -426,30 +234,6 @@ const settingDefinitions = {
             defaultMessage: 'Changes layer indexes to change the position in the render order array without limiting the number of layers to the number of drawables.',
             description: 'Real Layer Indexes help',
             id: 'tw.settingsModal.realLayerIndexesHelp'
-        }
-    },
-    enableStageResize: {
-        label: {
-            defaultMessage: 'Enable Stage Resize',
-            description: 'Enable Stage Resize setting',
-            id: 'mw.settingsModal.enableStageResize'
-        },
-        help: {
-            defaultMessage: 'Enables the stage resize feature, allowing you to drag to resize the stage panel.(Refreshing required)',
-            description: 'Enable Stage Resize setting help',
-            id: 'mw.settingsModal.enableStageResizeHelp'
-        }
-    },
-    windowAnimation: {
-        label: {
-            defaultMessage: 'Window Animation',
-            description: 'Enable window open/close animation',
-            id: 'mw.settingsModal.windowAnimation'
-        },
-        help: {
-            defaultMessage: 'Enables fade and scale animations when opening or closing windows.',
-            description: 'Window Animation setting help',
-            id: 'mw.settingsModal.windowAnimationHelp'
         }
     },
     squareStageCorners: {
@@ -584,15 +368,12 @@ class DebuggerBooleanSetting extends React.Component {
         this.setState({value});
     }
     render () {
-        const {intl, label, help} = this.props;
-        const translatedLabel = intl.formatMessage({id: label, defaultMessage: label});
-        const translatedHelp = help ? intl.formatMessage({id: help, defaultMessage: help}) : undefined;
         return (
             <BooleanSetting
                 value={this.state.value}
                 onChange={this.handleChange}
-                label={translatedLabel}
-                help={translatedHelp}
+                label={this.props.label}
+                help={this.props.help}
             />
         );
     }
@@ -600,9 +381,8 @@ class DebuggerBooleanSetting extends React.Component {
 
 DebuggerBooleanSetting.propTypes = {
     settingId: PropTypes.string.isRequired,
-    label: PropTypes.string.isRequired,
-    help: PropTypes.string,
-    intl: intlShape.isRequired
+    label: PropTypes.node.isRequired,
+    help: PropTypes.node
 };
 
 const HighQualityPen = createBooleanSetting('HighQualityPen', settingDefinitions.highQualityPen);
@@ -613,8 +393,6 @@ const RemoveMiscLimits = createBooleanSetting('RemoveMiscLimits', settingDefinit
 const WarpTimer = createBooleanSetting('WarpTimer', settingDefinitions.warpTimer);
 const CaseSensitiveLists = createBooleanSetting('CaseSensitiveLists', settingDefinitions.caseSensitiveLists);
 const RealLayerIndexes = createBooleanSetting('RealLayerIndexes', settingDefinitions.realLayerIndexes);
-const EnableStageResize = createBooleanSetting('EnableStageResize', settingDefinitions.enableStageResize);
-const WindowAnimation = createBooleanSetting('WindowAnimation', settingDefinitions.windowAnimation);
 const SquareStageCorners = createBooleanSetting('SquareStageCorners', settingDefinitions.squareStageCorners);
 const HideDeleteButton = createBooleanSetting('HideDeleteButton', settingDefinitions.hideDeleteButton);
 const HideExtensionButton = createBooleanSetting('HideExtensionButton', settingDefinitions.hideExtensionButton);
@@ -623,51 +401,21 @@ const HideOperatorArrows = createBooleanSetting('HideOperatorArrows', settingDef
 const UnclipPalette = createBooleanSetting('UnclipPalette', settingDefinitions.unclipPalette);
 const VanillaPalette = createBooleanSetting('VanillaPalette', settingDefinitions.vanillaPalette);
 
-const DisableCompiler = props => (
-    <BooleanSetting
-        {...props}
-        label={
-            <FormattedMessage
-                defaultMessage="Disable Compiler"
-                description="Disable Compiler setting"
-                id="tw.settingsModal.disableCompiler"
-            />
-        }
-        help={
-            <FormattedMessage
-                // eslint-disable-next-line max-len
-                defaultMessage="Disables the {APP_NAME} compiler. You may want to enable this while editing projects so that scripts update immediately. Otherwise, you should never enable this."
-                description="Disable Compiler help"
-                id="tw.settingsModal.disableCompilerHelp"
-                values={{
-                    APP_NAME
-                }}
-            />
-        }
-        slug="disable-compiler"
-    />
-);
-
-DisableCompiler.propTypes = {
-    value: PropTypes.bool,
-    onChange: PropTypes.func.isRequired
-};
-
 const STYLE_OPTIONS = {
     'tab-style': [
-        {value: 'mistwarp', labelId: 'mw.settingsModal.tabStyle.mistwarp', label: 'MistWarp'},
-        {value: 'turbowarp', labelId: 'mw.settingsModal.tabStyle.turbowarp', label: 'TurboWarp'},
-        {value: 'scratchbox', labelId: 'mw.settingsModal.tabStyle.scratchbox', label: 'ScratchBox'}
+        {value: 'mistwarp', label: 'MistWarp'},
+        {value: 'turbowarp', label: 'TurboWarp'},
+        {value: 'scratchbox', label: 'ScratchBox'}
     ],
     'tab-looks': [
-        {value: 'default', labelId: 'mw.settingsModal.tabLooks.default', label: 'Default'},
-        {value: 'icon-only', labelId: 'mw.settingsModal.tabLooks.iconOnly', label: 'Icon Only'},
-        {value: 'text-only', labelId: 'mw.settingsModal.tabLooks.textOnly', label: 'Text Only'}
+        {value: 'default', label: 'Default'},
+        {value: 'icon-only', label: 'Icon Only'},
+        {value: 'text-only', label: 'Text Only'}
     ],
     'window-style': [
-        {value: 'mistwarp', labelId: 'mw.settingsModal.windowStyle.mistwarp', label: 'MistWarp'},
-        {value: 'macos', labelId: 'mw.settingsModal.windowStyle.macos', label: 'macOS'},
-        {value: 'windows10', labelId: 'mw.settingsModal.windowStyle.windows10', label: 'Windows 10'}
+        {value: 'mistwarp', label: 'MistWarp'},
+        {value: 'macos', label: 'macOS'},
+        {value: 'windows10', label: 'Windows 10'}
     ]
 };
 
@@ -678,7 +426,7 @@ const getOptionCss = (groupId, value) => {
     return option ? option.css : null;
 };
 
-const StyleOption = ({groupId, option, selected, onSelect, intl}) => (
+const StyleOption = ({groupId, option, selected, onSelect}) => (
     <button
         type="button"
         className={classNames(styles.styleOption, {[styles.styleOptionSelected]: selected})}
@@ -689,27 +437,22 @@ const StyleOption = ({groupId, option, selected, onSelect, intl}) => (
                 type={groupId === 'window-style' ? 'window' : 'tabs'}
                 variant={option.value}
                 css={getOptionCss(groupId, option.value)}
-                intl={intl}
             />
         </div>
-        <span className={styles.styleOptionLabel}>
-            {option.labelId && intl ? intl.formatMessage({id: option.labelId, defaultMessage: option.label}) : option.label}
-        </span>
+        <span className={styles.styleOptionLabel}>{option.label}</span>
     </button>
 );
 StyleOption.propTypes = {
     groupId: PropTypes.string.isRequired,
     option: PropTypes.shape({
         value: PropTypes.string,
-        label: PropTypes.string,
-        labelId: PropTypes.string
+        label: PropTypes.string
     }).isRequired,
     selected: PropTypes.bool,
-    onSelect: PropTypes.func.isRequired,
-    intl: intlShape
+    onSelect: PropTypes.func.isRequired
 };
 
-const StyleSelect = ({groupId, label, value, onChange, intl}) => (
+const StyleSelect = ({groupId, label, value, onChange}) => (
     <div className={styles.setting}>
         <div className={styles.label}>{label}</div>
         <div className={styles.stylePicker}>
@@ -720,7 +463,6 @@ const StyleSelect = ({groupId, label, value, onChange, intl}) => (
                     option={option}
                     selected={value === option.value}
                     onSelect={onChange}
-                    intl={intl}
                 />
             ))}
         </div>
@@ -730,8 +472,7 @@ StyleSelect.propTypes = {
     groupId: PropTypes.string.isRequired,
     label: PropTypes.node,
     value: PropTypes.string,
-    onChange: PropTypes.func.isRequired,
-    intl: intlShape
+    onChange: PropTypes.func.isRequired
 };
 
 const TabStyleSelect = props => (
@@ -743,10 +484,9 @@ const TabStyleSelect = props => (
         />}
         value={props.value}
         onChange={props.onChange}
-        intl={props.intl}
     />
 );
-TabStyleSelect.propTypes = {value: PropTypes.string, onChange: PropTypes.func, intl: intlShape};
+TabStyleSelect.propTypes = {value: PropTypes.string, onChange: PropTypes.func};
 
 const TabLooksSelect = props => (
     <StyleSelect
@@ -757,10 +497,9 @@ const TabLooksSelect = props => (
         />}
         value={props.value}
         onChange={props.onChange}
-        intl={props.intl}
     />
 );
-TabLooksSelect.propTypes = {value: PropTypes.string, onChange: PropTypes.func, intl: intlShape};
+TabLooksSelect.propTypes = {value: PropTypes.string, onChange: PropTypes.func};
 
 const WindowStyleSelect = props => {
     if (typeof window.EditorPreload !== 'undefined') {
@@ -782,43 +521,46 @@ const WindowStyleSelect = props => {
             />}
             value={props.value}
             onChange={props.onChange}
-            intl={props.intl}
         />
     );
 };
-WindowStyleSelect.propTypes = {value: PropTypes.string, onChange: PropTypes.func, intl: intlShape};
+WindowStyleSelect.propTypes = {value: PropTypes.string, onChange: PropTypes.func};
 
 const CustomFPS = ({framerate, onChange, onCustomizeFramerate}) => (
-    <BooleanSetting
-        value={framerate !== 30}
-        onChange={onChange}
-        label={
-            <FormattedMessage
-                defaultMessage="60 FPS (Custom FPS)"
-                description="FPS setting"
-                id="tw.settingsModal.fps"
-            />
+    <Setting
+        active={framerate !== 30}
+        primary={
+            <div className={styles.label}>
+                <label className={styles.label}>
+                    <FancyCheckbox
+                        className={styles.checkbox}
+                        checked={framerate !== 30}
+                        onChange={onChange}
+                    />
+                    <FormattedMessage
+                        defaultMessage="60 FPS"
+                        description="FPS setting"
+                        id="tw.settingsModal.fps"
+                    />
+                </label>
+                <BufferedInput
+                    className={styles.numberInput}
+                    type="number"
+                    value={framerate}
+                    min="0.1"
+                    step="0.1"
+                    aria-label="Custom framerate"
+                    onSubmit={onCustomizeFramerate}
+                />
+                <span>{'FPS'}</span>
+            </div>
         }
         help={
             <FormattedMessage
                 // eslint-disable-next-line max-len
-                defaultMessage="Runs scripts 60 times per second instead of 30. Most projects will not work properly with this enabled. You should try Interpolation with 60 FPS mode disabled if that is the case. {customFramerate}."
+                defaultMessage="Runs scripts at the selected framerate. Many projects expect 30 FPS and may run too quickly at higher values. Try Interpolation first if you only want smoother motion."
                 description="FPS setting help"
                 id="tw.settingsModal.fpsHelp"
-                values={{
-                    customFramerate: (
-                        <a
-                            onClick={onCustomizeFramerate}
-                            tabIndex="0"
-                        >
-                            <FormattedMessage
-                                defaultMessage="Click to use a framerate other than 30 or 60"
-                                description="FPS settings help"
-                                id="tw.settingsModal.fpsHelp.customFramerate"
-                            />
-                        </a>
-                    )
-                }}
             />
         }
         slug="custom-fps"
@@ -900,43 +642,6 @@ CustomStageSize.propTypes = {
     onStageHeightChange: PropTypes.func
 };
 
-const CloudVariableServer = props => {
-    const {intl} = props;
-    return (
-    <Setting
-        primary={
-            <div className={classNames(styles.label, styles['cloud-variable-server'])}>
-                <FormattedMessage
-                    defaultMessage="Cloud Variable Server"
-                    description="Cloud Variable Server setting"
-                    id="tw.settingsModal.cloudVariableServer"
-                />
-                <BufferedInput
-                    value={props.cloudVariableServer}
-                    onSubmit={props.onCloudVariableServerChange}
-                    className={styles['cloud-variable-server-input']}
-                    type="text"
-                    placeholder={intl.formatMessage(messages.cloudServerPlaceholder)}
-                />
-            </div>
-        }
-        help={
-            <FormattedMessage
-                // eslint-disable-next-line max-len
-                defaultMessage="Changes the server used for cloud variables. The URL must start with ws:// or wss://."
-                description="Cloud Variable Server setting help"
-                id="tw.settingsModal.cloudVariableServerHelp"
-            />
-        }
-    />);
-};
-
-CloudVariableServer.propTypes = {
-    cloudVariableServer: PropTypes.string,
-    onCloudVariableServerChange: PropTypes.func,
-    intl: intlShape
-};
-
 const StoreProjectOptions = ({
     onStoreProjectOptions,
     storeThemeInProject,
@@ -945,6 +650,7 @@ const StoreProjectOptions = ({
     <div className={styles.setting}>
         <div>
             <button
+                type="button"
                 onClick={onStoreProjectOptions}
                 className={styles.button}
             >
@@ -975,18 +681,15 @@ const StoreProjectOptions = ({
                 <FormattedMessage
                     defaultMessage="Store theme in project"
                     description="Checkbox under the store settings in project button"
-                    id="tw.settingsModal.storeThemeInProject"
+                    id="mw.settingsModal.storeThemeInProject"
                 />
             </label>
             <p>
                 <FormattedMessage
                     // eslint-disable-next-line max-len
-                    defaultMessage='When enabled, clicking "Store settings in project" will also store the current {APP_NAME} theme so it can be applied when this project is loaded.'
+                    defaultMessage='When enabled, clicking "Store settings in project" will also store the current MistWarp theme so it can be applied when this project is loaded.'
                     description="Help text for the store theme in project checkbox"
                     id="mw.settingsModal.storeThemeInProjectHelp"
-                    values={{
-                        APP_NAME
-                    }}
                 />
             </p>
         </div>
@@ -1058,25 +761,6 @@ const pageConfigurations = {
                             value: props.removeLimits,
                             onChange: props.onRemoveLimitsChange
                         })
-                    },
-                    {
-                        component: DisableCompiler,
-                        props: props => ({
-                            value: props.disableCompiler,
-                            onChange: props.onDisableCompilerChange
-                        })
-                    }
-                ]
-            },
-            {
-                headerMessage: 'headerCloud',
-                settings: [
-                    {
-                        component: CloudVariableServer,
-                        props: props => ({
-                            cloudVariableServer: props.cloudVariableServer,
-                            onCloudVariableServerChange: props.onCloudVariableServerChange
-                        })
                     }
                 ]
             },
@@ -1106,16 +790,16 @@ const pageConfigurations = {
                         component: DebuggerBooleanSetting,
                         props: () => ({
                             settingId: 'stage_pause_button',
-                            label: settingDefinitions.showPauseButton.label.id,
-                            help: settingDefinitions.showPauseButton.help.id
+                            label: <FormattedMessage {...settingDefinitions.showPauseButton.label} />,
+                            help: <FormattedMessage {...settingDefinitions.showPauseButton.help} />
                         })
                     },
                     {
                         component: DebuggerBooleanSetting,
                         props: () => ({
                             settingId: 'stage_step_button',
-                            label: settingDefinitions.showStepButton.label.id,
-                            help: settingDefinitions.showStepButton.help.id
+                            label: <FormattedMessage {...settingDefinitions.showStepButton.label} />,
+                            help: <FormattedMessage {...settingDefinitions.showStepButton.help} />
                         })
                     },
                     {
@@ -1276,20 +960,6 @@ const pageConfigurations = {
                             value: props.caseSensitiveLists,
                             onChange: props.onCaseSensitiveListsChange
                         })
-                    },
-                    {
-                        component: EnableStageResize,
-                        props: props => ({
-                            value: props.enableStageResize,
-                            onChange: props.onEnableStageResizeChange
-                        })
-                    },
-                    {
-                        component: WindowAnimation,
-                        props: props => ({
-                            value: props.windowAnimation,
-                            onChange: props.onWindowAnimationChange
-                        })
                     }
                 ]
             }
@@ -1315,7 +985,6 @@ const UnwrappedPageRenderer = ({config, intl, ...props}) => (
                     return (<SettingComponent
                         key={settingIdx}
                         {...settingProps}
-                        intl={intl}
                     />);
                 })}
             </React.Fragment>
@@ -1362,7 +1031,6 @@ const UnwrappedDebuggerPage = ({intl}) => (
                 settingId={setting.id}
                 label={setting.label}
                 help={setting.help}
-                intl={intl}
             />
         ))}
     </Box>
@@ -1445,10 +1113,7 @@ class UnwrappedVersionControlPage extends React.Component {
                     />}
                     value={this.state.authorName}
                     onSubmit={this.handleNameChange}
-                    placeholder={intl.formatMessage({
-                        id: 'mw.settings.vc.authorNamePlaceholder',
-                        defaultMessage: 'User'
-                    })}
+                    placeholder="User"
                 />
                 <TextSetting
                     label={<FormattedMessage
@@ -1461,7 +1126,7 @@ class UnwrappedVersionControlPage extends React.Component {
                     />}
                     value={this.state.authorEmail}
                     onSubmit={this.handleEmailChange}
-                    placeholder={intl.formatMessage(messages.authorEmailPlaceholder)}
+                    placeholder="user@example.com"
                 />
                 <TextSetting
                     label={<FormattedMessage
@@ -1474,7 +1139,7 @@ class UnwrappedVersionControlPage extends React.Component {
                     />}
                     value={this.state.defaultBranch}
                     onSubmit={this.handleBranchChange}
-                    placeholder={intl.formatMessage(messages.defaultBranchPlaceholder)}
+                    placeholder="main"
                 />
                 <BooleanSetting
                     value={this.state.autoCommit}
@@ -1518,27 +1183,25 @@ class VmSetting extends React.Component {
         this.commit(value);
     }
     render () {
-        const {definition, intl} = this.props;
+        const {definition} = this.props;
         const {value} = this.state;
-        const translatedLabel = intl.formatMessage({id: definition.label, defaultMessage: definition.label});
-        const translatedHelp = definition.help ? intl.formatMessage({id: definition.help, defaultMessage: definition.help}) : undefined;
         if (definition.type === 'boolean') {
             return (
                 <BooleanSetting
                     value={value}
                     onChange={this.handleBooleanChange}
-                    label={translatedLabel}
-                    help={translatedHelp}
+                    label={definition.label}
+                    help={definition.help}
                 />
             );
         }
         if (definition.type === 'select') {
             return (
                 <Setting
-                    help={translatedHelp}
+                    help={definition.help}
                     primary={
                         <div className={styles.label}>
-                            <span className={styles.settingText}>{translatedLabel}</span>
+                            <span className={styles.settingText}>{definition.label}</span>
                             <select
                                 className={styles.select}
                                 value={value}
@@ -1549,7 +1212,7 @@ class VmSetting extends React.Component {
                                         key={option.value}
                                         value={option.value}
                                     >
-                                        {intl.formatMessage({id: option.label, defaultMessage: option.label})}
+                                        {option.label}
                                     </option>
                                 ))}
                             </select>
@@ -1560,10 +1223,10 @@ class VmSetting extends React.Component {
         }
         return (
             <Setting
-                help={translatedHelp}
+                help={definition.help}
                 primary={
                     <div className={styles.label}>
-                        <span className={styles.settingText}>{translatedLabel}</span>
+                        <span className={styles.settingText}>{definition.label}</span>
                         <BufferedInput
                             className={styles.numberInput}
                             type="number"
@@ -1589,8 +1252,7 @@ VmSetting.propTypes = {
         max: PropTypes.number,
         step: PropTypes.number,
         options: PropTypes.array
-    }).isRequired,
-    intl: intlShape.isRequired
+    }).isRequired
 };
 
 const UnwrappedVariableManagerPage = ({intl}) => (
@@ -1600,7 +1262,6 @@ const UnwrappedVariableManagerPage = ({intl}) => (
             <VmSetting
                 key={definition.id}
                 definition={definition}
-                intl={intl}
             />
         ))}
     </Box>
@@ -1609,179 +1270,6 @@ UnwrappedVariableManagerPage.propTypes = {
     intl: intlShape.isRequired
 };
 const VariableManagerPage = injectIntl(UnwrappedVariableManagerPage);
-
-class UnwrappedRoturPage extends React.Component {
-    constructor (props) {
-        super(props);
-        bindAll(this, [
-            'handlePresenceChange',
-            'handleIncludeDurationChange',
-            'handleActivitySharingChange',
-            'handleResetActivityGrants'
-        ]);
-        this.state = {...getRoturSettings(), activityGrantCount: Object.keys(readActivityGrants()).length};
-    }
-    setSetting (key, value) {
-        setRoturSetting(key, value);
-        this.setState({[key]: value});
-    }
-    handlePresenceChange (e) {
-        this.setSetting('presenceEnabled', e.target.checked);
-    }
-    handleIncludeDurationChange (e) {
-        this.setSetting('includeEditDuration', e.target.checked);
-    }
-    handleActivitySharingChange (e) {
-        this.setSetting('activitySharing', e.target.value);
-    }
-    handleResetActivityGrants () {
-        writeActivityGrants({});
-        this.setState({activityGrantCount: 0});
-    }
-    render () {
-        const {intl, loggedIn, username, projectTitle} = this.props;
-        const {presenceEnabled, includeEditDuration, activitySharing, activityGrantCount} = this.state;
-
-        return (
-            <Box className={styles.body}>
-                <Header>{intl.formatMessage(messages.headerRotur)}</Header>
-                <p className={styles.detail}>
-                    {loggedIn ? (
-                        <FormattedMessage
-                            defaultMessage="Signed in as {username}. These options control how Bilup appears on your Bilup Accounts profile."
-                            id="mw.settings.rotur.signedInAs"
-                            values={{username}}
-                        />
-                    ) : (
-                        <FormattedMessage
-                            defaultMessage="Log in with Bilup Accounts from the top-right of the menu bar to publish presence."
-                            id="mw.settings.rotur.notSignedIn"
-                        />
-                    )}
-                </p>
-
-                <BooleanSetting
-                    value={presenceEnabled}
-                    onChange={this.handlePresenceChange}
-                    label={<FormattedMessage
-                        defaultMessage="Show Bilup activity on Bilup Accounts"
-                        id="mw.settings.rotur.presenceEnabled"
-                    />}
-                    help={<FormattedMessage
-                        defaultMessage="When signed in, friends on Bilup Accounts can see that you are editing in Bilup."
-                        id="mw.settings.rotur.presenceEnabledHelp"
-                    />}
-                />
-                <BooleanSetting
-                    value={includeEditDuration}
-                    onChange={this.handleIncludeDurationChange}
-                    label={<FormattedMessage
-                        defaultMessage="Show how long I've been editing"
-                        id="mw.settings.rotur.includeEditDuration"
-                    />}
-                    help={<FormattedMessage
-                        defaultMessage="Uses Bilup Accounts's elapsed timer. Not added to the title or status text."
-                        id="mw.settings.rotur.includeEditDurationHelp"
-                    />}
-                />
-
-                <div className={styles.setting}>
-                    <div className={styles.textSettingLabel}>
-                        <FormattedMessage
-                            defaultMessage="Let projects show activity on your profile"
-                            id="mw.settings.rotur.activitySharing"
-                        />
-                    </div>
-                    <select
-                        value={activitySharing}
-                        onChange={this.handleActivitySharingChange}
-                    >
-                        <option value="ask">{intl.formatMessage(messages.activitySharingAsk)}</option>
-                        <option value="all">{intl.formatMessage(messages.activitySharingAll)}</option>
-                        <option value="off">{intl.formatMessage(messages.activitySharingOff)}</option>
-                    </select>
-                    <p className={styles.detail}>
-                        <FormattedMessage
-                            // eslint-disable-next-line max-len
-                            defaultMessage="Projects can show what you're playing on your profile. Be asked per project, always allow, or never."
-                            id="mw.settings.rotur.activitySharingHelp"
-                        />
-                    </p>
-                    {activityGrantCount > 0 ? (
-                        <button
-                            className={styles.button}
-                            onClick={this.handleResetActivityGrants}
-                        >
-                            <FormattedMessage
-                                defaultMessage="Reset per-project choices ({count})"
-                                id="mw.settings.rotur.resetActivityGrants"
-                                values={{count: activityGrantCount}}
-                            />
-                        </button>
-                    ) : null}
-                </div>
-
-                <p className={styles.detail}>
-                    <FormattedMessage
-                        defaultMessage="Themes and settings sync to your Bilup Accounts account when signed in."
-                        id="mw.settings.rotur.cloudSyncNote"
-                    />
-                </p>
-
-                <div className={styles.setting}>
-                    <div className={styles.textSettingLabel}>
-                        <FormattedMessage
-                            defaultMessage="Preview"
-                            id="mw.settings.rotur.preview"
-                        />
-                    </div>
-                    <p className={styles.detail}>
-                        <strong>{APP_NAME}</strong>
-                        <br />
-                        {formatActivityTitle()}
-                        <br />
-                        {formatActivityStatus(projectTitle)}
-                        {includeEditDuration ? (
-                            <React.Fragment>
-                                <br />
-                                <em>
-                                    <FormattedMessage
-                                        defaultMessage="(+ live edit timer on Rotur)"
-                                        id="mw.settings.rotur.previewTimer"
-                                    />
-                                </em>
-                            </React.Fragment>
-                        ) : null}
-                        {!presenceEnabled ? (
-                            <React.Fragment>
-                                <br />
-                                <em>
-                                    <FormattedMessage
-                                        defaultMessage="(Presence is disabled — nothing is published.)"
-                                        id="mw.settings.rotur.previewDisabled"
-                                    />
-                                </em>
-                            </React.Fragment>
-                        ) : null}
-                    </p>
-                </div>
-            </Box>
-        );
-    }
-}
-UnwrappedRoturPage.propTypes = {
-    intl: intlShape.isRequired,
-    loggedIn: PropTypes.bool,
-    username: PropTypes.string,
-    projectTitle: PropTypes.string
-};
-const RoturPage = injectIntl(connect(
-    state => ({
-        loggedIn: Boolean(state.scratchGui.rotur && state.scratchGui.rotur.username),
-        username: state.scratchGui.rotur ? state.scratchGui.rotur.username : null,
-        projectTitle: state.scratchGui.projectTitle
-    })
-)(UnwrappedRoturPage));
 
 const DesktopSelectSetting = ({label, help, value, options, onChange}) => (
     <Setting
@@ -1833,11 +1321,9 @@ class DesktopPage extends React.Component {
         } catch (e) {
             this.setState({settings: null});
         }
-        if (navigator.mediaDevices && typeof navigator.mediaDevices.enumerateDevices === 'function') {
-            navigator.mediaDevices.enumerateDevices()
-                .then(devices => this.setState({devices}))
-                .catch(() => {});
-        }
+        navigator.mediaDevices.enumerateDevices()
+            .then(devices => this.setState({devices}))
+            .catch(() => {});
     }
 
     set (key, value) {
@@ -1847,14 +1333,10 @@ class DesktopPage extends React.Component {
                 [key]: value
             }
         }));
-        const result = window.EditorPreload.setDesktopSetting(key, value);
-        if (result && typeof result.catch === 'function') {
-            result.catch(error => console.error('Failed to set desktop setting:', key, error));
-        }
+        window.EditorPreload.setDesktopSetting(key, value);
     }
 
     renderDeviceSelect (key, label, help, kind) {
-        const {intl} = this.props;
         const devices = this.state.devices.filter(device => device.kind === kind);
         return (
             <DesktopSelectSetting
@@ -1864,7 +1346,7 @@ class DesktopPage extends React.Component {
                 options={[
                     {
                         value: '',
-                        label: intl.formatMessage(messages.desktopSystemDefault)
+                        label: 'System default'
                     },
                     ...devices.map(device => ({
                         value: device.deviceId,
@@ -1878,7 +1360,6 @@ class DesktopPage extends React.Component {
 
     render () {
         const s = this.state.settings;
-        const {intl} = this.props;
         if (!s) {
             return null;
         }
@@ -1897,13 +1378,13 @@ class DesktopPage extends React.Component {
                         value={s.updateChecker}
                         options={[
                             {value: 'unstable',
-                                label: intl.formatMessage(messages.desktopUpdateAll)},
+                                label: 'All updates, including betas'},
                             {value: 'stable',
-                                label: intl.formatMessage(messages.desktopUpdateStable)},
+                                label: 'Stable updates'},
                             {value: 'security',
-                                label: intl.formatMessage(messages.desktopUpdateSecurity)},
+                                label: 'Security updates only'},
                             {value: 'never',
-                                label: intl.formatMessage(messages.desktopUpdateNever)}
+                                label: 'Never'}
                         ]}
                         onChange={e => this.set('updateChecker', e.target.value)}
                     />
@@ -1924,7 +1405,7 @@ class DesktopPage extends React.Component {
                 />), 'videoinput')}
                 <BooleanSetting
                     value={!!s.hardwareAcceleration}
-                    onChange={event => this.set('hardwareAcceleration', event.target.checked)}
+                    onChange={value => this.set('hardwareAcceleration', value)}
                     label={<FormattedMessage
                         defaultMessage="Hardware acceleration (requires restart)"
                         id="mw.settingsModal.desktop.hardwareAcceleration"
@@ -1936,7 +1417,7 @@ class DesktopPage extends React.Component {
                 />
                 <BooleanSetting
                     value={!!s.backgroundThrottling}
-                    onChange={event => this.set('backgroundThrottling', event.target.checked)}
+                    onChange={value => this.set('backgroundThrottling', value)}
                     label={<FormattedMessage
                         defaultMessage="Pause when the window is not visible"
                         id="mw.settingsModal.desktop.backgroundThrottling"
@@ -1948,7 +1429,7 @@ class DesktopPage extends React.Component {
                 />
                 <BooleanSetting
                     value={!!s.bypassCORS}
-                    onChange={event => this.set('bypassCORS', event.target.checked)}
+                    onChange={value => this.set('bypassCORS', value)}
                     label={<FormattedMessage
                         defaultMessage="Allow projects to access any website (requires restart, dangerous)"
                         id="mw.settingsModal.desktop.bypassCORS"
@@ -1960,7 +1441,7 @@ class DesktopPage extends React.Component {
                 />
                 <BooleanSetting
                     value={!!s.spellchecker}
-                    onChange={event => this.set('spellchecker', event.target.checked)}
+                    onChange={value => this.set('spellchecker', value)}
                     label={<FormattedMessage
                         defaultMessage="Spellchecker (requires restart)"
                         id="mw.settingsModal.desktop.spellchecker"
@@ -1972,7 +1453,7 @@ class DesktopPage extends React.Component {
                 />
                 <BooleanSetting
                     value={!!s.exitFullscreenOnEscape}
-                    onChange={event => this.set('exitFullscreenOnEscape', event.target.checked)}
+                    onChange={value => this.set('exitFullscreenOnEscape', value)}
                     label={<FormattedMessage
                         defaultMessage="Exit fullscreen when escape is pressed"
                         id="mw.settingsModal.desktop.exitFullscreenOnEscape"
@@ -1985,30 +1466,19 @@ class DesktopPage extends React.Component {
                 {s.richPresenceAvailable ? (
                     <BooleanSetting
                         value={!!s.richPresence}
-                        onChange={event => this.set('richPresence', event.target.checked)}
+                        onChange={value => this.set('richPresence', value)}
                         label={<FormattedMessage
                             defaultMessage="Discord rich presence"
                             id="mw.settingsModal.desktop.richPresence"
                         />}
                         help={<FormattedMessage
-                            defaultMessage="Shows that you are using Bilup on your Discord profile while the app is open."
+                            defaultMessage="Shows that you are using MistWarp on your Discord profile while the app is open."
                             id="mw.settingsModal.desktop.richPresenceHelp"
                         />}
                     />
                 ) : null}
-                <BooleanSetting
-                    value={!!s.cloudExtensions}
-                    onChange={event => this.set('cloudExtensions', event.target.checked)}
-                    label={<FormattedMessage
-                        defaultMessage="Load extensions from the cloud"
-                        id="mw.settingsModal.desktop.cloudExtensions"
-                    />}
-                    help={<FormattedMessage
-                        defaultMessage="Loads extensions from the internet when possible, falling back to local copies when offline or unreachable."
-                        id="mw.settingsModal.desktop.cloudExtensionsHelp"
-                    />}
-                />
                 <button
+                    type="button"
                     className={styles.button}
                     onClick={() => window.EditorPreload.openUserData()}
                 >
@@ -2050,8 +1520,6 @@ const SettingsRouter = ({view, ...handlers}) => {
         return <StylesPage {...handlers} />;
     case 'menuBar':
         return <MenuBarPage {...handlers} />;
-    case 'rotur':
-        return <RoturPage {...handlers} />;
     case 'desktop':
         return <DesktopPage {...handlers} />;
     case 'experimental':
@@ -2139,7 +1607,7 @@ class SettingsModalComponent extends React.Component {
                 items: [
                     {
                         id: 'theme',
-                        label: intl.formatMessage({id: 'tw.menuBar.theme', defaultMessage: 'Theme'}),
+                        label: intl.formatMessage({id: 'tw.menuBar.blockColors', defaultMessage: 'Block Colors'}),
                         icon: SunMoon
                     },
                     {
@@ -2201,12 +1669,7 @@ class SettingsModalComponent extends React.Component {
                         id: 'debugger',
                         label: intl.formatMessage({id: 'mw.settings.debugger', defaultMessage: 'Debugger'}),
                         icon: Bug
-                    },
-                    ...(isScratchDesktop() ? [] : [{
-                        id: 'rotur',
-                        label: intl.formatMessage({id: 'mw.settings.rotur', defaultMessage: 'Bilup Accounts'}),
-                        icon: Radio
-                    }])
+                    }
                 ]
             },
             {
@@ -2247,7 +1710,7 @@ class SettingsModalComponent extends React.Component {
             >
                 <ModalSidebarLayout mobileView={this.state.mobileView}>
                     <ModalSidebar
-                        ariaLabel={intl.formatMessage(messages.settingsSectionsAria)}
+                        ariaLabel="Settings sections"
                         width="wide"
                     >
                         {sidebarGroups.map(group => {
@@ -2275,6 +1738,7 @@ class SettingsModalComponent extends React.Component {
                     </ModalSidebar>
                     <ModalSidebarContent className={styles.contentArea}>
                         <button
+                            type="button"
                             className={styles.mobileBackButton}
                             onClick={this.handleMobileBack}
                         >
@@ -2316,8 +1780,6 @@ SettingsModalComponent.propTypes = {
     onRemoveLimitsChange: PropTypes.func,
     warpTimer: PropTypes.bool,
     onWarpTimerChange: PropTypes.func,
-    disableCompiler: PropTypes.bool,
-    onDisableCompilerChange: PropTypes.func,
     caseSensitiveLists: PropTypes.bool,
     onCaseSensitiveListsChange: PropTypes.func,
     realLayerIndexes: PropTypes.bool,
@@ -2355,11 +1817,7 @@ SettingsModalComponent.propTypes = {
     debugMode: PropTypes.bool,
     onDebugModeChange: PropTypes.func,
     showFPSCounter: PropTypes.bool,
-    onShowFPSCounterChange: PropTypes.func,
-    cloudVariableServer: PropTypes.string,
-    onCloudVariableServerChange: PropTypes.func,
-    windowAnimation: PropTypes.bool,
-    onWindowAnimationChange: PropTypes.func
+    onShowFPSCounterChange: PropTypes.func
 };
 
 export default injectIntl(SettingsModalComponent);

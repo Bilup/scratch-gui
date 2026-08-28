@@ -1,31 +1,32 @@
 import JSZip from '@turbowarp/jszip';
 import {
     createProject, uploadProject, publishProject, updateProject, checkProjectAssets, getProject, remixProject,
-    deleteProject
+    deleteProject, collectExtensionSources
 } from './api';
+import {createMwp} from '../git/mwp.js';
+import {syncConfiguredRemotes} from '../git/sync-remotes.js';
+import {preloadProjectHistory} from '../git/project-history.js';
 
 const ZIP_COMPRESSABLE = ['.json', '.svg', '.wav', '.ttf', '.otf'];
 
 // Only ship project.json plus assets the server does not already have;
 // assets are content-addressed server-side so everything else is reused.
-const buildSparseSb3 = async (vm, platformId) => {
-    const files = vm.saveProjectSb3DontZip();
-    const names = Object.keys(files).filter(name => name !== 'project.json');
-    const {missing} = await checkProjectAssets(platformId, names);
-    const missingSet = new Set(missing);
+const zipProjectFiles = (files, include) => {
     const zip = new JSZip();
-    const addFile = (name, data) => {
+    for (const [name, data] of Object.entries(files)) {
+        if (!include(name)) continue;
         zip.file(name, data, {
             compression: ZIP_COMPRESSABLE.some(ext => name.endsWith(ext)) ? 'DEFLATE' : 'STORE'
         });
-    };
-    addFile('project.json', files['project.json']);
-    for (const name of names) {
-        if (missingSet.has(name)) {
-            addFile(name, files[name]);
-        }
     }
     return zip.generateAsync({type: 'blob', mimeType: 'application/x.scratch.sb3'});
+};
+
+const buildSparseSb3 = async (files, platformId) => {
+    const names = Object.keys(files).filter(name => name !== 'project.json');
+    const {missing} = await checkProjectAssets(platformId, names);
+    const missingSet = new Set(missing);
+    return zipProjectFiles(files, name => name === 'project.json' || missingSet.has(name));
 };
 
 const PLATFORM_ID_KEY = 'mw:mistwarp-current-project';
@@ -41,7 +42,12 @@ const rememberPlatformProject = project => {
                 shared: !!value.shared,
                 canRemix: value.canRemix,
                 projectJsonUrl: value.projectJsonUrl,
-                trustedExtensions: value.trustedExtensions || []
+                trustedExtensions: value.trustedExtensions || [],
+                workspaceUrl: value.workspaceUrl,
+                gitHead: value.gitHead,
+                gitBranch: value.gitBranch,
+                remixParent: value.remixParent,
+                remixBaseCommit: value.remixBaseCommit
             }));
         } else {
             sessionStorage.removeItem(PLATFORM_ID_KEY);
@@ -173,14 +179,15 @@ const prepareThumbnailBlob = async dataUri => {
     return null;
 };
 
-// Save the project to MistWarp: stored on the server (R2), not git.
-// A git remote is only involved if the user explicitly connects one elsewhere.
-// Sharing is a separate, explicit act (share: true, or the project page).
+// Save to MistWarp first, then mirror the new version to any connections the
+// user has added. Sharing remains a separate action.
 const publishToMistWarp = async ({
-    vm, title, thumbnailBlob, share = false, updateOnly = false, onProgress = () => {}
+    vm, title, thumbnailBlob, changeMessage = '', commitChanges = true,
+    share = false, updateOnly = false, onProgress = () => {}
 }) => {
     const projectTitle = (title && title.trim()) || 'Untitled';
 
+    let createdNow = false;
     let platformProject = getRememberedPlatformProjectState();
     let platformId = platformProject && platformProject.id;
     if (platformId) {
@@ -201,10 +208,10 @@ const publishToMistWarp = async ({
             platformId = remix.id;
             platformProject = {id: platformId, isOwner: true, shared: false};
             rememberPlatformProject(platformProject);
+            createdNow = true;
         }
     }
 
-    let createdNow = false;
     if (!platformId) {
         onProgress({phase: 'register', message: 'Creating project'});
         const scratchOrigin = getScratchOrigin();
@@ -226,33 +233,55 @@ const publishToMistWarp = async ({
     // Create + upload must be atomic: if the upload fails on a project we just
     // created, delete it so we never leave a data-less project behind.
     try {
-        onProgress({phase: 'package', message: 'Packaging project'});
+        onProgress({phase: 'package', message: 'Preparing project files'});
+        const thumbnailPromise = updateOnly ? Promise.resolve(null) :
+            Promise.resolve(thumbnailBlob || captureThumbnail(vm));
         await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 0)));
+        const sb3Files = vm.saveProjectSb3DontZip();
         let sb3Blob;
         try {
-            sb3Blob = await buildSparseSb3(vm, platformId);
+            sb3Blob = await buildSparseSb3(sb3Files, platformId);
         } catch (e) {
-            sb3Blob = await vm.saveProjectSb3();
+            sb3Blob = await zipProjectFiles(sb3Files, () => true);
         }
-        const thumbnail = updateOnly ? null : (thumbnailBlob || await captureThumbnail(vm));
+        onProgress({phase: 'package', message: 'Preparing version history and extensions'});
+        const mwpPromise = createMwp({
+            vm,
+            sb3Files,
+            projectId: platformId,
+            remixParent: platformProject && platformProject.remixParent,
+            baseCommit: platformProject && platformProject.remixBaseCommit,
+            remoteHead: platformProject && platformProject.workspaceUrl ? platformProject.gitHead : '',
+            message: changeMessage.trim() || (createdNow ? 'Initial version' : 'Updated project'),
+            commitChanges
+        });
+        const extensionSourcesPromise = collectExtensionSources(sb3Blob);
+        const [thumbnail, mwp, extensions] = await Promise.all([
+            thumbnailPromise,
+            mwpPromise,
+            extensionSourcesPromise
+        ]);
         onProgress({phase: 'upload', message: 'Uploading project'});
         try {
             await uploadProject(platformId, sb3Blob, thumbnail, (loaded, total) => {
-                const percent = Math.min(100, Math.round((loaded / total) * 100));
+                const percent = total > 0 ? Math.min(100, Math.round((loaded / total) * 100)) : null;
                 onProgress({
                     phase: 'upload',
-                    message: percent >= 100 ? 'Processing on server' : `Uploading ${percent}%`,
+                    message: percent !== null && percent >= 100 ? 'Processing on server' :
+                        percent === null ? 'Uploading project' : `Uploading ${percent}%`,
                     loaded,
                     total
                 });
-            });
+            }, {workspace: mwp.blob, git: mwp.manifest, extensions});
         } catch (e) {
             if (e.code !== 'debounced' || createdNow) {
                 throw e;
             }
         }
+        onProgress({phase: 'finish', message: 'Updating version history'});
+        await preloadProjectHistory(vm, {force: true});
     } catch (e) {
-        if (createdNow) {
+        if (createdNow && e.code !== 'upload_processing_timeout') {
             try {
                 await deleteProject(platformId);
             } catch (_) {
@@ -262,6 +291,9 @@ const publishToMistWarp = async ({
         }
         throw e;
     }
+
+    const remoteSync = await syncConfiguredRemotes({vm, onProgress});
+    const remoteWarnings = remoteSync.filter(remote => !remote.ok);
 
     let shared = Boolean(platformProject && platformProject.shared);
     if (share && !shared) {
@@ -279,7 +311,7 @@ const publishToMistWarp = async ({
         // ignore
     }
 
-    return {id: platformId, url: `/project/${platformId}`, shared};
+    return {id: platformId, url: `/project/${platformId}`, shared, remoteWarnings};
 };
 
 export {

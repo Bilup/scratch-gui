@@ -1,25 +1,53 @@
 import React, {useEffect, useState} from 'react';
-import {Link} from 'react-router-dom';
-import {useIntl} from '../../lib/tw-use-intl.jsx';
+import {Link, useSearchParams} from 'react-router-dom';
 import {Users, Trophy, Heart, Play} from 'lucide-react';
 import rotur from '../rotur';
 import api from '../api';
 import useLatest from '../use-latest.js';
+import SectionTabs from '../components/SectionTabs.jsx';
 import Avatar from '../components/Avatar.jsx';
+import Button from '../components/ui/Button.jsx';
 import styles from './Leaderboard.module.css';
 
 const PODIUM_CLASSES = [styles.podium1, styles.podium2, styles.podium3];
 
+const BOARDS = [
+    {
+        key: 'followers',
+        label: 'Followers',
+        title: 'Most followed users',
+        lead: 'The most followed public Rotur accounts.'
+    },
+    {
+        key: 'loves',
+        label: 'Loves',
+        title: 'Most loved creators',
+        lead: 'Creators with the most loves across all their shared projects.'
+    },
+    {
+        key: 'views',
+        label: 'Views',
+        title: 'Most viewed creators',
+        lead: 'Creators with the most views across all their shared projects.'
+    }
+];
+
+export const leaderboardBoard = value => (BOARDS.some(item => item.key === value) ? value : 'followers');
+
+export const normalizeLeaderboardParams = currentParams => {
+    const next = new URLSearchParams(currentParams);
+    const board = leaderboardBoard(next.get('board'));
+    if (board === 'followers') next.delete('board');
+    else next.set('board', board);
+    return next;
+};
+
 const Stat = ({board, person}) => {
-    const intl = useIntl();
     if (board === 'loves') {
         return (
             <span className={styles.stat}>
                 <Heart size={16} />
-                {intl.formatMessage({
-                    id: 'mw.community.leaderboard.loves',
-                    defaultMessage: '{count} loves'
-                }, {count: (person.loves || 0).toLocaleString()})}
+                {(person.loves || 0).toLocaleString()} loves
             </span>
         );
     }
@@ -27,62 +55,31 @@ const Stat = ({board, person}) => {
         return (
             <span className={styles.stat}>
                 <Play size={16} />
-                {intl.formatMessage({
-                    id: 'mw.community.leaderboard.views',
-                    defaultMessage: '{count} views'
-                }, {count: (person.views || 0).toLocaleString()})}
+                {(person.views || 0).toLocaleString()} views
             </span>
         );
     }
     return (
         <span className={styles.stat}>
             <Users size={16} />
-            {intl.formatMessage({
-                id: 'mw.community.leaderboard.followers',
-                defaultMessage: '{count} followers'
-            }, {count: (person.follower_count || 0).toLocaleString()})}
+            {(person.follower_count || 0).toLocaleString()} followers
         </span>
     );
 };
 
-const BOARDS = [
-    {
-        key: 'followers',
-        labelKey: 'mw.community.leaderboard.board.followers',
-        labelDefault: 'Followers',
-        titleKey: 'mw.community.leaderboard.title.followers',
-        titleDefault: 'Most followed users',
-        leadKey: 'mw.community.leaderboard.lead.followers',
-        leadDefault: 'The most followed public Bilup Accounts accounts.'
-    },
-    {
-        key: 'loves',
-        labelKey: 'mw.community.leaderboard.board.loves',
-        labelDefault: 'Loves',
-        titleKey: 'mw.community.leaderboard.title.loves',
-        titleDefault: 'Most loved creators',
-        leadKey: 'mw.community.leaderboard.lead.loves',
-        leadDefault: 'Creators with the most loves across all their shared projects.'
-    },
-    {
-        key: 'views',
-        labelKey: 'mw.community.leaderboard.board.views',
-        labelDefault: 'Views',
-        titleKey: 'mw.community.leaderboard.title.views',
-        titleDefault: 'Most viewed creators',
-        leadKey: 'mw.community.leaderboard.lead.views',
-        leadDefault: 'Creators with the most views across all their shared projects.'
-    }
-];
-
 const Leaderboard = () => {
-    const intl = useIntl();
-    const [board, setBoard] = useState('followers');
+    const [searchParams, setSearchParams] = useSearchParams();
+    const board = leaderboardBoard(searchParams.get('board'));
     const [users, setUsers] = useState(null);
     const [error, setError] = useState('');
+    const [attempt, setAttempt] = useState(0);
     const beginLoad = useLatest();
     const active = BOARDS.find(item => item.key === board);
-    const boardLabel = item => intl.formatMessage({id: item.labelKey, defaultMessage: item.labelDefault});
+
+    useEffect(() => {
+        const normalized = normalizeLeaderboardParams(searchParams);
+        if (normalized.toString() !== searchParams.toString()) setSearchParams(normalized, {replace: true});
+    }, [searchParams, setSearchParams]);
 
     useEffect(() => {
         const fresh = beginLoad();
@@ -95,40 +92,39 @@ const Leaderboard = () => {
             .then(fresh(setUsers))
             .catch(fresh(() => {
                 setUsers([]);
-                setError(intl.formatMessage({
-                    id: 'mw.community.leaderboard.loadFailed',
-                    defaultMessage: 'Could not load the leaderboard.'
-                }));
+                setError('Could not load the leaderboard.');
             }));
-    }, [board, intl]);
+    }, [attempt, board, beginLoad]);
+
+    const selectBoard = nextBoard => {
+        const next = new URLSearchParams(searchParams);
+        if (nextBoard === 'followers') next.delete('board');
+        else next.set('board', nextBoard);
+        setSearchParams(next);
+    };
 
     return (
         <main className={styles.page}>
-            <h1>{intl.formatMessage({id: active.titleKey, defaultMessage: active.titleDefault})}</h1>
-            <p className={styles.lead}>{intl.formatMessage({id: active.leadKey, defaultMessage: active.leadDefault})}</p>
-            <div className={styles.tabs}>
-                {BOARDS.map(item => (
-                    <button
-                        key={item.key}
-                        className={item.key === board ? styles.tabActive : styles.tab}
-                        onClick={() => setBoard(item.key)}
-                    >
-                        {boardLabel(item)}
-                    </button>
-                ))}
-            </div>
+            <h1>{active.title}</h1>
+            <p className={styles.lead}>{active.lead}</p>
+            <SectionTabs
+                items={BOARDS}
+                value={board}
+                onChange={selectBoard}
+                className={styles.tabs}
+                itemClassName={styles.tab}
+                activeClassName={styles.tabActive}
+                ariaLabel="Leaderboard type"
+            />
             {users === null ? (
-                <p className={styles.status}>{intl.formatMessage({
-                    id: 'mw.community.leaderboard.loading',
-                    defaultMessage: 'Loading…'
-                })}</p>
+                <p className={styles.status}>Loading…</p>
             ) : error ? (
-                <p className={styles.status}>{error}</p>
+                <div className={styles.status}>
+                    <p>{error}</p>
+                    <Button onClick={() => setAttempt(value => value + 1)}>Try again</Button>
+                </div>
             ) : !users.length ? (
-                <p className={styles.status}>{intl.formatMessage({
-                    id: 'mw.community.leaderboard.empty',
-                    defaultMessage: 'No one on this leaderboard yet.'
-                })}</p>
+                <p className={styles.status}>No one on this leaderboard yet.</p>
             ) : (
                 <ol className={styles.list}>
                     {users.map((person, position) => (
@@ -148,19 +144,12 @@ const Leaderboard = () => {
                                     <strong>{person.username}</strong>
                                     {board === 'followers' ? (
                                         <span>{typeof person.index === 'number' ?
-                                            intl.formatMessage({
-                                                id: 'mw.community.leaderboard.accountNumber',
-                                                defaultMessage: 'Account #{index}'
-                                            }, {index: person.index}) :
-                                            intl.formatMessage({
-                                                id: 'mw.community.leaderboard.accountUnavailable',
-                                                defaultMessage: 'Account number unavailable'
-                                            })}</span>
+                                            `Account #${person.index}` : 'Account number unavailable'}</span>
                                     ) : (
-                                        <span>{intl.formatMessage({
-                                            id: 'mw.community.leaderboard.sharedProjects',
-                                            defaultMessage: '{count} shared {count, plural, one {project} other {projects}}'
-                                        }, {count: person.projects || 0})}</span>
+                                        <span>
+                                            {`${person.projects || 0} shared `}
+                                            {person.projects === 1 ? 'project' : 'projects'}
+                                        </span>
                                     )}
                                     {board === 'followers' && person.status ? (
                                         <span>{person.status.status || person.status.presence}</span>

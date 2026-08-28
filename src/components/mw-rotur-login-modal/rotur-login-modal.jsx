@@ -11,13 +11,13 @@ import styles from './rotur-login-modal.css';
 
 const messages = defineMessages({
     title: {
-        defaultMessage: 'Sign in with Bilup Accounts',
-        description: 'Title of Bilup Accounts login modal',
+        defaultMessage: 'Sign in with Rotur',
+        description: 'Title of Rotur login modal',
         id: 'mw.roturLogin.title'
     },
     infoTitle: {
-        defaultMessage: 'Bilup Accounts in Bilup',
-        description: 'Title of Bilup Accounts info modal when signed in',
+        defaultMessage: 'Rotur in MistWarp',
+        description: 'Title of Rotur info modal when signed in',
         id: 'mw.roturLogin.infoTitle'
     }
 });
@@ -28,14 +28,14 @@ const FEATURES = [
         title: (
             <FormattedMessage
                 defaultMessage="Show what you're editing"
-                description="Bilup Accounts login feature title"
+                description="Rotur login feature title"
                 id="mw.roturLogin.feature.activity.title"
             />
         ),
         description: (
             <FormattedMessage
-                defaultMessage="Share Bilup activity on your Bilup Accounts profile."
-                description="Bilup Accounts login feature description"
+                defaultMessage="Share MistWarp activity on your Rotur profile."
+                description="Rotur login feature description"
                 id="mw.roturLogin.feature.activity.desc"
             />
         )
@@ -45,14 +45,14 @@ const FEATURES = [
         title: (
             <FormattedMessage
                 defaultMessage="Cloud themes and settings"
-                description="Bilup Accounts login feature title"
+                description="Rotur login feature title"
                 id="mw.roturLogin.feature.cloud.title"
             />
         ),
         description: (
             <FormattedMessage
                 defaultMessage="Sync themes and settings across devices when signed in."
-                description="Bilup Accounts login feature description"
+                description="Rotur login feature description"
                 id="mw.roturLogin.feature.cloud.desc"
             />
         )
@@ -61,15 +61,15 @@ const FEATURES = [
         icon: GitBranch,
         title: (
             <FormattedMessage
-                defaultMessage="Bilup Git in the Git window"
-                description="Bilup Accounts login feature title"
+                defaultMessage="Rotur Git in the Git window"
+                description="Rotur login feature title"
                 id="mw.roturLogin.feature.git.title"
             />
         ),
         description: (
             <FormattedMessage
-                defaultMessage="Create repos on git.bilup.org, push your project, and clone others."
-                description="Bilup Accounts login feature description"
+                defaultMessage="Create repos on git.rotur.dev, push your project, and clone others."
+                description="Rotur login feature description"
                 id="mw.roturLogin.feature.git.desc"
             />
         )
@@ -82,14 +82,14 @@ const COMING_SOON = [
         title: (
             <FormattedMessage
                 defaultMessage="Friends and collab invites"
-                description="Upcoming Bilup Accounts feature title"
+                description="Upcoming Rotur feature title"
                 id="mw.roturLogin.coming.friends.title"
             />
         ),
         description: (
             <FormattedMessage
-                defaultMessage="See online friends on Bilup and invite them to collab."
-                description="Upcoming Bilup Accounts feature description"
+                defaultMessage="See online friends on MistWarp and invite them to collab."
+                description="Upcoming Rotur feature description"
                 id="mw.roturLogin.coming.friends.desc"
             />
         )
@@ -122,22 +122,36 @@ class RoturLoginModal extends React.Component {
             busy: false,
             localError: null
         };
+        this.loginInFlight = false;
         this.handleLogin = this.handleLogin.bind(this);
+        this.handleRequestClose = this.handleRequestClose.bind(this);
+        this.releaseLogin = this.releaseLogin.bind(this);
+    }
+
+    handleRequestClose () {
+        if (this.loginInFlight || this.state.busy || this.props.status === 'logging-in') return;
+        this.props.onRequestClose();
+    }
+
+    releaseLogin () {
+        this.loginInFlight = false;
     }
 
     async handleLogin () {
-        if (this.state.busy) return;
+        if (this.loginInFlight || this.state.busy || this.props.status === 'logging-in') return;
+        this.loginInFlight = true;
         this.setState({busy: true, localError: null});
         try {
             const api = getRoturSessionApi();
             if (!api || typeof api.login !== 'function') {
-                throw new Error('Bilup Accounts session is not ready yet. Try again in a moment.');
+                throw new Error('Rotur session is not ready yet. Try again in a moment.');
             }
             await api.login();
         } catch (error) {
             const message = error && error.message ? error.message : String(error);
             this.setState({localError: message});
         } finally {
+            this.releaseLogin();
             this.setState({busy: false});
         }
     }
@@ -153,7 +167,7 @@ class RoturLoginModal extends React.Component {
                 contentLabel={this.props.intl.formatMessage(loggedIn ? messages.infoTitle : messages.title)}
                 headerClassName={styles.header}
                 id="roturLoginModal"
-                onRequestClose={this.props.onRequestClose}
+                onRequestClose={this.handleRequestClose}
                 resizable
                 maximizable={false}
                 width={440}
@@ -167,20 +181,20 @@ class RoturLoginModal extends React.Component {
                             alt=""
                             className={styles.logo}
                             draggable={false}
-                            src="https://accounts.bilup.org/logo.png"
+                            src="https://rotur.dev/Rotur%20Logo.png"
                         />
                         <div className={styles.heroText}>
                             <h2 className={styles.title}>
                                 {loggedIn ? (
                                     <FormattedMessage
-                                        defaultMessage="Bilup Accounts in Bilup"
-                                        description="Headline in Bilup Accounts info modal when signed in"
+                                        defaultMessage="Rotur in MistWarp"
+                                        description="Headline in Rotur info modal when signed in"
                                         id="mw.roturLogin.infoHeadline"
                                     />
                                 ) : (
                                     <FormattedMessage
-                                        defaultMessage="Connect Bilup to Bilup Accounts"
-                                        description="Headline in Bilup Accounts login modal"
+                                        defaultMessage="Connect MistWarp to Rotur"
+                                        description="Headline in Rotur login modal"
                                         id="mw.roturLogin.headline"
                                     />
                                 )}
@@ -190,7 +204,7 @@ class RoturLoginModal extends React.Component {
                                     <FormattedMessage
                                         // eslint-disable-next-line max-len
                                         defaultMessage="You're signed in as {username}. Here's what your account enables."
-                                        description="Subtitle in Bilup Accounts info modal when signed in"
+                                        description="Subtitle in Rotur info modal when signed in"
                                         id="mw.roturLogin.infoSubtitle"
                                         values={{username: this.props.username}}
                                     />
@@ -198,7 +212,7 @@ class RoturLoginModal extends React.Component {
                                     <FormattedMessage
                                         // eslint-disable-next-line max-len
                                         defaultMessage="Sign in for presence, your profile picture, and cloud sync of themes and settings."
-                                        description="Subtitle in Bilup Accounts login modal"
+                                        description="Subtitle in Rotur login modal"
                                         id="mw.roturLogin.subtitle"
                                     />
                                 )}
@@ -209,7 +223,7 @@ class RoturLoginModal extends React.Component {
                     <p className={styles.sectionLabel}>
                         <FormattedMessage
                             defaultMessage="What you unlock"
-                            description="Section label listing Bilup Accounts login benefits"
+                            description="Section label listing Rotur login benefits"
                             id="mw.roturLogin.unlocks"
                         />
                     </p>
@@ -228,7 +242,7 @@ class RoturLoginModal extends React.Component {
                     <p className={styles.sectionLabel}>
                         <FormattedMessage
                             defaultMessage="Coming soon"
-                            description="Section label for planned Bilup Accounts features"
+                            description="Section label for planned Rotur features"
                             id="mw.roturLogin.comingSoon"
                         />
                     </p>
@@ -246,19 +260,31 @@ class RoturLoginModal extends React.Component {
                     </ul>
 
                     {error ? (
-                        <p className={styles.error}>{error}</p>
+                        <div>
+                            <p className={styles.error}>{error}</p>
+                            <p style={{marginTop: '4px', fontSize: '0.85rem', textAlign: 'center'}}>
+                                <a
+                                    href="https://rotur.dev/me"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{color: '#c299cf', textDecoration: 'underline'}}
+                                >
+                                    {'Check account standing on rotur.dev'}
+                                </a>
+                            </p>
+                        </div>
                     ) : null}
 
                     <div className={styles.actions}>
                         {loggedIn ? (
                             <button
                                 className={`${styles.button} ${styles.primary}`}
-                                onClick={this.props.onRequestClose}
+                                onClick={this.handleRequestClose}
                                 type="button"
                             >
                                 <FormattedMessage
                                     defaultMessage="Close"
-                                    description="Close button on Bilup Accounts info modal"
+                                    description="Close button on Rotur info modal"
                                     id="mw.roturLogin.close"
                                 />
                             </button>
@@ -266,12 +292,13 @@ class RoturLoginModal extends React.Component {
                             <React.Fragment>
                                 <button
                                     className={`${styles.button} ${styles.secondary}`}
-                                    onClick={this.props.onRequestClose}
+                                    onClick={this.handleRequestClose}
+                                    disabled={busy}
                                     type="button"
                                 >
                                     <FormattedMessage
                                         defaultMessage="Not now"
-                                        description="Cancel button on Bilup Accounts login modal"
+                                        description="Cancel button on Rotur login modal"
                                         id="mw.roturLogin.notNow"
                                     />
                                 </button>
@@ -283,14 +310,14 @@ class RoturLoginModal extends React.Component {
                                 >
                                     {busy ? (
                                         <FormattedMessage
-                                            defaultMessage="Opening Bilup Accounts..."
-                                            description="Loading state for Bilup Accounts login button"
+                                            defaultMessage="Opening Rotur..."
+                                            description="Loading state for Rotur login button"
                                             id="mw.roturLogin.opening"
                                         />
                                     ) : (
                                         <FormattedMessage
-                                            defaultMessage="Continue with Bilup Accounts"
-                                            description="Primary button to start Bilup Accounts OAuth login"
+                                            defaultMessage="Continue with Rotur"
+                                            description="Primary button to start Rotur OAuth login"
                                             id="mw.roturLogin.continue"
                                         />
                                     )}
@@ -302,17 +329,17 @@ class RoturLoginModal extends React.Component {
                     <p className={styles.footnote}>
                         <FormattedMessage
                             // eslint-disable-next-line max-len
-                            defaultMessage="Secure sign-in on {link}. Your account powers presence, cloud sync, and Bilup Git."
-                            description="Privacy footnote under Bilup Accounts login"
+                            defaultMessage="Secure sign-in on {link}. Your account powers presence, cloud sync, and Rotur Git."
+                            description="Privacy footnote under Rotur login"
                             id="mw.roturLogin.footnote"
                             values={{
                                 link: (
                                     <a
-                                        href="https://accounts.bilup.org"
+                                        href="https://rotur.dev"
                                         rel="noopener noreferrer"
                                         target="_blank"
                                     >
-                                        accounts.bilup.org
+                                        {'rotur.dev'}
                                     </a>
                                 )
                             }}
@@ -338,4 +365,5 @@ const mapStateToProps = state => ({
     username: state.scratchGui.rotur.username
 });
 
+export {RoturLoginModal};
 export default injectIntl(connect(mapStateToProps)(RoturLoginModal));

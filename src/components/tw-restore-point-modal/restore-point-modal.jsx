@@ -28,25 +28,6 @@ const messages = defineMessages({
     refresh: {
         defaultMessage: 'Refresh',
         id: 'tw.restorePoints.refresh'
-    },
-    everyMs: {
-        defaultMessage: 'Every {n}ms',
-        id: 'tw.restorePoints.everyMs'
-    },
-    confirmTitle: {
-        defaultMessage: 'Confirm',
-        description: 'Title of the confirmation dialog',
-        id: 'tw.restorePoints.confirmTitle'
-    },
-    confirmYes: {
-        defaultMessage: 'Yes',
-        description: 'Button to confirm the action',
-        id: 'tw.restorePoints.confirmYes'
-    },
-    confirmNo: {
-        defaultMessage: 'No',
-        description: 'Button to cancel the action',
-        id: 'tw.restorePoints.confirmNo'
     }
 });
 
@@ -59,6 +40,7 @@ const INTERVAL_OPTIONS = [
     MINUTE * 30,
     -1
 ];
+const ignoreClose = () => {};
 
 const IntervalSelector = props => (
     <select
@@ -84,7 +66,7 @@ const IntervalSelector = props => (
         ))}
         {!INTERVAL_OPTIONS.includes(props.value) && (
             <option value={props.value}>
-                {props.intl.formatMessage(messages.everyMs, {n: props.value})}
+                {`Every ${props.value}ms`}
             </option>
         )}
     </select>
@@ -97,7 +79,6 @@ IntervalSelector.propTypes = {
 };
 
 const RestorePointModal = props => (
-    <>
     <Modal
         centered
         className={styles.modalContent}
@@ -106,10 +87,36 @@ const RestorePointModal = props => (
         id="restorePointModal"
         minHeight={420}
         minWidth={500}
-        onRequestClose={props.onClose}
+        onRequestClose={props.confirmationBusy ? ignoreClose : props.onClose}
         width={680}
     >
         <div className={styles.body}>
+            {props.confirmation ? (
+                <div className={styles.confirmationOverlay}>
+                    <div className={styles.confirmationCard}>
+                        <AlertTriangle />
+                        <strong>{props.confirmation.title}</strong>
+                        <p>{props.confirmation.message}</p>
+                        {props.confirmationError ? (
+                            <p className={styles.confirmationError}>{props.confirmationError}</p>
+                        ) : null}
+                        <div className={styles.confirmationActions}>
+                            <button
+                                type="button"
+                                className={styles.secondaryButton}
+                                disabled={props.confirmationBusy}
+                                onClick={props.onCancelConfirmation}
+                            >{'Cancel'}</button>
+                            <button
+                                type="button"
+                                className={styles.confirmationButton}
+                                disabled={props.confirmationBusy}
+                                onClick={props.onConfirm}
+                            >{props.confirmationBusy ? 'Working…' : props.confirmation.action}</button>
+                        </div>
+                    </div>
+                </div>
+            ) : null}
             <div className={styles.automaticRow}>
                 <div>
                     <strong>
@@ -164,6 +171,7 @@ const RestorePointModal = props => (
                 </div>
                 <div className={styles.headerActions}>
                     <button
+                        type="button"
                         aria-label={props.intl.formatMessage(messages.refresh)}
                         className={styles.iconButton}
                         disabled={props.isLoading}
@@ -173,6 +181,7 @@ const RestorePointModal = props => (
                         <RefreshCw />
                     </button>
                     <button
+                        type="button"
                         className={styles.primaryButton}
                         disabled={props.isLoading}
                         onClick={props.onClickCreate}
@@ -197,6 +206,7 @@ const RestorePointModal = props => (
                     </strong>
                     <span className={styles.errorMessage}>{props.error}</span>
                     <button
+                        type="button"
                         className={styles.secondaryButton}
                         onClick={props.onClickRefresh}
                     >
@@ -283,6 +293,7 @@ const RestorePointModal = props => (
                         />
                     </span>
                     <button
+                        type="button"
                         className={styles.deleteAllButton}
                         onClick={props.onClickDeleteAll}
                     >
@@ -296,46 +307,6 @@ const RestorePointModal = props => (
             )}
         </div>
     </Modal>
-    {props.confirmDialog && (
-        <Modal
-            centered
-            className={styles.confirmModal}
-            contentLabel={props.intl.formatMessage(messages.confirmTitle)}
-            height={200}
-            id="restorePointConfirmDialog"
-            minHeight={200}
-            minWidth={380}
-            onRequestClose={props.onCancelDialog}
-            resizable={false}
-            width={420}
-        >
-            <div className={styles.confirmBody}>
-                <strong className={styles.confirmTitle}>
-                    {props.intl.formatMessage(messages.confirmTitle)}
-                </strong>
-                <span className={styles.confirmMessage}>
-                    {props.confirmDialog.message}
-                </span>
-                <div className={styles.confirmActions}>
-                    <button
-                        className={`${styles.confirmButton} ${styles.confirmCancelButton}`}
-                        onClick={props.onCancelDialog}
-                        type="button"
-                    >
-                        {props.intl.formatMessage(messages.confirmNo)}
-                    </button>
-                    <button
-                        className={`${styles.confirmButton} ${styles.confirmOkButton}`}
-                        onClick={props.onConfirmDialog}
-                        type="button"
-                    >
-                        {props.intl.formatMessage(messages.confirmYes)}
-                    </button>
-                </div>
-            </div>
-        </Modal>
-    )}
-    </>
 );
 
 RestorePointModal.propTypes = {
@@ -353,13 +324,16 @@ RestorePointModal.propTypes = {
     isLoading: PropTypes.bool.isRequired,
     totalSize: PropTypes.number.isRequired,
     restorePoints: PropTypes.arrayOf(PropTypes.shape({})),
-    confirmDialog: PropTypes.shape({
+    error: PropTypes.string,
+    confirmation: PropTypes.shape({
+        action: PropTypes.string.isRequired,
         message: PropTypes.string.isRequired,
-        onConfirm: PropTypes.func.isRequired
+        title: PropTypes.string.isRequired
     }),
-    onConfirmDialog: PropTypes.func.isRequired,
-    onCancelDialog: PropTypes.func.isRequired,
-    error: PropTypes.string
+    confirmationBusy: PropTypes.bool.isRequired,
+    confirmationError: PropTypes.string,
+    onCancelConfirmation: PropTypes.func.isRequired,
+    onConfirm: PropTypes.func.isRequired
 };
 
 export default injectIntl(RestorePointModal);

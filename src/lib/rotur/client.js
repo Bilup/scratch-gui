@@ -1,5 +1,4 @@
 import {Rotur, resolvePermissions} from 'rotur-sdk';
-import {getItem as getStorageItem} from '../utils/safe-storage.js';
 import {
     getRoturSettings,
     formatActivityTitle,
@@ -7,7 +6,7 @@ import {
 } from './settings.js';
 
 const TOKEN_KEY = 'mw:rotur-token';
-const REQUIRED_PERMISSIONS = [
+const REQUIRED_PERMISSIONS = [...new Set([
     ...resolvePermissions([
         'me.checkAuth',
         'following.follow',
@@ -17,18 +16,35 @@ const REQUIRED_PERMISSIONS = [
         'me.claimDaily',
         'notifications.list'
     ]),
-    'credits:view'
-];
+    'account:view',
+    'account:profile',
+    'account:settings',
+    'credits:view',
+    'credits:manage',
+    'credits:transfer',
+    'credits:daily',
+    'notifications:view',
+    'posts:create',
+    'posts:delete',
+    'groups:view',
+    'groups:members.view',
+    'groups:join',
+    'groups:leave',
+    'groups:manage'
+])];
 const PRESENCE_PERMISSION = 'account:profile';
-const LOGIN_PERMISSIONS = [...REQUIRED_PERMISSIONS, PRESENCE_PERMISSION];
-const ACTIVITY_ID = 'Bilup';
-const APP_URL = 'https://com.bilup.org/';
-const APP_IMAGE = 'https://raw.githubusercontent.com/Bilup/desktop/master/art/icon.png';
+const LOGIN_PERMISSIONS = REQUIRED_PERMISSIONS;
+const LOGIN_SYSTEM = 'mistwarp';
+const ACTIVITY_ID = 'MistWarp';
+const APP_URL = 'https://warp.mistium.com';
+const APP_IMAGE = 'https://raw.githubusercontent.com/MistWarp/desktop/master/art/icon.png';
 
 /** @type {Rotur|null} */
 let client = null;
 const notificationListeners = new Set();
 const notificationRemovalListeners = new Set();
+const visibleNotificationIds = new Set();
+const notificationFetches = new Map();
 let notificationSocketListener = null;
 let notificationRemovalSocketListener = null;
 
@@ -41,7 +57,7 @@ const getClient = () => {
 
 const loadStoredToken = () => {
     try {
-        return getStorageItem(TOKEN_KEY);
+        return localStorage.getItem(TOKEN_KEY);
     } catch (_) {
         return null;
     }
@@ -65,7 +81,7 @@ const storeToken = token => {
  * @returns {string} Avatar URL
  */
 const getAvatarUrl = username => (
-    `https://avatars.accounts.bilup.org/${encodeURIComponent(String(username).toLowerCase())}`
+    `https://avatars.rotur.dev/${encodeURIComponent(String(username).toLowerCase())}`
 );
 
 /**
@@ -112,7 +128,7 @@ const fetchCurrentUser = async () => {
         sawNetworkError = true;
     }
     if (sawNetworkError) {
-        const error = new Error('Could not reach Bilup Accounts');
+        const error = new Error('Could not reach Rotur');
         error.transient = true;
         throw error;
     }
@@ -195,11 +211,17 @@ const restoreSession = async () => {
     const rotur = getClient();
     rotur.setToken(token);
     const cached = readRestoreCache(token);
+    const hasPermissions = await tokenHasRequiredPermissions();
+    if (!hasPermissions) {
+        rotur.logout();
+        storeToken(null);
+        return null;
+    }
     if (cached) {
         return cached;
     }
-    const [user, hasPermissions] = await Promise.all([fetchCurrentUser(), tokenHasRequiredPermissions()]);
-    if (!user || !hasPermissions) {
+    const user = await fetchCurrentUser();
+    if (!user) {
         rotur.logout();
         storeToken(null);
         return null;
@@ -211,25 +233,25 @@ const restoreSession = async () => {
 
 const buildAuthUrl = (returnTo = (typeof window === 'undefined' ? '' : window.location.href)) => {
     const params = new URLSearchParams({
-        system: 'web',
+        system: LOGIN_SYSTEM,
         return_to: returnTo,
         requires: LOGIN_PERMISSIONS.join(',')
     });
-    return `https://accounts.bilup.org/auth?${params.toString()}`;
+    return `https://rotur.dev/auth?${params.toString()}`;
 };
 
-/** Open the Bilup Accounts login flow (popup, with iframe fallback for Electron). */
+/** Open the Rotur login flow (popup, with iframe fallback for Electron). */
 const login = async () => {
     const rotur = getClient();
     await rotur.login({
-        system: 'web',
+        system: LOGIN_SYSTEM,
         timeout: 120000,
         requires: LOGIN_PERMISSIONS
     });
     storeToken(rotur.token);
     const user = await fetchCurrentUser();
     if (!user) {
-        throw new Error('Logged in but could not load Bilup Accounts profile');
+        throw new Error('Logged in but could not load Rotur profile');
     }
     writeRestoreCache(rotur.token, user);
     return user;
@@ -261,6 +283,8 @@ const logout = () => {
         notificationSocketListener = null;
     }
     notificationListeners.clear();
+    visibleNotificationIds.clear();
+    notificationFetches.clear();
     rotur.logout();
     storeToken(null);
     writeRestoreCache(null, null);
@@ -296,6 +320,9 @@ const normalizeNotification = notification => {
         return notification;
     }
     const out = {...notification};
+    const isMistWarpRelay = String(out.platform || '').toLowerCase() === 'mistwarp' &&
+        String(out.type || '').toLowerCase() === 'notification' &&
+        String(out.actor || '').toLowerCase() === 'mistwarp';
     for (const [k, v] of Object.entries(pd)) {
         if (k === 'type' || k === 'id' || k === 'timestamp' || k === 'created' || k === 'read') {
             continue;
@@ -305,7 +332,37 @@ const normalizeNotification = notification => {
     if (out.platform === 'mistwarp' && typeof pd.type === 'string' && pd.type) {
         out.type = pd.type;
     }
+    const payloadActor = pd.actor || pd.from;
+    if (out.platform === 'mistwarp' && typeof payloadActor === 'string' && payloadActor) {
+        out.actor = payloadActor;
+    }
+    if (isMistWarpRelay && String(pd.type || '').toLowerCase() === 'follow') {
+        out.mwDiscard = true;
+    }
     return out;
+};
+
+// MistWarp only shows its own activity plus Rotur's account-level follow
+// notifications. Other apps share the same Rotur notification inbox.
+const isVisibleNotification = notification => {
+    const normalized = normalizeNotification(notification);
+    if (!normalized || typeof normalized !== 'object') {
+        return false;
+    }
+    if (normalized.mwDiscard) {
+        return false;
+    }
+    if (String(normalized.type || '').toLowerCase() === 'follow') {
+        return true;
+    }
+    const platformData = normalized.platform_data && typeof normalized.platform_data === 'object' ?
+        normalized.platform_data : {};
+    return [
+        normalized.platform,
+        normalized.source,
+        platformData.platform,
+        platformData.source
+    ].some(value => typeof value === 'string' && value.toLowerCase() === 'mistwarp');
 };
 
 const notifyNotificationListeners = notification => {
@@ -313,6 +370,12 @@ const notifyNotificationListeners = notification => {
         return;
     }
     const normalized = normalizeNotification(notification);
+    if (!isVisibleNotification(normalized)) {
+        return;
+    }
+    if (typeof normalized.id === 'string') {
+        visibleNotificationIds.add(normalized.id);
+    }
     notificationListeners.forEach(listener => {
         try {
             listener(normalized);
@@ -323,9 +386,10 @@ const notifyNotificationListeners = notification => {
 };
 
 const notifyRemovalListeners = payload => {
-    if (!payload || typeof payload.id !== 'string') {
+    if (!payload || typeof payload.id !== 'string' || !visibleNotificationIds.has(payload.id)) {
         return;
     }
+    visibleNotificationIds.delete(payload.id);
     notificationRemovalListeners.forEach(listener => {
         try {
             listener(payload);
@@ -404,7 +468,7 @@ const subscribeNotificationRemovals = listener => {
 };
 
 /**
- * Publish Bilup editing presence.
+ * Publish MistWarp editing presence.
  * Title/status are fixed strings; edit duration uses start_time only.
  * @param {object|string} projectTitleOrCtx - Project title or activity context.
  * @param {object} [extra] - Extra activity fields.
@@ -478,17 +542,34 @@ const getRotur = () => getClient();
 
 // Notifications live on Rotur; the backend only posts them there. Fetch them
 // with the user's own token so each account sees its own notifications.
-const fetchNotifications = async afterDays => {
+const fetchNotifications = afterDays => {
     const rotur = getClient();
     if (!rotur.loggedIn) {
-        return [];
+        return Promise.resolve([]);
     }
-    try {
+    const key = String(afterDays);
+    if (notificationFetches.has(key)) {
+        return notificationFetches.get(key);
+    }
+    const request = Promise.resolve().then(async () => {
         const list = await rotur.notifications.list(afterDays);
-        return Array.isArray(list) ? list.map(normalizeNotification) : [];
-    } catch (_) {
-        return [];
-    }
+        if (!Array.isArray(list)) {
+            return [];
+        }
+        const visible = list.map(normalizeNotification).filter(isVisibleNotification);
+        for (const notification of visible) {
+            if (typeof notification.id === 'string') {
+                visibleNotificationIds.add(notification.id);
+            }
+        }
+        return visible;
+    });
+    notificationFetches.set(key, request);
+    request.then(
+        () => notificationFetches.delete(key),
+        () => notificationFetches.delete(key)
+    );
+    return request;
 };
 
 const markNotificationsRead = async () => {
@@ -506,7 +587,7 @@ const markNotificationsRead = async () => {
 
 // Ensure the current session token can exercise every scope in `scopes`. If the
 // token is already sufficient (or is a full-access main token) this is a no-op;
-// otherwise it re-runs the Bilup Accounts login popup requesting the union of the existing
+// otherwise it re-runs the Rotur login popup requesting the union of the existing
 // login scopes plus the requested ones, broadening the same session in place. No
 // separate per-project sub-token is minted.
 const ensureScopes = async scopes => {
@@ -536,9 +617,9 @@ const ensureScopes = async scopes => {
         return true;
     }
     await rotur.login({
-        system: 'rotur',
+        system: LOGIN_SYSTEM,
         timeout: 120000,
-        requires: [...new Set([...LOGIN_PERMISSIONS, ...wanted])]
+        requires: [...new Set([...LOGIN_PERMISSIONS, ...granted, ...wanted])]
     });
     storeToken(rotur.token);
     return true;
@@ -553,7 +634,7 @@ const isPaymentPermissionError = error => {
         message.includes('token');
 };
 
-// Read the current Bilup Accounts credit balance, or null if the token can't see it.
+// Read the current Rotur credit balance, or null if the token can't see it.
 const getBalance = async () => {
     const rotur = getClient();
     if (!rotur.loggedIn) {
@@ -567,7 +648,30 @@ const getBalance = async () => {
     }
 };
 
-// Read balance plus donation totals from the account's transaction history.
+export const donationTransactions = transactions => {
+    if (!Array.isArray(transactions)) return [];
+    return transactions.reduce((donations, transaction, index) => {
+        const note = String((transaction && transaction.note) || '');
+        if (!note.toLowerCase().includes('donation')) return donations;
+        const direction = transaction.type === 'in' ? 'received' :
+            transaction.type === 'out' ? 'given' : null;
+        const amount = Math.round((Number(transaction.amount) || 0) * 100) / 100;
+        if (!direction || amount <= 0) return donations;
+        const rawTime = Number(transaction.time || transaction.timestamp || 0);
+        const time = rawTime > 0 && rawTime < 10000000000 ? rawTime * 1000 : rawTime;
+        donations.push({
+            id: String(transaction.id || `${direction}-${rawTime}-${index}`),
+            direction,
+            amount,
+            user: String(transaction.user || transaction.from || transaction.to || ''),
+            note,
+            time: Number.isFinite(time) ? time : 0
+        });
+        return donations;
+    }, []).sort((left, right) => right.time - left.time);
+};
+
+// Read balance plus donation totals and history from the account's transactions.
 // Returns null if the token can't see credits. Fields default to 0/null.
 const getAccountSummary = async () => {
     const rotur = getClient();
@@ -581,21 +685,19 @@ const getAccountSummary = async () => {
         }
         const balance = typeof me['sys.currency'] === 'number' ? me['sys.currency'] : null;
         const txns = me['sys.transactions'] || me.transactions || [];
+        const donations = donationTransactions(txns);
         let donationsReceived = 0;
         let donationsGiven = 0;
-        if (Array.isArray(txns)) {
-            for (const t of txns) {
-                const note = String(t.note || '').toLowerCase();
-                if (!note.includes('donation')) continue;
-                if (t.type === 'in') donationsReceived += Number(t.amount) || 0;
-                else if (t.type === 'out') donationsGiven += Number(t.amount) || 0;
-            }
+        for (const donation of donations) {
+            if (donation.direction === 'received') donationsReceived += donation.amount;
+            else donationsGiven += donation.amount;
         }
         const round = value => Math.round(value * 100) / 100;
         return {
             balance,
             donationsReceived: round(donationsReceived),
             donationsGiven: round(donationsGiven),
+            donations,
             hasTransactions: Array.isArray(txns)
         };
     } catch (_) {
@@ -603,7 +705,7 @@ const getAccountSummary = async () => {
     }
 };
 
-// Transfer credits to another Bilup Accounts user. Throws an Error; if the failure is a
+// Transfer credits to another Rotur user. Throws an Error; if the failure is a
 // missing-permission on the current (sub-)token, the error carries needsReauth.
 const payUser = async (to, amount, note) => {
     const rotur = getClient();
@@ -669,6 +771,7 @@ export {
     payUser,
     claimDaily,
     ensureScopes,
+    isVisibleNotification,
     fetchNotifications,
     markNotificationsRead
 };

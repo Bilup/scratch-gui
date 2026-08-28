@@ -1,7 +1,6 @@
 import {connect} from 'react-redux';
 import PropTypes from 'prop-types';
-import React, {useCallback} from 'react';
-import {injectIntl, defineMessages} from 'react-intl';
+import React, {useCallback, useRef, useState} from 'react';
 import InlineMessages from '../../containers/inline-messages.jsx';
 import {filterInlineAlerts} from '../../reducers/alerts';
 import {setProjectUnchanged} from '../../reducers/project-changed';
@@ -13,37 +12,37 @@ import {Save} from 'lucide-react';
 
 import styles from './save-status.css';
 
-const messages = defineMessages({
-    remix: {
-        id: 'mw.share.windowTitleRemix',
-        defaultMessage: 'Remix to Bilup',
-        description: 'Tooltip label for saving a remixed project to Bilup'
-    },
-    save: {
-        id: 'mw.share.windowTitleSave',
-        defaultMessage: 'Save to Bilup',
-        description: 'Tooltip label for saving a project to Bilup'
-    }
-});
-
 const TWSaveStatus = ({
     alertsList,
-    intl,
     projectChanged,
     projectTitle,
     roturReady,
     onProjectUnchanged,
     vm
 }) => {
+    const savingRef = useRef(false);
+    const [saving, setSaving] = useState(false);
     const platformState = communityEnabled && roturReady ? getRememberedPlatformProjectState() : null;
     const mistwarpAction = communityEnabled && roturReady ?
         getMistWarpAction(platformState, projectChanged) :
         null;
-    const onSaveClick = useCallback(() => smartSave({
-        vm,
-        title: projectTitle,
-        onSaved: onProjectUnchanged
-    }), [vm, projectTitle, onProjectUnchanged]);
+    const onSaveClick = useCallback(async () => {
+        if (savingRef.current) return false;
+        savingRef.current = true;
+        setSaving(true);
+        try {
+            return await smartSave({
+                vm,
+                title: projectTitle,
+                onSaved: onProjectUnchanged
+            });
+        } finally {
+            // This ref is the lock for this invocation, not state derived before the await.
+            // eslint-disable-next-line require-atomic-updates
+            savingRef.current = false;
+            setSaving(false);
+        }
+    }, [vm, projectTitle, onProjectUnchanged]);
     if (filterInlineAlerts(alertsList).length > 0) {
         return <InlineMessages />;
     }
@@ -51,28 +50,27 @@ const TWSaveStatus = ({
         return null;
     }
     if (!platformState || !mistwarpAction) return null;
-    const mistwarpLabel = mistwarpAction === 'remix' ?
-        intl.formatMessage(messages.remix) :
-        intl.formatMessage(messages.save);
+    const mistwarpLabel = mistwarpAction === 'remix' ? 'Remix to MistWarp' : 'Save to MistWarp';
     return (
-        <div
+        <button
+            type="button"
             className={styles.saveNow}
+            aria-busy={saving || null}
+            aria-label={saving ? 'Saving to MistWarp' : mistwarpLabel}
+            disabled={saving}
             onClick={onSaveClick}
-            title={mistwarpLabel}
+            title={saving ? 'Saving…' : mistwarpLabel}
         >
             <Save
                 className={styles.saveIconAlways}
                 size={18}
             />
-        </div>
+        </button>
     );
 };
 
 TWSaveStatus.propTypes = {
     alertsList: PropTypes.arrayOf(PropTypes.object),
-    intl: PropTypes.shape({
-        formatMessage: PropTypes.func.isRequired
-    }).isRequired,
     projectChanged: PropTypes.bool,
     projectTitle: PropTypes.string,
     roturReady: PropTypes.bool,
@@ -96,7 +94,9 @@ const mapDispatchToProps = dispatch => ({
     onProjectUnchanged: () => dispatch(setProjectUnchanged())
 });
 
-export default injectIntl(connect(
+export default connect(
     mapStateToProps,
     mapDispatchToProps
-)(TWSaveStatus));
+)(TWSaveStatus);
+
+export {TWSaveStatus};

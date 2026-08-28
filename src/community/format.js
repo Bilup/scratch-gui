@@ -1,9 +1,3 @@
-const pad2 = n => String(n).padStart(2, '0');
-const formatDateTime = ts => {
-    const d = new Date(ts);
-    return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-};
-
 const timeAgo = ms => {
     const mins = Math.floor((Date.now() - ms) / 60000);
     if (mins < 1) return 'just now';
@@ -24,4 +18,38 @@ const formatBytes = bytes => {
     return `${value} B`;
 };
 
-export {formatDateTime, timeAgo, sameUser, formatBytes};
+const safeDate = value => {
+    if (!value) return null;
+    const normalized = typeof value === 'string' && /^\d+$/.test(value) ? Number(value) : value;
+    const date = new Date(normalized);
+    return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const formatDate = (value, fallback = '') => {
+    const date = safeDate(value);
+    if (!date) return fallback;
+    return date.toLocaleDateString([], {year: 'numeric', month: 'short', day: 'numeric'});
+};
+
+const formatDateTime = (value, fallback = '') => {
+    const date = safeDate(value);
+    if (!date) return fallback;
+    return date.toLocaleString([], {dateStyle: 'medium', timeStyle: 'short'});
+};
+
+const formatPlaytime = (value, includeLabel = true) => {
+    const milliseconds = Number(value);
+    const hasPlaytime = Number.isFinite(milliseconds) && milliseconds > 0;
+    const minutes = hasPlaytime ? Math.floor(milliseconds / 60000) : 0;
+    let duration;
+    if (hasPlaytime && minutes === 0) duration = '<1m';
+    else if (minutes < 60) duration = `${minutes}m`;
+    else {
+        const hours = Math.floor(minutes / 60);
+        const remainder = minutes % 60;
+        duration = remainder ? `${hours}h ${remainder}m` : `${hours}h`;
+    }
+    return includeLabel ? `${duration} played` : duration;
+};
+
+export {timeAgo, sameUser, formatBytes, formatDate, formatDateTime, formatPlaytime, safeDate};

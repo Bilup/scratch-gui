@@ -1,28 +1,24 @@
-import React, { Component } from 'react';
+import React, {Component} from 'react';
 import PropTypes from 'prop-types';
-import { FormattedMessage, injectIntl } from 'react-intl';
+import {FormattedMessage, injectIntl} from 'react-intl';
 import classNames from 'classnames';
 
 import Modal from '../../containers/windowed-modal.jsx';
 import Box from '../box/box.jsx';
 import Button from '../button/button.jsx';
 import Input from '../forms/input.jsx';
-import BufferedInputHOC from '../forms/buffered-input-hoc.jsx';
+
+import {Handshake as CollaborationIcon, User, Crown, UserMinus, Copy, AlertTriangle, PenLine} from 'lucide-react';
 
 import showAlert from '../../addons/window-system/alert';
-import NotificationSystem from '../../lib/notification-manager.js';
 import CollaborationService from '../../lib/collaboration/index.js';
 import {avatarForCollabUser} from '../../lib/collaboration/avatar.js';
 import describeActivity from '../../lib/collaboration/describe-activity.js';
 
 import styles from './collaboration-modal.css';
 
-import {Handshake as CollaborationIcon, User, Crown, UserMinus, Copy, AlertTriangle, PenLine, Settings, X} from 'lucide-react';
-
-const BufferedInput = BufferedInputHOC(Input);
-
 class CollaborationModal extends Component {
-    constructor(props) {
+    constructor (props) {
         super(props);
 
         this.state = {
@@ -32,17 +28,11 @@ class CollaborationModal extends Component {
             error: null,
             pendingRequests: [],
             showJoinRequest: false,
-            showSettings: false,
-            peerConfig: {
-                host: 'collab.bilup.org',
-                port: 443,
-                key: 'bilup',
-                path: '/',
-                secure: true
-            }
+            privacyBusy: false
         };
 
         this._autoJoinKey = null;
+        this._privacyPromise = null;
 
         this.handleRoomIdChange = this.handleRoomIdChange.bind(this);
         this.handleRoomIdKeyPress = this.handleRoomIdKeyPress.bind(this);
@@ -66,16 +56,8 @@ class CollaborationModal extends Component {
         this.handleJoinDenied = this.handleJoinDenied.bind(this);
         this.resetToJoinScreen = this.resetToJoinScreen.bind(this);
         this.handleCancelClick = this.handleCancelClick.bind(this);
-        this.togglePublicPrivacy = this.togglePublicPrivacy.bind(this);
-        this.togglePrivatePrivacy = this.togglePrivatePrivacy.bind(this);
-        this.handleShowSettings = this.handleShowSettings.bind(this);
-        this.handleCloseSettings = this.handleCloseSettings.bind(this);
-        this.handleHostChange = this.handleHostChange.bind(this);
-        this.handlePortChange = this.handlePortChange.bind(this);
-        this.handleKeyChange = this.handleKeyChange.bind(this);
-        this.handlePathChange = this.handlePathChange.bind(this);
-        this.handleSecureChange = this.handleSecureChange.bind(this);
-        this.handleSaveConfig = this.handleSaveConfig.bind(this);
+        this.handleSelectPublicPrivacy = this.handleSelectPublicPrivacy.bind(this);
+        this.handleSelectPrivatePrivacy = this.handleSelectPrivatePrivacy.bind(this);
     }
 
     componentDidMount () {
@@ -96,7 +78,7 @@ class CollaborationModal extends Component {
         }
     }
 
-    componentDidUpdate(prevProps) {
+    componentDidUpdate (prevProps) {
         if (prevProps.isConnected !== this.props.isConnected) {
             this.setState({
                 connectionStep: this.props.isConnected ? 'connected' : 'join',
@@ -133,7 +115,7 @@ class CollaborationModal extends Component {
                         JSON.stringify(pendingRequests) !== JSON.stringify(this.state.pendingRequests);
 
                     if (hasChanged) {
-                        this.setState({ pendingRequests });
+                        this.setState({pendingRequests});
                     }
                 }
             } catch (error) {
@@ -160,7 +142,7 @@ class CollaborationModal extends Component {
         this._autoJoinKey = null;
     }
 
-    resetToJoinScreen() {
+    resetToJoinScreen () {
         this.setState({
             connectionStep: 'join',
             isConnecting: false,
@@ -168,17 +150,17 @@ class CollaborationModal extends Component {
         });
     }
 
-    handleCancelClick() {
+    handleCancelClick () {
         this.resetToJoinScreen();
         this.props.onCancelConnection();
     }
 
-    togglePublicPrivacy() {
-        this.handleChangeCurrentRoomPrivacy('public');
+    handleSelectPublicPrivacy () {
+        return this.handleChangeCurrentRoomPrivacy('public');
     }
 
-    togglePrivatePrivacy() {
-        this.handleChangeCurrentRoomPrivacy('private');
+    handleSelectPrivatePrivacy () {
+        return this.handleChangeCurrentRoomPrivacy('private');
     }
 
     handleRoomIdChange (event) {
@@ -234,7 +216,7 @@ class CollaborationModal extends Component {
             currentUrl.searchParams.delete('username');
             window.history.replaceState(null, null, currentUrl.toString());
 
-            this.setState({ roomId: roomCode });
+            this.setState({roomId: roomCode});
 
         } catch (error) {
             this.setState({
@@ -246,7 +228,7 @@ class CollaborationModal extends Component {
         }
     }
 
-    handleLeaveRoom() {
+    handleLeaveRoom () {
         this.props.onLeaveRoom();
         this.setState({
             connectionStep: 'join',
@@ -255,16 +237,11 @@ class CollaborationModal extends Component {
         });
     }
 
-    handleKickUser(userId) {
+    handleKickUser (userId) {
         this.props.onKickUser(userId);
-        // In case the kicked peer still had a pending join request, drop it
-        // from the local list immediately as well.
-        this.setState(prevState => ({
-            pendingRequests: prevState.pendingRequests.filter(req => req.id !== userId)
-        }));
     }
 
-    handleCopyRoomUrl() {
+    handleCopyRoomUrl () {
         const currentUrl = new URL(window.location.href);
         currentUrl.searchParams.set('room', this.props.roomId);
         currentUrl.searchParams.delete('username');
@@ -273,14 +250,7 @@ class CollaborationModal extends Component {
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(roomUrl).then(() => {
                 console.log('Room URL copied to clipboard');
-                NotificationSystem.info(
-                    this.props.intl.formatMessage({
-                        id: 'gui.collaboration.urlCopied',
-                        defaultMessage: '已复制到剪贴板',
-                        description: 'Notification when room URL is copied to clipboard'
-                    }),
-                    3000
-                );
+                showAlert('Room URL copied to clipboard!');
             })
                 .catch(err => {
                     console.error('Failed to copy room URL:', err);
@@ -291,7 +261,7 @@ class CollaborationModal extends Component {
         }
     }
 
-    fallbackCopyToClipboard(text) {
+    fallbackCopyToClipboard (text) {
         const textArea = document.createElement('textarea');
         textArea.value = text;
         textArea.style.position = 'fixed';
@@ -305,14 +275,7 @@ class CollaborationModal extends Component {
             const successful = document.execCommand('copy');
             if (successful) {
                 console.log('Room URL copied to clipboard (fallback)');
-                NotificationSystem.info(
-                    this.props.intl.formatMessage({
-                        id: 'gui.collaboration.urlCopied',
-                        defaultMessage: '已复制到剪贴板',
-                        description: 'Notification when room URL is copied to clipboard'
-                    }),
-                    3000
-                );
+                showAlert('Room URL copied to clipboard!');
             } else {
                 console.warn('Fallback copy failed');
                 this.showUrlPrompt(text);
@@ -325,19 +288,14 @@ class CollaborationModal extends Component {
         }
     }
 
-    showUrlPrompt(text) {
+    showUrlPrompt (text) {
         console.log('Room URL:', text);
-        NotificationSystem.error(
-            this.props.intl.formatMessage({
-                id: 'gui.collaboration.copyFailed',
-                defaultMessage: '无法复制到剪贴板，请手动复制链接',
-                description: 'Notification when room URL copy fails'
-            }),
-            5000
+        showAlert(
+            'Could not copy room URL to clipboard. The URL has been logged to the console for manual copying.'
         );
     }
 
-    generateRoomCode() {
+    generateRoomCode () {
         const adjectives = ['cool', 'fun', 'epic', 'wild', 'neat', 'rad', 'hot', 'ice', 'big', 'tiny'];
         const nouns = ['cat', 'dog', 'owl', 'fox', 'bee', 'ant', 'fish', 'bird', 'frog', 'duck'];
 
@@ -381,37 +339,31 @@ class CollaborationModal extends Component {
     }
 
 
-    async handleApproveRequest(requesterId, requesterUsername) {
+    async handleApproveRequest (requesterId, requesterUsername) {
         try {
             await this.props.onApproveJoinRequest(requesterId, requesterUsername);
+            this.setState(prevState => ({
+                pendingRequests: prevState.pendingRequests.filter(req => req.id !== requesterId)
+            }));
         } catch (error) {
             console.error('Failed to approve join request:', error);
-            this.setState({ error: 'Failed to approve join request' });
-        } finally {
-            // Remove the request from the local list no matter what, so the
-            // host never gets stuck with a request that is already gone.
-            this.setState(prevState => ({
-                pendingRequests: prevState.pendingRequests.filter(req => req.id !== requesterId)
-            }));
+            this.setState({error: 'Failed to approve join request'});
         }
     }
 
-    async handleDenyRequest(requesterId) {
+    async handleDenyRequest (requesterId) {
         try {
             await this.props.onDenyJoinRequest(requesterId);
-        } catch (error) {
-            console.error('Failed to deny join request:', error);
-            this.setState({ error: 'Failed to deny join request' });
-        } finally {
-            // Remove the request from the local list no matter what, so the
-            // host never gets stuck with a request that is already gone.
             this.setState(prevState => ({
                 pendingRequests: prevState.pendingRequests.filter(req => req.id !== requesterId)
             }));
+        } catch (error) {
+            console.error('Failed to deny join request:', error);
+            this.setState({error: 'Failed to deny join request'});
         }
     }
 
-    handleCancelJoinRequest() {
+    handleCancelJoinRequest () {
         if (this.props.onCancelJoinRequest) {
             this.props.onCancelJoinRequest();
         }
@@ -434,7 +386,7 @@ class CollaborationModal extends Component {
         });
     }
 
-    handleAwaitingApproval() {
+    handleAwaitingApproval () {
         console.log('[COLLAB MODAL] Awaiting approval from host', {
             isConnected: this.props.isConnected,
             connectionStep: this.state.connectionStep
@@ -447,7 +399,7 @@ class CollaborationModal extends Component {
         });
     }
 
-    handleApprovalResolved() {
+    handleApprovalResolved () {
         console.log('[COLLAB MODAL] Approval resolved', {
             isConnected: this.props.isConnected,
             connectionStep: this.state.connectionStep
@@ -459,7 +411,7 @@ class CollaborationModal extends Component {
         });
     }
 
-    handleJoinDenied(reason) {
+    handleJoinDenied (reason) {
         console.log('[COLLAB MODAL] Join request denied:', reason);
         this.setState({
             connectionStep: 'join',
@@ -468,16 +420,24 @@ class CollaborationModal extends Component {
         });
     }
 
-    async handleChangeCurrentRoomPrivacy(newPrivacy) {
+    async handleChangeCurrentRoomPrivacy (newPrivacy) {
+        if (this._privacyPromise || newPrivacy === this.props.roomPrivacy) return this._privacyPromise;
+
+        this.setState({privacyBusy: true, error: null});
+        const request = Promise.resolve().then(() => this.props.onChangeRoomPrivacy(newPrivacy));
+        this._privacyPromise = request;
         try {
-            await this.props.onChangeRoomPrivacy(newPrivacy);
+            await request;
         } catch (error) {
             console.error('Failed to change room privacy:', error);
-            this.setState({ error: 'Failed to change room privacy' });
+            this.setState({error: 'Failed to change room privacy'});
+        } finally {
+            if (this._privacyPromise === request) this._privacyPromise = null;
+            this.setState({privacyBusy: false});
         }
     }
 
-    handleJoinRequestEvent(data) {
+    handleJoinRequestEvent (data) {
         console.log('[COLLAB MODAL] Join request event received:', data);
         if (CollaborationService) {
             try {
@@ -485,7 +445,7 @@ class CollaborationModal extends Component {
                 if (service && service.getPendingJoinRequests) {
                     const pendingRequests = service.getPendingJoinRequests();
                     console.log('[COLLAB MODAL] Updated pending requests:', pendingRequests);
-                    this.setState({ pendingRequests });
+                    this.setState({pendingRequests});
                 }
             } catch (error) {
                 console.warn('Could not get pending requests:', error);
@@ -493,55 +453,8 @@ class CollaborationModal extends Component {
         }
     }
 
-    handleShowSettings () {
-        this.setState({ showSettings: true });
-    }
-
-    handleCloseSettings () {
-        this.setState({ showSettings: false });
-    }
-
-    handleHostChange (value) {
-        this.setState(prevState => ({
-            peerConfig: { ...prevState.peerConfig, host: value }
-        }));
-    }
-
-    handlePortChange (value) {
-        const port = parseInt(value, 10);
-        this.setState(prevState => ({
-            peerConfig: { ...prevState.peerConfig, port: isNaN(port) ? 443 : port }
-        }));
-    }
-
-    handleKeyChange (value) {
-        this.setState(prevState => ({
-            peerConfig: { ...prevState.peerConfig, key: value }
-        }));
-    }
-
-    handlePathChange (value) {
-        this.setState(prevState => ({
-            peerConfig: { ...prevState.peerConfig, path: value }
-        }));
-    }
-
-    handleSecureChange (value) {
-        this.setState(prevState => ({
-            peerConfig: { ...prevState.peerConfig, secure: value }
-        }));
-    }
-
-    handleSaveConfig () {
-        this.setState({ showSettings: false });
-    }
-
     describeActivity (userId) {
-        return describeActivity(
-            this.props.vm,
-            (this.props.userActivity || {})[userId],
-            (descriptor, values) => this.props.intl.formatMessage(descriptor, values)
-        );
+        return describeActivity(this.props.vm, (this.props.userActivity || {})[userId]);
     }
 
     renderUserIcon (user, isHost) {
@@ -570,19 +483,8 @@ class CollaborationModal extends Component {
                     <AlertTriangle size={16} />
                 </div>
                 <div className={styles.bannerContent}>
-                    <strong>
-                        <FormattedMessage
-                            defaultMessage="Alpha Warning:"
-                            description="Alpha warning label"
-                            id="gui.collaboration.alphaWarningLabel"
-                        />
-                    </strong>
-                    {' '}
-                    <FormattedMessage
-                        defaultMessage="This feature is in early development. Your projects may get corrupted or broken. Use at your own risk."
-                        description="Alpha warning message"
-                        id="gui.collaboration.alphaWarningMessage"
-                    />
+                    <strong>{'Alpha: '}</strong>
+                    {'This feature is in early development. Your projects may get corrupted or broken.'}
                 </div>
             </div>
         );
@@ -606,17 +508,6 @@ class CollaborationModal extends Component {
                             id="gui.collaboration.title"
                         />
                     </div>
-                    <button
-                        className={styles.settingsButton}
-                        onClick={this.handleShowSettings}
-                        title={this.props.intl.formatMessage({
-                            defaultMessage: 'Connection settings',
-                            description: 'Tooltip for settings button',
-                            id: 'gui.collaboration.settingsButtonTitle'
-                        })}
-                    >
-                        <Settings size={20} />
-                    </button>
                 </div>
 
                 <div className={styles.description}>
@@ -625,10 +516,11 @@ class CollaborationModal extends Component {
                         defaultMessage="You will be known as: {username}"
                         description="Shows current username"
                         id="gui.collaboration.currentUsername"
-                        values={{ username: this.props.currentUsername }}
+                        values={{username: this.props.currentUsername}}
                     />
                     {!this.props.roturHandle && (
                         <button
+                            type="button"
                             className={styles.editUsernameButton}
                             onClick={this.props.onOpenChangeUsername}
                             title="Change username"
@@ -657,11 +549,7 @@ class CollaborationModal extends Component {
                             </label>
                             <Input
                                 className={styles.input}
-                                placeholder={this.props.intl.formatMessage({
-                                    id: 'gui.collaboration.roomIdPlaceholder',
-                                    defaultMessage: 'Enter room ID...',
-                                    description: 'Placeholder for room ID input'
-                                })}
+                                placeholder="Enter room ID..."
                                 value={this.state.roomId}
                                 onChange={this.handleRoomIdChange}
                                 onKeyPress={this.handleRoomIdKeyPress}
@@ -719,14 +607,7 @@ class CollaborationModal extends Component {
                             onClick={this.handleCreateRoom}
                             disabled={this.state.isConnecting}
                         >
-                            {typedRoomId ? (
-                                <FormattedMessage
-                                    defaultMessage='Host room "{roomId}"'
-                                    description="Button to host a collaboration room with a custom room ID"
-                                    id="gui.collaboration.hostRoom"
-                                    values={{roomId: typedRoomId}}
-                                />
-                            ) : (
+                            {typedRoomId ? `Host room "${typedRoomId}"` : (
                                 <FormattedMessage
                                     defaultMessage="Create New Room"
                                     description="Button to create new collaboration room"
@@ -752,7 +633,7 @@ class CollaborationModal extends Component {
         );
     }
 
-    renderConnectingStep() {
+    renderConnectingStep () {
         return (
             <Box className={styles.content}>
                 {this.renderAlphaBanner()}
@@ -780,23 +661,10 @@ class CollaborationModal extends Component {
         );
     }
 
-    renderConnectedStep() {
+    renderConnectedStep () {
         const users = this.props.connectedUsers || [];
         const currentUser = users.find(user => user.id === this.props.currentUserId);
-        // Trust the connection state over the users list: the host may not
-        // appear in connectedUsers yet (or currentUserId may be momentarily
-        // null), and losing the host badge would hide the kick / approve /
-        // deny / privacy controls entirely.
-        let serviceIsHost = false;
-        try {
-            const service = CollaborationService.getInstance();
-            if (service && typeof service.isCurrentUserHost === 'function') {
-                serviceIsHost = Boolean(service.isCurrentUserHost());
-            }
-        } catch (error) {
-            // Fall through to the users-list check below.
-        }
-        const isHost = serviceIsHost || Boolean(currentUser && currentUser.isHost);
+        const isHost = currentUser && currentUser.isHost;
 
         return (
             <Box className={styles.content}>
@@ -812,7 +680,7 @@ class CollaborationModal extends Component {
                             defaultMessage="Room: {roomId}"
                             description="Connected room title"
                             id="gui.collaboration.connectedRoom"
-                            values={{ roomId: this.props.roomId }}
+                            values={{roomId: this.props.roomId}}
                         />
                     </div>
                 </div>
@@ -824,7 +692,7 @@ class CollaborationModal extends Component {
                             defaultMessage="Connected - {userCount} {userCount, plural, one {user} other {users}} online"
                             description="Connection status"
                             id="gui.collaboration.status"
-                            values={{ userCount: users.length }}
+                            values={{userCount: users.length}}
                         />
                     </div>
                 </div>
@@ -834,7 +702,7 @@ class CollaborationModal extends Component {
                         <h3 className={styles.sectionTitle}>
                             <FormattedMessage
                                 defaultMessage="Connected Users"
-                                description="Connected users section title"
+                                description="Users section title"
                                 id="gui.collaboration.connectedUsers"
                             />
                         </h3>
@@ -893,16 +761,6 @@ class CollaborationModal extends Component {
                             ))}
                         </div>
                     </div>
-                    <h4>
-                        <FormattedMessage
-                            defaultMessage="Press {shortcut} to chat while collaborating"
-                            description="Chat hint"
-                            id="gui.collaboration.chatHint"
-                            values={{
-                                shortcut: this.props.customShortcuts?.collaborationChat || '/'
-                            }}
-                        />
-                    </h4>
                 </div>
 
                 {isHost && this.state.pendingRequests.length > 0 && (
@@ -913,7 +771,7 @@ class CollaborationModal extends Component {
                                     defaultMessage="Pending Join Requests ({count})"
                                     description="Pending requests section title"
                                     id="gui.collaboration.pendingRequests"
-                                    values={{ count: this.state.pendingRequests.length }}
+                                    values={{count: this.state.pendingRequests.length}}
                                 />
                             </h3>
 
@@ -977,9 +835,12 @@ class CollaborationModal extends Component {
                                 className={classNames(styles.privacyOption, {
                                     [styles.privacyOptionActive]: this.props.roomPrivacy === 'public'
                                 })}
+                                disabled={this.state.privacyBusy}
                                 role="radio"
                                 aria-checked={this.props.roomPrivacy === 'public'}
-                                onClick={this.togglePublicPrivacy}
+                                aria-busy={this.state.privacyBusy || null}
+                                onClick={this.handleSelectPublicPrivacy}
+                                type="button"
                             >
                                 <div className={styles.privacyCardTitle}>
                                     <FormattedMessage
@@ -1000,9 +861,12 @@ class CollaborationModal extends Component {
                                 className={classNames(styles.privacyOption, {
                                     [styles.privacyOptionActive]: this.props.roomPrivacy === 'private'
                                 })}
+                                disabled={this.state.privacyBusy}
                                 role="radio"
                                 aria-checked={this.props.roomPrivacy === 'private'}
-                                onClick={this.togglePrivatePrivacy}
+                                aria-busy={this.state.privacyBusy || null}
+                                onClick={this.handleSelectPrivatePrivacy}
+                                type="button"
                             >
                                 <div className={styles.privacyCardTitle}>
                                     <FormattedMessage
@@ -1054,7 +918,7 @@ class CollaborationModal extends Component {
         );
     }
 
-    renderPendingApprovalStep() {
+    renderPendingApprovalStep () {
         return (
             <Box className={styles.content}>
                 {this.renderAlphaBanner()}
@@ -1102,208 +966,23 @@ class CollaborationModal extends Component {
         );
     }
 
-    renderSettingsStep() {
-        return (
-            <Box className={styles.content}>
-                <div className={styles.alphaBanner}>
-                    <div className={styles.bannerIcon}>
-                        <AlertTriangle size={20} />
-                    </div>
-                    <div className={styles.bannerContent}>
-                        <strong>
-                            <FormattedMessage
-                                defaultMessage="Alpha Warning:"
-                                description="Alpha warning label"
-                                id="gui.collaboration.alphaWarningLabel"
-                            />
-                        </strong>
-                        {' '}
-                        <FormattedMessage
-                            defaultMessage="This feature is in early development. Your projects may get corrupted or broken. Use at your own risk."
-                            description="Alpha warning message"
-                            id="gui.collaboration.alphaWarningMessage"
-                        />
-                    </div>
-                </div>
-
-                <div className={styles.header}>
-                    <Settings
-                        className={styles.headerIcon}
-                        draggable={false}
-                    />
-                    <div className={styles.headerText}>
-                        <FormattedMessage
-                            defaultMessage="Connection Settings"
-                            description="Title for settings modal"
-                            id="gui.collaboration.settingsTitle"
-                        />
-                    </div>
-                    <button
-                        className={styles.closeButton}
-                        onClick={this.handleCloseSettings}
-                        title={this.props.intl.formatMessage({
-                            defaultMessage: 'Close settings',
-                            description: 'Tooltip for close button',
-                            id: 'gui.collaboration.closeSettingsTitle'
-                        })}
-                    >
-                        <X size={20} />
-                    </button>
-                </div>
-
-                <div className={styles.settingsSection}>
-                    <h3 className={styles.sectionTitle}>
-                        <FormattedMessage
-                            defaultMessage="PeerJS Server Configuration"
-                            description="Settings section title"
-                            id="gui.collaboration.peerServerConfig"
-                        />
-                    </h3>
-
-                    <div className={styles.inputGroup}>
-                        <label className={styles.label}>
-                            <FormattedMessage
-                                defaultMessage="Host"
-                                description="Label for peer server host input"
-                                id="gui.collaboration.peerHost"
-                            />
-                        </label>
-                        <BufferedInput
-                            className={styles.input}
-                            placeholder={this.props.intl.formatMessage({
-                                defaultMessage: 'Enter host address...',
-                                description: 'Placeholder for host input',
-                                id: 'gui.collaboration.peerHostPlaceholder'
-                            })}
-                            value={this.state.peerConfig.host}
-                            onSubmit={this.handleHostChange}
-                        />
-                    </div>
-
-                    <div className={styles.inputGroup}>
-                        <label className={styles.label}>
-                            <FormattedMessage
-                                defaultMessage="Port"
-                                description="Label for peer server port input"
-                                id="gui.collaboration.peerPort"
-                            />
-                        </label>
-                        <BufferedInput
-                            className={styles.input}
-                            placeholder={this.props.intl.formatMessage({
-                                defaultMessage: 'Enter port number...',
-                                description: 'Placeholder for port input',
-                                id: 'gui.collaboration.peerPortPlaceholder'
-                            })}
-                            value={this.state.peerConfig.port}
-                            onSubmit={this.handlePortChange}
-                        />
-                    </div>
-
-                    <div className={styles.inputGroup}>
-                        <label className={styles.label}>
-                            <FormattedMessage
-                                defaultMessage="Key"
-                                description="Label for peer server key input"
-                                id="gui.collaboration.peerKey"
-                            />
-                        </label>
-                        <BufferedInput
-                            className={styles.input}
-                            placeholder={this.props.intl.formatMessage({
-                                defaultMessage: 'Enter API key...',
-                                description: 'Placeholder for key input',
-                                id: 'gui.collaboration.peerKeyPlaceholder'
-                            })}
-                            value={this.state.peerConfig.key}
-                            onSubmit={this.handleKeyChange}
-                        />
-                    </div>
-
-                    <div className={styles.inputGroup}>
-                        <label className={styles.label}>
-                            <FormattedMessage
-                                defaultMessage="Path"
-                                description="Label for peer server path input"
-                                id="gui.collaboration.peerPath"
-                            />
-                        </label>
-                        <BufferedInput
-                            className={styles.input}
-                            placeholder={this.props.intl.formatMessage({
-                                defaultMessage: 'Enter path...',
-                                description: 'Placeholder for path input',
-                                id: 'gui.collaboration.peerPathPlaceholder'
-                            })}
-                            value={this.state.peerConfig.path}
-                            onSubmit={this.handlePathChange}
-                        />
-                    </div>
-
-                    <div className={styles.inputGroup}>
-                        <label className={styles.checkboxLabel}>
-                            <input
-                                type="checkbox"
-                                checked={this.state.peerConfig.secure}
-                                onChange={e => this.handleSecureChange(e.target.checked)}
-                                className={styles.checkbox}
-                            />
-                            <FormattedMessage
-                                defaultMessage="Secure (HTTPS/WSS)"
-                                description="Label for secure connection checkbox"
-                                id="gui.collaboration.peerSecure"
-                            />
-                        </label>
-                    </div>
-                </div>
-
-                <div className={styles.settingsActions}>
-                    <Button
-                        className={styles.secondaryButton}
-                        onClick={this.handleCloseSettings}
-                    >
-                        <FormattedMessage
-                            defaultMessage="Cancel"
-                            description="Cancel settings button"
-                            id="gui.collaboration.cancelSettings"
-                        />
-                    </Button>
-                    <Button
-                        className={styles.primaryButton}
-                        onClick={this.handleSaveConfig}
-                    >
-                        <FormattedMessage
-                            defaultMessage="Save Settings"
-                            description="Save settings button"
-                            id="gui.collaboration.saveSettings"
-                        />
-                    </Button>
-                </div>
-            </Box>
-        );
-    }
-
-    render() {
+    render () {
         let content;
-        if (this.state.showSettings) {
-            content = this.renderSettingsStep();
-        } else {
-            switch (this.state.connectionStep) {
-                case 'join':
-                    content = this.renderJoinStep();
-                    break;
-                case 'connecting':
-                    content = this.renderConnectingStep();
-                    break;
-                case 'connected':
-                    content = this.renderConnectedStep();
-                    break;
-                case 'pending-approval':
-                    content = this.renderPendingApprovalStep();
-                    break;
-                default:
-                    content = this.renderJoinStep();
-            }
+        switch (this.state.connectionStep) {
+        case 'join':
+            content = this.renderJoinStep();
+            break;
+        case 'connecting':
+            content = this.renderConnectingStep();
+            break;
+        case 'connected':
+            content = this.renderConnectedStep();
+            break;
+        case 'pending-approval':
+            content = this.renderPendingApprovalStep();
+            break;
+        default:
+            content = this.renderJoinStep();
         }
 
         return (
@@ -1311,11 +990,7 @@ class CollaborationModal extends Component {
                 visible={this.props.visible}
                 className={styles.modalContent}
                 onRequestClose={this.props.onRequestClose}
-                contentLabel={this.props.intl.formatMessage({
-                    id: 'gui.collaboration.title',
-                    defaultMessage: 'Live Collaboration',
-                    description: 'Title for collaboration modal'
-                })}
+                contentLabel="Live Collaboration"
                 id="collaborationModal"
                 width={600}
                 height={720}
