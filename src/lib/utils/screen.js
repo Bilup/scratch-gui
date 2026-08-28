@@ -97,12 +97,17 @@ const getStageDimensions = (stageSize, customStageSize, isFullScreen, stageConta
     if (!isFullScreen &&
         typeof stageContainerWidth === 'number' &&
         Number.isFinite(stageContainerWidth) &&
-        stageContainerWidth > 0) {
+        stageContainerWidth > 0 &&
+        stageDimensions.width > 0) {
         const availableContentWidth = Math.max(0, stageContainerWidth - 2);
-        const fitScale = availableContentWidth / stageDimensions.width;
-        stageDimensions.scale *= fitScale;
-        stageDimensions.width *= fitScale;
-        stageDimensions.height *= fitScale;
+        // Only scale if we need to fit, and don't go below a minimum scale to prevent infinite enlargement
+        // Prevent infinite loop when browser zoom is very small (< 40%)
+        if (stageDimensions.width > availableContentWidth && stageDimensions.scale > 0.05) {
+            const fitScale = availableContentWidth / stageDimensions.width;
+            stageDimensions.scale *= fitScale;
+            stageDimensions.width *= fitScale;
+            stageDimensions.height *= fitScale;
+        }
     }
 
     // On short viewports (mobile landscape, etc.) keep the sprite selector
@@ -111,11 +116,17 @@ const getStageDimensions = (stageSize, customStageSize, isFullScreen, stageConta
         typeof stageMaxHeight === 'number' &&
         Number.isFinite(stageMaxHeight) &&
         stageMaxHeight > 0 &&
-        stageDimensions.height > stageMaxHeight) {
+        stageDimensions.height > 0 &&
+        stageDimensions.height > stageMaxHeight &&
+        stageDimensions.scale > 0.05) {
+        // Prevent infinite loop when browser zoom is very small (< 40%)
         const fitScale = stageMaxHeight / stageDimensions.height;
         stageDimensions.scale *= fitScale;
         stageDimensions.width *= fitScale;
         stageDimensions.height *= fitScale;
+        // Ensure we don't go below 1px
+        stageDimensions.width = Math.max(1, stageDimensions.width);
+        stageDimensions.height = Math.max(1, stageDimensions.height);
     }
 
     // Round off dimensions to prevent resampling/blurriness

@@ -224,8 +224,9 @@
     "overrides": {
       "webpack@4.47.0>terser-webpack-plugin": "^1.4.1",
       "cheerio": "1.0.0-rc.12",
-"brace-expansion": "1.1.11",
-      "rotur-sdk": "github:Bilup/accounts-sdk#main"
+      "brace-expansion": "1.1.11",
+      "rotur-sdk": "github:Bilup/accounts-sdk#main",
+      "escape-string-regexp": "4.0.0"
     }
   }
 }

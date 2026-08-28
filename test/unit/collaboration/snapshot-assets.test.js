@@ -313,4 +313,108 @@ describe('asset channel', () => {
         channel.destroy();
         room.destroy();
     });
+
+    test('the host tells the requester which assets it cannot serve', async () => {
+        const stores = new Map();
+        const room = await createRoom({clientCount: 0});
+        const {hostChannel, wireClient} = wireAssets(room, stores);
+        const client = await room.addClient('anna');
+        const channel = wireClient(client);
+        room.hub.flush();
+
+        const clientUnavailable = jest.fn();
+        channel.on('asset-unavailable', clientUnavailable);
+
+        channel.requestFromHost([md5A]);
+        await settle(room.hub);
+
+        // The client is told the asset does not exist, so it can stop
+        // waiting and recover instead of wedging its op queue forever.
+        expect(clientUnavailable).toHaveBeenCalledWith({md5exts: [md5A]});
+
+        hostChannel.destroy();
+        channel.destroy();
+        room.destroy();
+    });
+
+    test('an asset request satisfied by the host does not send unavailable', async () => {
+        const stores = new Map();
+        const room = await createRoom({clientCount: 0});
+        const {hostChannel, wireClient} = wireAssets(room, stores);
+        const client = await room.addClient('anna');
+        const channel = wireClient(client);
+        room.hub.flush();
+
+        stores.get(room.host.id).set(md5A, assetBytes);
+        const clientUnavailable = jest.fn();
+        channel.on('asset-unavailable', clientUnavailable);
+
+        channel.requestFromHost([md5A]);
+        await settle(room.hub);
+
+        expect(clientUnavailable).not.toHaveBeenCalled();
+        expect(Array.from(stores.get(client.id).get(md5A))).toEqual(Array.from(assetBytes));
+
+        hostChannel.destroy();
+        channel.destroy();
+        room.destroy();
+    });
+
+    test('an op blocked on assets that never arrive resyncs instead of wedging', async () => {
+        jest.useFakeTimers();
+        const room = await createRoom({clientCount: 1});
+        const client = room.clients[0];
+        // This client can never have the asset locally.
+        client.session._hasAsset = () => false;
+
+        const resync = jest.fn();
+        client.session.on('resync-needed', resync);
+
+        room.edit(room.host, OP.COSTUME_ADD, {
+            targetId: 'sprite1',
+            costume: {name: 'c1'},
+            assetRefs: [`${'a'.repeat(32)}.svg`]
+        });
+        room.hub.flush();
+
+        expect(client.session._blockedOp).not.toBeNull();
+
+        // No asset ever arrives; after the timeout the queue gives up and
+        // asks to re-onboard (the snapshot carries every asset).
+        jest.runTimersToTime(31000);
+        expect(resync).toHaveBeenCalled();
+
+        jest.useRealTimers();
+        room.destroy();
+    });
+
+    test('a blocked op resumes as soon as its assets arrive', async () => {
+        jest.useFakeTimers();
+        const room = await createRoom({clientCount: 1});
+        const client = room.clients[0];
+        const assets = new Set();
+        client.session._hasAsset = md5ext => assets.has(md5ext);
+
+        const resync = jest.fn();
+        client.session.on('resync-needed', resync);
+
+        room.edit(room.host, OP.COSTUME_ADD, {
+            targetId: 'sprite1',
+            costume: {name: 'c1'},
+            assetRefs: [`${'a'.repeat(32)}.svg`]
+        });
+        room.hub.flush();
+        expect(client.session._blockedOp).not.toBeNull();
+
+        // The asset arrives; the queue resumes and the timer never fires.
+        assets.add(`${'a'.repeat(32)}.svg`);
+        client.session.resumeApply();
+        expect(client.session._blockedOp).toBeNull();
+
+        jest.runTimersToTime(31000);
+        expect(resync).not.toHaveBeenCalled();
+
+        jest.useRealTimers();
+        room.destroy();
+    });
 });

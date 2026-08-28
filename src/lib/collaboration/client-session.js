@@ -14,6 +14,11 @@ const GAP_RESYNC_DELAY_MS = 10000;
 const PENDING_OP_TIMEOUT_MS = 30000;
 const PENDING_PRUNE_INTERVAL_MS = 10000;
 const MAX_BUFFERED_OPS = 5000;
+// An op blocked on missing assets cannot wait forever: the host may never
+// have the bytes (a failed push, a deleted asset). Once this window closes
+// the client re-onboards — the snapshot carries every asset, so a wedge
+// turns into a self-healing resync instead of a permanently stuck queue.
+const ASSET_BLOCK_TIMEOUT_MS = 30000;
 // After a reconnect the host needs a moment to replay missed ops / echo back
 // ops we proposed just before the drop. Once this window closes, any still
 // unconfirmed pending op is lost locally, so we re-onboard to guarantee every
@@ -87,6 +92,8 @@ class ClientSession extends Emitter {
         this._gapRequestTimer = null;
         this._gapResyncTimer = null;
         this._pruneTimer = null;
+        this._assetBlockTimer = null;
+        this._assetBlockedSince = 0;
 
         this._onMessage = this._onMessage.bind(this);
         this._onPeerDisconnected = this._onPeerDisconnected.bind(this);
@@ -126,6 +133,7 @@ class ClientSession extends Emitter {
             clearTimeout(this._settleTimer);
             this._settleTimer = null;
         }
+        this._clearAssetBlockTimer();
         if (this._pruneTimer) {
             clearInterval(this._pruneTimer);
             this._pruneTimer = null;
@@ -213,6 +221,7 @@ class ClientSession extends Emitter {
         if (!this._blockedOp) return;
         const envelope = this._blockedOp;
         this._blockedOp = null;
+        this._clearAssetBlockTimer();
         this._applyOp(envelope);
         this._drainBuffer();
     }
@@ -225,6 +234,7 @@ class ClientSession extends Emitter {
         this.lastAppliedSeq = null;
         this.pendingOps = [];
         this._blockedOp = null;
+        this._clearAssetBlockTimer();
         this._opBuffer.clear();
         this._clearGapTimers();
         // A re-onboard starts from scratch: no snapshot in flight, and any
@@ -309,6 +319,10 @@ class ClientSession extends Emitter {
             this._opBuffer.delete(next.seq);
             this._applyOp(next);
         }
+        // If the drained op re-blocked on assets, arm the recovery timer.
+        if (this._blockedOp && !this._assetBlockTimer) {
+            this._armAssetBlockTimer();
+        }
         // Drop anything the snapshot already covered.
         this._opBuffer.forEach((op, seq) => {
             if (seq <= this.lastAppliedSeq) this._opBuffer.delete(seq);
@@ -318,6 +332,29 @@ class ClientSession extends Emitter {
         } else {
             this._scheduleGapRecovery();
         }
+    }
+
+    /**
+     * Arm a timeout on the asset-blocked op. If the requested assets never
+     * arrive (the host does not have them), the client re-onboards instead
+     * of wedging the ordered queue forever.
+     */
+    _armAssetBlockTimer () {
+        if (this._assetBlockTimer) clearTimeout(this._assetBlockTimer);
+        this._assetBlockedSince = Date.now();
+        this._assetBlockTimer = setTimeout(() => {
+            this._assetBlockTimer = null;
+            if (!this._blockedOp) return;
+            this.emit('resync-needed', 'assets for the next op never arrived from the host');
+        }, ASSET_BLOCK_TIMEOUT_MS);
+    }
+
+    _clearAssetBlockTimer () {
+        if (this._assetBlockTimer) {
+            clearTimeout(this._assetBlockTimer);
+            this._assetBlockTimer = null;
+        }
+        this._assetBlockedSince = 0;
     }
 
     _applyOp (envelope) {
@@ -337,6 +374,7 @@ class ClientSession extends Emitter {
             const missing = envelope.payload.assetRefs.filter(md5ext => !this._hasAsset(md5ext));
             if (missing.length > 0) {
                 this._blockedOp = envelope;
+                this._armAssetBlockTimer();
                 this.emit('assets-needed', missing);
                 return;
             }

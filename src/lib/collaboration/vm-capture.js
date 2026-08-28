@@ -72,9 +72,12 @@ const serializeAudioBuffer = buffer => {
  * @param {VmPatcher} options.patcher Patch registry for this session.
  * @param {Function} options.isSuppressed () => boolean.
  * @param {Function} options.onLocalOp (type, payload) => void.
+ * @param {Function} [options.onProjectLoaded] () => void. Called after a
+ * user-initiated vm.loadProject replaces the whole document (collab
+ * snapshot loads suppress capture, so they never fire this).
  * @returns {Function} A cleanup function for the non-patch listeners.
  */
-const wrapVmMethods = ({vm, patcher, isSuppressed, onLocalOp}) => {
+const wrapVmMethods = ({vm, patcher, isSuppressed, onLocalOp, onProjectLoaded}) => {
     const runtime = vm.runtime;
 
     const editingTargetId = () => (vm.editingTarget ? vm.editingTarget.id : null);
@@ -353,9 +356,34 @@ const wrapVmMethods = ({vm, patcher, isSuppressed, onLocalOp}) => {
     }
 
     // Costume selection has no dedicated VM entry point; diff the editing
-    // target's currentCostume on targetsUpdate (debounced).
+    // target's currentCostume on targetsUpdate (debounced). Declared up
+    // front because the loadProject patch below clears it on project load.
     let lastCostumeByTarget = new Map();
     let costumeSelectTimer = null;
+
+    // A whole-project load replaces the document; the collaboration engine
+    // must re-sync every peer. Collab snapshot loads run with capture
+    // suppressed (the adapter is set suppressed first), so only
+    // user-initiated loads (file open, restore point, git checkout) fire.
+    // lastCostumeByTarget is cleared before the load so the post-load
+    // targetsUpdate diff treats the rebuilt targets as a first observation
+    // instead of proposing a spurious COSTUME_SELECT op.
+    if (typeof vm.loadProject === 'function') {
+        patcher.patch(vm, 'loadProject', original => function (input, ...rest) {
+            lastCostumeByTarget.clear();
+            const suppressAtCall = isSuppressed();
+            const result = original.call(vm, input, ...rest);
+            if (result && result.then && !suppressAtCall && onProjectLoaded) {
+                result.then(() => {
+                    if (!isSuppressed()) onProjectLoaded();
+                }).catch(() => {
+                    // A failed load leaves the old document in place; no sync.
+                });
+            }
+            return result;
+        });
+    }
+
     const onTargetsUpdate = () => {
         if (isSuppressed()) return;
         const target = vm.editingTarget;

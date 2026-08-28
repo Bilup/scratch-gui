@@ -551,10 +551,22 @@ class VMApplier extends OpApplier {
             return;
         }
         case OP.EXTENSION_LOAD: {
-            if (vm.extensionManager &&
-                !vm.extensionManager.isExtensionLoaded(payload.extensionId)) {
-                await vm.extensionManager.loadExtensionURL(payload.extensionId);
+            const em = vm.extensionManager;
+            if (!em) return;
+            const target = payload.extensionId;
+            if (em.isExtensionLoaded(target)) return;
+            // Custom extensions register under their own declared id, not
+            // the URL the op carries, so `isExtensionLoaded(url)` is always
+            // false for them. Check whether this URL is already loaded under
+            // a different key before (re-)attempting a load — otherwise every
+            // replayed EXTENSION_LOAD op re-runs the whole extension script.
+            if (typeof target === 'string' && /^(https?:|data:|file:)/i.test(target) &&
+                typeof em.getExtensionURLs === 'function') {
+                const urls = em.getExtensionURLs();
+                const alreadyLoaded = Object.keys(urls).find(id => urls[id] === target);
+                if (alreadyLoaded && em.isExtensionLoaded(alreadyLoaded)) return;
             }
+            await em.loadExtensionURL(target);
             return;
         }
         case OP.EXTENSION_REMOVE: {

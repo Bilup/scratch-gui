@@ -65,7 +65,8 @@ const toArrayBuffer = data => {
  *
  * Events:
  *  - 'asset-received' (md5ext) — an asset was stored locally
- *  - 'asset-unavailable' ({peerId, md5ext}) — host could not serve a request
+ *  - 'asset-unavailable' — host: ({peerId, md5ext}) it cannot serve a
+ *    request; client: ({md5exts}) the host told us it cannot serve these.
  */
 class AssetChannel extends Emitter {
     /**
@@ -128,13 +129,13 @@ class AssetChannel extends Emitter {
             await this._waitForDrain(peerId);
             if (this._destroyed) return false;
             const start = index * CHUNK_SIZE;
-            const raw = buffer.slice(start, Math.min(start + CHUNK_SIZE, buffer.byteLength));
+            const chunk = buffer.slice(start, Math.min(start + CHUNK_SIZE, buffer.byteLength));
             // Encode as base64: PeerJS serializes objects as JSON, which
             // would lose the embedded ArrayBuffer.
             send(makeAsset(ASSET.CHUNK, {
                 md5ext,
                 index,
-                data: arrayBufferToBase64(raw)
+                data: arrayBufferToBase64(chunk)
             }));
         }
         return true;
@@ -185,15 +186,27 @@ class AssetChannel extends Emitter {
         case ASSET.REQUEST: {
             if (!this.isHost) return;
             const {md5exts} = envelope.payload;
-            md5exts.filter(md5ext => !this.getAsset(md5ext))
-                .forEach(md5ext => {
-                    if (!this._pendingServes.has(md5ext)) {
-                        this._pendingServes.set(md5ext, new Set());
-                    }
-                    this._pendingServes.get(md5ext).add(peerId);
-                    this.emit('asset-unavailable', {peerId, md5ext});
-                });
+            const unavailable = md5exts.filter(md5ext => !this.getAsset(md5ext));
+            unavailable.forEach(md5ext => {
+                if (!this._pendingServes.has(md5ext)) {
+                    this._pendingServes.set(md5ext, new Set());
+                }
+                this._pendingServes.get(md5ext).add(peerId);
+                this.emit('asset-unavailable', {peerId, md5ext});
+            });
+            // Tell the requester which assets we cannot serve so it can
+            // stop waiting and recover (resync) instead of wedging forever.
+            if (unavailable.length > 0) {
+                this.transport.send(peerId, makeAsset(ASSET.UNAVAILABLE, {md5exts: unavailable}));
+            }
             this.sendAssets(peerId, md5exts.filter(md5ext => this.getAsset(md5ext)));
+            break;
+        }
+        case ASSET.UNAVAILABLE: {
+            if (this.isHost) return;
+            const {md5exts} = envelope.payload;
+            md5exts.forEach(md5ext => this._requestedFromHost.delete(md5ext));
+            this.emit('asset-unavailable', {md5exts});
             break;
         }
         case ASSET.BEGIN: {

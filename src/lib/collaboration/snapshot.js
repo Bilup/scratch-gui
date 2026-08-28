@@ -61,6 +61,9 @@ const toArrayBuffer = data => {
  *  - 'upload-progress' ({peerId, sent, total})
  *  - 'upload-complete' ({peerId})
  *  - 'upload-error' ({peerId, error})
+ *  - 'project-pushed' ({peerId, buffer}) — a client pushed a whole-project
+ *    replacement (it loaded a project locally). The host should adopt it
+ *    and re-snapshot the room.
  */
 class HostSnapshotService extends Emitter {
     /**
@@ -82,6 +85,7 @@ class HostSnapshotService extends Emitter {
         // ones with no blocks in the project (sb3 drops those).
         this.getExtensions = getExtensions || null;
         this._transfers = new Map(); // peerId -> transfer state
+        this._pushes = new Map(); // peerId -> client->host push state
         this._transferCounter = 0;
 
         this._onSnapshotNeeded = ({peerId}) => {
@@ -92,10 +96,17 @@ class HostSnapshotService extends Emitter {
                 this._onAck(peerId, envelope.payload);
             } else if (envelope.type === SNAPSHOT.REQUEST) {
                 this.startTransfer(peerId);
+            } else if (envelope.type === SNAPSHOT.PUSH) {
+                this._onPushBegin(peerId, envelope.payload);
+            } else if (envelope.type === SNAPSHOT.CHUNK) {
+                this._onPushChunk(peerId, envelope.payload);
+            } else if (envelope.type === SNAPSHOT.PUSH_COMPLETE) {
+                this._onPushComplete(peerId, envelope.payload);
             }
         };
         this._onUserLeft = user => {
             this._transfers.delete(user.id);
+            this._pushes.delete(user.id);
         };
         session.on('snapshot-needed', this._onSnapshotNeeded);
         session.on('snapshot-message', this._onSnapshotMessage);
@@ -107,6 +118,7 @@ class HostSnapshotService extends Emitter {
         this.session.off('snapshot-message', this._onSnapshotMessage);
         this.session.off('user-left', this._onUserLeft);
         this._transfers.clear();
+        this._pushes.clear();
         this.removeAllListeners();
     }
 
@@ -203,6 +215,44 @@ class HostSnapshotService extends Emitter {
         }
         this._sendNextChunk(peerId, transfer);
     }
+
+    // ----- Client -> host project push (a peer loaded a local project) -----
+
+    _onPushBegin (peerId, {transferId, totalBytes, chunkCount}) {
+        this._pushes.set(peerId, {
+            transferId,
+            totalBytes,
+            chunkCount,
+            chunks: new Array(chunkCount),
+            receivedCount: 0,
+            receivedBytes: 0
+        });
+    }
+
+    _onPushChunk (peerId, {transferId, index, data}) {
+        const push = this._pushes.get(peerId);
+        if (!push || push.transferId !== transferId) return;
+        if (index >= push.chunkCount || push.chunks[index]) return;
+        push.chunks[index] = toArrayBuffer(data);
+        push.receivedCount++;
+        push.receivedBytes += push.chunks[index].byteLength;
+    }
+
+    _onPushComplete (peerId, {transferId}) {
+        const push = this._pushes.get(peerId);
+        if (!push || push.transferId !== transferId) return;
+        this._pushes.delete(peerId);
+        if (push.receivedCount !== push.chunkCount || push.receivedBytes !== push.totalBytes) {
+            return; // corrupt transfer; drop silently
+        }
+        const combined = new Uint8Array(push.receivedBytes);
+        let offset = 0;
+        push.chunks.forEach(chunk => {
+            combined.set(new Uint8Array(chunk), offset);
+            offset += chunk.byteLength;
+        });
+        this.emit('project-pushed', {peerId, buffer: combined.buffer});
+    }
 }
 
 /**
@@ -280,6 +330,36 @@ class ClientSnapshotService extends Emitter {
         this.transport.sendToHost(makeSnapshot(SNAPSHOT.REQUEST, {}));
     }
 
+    /**
+     * Push our locally loaded project to the host (member -> host whole-
+     * project replacement). The host adopts it and re-snapshots the room,
+     * so every peer — including us — converges on the pushed project.
+     * Chunks are base64-encoded for the JSON transport, like snapshots.
+     * @param {ArrayBuffer} buffer The serialized project bytes.
+     */
+    pushProject (buffer) {
+        if (!buffer || buffer.byteLength === 0) return;
+        const transferId = `push-${Date.now()}-${Math.random()
+            .toString(36)
+            .slice(2, 10)}`;
+        const chunkCount = Math.max(1, Math.ceil(buffer.byteLength / CHUNK_SIZE));
+        this.transport.sendToHost(makeSnapshot(SNAPSHOT.PUSH, {
+            transferId,
+            totalBytes: buffer.byteLength,
+            chunkCount
+        }));
+        for (let index = 0; index < chunkCount; index++) {
+            const start = index * CHUNK_SIZE;
+            const raw = buffer.slice(start, Math.min(start + CHUNK_SIZE, buffer.byteLength));
+            this.transport.sendToHost(makeSnapshot(SNAPSHOT.CHUNK, {
+                transferId,
+                index,
+                data: arrayBufferToBase64(raw)
+            }));
+        }
+        this.transport.sendToHost(makeSnapshot(SNAPSHOT.PUSH_COMPLETE, {transferId}));
+    }
+
     _onBegin ({transferId, totalBytes, chunkCount, atSeq, targetIds, extensions}) {
         this._incoming = {
             transferId,
@@ -335,7 +415,7 @@ class ClientSnapshotService extends Emitter {
             return;
         }
 
-// All bytes are in. Signal "download complete" BEFORE applying the
+        // All bytes are in. Signal "download complete" BEFORE applying the
         // project: applyProjectData emits 'project-sync-apply-complete',
         // which is what clears the loading overlay. Emitting
         // 'download-complete' afterwards would re-arm the overlay with no
