@@ -6,6 +6,12 @@
 module.exports = {
     setupFiles: [],
     testMatch: ['<rootDir>/test/unit/collaboration/**/*.test.js'],
+    // jest 21's default babel-jest drives babel-core 6, which cannot load the
+    // babel 7 plugins in .babelrc ("Requires Babel ^7.0.0-0"). Use the same
+    // babel 7 transformer as the main jest config.
+    transform: {
+        '^.+\\.(js|jsx|mjs|cjs)$': '<rootDir>/test/helpers/babel7-jest-transformer.js'
+    },
     moduleNameMapper: {
         '\\.(css|less)$': '<rootDir>/test/__mocks__/styleMock.js'
     }

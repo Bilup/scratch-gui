@@ -12,6 +12,7 @@ import PresenceChannel from './presence.js';
 import CursorOverlay from './cursor-overlay.js';
 import {getAssetData, storeAssetData, hasAssetData, clearAssetCache} from './vm-assets.js';
 import {avatarForCollabUser} from './avatar.js';
+import {CTRL, makeCtrl} from './protocol.js';
 import RestorePointAPI from '../api/restore-points.js';
 
 /**
@@ -90,7 +91,8 @@ class CollabService extends Emitter {
             vm: this.vm,
             patcher: this._patcher,
             isSuppressed: () => !this._adapter || this._adapter.isSuppressed(),
-            onLocalOp: (type, payload) => this._submitLocalOp(type, payload)
+            onLocalOp: (type, payload) => this._submitLocalOp(type, payload),
+            onProjectLoaded: () => this._handleProjectLoaded()
         });
 
         try {
@@ -130,6 +132,9 @@ class CollabService extends Emitter {
                 })),
             getExtensions: () => this._getLoadedExtensions()
         });
+        // A client pushed a whole-project replacement (it loaded a project
+        // locally); adopt it and re-snapshot every client.
+        this._snapshot.on('project-pushed', ({peerId, buffer}) => this._adoptPushedProject(peerId, buffer));
         this._assets = new AssetChannel({
             isHost: true,
             session,
@@ -234,6 +239,12 @@ class CollabService extends Emitter {
         });
         session.on('assets-needed', md5exts => this._assets.requestFromHost(md5exts));
         this._assets.on('asset-received', () => session.resumeApply());
+        this._assets.on('asset-unavailable', () => {
+            // The host told us it cannot serve the assets our blocked op
+            // needs (or the request timed out). A resync snapshot carries
+            // every asset, so re-onboard instead of wedging the queue.
+            if (this._snapshot) this._snapshot.requestResync();
+        });
         session.on('connection-failed', payload => {
             this.emit('connection-failed', payload);
             this.disconnect();
@@ -375,6 +386,79 @@ class CollabService extends Emitter {
         if (this.vm && this.vm.runtime) {
             this.vm.runtime.emitProjectChanged();
         }
+    }
+
+    /**
+     * A user-initiated vm.loadProject replaced the whole document. The room
+     * must converge on the newly loaded project:
+     *  - Host: its document already IS the new project, so every client
+     *    re-onboards from a fresh snapshot.
+     *  - Member: push the project to the host, which adopts it and then
+     *    re-snapshots the room (including us, so ids and ordering match).
+     */
+    async _handleProjectLoaded () {
+        if (!this.isConnected || !this._session) return;
+        if (this.isHost) {
+            this._resyncAllClients();
+            return;
+        }
+        // Only act once onboarded: during onboarding the snapshot apply is
+        // what loaded the project, and capture is suppressed so this never
+        // fires anyway — this guard just makes the flow explicit.
+        if (this._approved && this._session.lastAppliedSeq !== null) {
+            await this._pushProjectToHost();
+        }
+    }
+
+    /**
+     * Host only: tell every connected client that the project changed and
+     * they must re-onboard. Each client requests a snapshot; the host
+     * streams its current document (already the newly loaded project).
+     */
+    _resyncAllClients () {
+        if (!this.isHost || !this._session || !this._transport) return;
+        const myId = this.getCurrentUserId();
+        this._session.getUsers()
+            .map(user => user.id)
+            .filter(id => id !== myId)
+            .forEach(peerId => {
+                this._transport.send(peerId, makeCtrl(CTRL.RESYNC_REQUIRED, {}));
+            });
+    }
+
+    /**
+     * Member only: serialize our locally loaded project and push it to the
+     * host so it becomes the room's new document.
+     */
+    async _pushProjectToHost () {
+        if (!this._snapshot || typeof this._snapshot.pushProject !== 'function') return;
+        let buffer;
+        try {
+            buffer = await this.vm.saveProjectSb3('arraybuffer');
+        } catch (error) {
+            // eslint-disable-next-line no-console
+            console.warn('[Collab] Could not serialize the loaded project for sync:', error);
+            return;
+        }
+        this._snapshot.pushProject(buffer);
+    }
+
+    /**
+     * Host only: a client pushed a whole-project replacement. Load it as
+     * the new room document (capture suppressed), then re-snapshot every
+     * client — including the pusher — so the room converges.
+     * @param {string} peerId The client that pushed.
+     * @param {ArrayBuffer} buffer The serialized project.
+     */
+    async _adoptPushedProject (peerId, buffer) {
+        try {
+            await this._loadProjectSuppressed(buffer);
+        } catch (error) {
+            // eslint-disable-next-line no-console
+            console.warn('[Collab] Could not adopt pushed project:', error);
+            return;
+        }
+        this._resyncAllClients();
     }
 
     disconnect () {

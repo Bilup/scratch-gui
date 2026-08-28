@@ -83,13 +83,20 @@ const SNAPSHOT = {
     BEGIN: 'snapshot-begin',
     CHUNK: 'snapshot-chunk',
     ACK: 'snapshot-ack',
-    COMPLETE: 'snapshot-complete'
+    COMPLETE: 'snapshot-complete',
+    // Client -> host: the client replaced its local project and pushes the
+    // new .sb3 bytes so the host can adopt it and re-snapshot the room.
+    PUSH: 'snapshot-push',
+    PUSH_COMPLETE: 'snapshot-push-complete'
 };
 
 const ASSET = {
     REQUEST: 'asset-request',
     BEGIN: 'asset-begin',
-    CHUNK: 'asset-chunk'
+    CHUNK: 'asset-chunk',
+    // Host -> client: some requested assets do not exist on the host, so
+    // the requesting client must not wait forever for them.
+    UNAVAILABLE: 'asset-unavailable'
 };
 
 const PRESENCE = {
@@ -434,6 +441,19 @@ const PAYLOAD_VALIDATORS = {
     [SNAPSHOT.COMPLETE]: payload =>
         (isNonEmptyString(payload.transferId, LIMITS.MAX_ID) ? null : 'snapshot-complete requires transferId'),
 
+    [SNAPSHOT.PUSH]: payload => {
+        if (!isNonEmptyString(payload.transferId, LIMITS.MAX_ID)) return 'snapshot-push requires transferId';
+        if (!isNonNegativeInt(payload.totalBytes) || payload.totalBytes > LIMITS.MAX_TRANSFER_BYTES) {
+            return 'snapshot-push invalid totalBytes';
+        }
+        if (!isNonNegativeInt(payload.chunkCount) || payload.chunkCount > LIMITS.MAX_CHUNK_COUNT) {
+            return 'snapshot-push invalid chunkCount';
+        }
+        return null;
+    },
+    [SNAPSHOT.PUSH_COMPLETE]: payload =>
+        (isNonEmptyString(payload.transferId, LIMITS.MAX_ID) ? null : 'snapshot-push-complete requires transferId'),
+
     [ASSET.REQUEST]: payload => {
         if (!Array.isArray(payload.md5exts) || payload.md5exts.length === 0 ||
             payload.md5exts.length > LIMITS.MAX_ASSET_REFS) {
@@ -456,6 +476,14 @@ const PAYLOAD_VALIDATORS = {
         if (!isMd5Ext(payload.md5ext)) return 'asset-chunk requires md5ext';
         if (!isNonNegativeInt(payload.index)) return 'asset-chunk requires index';
         if (!isChunkData(payload.data)) return 'asset-chunk invalid data';
+        return null;
+    },
+    [ASSET.UNAVAILABLE]: payload => {
+        if (!Array.isArray(payload.md5exts) || payload.md5exts.length === 0 ||
+            payload.md5exts.length > LIMITS.MAX_ASSET_REFS) {
+            return 'asset-unavailable requires md5exts array';
+        }
+        if (!payload.md5exts.every(isMd5Ext)) return 'asset-unavailable contains invalid md5ext';
         return null;
     },
 
