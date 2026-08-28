@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import {connect} from 'react-redux';
 import bindAll from 'lodash.bindall';
 import {BLOCKS_CUSTOM, Theme} from '../lib/themes';
-import {applyThemeVisuals, detectTheme, onSystemPreferenceChange} from '../lib/themes/themePersistance';
+import {applyTheme, applyThemeVisuals, detectTheme, onSystemPreferenceChange} from '../lib/themes/themePersistance';
 import {setTheme} from '../reducers/theme';
 
 const TWThemeManagerHOC = function (WrappedComponent) {
@@ -29,12 +29,12 @@ const TWThemeManagerHOC = function (WrappedComponent) {
                 prevTheme.gui !== currentTheme.gui ||
                 prevTheme.blocks !== currentTheme.blocks ||
                 prevTheme.menuBarAlign !== currentTheme.menuBarAlign ||
-                prevTheme.appearance !== currentTheme.appearance ||
+                JSON.stringify(prevTheme.appearance) !== JSON.stringify(currentTheme.appearance) ||
                 prevTheme.iconPack !== currentTheme.iconPack ||
                 prevTheme.name !== currentTheme.name;
 
             if (themeChanged) {
-                applyThemeVisuals(currentTheme);
+                applyTheme(currentTheme);
             }
         }
         componentWillUnmount () {
@@ -45,7 +45,8 @@ const TWThemeManagerHOC = function (WrappedComponent) {
             if (this.props.reduxTheme.blocks === BLOCKS_CUSTOM) {
                 newTheme = newTheme.set('blocks', BLOCKS_CUSTOM);
             }
-            this.props.onChangeTheme(newTheme);
+            // 系统主题变更只更新DOM，不持久化到localStorage以保留"自动"主题行为
+            applyThemeVisuals(newTheme);
         }
         render () {
             const {
