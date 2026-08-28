@@ -44,9 +44,10 @@ export default async function ({ addon, console, msg }) {
             const jsonString = typeof projectJSON === 'string' ? projectJSON : JSON.stringify(projectJSON);
             let totalBytes = getTextBytes(jsonString);
 
-            // 加上所有角色（含舞台）造型/声音素材的占用
+            // 加上所有角色（含舞台）造型/声音素材的占用（跳过克隆体避免重复）
             const targets = vm.runtime.targets || [];
             targets.forEach(target => {
+                if (!target.isOriginal) return;
                 totalBytes += getAssetsSize(target.sprite || target);
             });
 
@@ -62,6 +63,7 @@ export default async function ({ addon, console, msg }) {
         
         const targets = vm.runtime.targets || [];
         targets.forEach(target => {
+            if (!target.isOriginal) return; // 跳过克隆体
             const sprite = target.sprite || target;
             const blocks = sprite.blocks ? Object.values(sprite.blocks._blocks) : [];
             total += blocks.filter(block => !block.shadow).length;

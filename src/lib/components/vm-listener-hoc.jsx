@@ -182,6 +182,14 @@ const vmListenerHOC = function (WrappedComponent) {
             if (this.props.shouldUpdateTargets && !prevProps.shouldUpdateTargets) {
                 this.props.vm.emitTargetsUpdate(false /* Emit the event, but do not trigger project change */);
             }
+
+            // When project loading completes, request a targets update from the VM.
+            // During loading, handleTargetsUpdate skips all targetsUpdate events,
+            // so the sprites are never dispatched to Redux. This ensures they show
+            // up in the sprite panel after the project finishes loading.
+            if (!this.props.isLoadingProject && prevProps.isLoadingProject) {
+                this.props.vm.emitTargetsUpdate(false);
+            }
         }
         componentWillUnmount () {
             if (this.props.attachKeyboardEvents) {

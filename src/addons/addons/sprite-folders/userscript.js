@@ -282,7 +282,7 @@ export default async ({ addon, console, msg }) => {
         const fileList = document.createElement('div');
         fileList.className = 'sa-file-list';
 
-        const sprites = vm.runtime.targets.filter(t => !t.isStage && t.id);
+        const sprites = vm.runtime.targets.filter(t => !t.isStage && t.id && t.isOriginal);
 
         // Group sprites by folder
         const grouped = {};
@@ -750,7 +750,7 @@ export default async ({ addon, console, msg }) => {
         setTimeout(() => {
             // Update icons for sprites whose costumes have changed before re-rendering
             vm.runtime.targets.forEach(target => {
-                if (!target.isStage && target.id) {
+                if (!target.isStage && target.id && target.isOriginal) {
                     updateSpriteIcon(target);
                 }
             });
