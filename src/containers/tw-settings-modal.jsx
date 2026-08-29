@@ -54,7 +54,8 @@ class UsernameModal extends React.Component {
             hideDeleteButton: getAppearanceSetting('hide-delete-button'),
             hideExtensionButton: getAppearanceSetting('hide-extension-button'),
             unclipPalette: getAppearanceSetting('unclip-palette'),
-            hideBackpack: getAppearanceSetting('hide-backpack')
+            hideBackpack: getAppearanceSetting('hide-backpack'),
+            frostedGlass: getAppearanceSetting('frosted-glass')
         };
 
         bindAll(this, [
@@ -88,6 +89,7 @@ class UsernameModal extends React.Component {
             'handleHideExtensionButtonChange',
             'handleUnclipPaletteChange',
             'handleHideBackpackChange',
+            'handleFrostedGlassChange',
             'handleTabStyleChange',
             'handleTabLooksChange',
             'handleWindowStyleChange'
@@ -312,6 +314,10 @@ handleWindowAnimationChange (e) {
         this.setAppearance_('hideBackpack', 'hide-backpack', e.target.checked);
     }
 
+    handleFrostedGlassChange (e) {
+        this.setAppearance_('frostedGlass', 'frosted-glass', e.target.checked);
+    }
+
     handleUnclipPaletteChange (e) {
         this.setAppearance_('unclipPalette', 'unclip-palette', e.target.checked);
     }
@@ -400,6 +406,8 @@ handleWindowAnimationChange (e) {
                 storeThemeInProject={this.state.storeThemeInProject}
                 enableStageResize={this.state.enableStageResize}
                 windowAnimation={this.state.windowAnimation}
+                frostedGlass={this.state.frostedGlass}
+                onFrostedGlassChange={this.handleFrostedGlassChange}
                 theme={this.props.theme}
                 {...props}
             />

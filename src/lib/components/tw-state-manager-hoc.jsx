@@ -519,6 +519,25 @@ const TWStateManager = function (WrappedComponent) {
                 this.applyRoturIdentity();
             }
 
+            // When the cloud identity is restored after the user has already
+            // connected to a collaboration room (e.g. auto-join via URL param
+            // before identity restore completes), update the display name in
+            // the room so peers see the cloud handle, not the local fallback.
+            if (
+                this.props.roturUsername &&
+                this.props.roturUsername !== prevProps.roturUsername
+            ) {
+                try {
+                    const service = CollaborationService.getInstance();
+                    if (service && service.isConnectedToHostPeer()) {
+                        const name = this.props.usernameOverride || `@${this.props.roturUsername}`;
+                        service.changeUsername(name);
+                    }
+                } catch (error) {
+                    console.warn('Could not sync cloud username with collaboration service:', error);
+                }
+            }
+
             if (
                 this.props.reduxProjectId !== prevProps.reduxProjectId ||
                 this.props.isPlayerOnly !== prevProps.isPlayerOnly ||
