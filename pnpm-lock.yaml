@@ -21,7 +21,7 @@ patchedDependencies:
     hash: 81a01d6d472570d53eec593be679e84867db1ba1410f5ef084d5c404068481b9
     path: patches/@turbowarp__scratch-svg-renderer.patch
   scratch-parser:
-    hash: 7f03af2d2e61fc6d5af5eecddef071142f83bbae93a9e0733cf5b9a8e8b6a3eb
+    hash: 3e9161e61f75e3a2b4b6b318e5e609833ad1653e072a250eb6d2199dc4fd460b
     path: patches/scratch-parser.patch
 
 importers:
