@@ -347,6 +347,18 @@ const settingDefinitions = {
             id: 'mw.settingsModal.windowAnimationHelp'
         }
     },
+    frostedGlass: {
+        label: {
+            defaultMessage: 'Frosted Glass Theme',
+            description: 'Frosted Glass Theme setting',
+            id: 'mw.settingsModal.frostedGlass'
+        },
+        help: {
+            defaultMessage: 'Applies a frosted glass blur effect to the editor UI, blocks palette, and stage area. Only affects the editor.',
+            description: 'Frosted Glass Theme setting help',
+            id: 'mw.settingsModal.frostedGlassHelp'
+        }
+    },
     squareStageCorners: {
         label: {
             defaultMessage: 'Square Stage Corners',
@@ -510,6 +522,7 @@ const CaseSensitiveLists = createBooleanSetting('CaseSensitiveLists', settingDef
 const RealLayerIndexes = createBooleanSetting('RealLayerIndexes', settingDefinitions.realLayerIndexes);
 const EnableStageResize = createBooleanSetting('EnableStageResize', settingDefinitions.enableStageResize);
 const WindowAnimation = createBooleanSetting('WindowAnimation', settingDefinitions.windowAnimation);
+const FrostedGlass = createBooleanSetting('FrostedGlass', settingDefinitions.frostedGlass);
 const SquareStageCorners = createBooleanSetting('SquareStageCorners', settingDefinitions.squareStageCorners);
 const HideDeleteButton = createBooleanSetting('HideDeleteButton', settingDefinitions.hideDeleteButton);
 const HideExtensionButton = createBooleanSetting('HideExtensionButton', settingDefinitions.hideExtensionButton);
@@ -1189,6 +1202,13 @@ const pageConfigurations = {
                         props: props => ({
                             value: props.windowAnimation,
                             onChange: props.onWindowAnimationChange
+                        })
+                    },
+                    {
+                        component: FrostedGlass,
+                        props: props => ({
+                            value: props.frostedGlass,
+                            onChange: props.onFrostedGlassChange
                         })
                     }
                 ]
@@ -2262,7 +2282,9 @@ SettingsModalComponent.propTypes = {
     cloudVariableServer: PropTypes.string,
     onCloudVariableServerChange: PropTypes.func,
     windowAnimation: PropTypes.bool,
-    onWindowAnimationChange: PropTypes.func
+    onWindowAnimationChange: PropTypes.func,
+    frostedGlass: PropTypes.bool,
+    onFrostedGlassChange: PropTypes.func
 };
 
 export default injectIntl(SettingsModalComponent);

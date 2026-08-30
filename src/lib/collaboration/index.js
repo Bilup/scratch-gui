@@ -90,7 +90,13 @@ class CollabService extends Emitter {
         this._unwrapVm = wrapVmMethods({
             vm: this.vm,
             patcher: this._patcher,
-            isSuppressed: () => !this._adapter || this._adapter.isSuppressed(),
+            // Use isVmCaptureSuppressed() instead of isSuppressed() so the
+            // workspaceUpdate-induced _suppressUntil window (which is meant
+            // to suppress Blockly render events) does not suppress VM-level
+            // sprite/costume/sound capture — those operations trigger
+            // workspaceUpdate as a side effect, which would otherwise
+            // prevent their own capture from ever firing.
+            isSuppressed: () => !this._adapter || this._adapter.isVmCaptureSuppressed(),
             onLocalOp: (type, payload) => this._submitLocalOp(type, payload),
             onProjectLoaded: () => this._handleProjectLoaded()
         });

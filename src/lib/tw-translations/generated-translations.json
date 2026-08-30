@@ -1920,6 +1920,8 @@
         "mw.settingsModal.enableStageResizeHelp": "启用舞台调整大小功能，允许您拖动调整舞台面板的大小。(需要刷新)",
         "mw.settingsModal.windowAnimation": "开启窗口动画",
         "mw.settingsModal.windowAnimationHelp": "启用打开或关闭窗口时的淡入淡出和缩放动画效果。",
+        "mw.settingsModal.frostedGlass": "毛玻璃主题",
+        "mw.settingsModal.frostedGlassHelp": "为编辑器 UI、积木栏和作品栏区域应用毛玻璃模糊效果。仅对编辑器内部有效。",
         "mw.settingsModal.squareStageCorners": "方角舞台",
         "mw.settingsModal.squareStageCornersHelp": "移除舞台的圆角。",
         "mw.settingsModal.hideDeleteButton": "隐藏删除按钮",

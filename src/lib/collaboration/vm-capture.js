@@ -375,7 +375,7 @@ const wrapVmMethods = ({vm, patcher, isSuppressed, onLocalOp, onProjectLoaded}) 
             const result = original.call(vm, input, ...rest);
             if (result && result.then && !suppressAtCall && onProjectLoaded) {
                 result.then(() => {
-                    if (!isSuppressed()) onProjectLoaded();
+                    onProjectLoaded();
                 }).catch(() => {
                     // A failed load leaves the old document in place; no sync.
                 });

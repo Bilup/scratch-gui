@@ -25,6 +25,26 @@ const APPEARANCE_SETTINGS = [
             ' > svg.blocklyFlyout:not(.sa-flyoutClose){overflow:visible;}' +
             '.injectionDiv:has(> .blocklyToolboxDiv:hover, > svg.blocklyFlyout:not(.sa-flyoutClose):hover)' +
             ' #blocklyBlockMenuClipRect{width:100000px;}'
+    },
+    {
+        id: 'frosted-glass',
+        css: '.blocklyToolboxDiv{background:rgba(var(--ui-primary-rgb,229,240,255),0.45)!important;' +
+            'backdrop-filter:blur(20px)!important;-webkit-backdrop-filter:blur(20px)!important;}' +
+            '.blocklyFlyout{background:rgba(249,249,249,0.35)!important;' +
+            'backdrop-filter:blur(20px)!important;-webkit-backdrop-filter:blur(20px)!important;}' +
+            '[class*="stage-wrapper_stage-wrapper_"]{background:rgba(var(--ui-primary-rgb,229,240,255),0.25)!important;' +
+            'backdrop-filter:blur(10px)!important;-webkit-backdrop-filter:blur(10px)!important;}' +
+            '[class*="gui_body-wrapper_"]{background:transparent!important;}' +
+            '[class*="asset-panel_wrapper_"]{background:rgba(var(--ui-primary-rgb,229,240,255),0.45)!important;' +
+            'backdrop-filter:blur(10px)!important;-webkit-backdrop-filter:blur(10px)!important;}' +
+            '[class*="sprite-selector_scroll-wrapper_"]{background:rgba(var(--ui-primary-rgb,229,240,255),0.45)!important;' +
+            'backdrop-filter:blur(10px)!important;-webkit-backdrop-filter:blur(10px)!important;}' +
+            '[class*="stage-header_stage-header-wrapper-overlay_"]{background:rgba(var(--ui-primary-rgb,229,240,255),0.45)!important;' +
+            'backdrop-filter:blur(10px)!important;-webkit-backdrop-filter:blur(10px)!important;}' +
+            '[class*="gui_tab-list_"]{background:rgba(var(--ui-primary-rgb,229,240,255),0.45)!important;' +
+            'backdrop-filter:blur(10px)!important;-webkit-backdrop-filter:blur(10px)!important;}' +
+            '[class*="selector_wrapper_"]{background:rgba(var(--ui-primary-rgb,229,240,255),0.45)!important;' +
+            'backdrop-filter:blur(10px)!important;-webkit-backdrop-filter:blur(10px)!important;}'
     }
 ];
 
