@@ -100,9 +100,13 @@ const getStageDimensions = (stageSize, customStageSize, isFullScreen, stageConta
         stageContainerWidth > 0 &&
         stageDimensions.width > 0) {
         const availableContentWidth = Math.max(0, stageContainerWidth - 2);
-        // Only scale if we need to fit, and don't go below a minimum scale to prevent infinite enlargement
-        // Prevent infinite loop when browser zoom is very small (< 40%)
-        if (stageDimensions.width > availableContentWidth && stageDimensions.scale > 0.05) {
+        // 双向缩放：舞台始终填满面板内容区（拖拽调整大小模式）。
+        // 之前只缩不放（width > availableContentWidth 才缩），导致面板
+        // 变宽时舞台封顶在 480 不再跟随（"舞台主体不跟着缩放"），
+        // 面板变窄时两者又有 2px 级脱钩。
+        // 只保留 scale 下限保护，防止浏览器缩放极小时无限缩小。
+        if (Math.abs(stageDimensions.width - availableContentWidth) > 0.5 &&
+            stageDimensions.scale > 0.05) {
             const fitScale = availableContentWidth / stageDimensions.width;
             stageDimensions.scale *= fitScale;
             stageDimensions.width *= fitScale;

@@ -164,7 +164,7 @@ import oldtimeyLogo from './oldtimey-logo.svg';
 
 import {
     FilePen, PencilRuler, TriangleAlert, Info, Shuffle, Zap, Gauge,
-    FilePlusCorner, Upload, RefreshCcw, ClockPlus, Package, FileInput,
+    FilePlusCorner, Upload, RefreshCcw, ClockPlus, Package,
     Save, ArchiveRestore, UserPen, Cloud, PackagePlus, Puzzle,
     Bookmark, GitBranch, FileCog, Bug, Database, Undo, Redo, Handshake, Wrench, Send,
     Download, AppWindow, Computer, Shield, Code, Code2, TerminalSquare, ChartColumn, ListTodo,
@@ -198,11 +198,6 @@ const twMessages = defineMessages({
         id: 'tw.menuBar.bilupLogoAlt',
         defaultMessage: 'Bilup',
         description: 'Alt text for the Bilup logo'
-    },
-    bilupWordmark: {
-        id: 'tw.menuBar.bilupWordmark',
-        defaultMessage: 'Bilup',
-        description: 'Bilup brand wordmark text in the menu bar'
     },
     moreMenu: {
         id: 'tw.menuBar.moreMenu',
@@ -606,7 +601,9 @@ class MenuBar extends React.Component {
         this.props.onRequestCloseFile();
     }
     handleClickSave() {
-        this.props.onClickSave();
+        if (this.props.handleSaveProject) {
+            this.props.handleSaveProject();
+        }
         this.props.onRequestCloseFile();
     }
     handleClickSaveAsCopy() {
@@ -1609,11 +1606,8 @@ class MenuBar extends React.Component {
                             src={bilupLogo}
                             alt={this.props.intl.formatMessage(twMessages.bilupLogoAlt)}
                             className={styles.homeLogo}
-                            style={{transform: 'scale(0.8)'}}
+                            draggable={false}
                         />
-                        <span className={styles.homeWordmark}>
-                            {this.props.intl.formatMessage(twMessages.bilupWordmark)}
-                        </span>
                     </a>
                     {this.state.menuCollapsed && (
                         <div
@@ -1812,41 +1806,6 @@ class MenuBar extends React.Component {
                                                                 id="gui.menuBar.saveToComputer"
                                                             />
                                                         </MenuItem>
-                                                        {extended.available && (
-                                                            <React.Fragment>
-                                                                {extended.name !== null && (
-                                                                    <MenuItem
-                                                                        // eslint-disable-next-line max-len
-                                                                        onClick={this.getSaveToComputerHandler(extended.saveToLastFile)}
-                                                                        shortcut={formatShortcutDisplay(this.getShortcut('save'))}
-                                                                    >
-                                                                        <FileInput />
-                                                                        <FormattedMessage
-                                                                            defaultMessage="Save to {file}"
-                                                                            // eslint-disable-next-line max-len
-                                                                            description="Menu bar item to save project to an existing file on the user's computer"
-                                                                            id="tw.saveTo"
-                                                                            values={{
-                                                                                file: extended.name
-                                                                            }}
-                                                                        />
-                                                                    </MenuItem>
-                                                                )}
-                                                                {/* eslint-disable-next-line max-len */}
-                                                                <MenuItem
-                                                                    onClick={this.getSaveToComputerHandler(extended.saveAsNew)}
-                                                                    shortcut={formatShortcutDisplay(this.getShortcut('saveAs'))}
-                                                                >
-                                                                    <Save />
-                                                                    <FormattedMessage
-                                                                        defaultMessage="Save as..."
-                                                                        // eslint-disable-next-line max-len
-                                                                        description="Menu bar item to select a new file to save the project as"
-                                                                        id="tw.saveAs"
-                                                                    />
-                                                                </MenuItem>
-                                                            </React.Fragment>
-                                                        )}
                                                     </React.Fragment>
                                                 );
                                             }}
