@@ -104,13 +104,16 @@ const getStageDimensions = (stageSize, customStageSize, isFullScreen, stageConta
         // 之前只缩不放（width > availableContentWidth 才缩），导致面板
         // 变宽时舞台封顶在 480 不再跟随（"舞台主体不跟着缩放"），
         // 面板变窄时两者又有 2px 级脱钩。
-        // 只保留 scale 下限保护，防止浏览器缩放极小时无限缩小。
-        if (Math.abs(stageDimensions.width - availableContentWidth) > 0.5 &&
-            stageDimensions.scale > 0.05) {
+        // 舞台始终跟随面板缩放，不设 scale 下限保护。
+        // 面板拖拽已通过 hideThreshold 防止无限缩小。
+        if (Math.abs(stageDimensions.width - availableContentWidth) > 0.5) {
             const fitScale = availableContentWidth / stageDimensions.width;
             stageDimensions.scale *= fitScale;
             stageDimensions.width *= fitScale;
             stageDimensions.height *= fitScale;
+            // 确保舞台尺寸不低于 1px
+            stageDimensions.width = Math.max(1, stageDimensions.width);
+            stageDimensions.height = Math.max(1, stageDimensions.height);
         }
     }
 
@@ -121,9 +124,9 @@ const getStageDimensions = (stageSize, customStageSize, isFullScreen, stageConta
         Number.isFinite(stageMaxHeight) &&
         stageMaxHeight > 0 &&
         stageDimensions.height > 0 &&
-        stageDimensions.height > stageMaxHeight &&
-        stageDimensions.scale > 0.05) {
-        // Prevent infinite loop when browser zoom is very small (< 40%)
+        stageDimensions.height > stageMaxHeight) {
+        // Stretch to fit the available height, without scale threshold.
+        // Math.max(1) below prevents sub-1px sizes.
         const fitScale = stageMaxHeight / stageDimensions.height;
         stageDimensions.scale *= fitScale;
         stageDimensions.width *= fitScale;
