@@ -51,7 +51,7 @@ import AddonHooks from '../../addons/hooks.js';
 import NativeFindBar from '../find-bar/find-bar.jsx';
 import NativeSpotlight from '../../containers/spotlight.jsx';
 
-import {STAGE_SIZE_MODES, FIXED_WIDTH, UNCONSTRAINED_NON_STAGE_WIDTH} from '../../lib/constants/layout-constants';
+import {STAGE_SIZE_MODES, STAGE_DISPLAY_SIZES, FIXED_WIDTH, UNCONSTRAINED_NON_STAGE_WIDTH} from '../../lib/constants/layout-constants';
 import {resolveStageSize} from '../../lib/utils/screen';
 import {getFindBarApi} from '../../lib/find-bar/api';
 import {setFractchModeOpener} from '../../lib/git/fractch-mode';
@@ -121,7 +121,11 @@ const fullscreenBackgroundColor = getFullscreenBackgroundColor();
 const AUTO_SMALL_STAGE_INNER_WIDTH = Math.round(FIXED_WIDTH);
 const MIN_EDITOR_PANE_WIDTH = 598;
 const MIN_TARGET_PANE_HEIGHT = 180;
-const HIDE_STAGE_DRAG_SLOP = 80;
+// 面板隐藏的拖拽容差。值越大，面板在隐藏前可缩得越小。
+// 移除 getStageDimensions 的 scale 下限后，舞台可安全缩到 1px，
+// 面板不再需要为容纳固定尺寸舞台而保留较大宽度。
+// 120px ≈ 短视口布局的最小面板宽度，也是拖拽面板的最小宽度。
+const HIDE_STAGE_DRAG_SLOP = 138;
 const NARROW_LAYOUT_WIDTH = 900;
 const STAGE_RESIZER_WIDTH = 6;
 const MIN_STAGE_PANEL_WIDTH = (FIXED_WIDTH * 0.5) + 18;
@@ -420,12 +424,13 @@ const GUIComponent = props => {
                 setStageWidth(FIXED_WIDTH * 0.5);
             } else if (props.stageSizeMode === STAGE_SIZE_MODES.large) {
                 setStageWidth(FIXED_WIDTH);
+            } else if (props.stageSizeMode === STAGE_SIZE_MODES.full) {
+                // 完整舞台模式：将面板宽度重置为完整舞台宽度，
+                // 使舞台以其自然尺寸显示，不再被 fit-scale 缩放。
+                setStageWidth(
+                    (props.customStageSize && props.customStageSize.width) || FIXED_WIDTH
+                );
             }
-            // full 模式：不要调用 setStageWidth(null)。那会把
-            // stageContainerWidth 清成 null 并设置 skipNextMeasureRef，
-            // 导致 fit-scale 失效、舞台固定在 480 无法跟随面板缩放。
-            // full 模式下 stageContainerWidth 应由 ResizeObserver / 拖拽
-            // 实时测量驱动。
         } else {
             if (props.stageSizeMode === STAGE_SIZE_MODES.small) {
                 setStageWidth(FIXED_WIDTH * 0.5);
@@ -1069,6 +1074,15 @@ const GUIComponent = props => {
             isUnconstrained
         );
 
+        // 当拖拽缩放面板时，stageSize 保持 large/full 不变（避免舞台离散跳变），
+        // 但角色选择区的 SpriteInfo 需要使用简略布局来防止控件溢出。
+        // 当面板内容宽度小于完整舞台宽度时，强制使用 small 布局。
+        const spriteLayoutSize = enableStageResize && 
+            typeof stageContainerWidth === 'number' && 
+            stageContainerWidth < FIXED_WIDTH ? 
+            STAGE_DISPLAY_SIZES.small : 
+            stageSize;
+
         return (
             <React.Fragment>
                 {isWindowFullScreen ? (
@@ -1393,7 +1407,7 @@ const GUIComponent = props => {
                             {isStageHidden ? null : (
                                 <Box className={styles.targetWrapper}>
                                     <TargetPane
-                                        stageSize={stageSize}
+                                        stageSize={spriteLayoutSize}
                                         vm={vm}
                                     />
                                 </Box>

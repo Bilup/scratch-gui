@@ -620,6 +620,13 @@ const collectAssetMd5exts = projectJSON => {
             }
         }
     }
+    // Collect font assets from customFonts
+    const customFonts = projectJSON.customFonts || [];
+    for (const font of customFonts) {
+        if (!font.system && typeof font.md5ext === 'string') {
+            md5exts.add(font.md5ext);
+        }
+    }
     return Array.from(md5exts);
 };
 
