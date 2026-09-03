@@ -459,6 +459,101 @@
     font-size: 0.8125rem;
 }
 
+/* Shared slider style used by Wallpaper and the frosted-glass parameter
+   controls. `accent-color` makes modern browsers color the fill natively;
+   ::-webkit-slider-* and ::-moz-range-* styles are kept so Firefox and
+   Chrome both render the same flat thumb and track instead of falling back
+   to platform-native 3-D widgets that don't match the editor UI. */
+.gcSlider {
+    flex: 1;
+    min-width: 0;
+    height: 4px;
+    border-radius: 2px;
+    background: $ui-black-transparent;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+    accent-color: $looks-secondary;
+    cursor: pointer;
+}
+
+.gcSlider::-webkit-slider-runnable-track {
+    height: 4px;
+    border-radius: 2px;
+    background: $ui-black-transparent;
+}
+
+.gcSlider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: $looks-secondary;
+    cursor: pointer;
+    margin-top: -5px;
+    border: 0;
+}
+
+.gcSlider::-moz-range-track {
+    height: 4px;
+    border-radius: 2px;
+    background: $ui-black-transparent;
+    border: 0;
+}
+
+.gcSlider::-moz-range-progress {
+    height: 4px;
+    border-radius: 2px;
+    background: $looks-secondary;
+}
+
+.gcSlider::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: $looks-secondary;
+    cursor: pointer;
+    border: 0;
+}
+
+/* Experimental page groups: visually wrap related settings in a bordered box so
+   the layout matches the design (small empty group, small enabled group, group
+   that contains the frosted-glass toggle plus its parameter controls). */
+.experimental-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 0.5rem 0;
+    padding: 0.25rem 0.5rem 0.5rem;
+    border: 1px solid $ui-black-transparent;
+    border-radius: 8px;
+    background: color-mix(in srgb, $ui-primary 55%, transparent);
+}
+
+.experimental-group .setting {
+    margin: 0.125rem 0;
+}
+
+.frosted-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin: 0.4rem 0 0.25rem 1.75rem;
+    padding: 0.4rem 0.65rem 0.55rem;
+    border-left: 2px solid $looks-secondary;
+    background: color-mix(in srgb, $looks-secondary 7%, transparent);
+    border-radius: 0 6px 6px 0;
+}
+
+.frosted-controls .slider-row {
+    height: 28px;
+}
+
+.frosted-controls .slider-label {
+    width: 5.5rem;
+}
+
 .wallpaper-list {
     display: flex;
     flex-direction: column;

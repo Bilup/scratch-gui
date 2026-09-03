@@ -11,7 +11,8 @@ import SettingsModalComponent from '../components/tw-settings-modal/settings-mod
 import {defaultStageSize, setCustomStageSize} from '../reducers/custom-stage-size';
 import {CustomTheme} from '../lib/themes/custom-themes.js';
 import {setSearchParams} from '../lib/utils/navigation';
-import {getAppearanceSetting, setAppearanceSetting} from '../lib/mw-appearance-settings';
+import {getAppearanceSetting, setAppearanceSetting, getFrostedGlassParams, setFrostedGlassParam}
+    from '../lib/mw-appearance-settings';
 import {getStyleSetting, getStyleSettings, setStyleSetting} from '../lib/mw-style-settings';
 import {applyTheme} from '../lib/themes/themePersistance';
 import {getHideOperatorArrows, setHideOperatorArrows} from '../lib/mw-operator-arrows';
@@ -82,7 +83,8 @@ class UsernameModal extends React.Component {
             hideExtensionButton: getAppearanceSetting('hide-extension-button'),
             unclipPalette: getAppearanceSetting('unclip-palette'),
             hideBackpack: getAppearanceSetting('hide-backpack'),
-            frostedGlass: getAppearanceSetting('frosted-glass')
+            frostedGlass: getAppearanceSetting('frosted-glass'),
+            frostedGlassParams: getFrostedGlassParams()
         };
 
         bindAll(this, [
@@ -117,6 +119,7 @@ class UsernameModal extends React.Component {
             'handleUnclipPaletteChange',
             'handleHideBackpackChange',
             'handleFrostedGlassChange',
+            'handleFrostedGlassParamChange',
             'handleTabStyleChange',
             'handleTabLooksChange',
             'handleWindowStyleChange'
@@ -354,6 +357,13 @@ handleWindowAnimationChange (e) {
         this.setAppearance_('frostedGlass', 'frosted-glass', e.target.checked);
     }
 
+    handleFrostedGlassParamChange (name) {
+        return value => {
+            setFrostedGlassParam(name, value);
+            this.setState({frostedGlassParams: getFrostedGlassParams()});
+        };
+    }
+
     handleUnclipPaletteChange (e) {
         this.setAppearance_('unclipPalette', 'unclip-palette', e.target.checked);
     }
@@ -398,6 +408,7 @@ handleWindowAnimationChange (e) {
                 onStageWidthChange={this.handleStageWidthChange}
                 onStageHeightChange={this.handleStageHeightChange}
                 onDisableCompilerChange={this.handleDisableCompilerChange}
+                disableCompiler={this.props.disableCompiler}
                 onCaseSensitiveListsChange={this.handleCaseSensitiveListsChange}
                 onRealLayerIndexesChange={this.handleRealLayerIndexesChange}
                 stageWidth={this.props.customStageSize.width}
@@ -443,7 +454,9 @@ handleWindowAnimationChange (e) {
                 enableStageResize={this.state.enableStageResize}
                 windowAnimation={this.state.windowAnimation}
                 frostedGlass={this.state.frostedGlass}
+                frostedGlassParams={this.state.frostedGlassParams}
                 onFrostedGlassChange={this.handleFrostedGlassChange}
+                onFrostedGlassParamChange={this.handleFrostedGlassParamChange}
                 theme={this.props.theme}
                 {...props}
             />
@@ -497,6 +510,7 @@ const mapStateToProps = state => ({
     removeFencing: !state.scratchGui.tw.runtimeOptions.fencing,
     removeLimits: !state.scratchGui.tw.runtimeOptions.miscLimits,
     warpTimer: state.scratchGui.tw.compilerOptions.warpTimer,
+    disableCompiler: !state.scratchGui.tw.compilerOptions.enabled,
     customStageSize: state.scratchGui.customStageSize,
     // Handle possible undefined value for caseSensitiveLists
     caseSensitiveLists: !!state.scratchGui.tw.runtimeOptions.caseSensitiveLists,

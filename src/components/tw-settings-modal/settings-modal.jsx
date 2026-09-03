@@ -666,6 +666,96 @@ DisableCompiler.propTypes = {
     onChange: PropTypes.func.isRequired
 };
 
+const FrostedGlassControls = ({params, onParamChange}) => {
+    const handle = name => e => onParamChange(name)(parseFloat(e.target.value));
+    return (
+        <div className={styles.frostedControls}>
+            <label className={styles.sliderRow}>
+                <span className={styles.sliderLabel}>
+                    <FormattedMessage
+                        defaultMessage="Blur radius"
+                        id="mw.settingsModal.frostedGlass.blur"
+                    />
+                </span>
+                <input
+                    type="range"
+                    className={styles.gcSlider}
+                    min="0"
+                    max="40"
+                    step="1"
+                    value={params.blur}
+                    onChange={handle('blur')}
+                />
+                <span className={styles.sliderValue}>{`${Math.round(params.blur)} px`}</span>
+            </label>
+            <label className={styles.sliderRow}>
+                <span className={styles.sliderLabel}>
+                    <FormattedMessage
+                        defaultMessage="Panel opacity"
+                        id="mw.settingsModal.frostedGlass.alpha"
+                    />
+                </span>
+                <input
+                    type="range"
+                    className={styles.gcSlider}
+                    min="0"
+                    max="100"
+                    step="1"
+                    value={params.alpha}
+                    onChange={handle('alpha')}
+                />
+                <span className={styles.sliderValue}>{`${Math.round(params.alpha)}%`}</span>
+            </label>
+            <label className={styles.sliderRow}>
+                <span className={styles.sliderLabel}>
+                    <FormattedMessage
+                        defaultMessage="Saturation"
+                        id="mw.settingsModal.frostedGlass.saturation"
+                    />
+                </span>
+                <input
+                    type="range"
+                    className={styles.gcSlider}
+                    min="100"
+                    max="300"
+                    step="5"
+                    value={params.saturation}
+                    onChange={handle('saturation')}
+                />
+                <span className={styles.sliderValue}>{`${Math.round(params.saturation)}%`}</span>
+            </label>
+            <label className={styles.sliderRow}>
+                <span className={styles.sliderLabel}>
+                    <FormattedMessage
+                        defaultMessage="Border brightness"
+                        id="mw.settingsModal.frostedGlass.border"
+                    />
+                </span>
+                <input
+                    type="range"
+                    className={styles.gcSlider}
+                    min="0"
+                    max="100"
+                    step="1"
+                    value={params.border}
+                    onChange={handle('border')}
+                />
+                <span className={styles.sliderValue}>{`${Math.round(params.border)}%`}</span>
+            </label>
+        </div>
+    );
+};
+
+FrostedGlassControls.propTypes = {
+    params: PropTypes.shape({
+        blur: PropTypes.number,
+        alpha: PropTypes.number,
+        saturation: PropTypes.number,
+        border: PropTypes.number
+    }).isRequired,
+    onParamChange: PropTypes.func.isRequired
+};
+
 const STYLE_OPTIONS = {
     'tab-style': [
         {value: 'mistwarp', labelId: 'mw.settingsModal.tabStyle.mistwarp', label: 'MistWarp'},
@@ -1272,9 +1362,8 @@ const pageConfigurations = {
         ]
     },
     experimental: {
-        sections: [
+        groups: [
             {
-                headerMessage: 'headerExperimental',
                 settings: [
                     {
                         component: RealLayerIndexes,
@@ -1289,7 +1378,11 @@ const pageConfigurations = {
                             value: props.caseSensitiveLists,
                             onChange: props.onCaseSensitiveListsChange
                         })
-                    },
+                    }
+                ]
+            },
+            {
+                settings: [
                     {
                         component: EnableStageResize,
                         props: props => ({
@@ -1303,13 +1396,25 @@ const pageConfigurations = {
                             value: props.windowAnimation,
                             onChange: props.onWindowAnimationChange
                         })
-                    },
+                    }
+                ]
+            },
+            {
+                settings: [
                     {
                         component: FrostedGlass,
                         props: props => ({
                             value: props.frostedGlass,
                             onChange: props.onFrostedGlassChange
                         })
+                    },
+                    {
+                        component: FrostedGlassControls,
+                        props: props => ({
+                            params: props.frostedGlassParams,
+                            onParamChange: props.onFrostedGlassParamChange
+                        }),
+                        condition: props => props.frostedGlass
                     }
                 ]
             }
@@ -1347,14 +1452,46 @@ UnwrappedPageRenderer.propTypes = {
     config: PropTypes.object.isRequired,
     intl: intlShape.isRequired
 };
-
 const PageRenderer = injectIntl(UnwrappedPageRenderer);
+
+const UnwrappedExperimentalRenderer = ({config, intl, ...props}) => (
+    <Box className={styles.body}>
+        <Header>{intl.formatMessage(messages.headerExperimental)}</Header>
+        {config.groups.map((group, groupIdx) => (
+            <div
+                key={groupIdx}
+                className={styles.experimentalGroup}
+            >
+                {group.settings.map((setting, settingIdx) => {
+                    if (setting.condition && !setting.condition(props)) {
+                        return null;
+                    }
+                    const SettingComponent = setting.component;
+                    const settingProps = setting.props(props);
+                    return (
+                        <SettingComponent
+                            key={settingIdx}
+                            {...settingProps}
+                            intl={intl}
+                        />
+                    );
+                })}
+            </div>
+        ))}
+    </Box>
+);
+
+UnwrappedExperimentalRenderer.propTypes = {
+    config: PropTypes.object.isRequired,
+    intl: intlShape.isRequired
+};
+const ExperimentalRenderer = injectIntl(UnwrappedExperimentalRenderer);
 
 const GeneralPage = props => (<PageRenderer
     config={pageConfigurations.general}
     {...props}
 />);
-const ExperimentalPage = props => (<PageRenderer
+const ExperimentalPage = props => (<ExperimentalRenderer
     config={pageConfigurations.experimental}
     {...props}
 />);
@@ -2300,9 +2437,9 @@ class SettingsModalComponent extends React.Component {
                         >
                             <ChevronLeft size={18} />
                             <FormattedMessage
-                                defaultMessage="Settings"
+                                defaultMessage="Back"
                                 description="Back button in the settings window on mobile"
-                                id="tw.settingsModal.back"
+                                id="mw.settingsModal.back"
                             />
                         </button>
                         <SettingsRouter
