@@ -10,12 +10,7 @@ import {timeAgo} from '../format';
 import Avatar from '../components/Avatar.jsx';
 import Button from '../components/ui/Button.jsx';
 import NewsItem from '../components/NewsItem.jsx';
-import ProjectCard from '../components/ProjectCard.jsx';
-import ChallengeCalendar from '../components/ChallengeCalendar.jsx';
-import ReactionButtons from '../components/ReactionButtons.jsx';
-import logo from '../assets/bilup-logo.svg';
-import {track} from '../analytics.js';
-import {useCommunityIntl} from '../i18n.jsx';
+import logo from '../assets/bilup-icon.svg';
 import styles from './Home.module.css';
 
 const ACTIVITY_ICONS = {love: Heart, favorite: Star, share: Globe, remix: GitFork, review: Star};

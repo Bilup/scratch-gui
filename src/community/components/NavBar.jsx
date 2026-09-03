@@ -319,9 +319,8 @@ const NavBar = () => {
                     <img
                         className={styles.logo}
                         src={logo}
-                        alt=""
+                        alt="Bilup"
                     />
-                    <span className={styles.wordmark}>Bilup</span>
                 </Link>
 
                 <nav className={styles.links} aria-label={t('nav.main')}>

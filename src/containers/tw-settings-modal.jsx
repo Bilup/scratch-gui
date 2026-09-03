@@ -7,7 +7,7 @@ import {closeSettingsModal} from '../reducers/modals';
 import {setCloudHost} from '../reducers/tw';
 import {setTheme} from '../reducers/theme';
 import SettingsModalComponent from '../components/tw-settings-modal/settings-modal.jsx';
-import {defaultStageSize} from '../reducers/custom-stage-size';
+import {defaultStageSize, setCustomStageSize} from '../reducers/custom-stage-size';
 import {CustomTheme} from '../lib/themes/custom-themes.js';
 import {setSearchParams} from '../lib/utils/navigation';
 import {getAppearanceSetting, setAppearanceSetting} from '../lib/mw-appearance-settings';
@@ -18,6 +18,33 @@ import {getVanillaPalette, setVanillaPalette} from '../lib/mw-vanilla-palette';
 import WindowManager from '../addons/window-system/window-manager';
 import {normalizeCustomFramerate} from '../lib/utils/framerate';
 
+
+// Minimum/maximum allowed custom stage dimensions. Keep in sync with the
+// bounds enforced by src/reducers/custom-stage-size.js.
+const STAGE_DIM_MIN = 1;
+const STAGE_DIM_MAX = 4096;
+
+/**
+ * Coerce a user-entered stage dimension pair into a valid {width, height}
+ * object, clamping to [STAGE_DIM_MIN, STAGE_DIM_MAX] and dropping NaN.
+ * Returns null if either value is not a finite number after coercion —
+ * callers should bail out without touching Redux / vm in that case so that
+ * a stray keystroke cannot corrupt `customStageSize` state.
+ *
+ * @param {number|string} rawWidth
+ * @param {number|string} rawHeight
+ * @returns {{width: number, height: number}|null}
+ */
+const sanitizeStageDimension = (rawWidth, rawHeight) => {
+    const width = Number(rawWidth);
+    const height = Number(rawHeight);
+    if (!Number.isFinite(width) || !Number.isFinite(height)) {
+        return null;
+    }
+    const clampedWidth = Math.max(STAGE_DIM_MIN, Math.min(STAGE_DIM_MAX, Math.round(width)));
+    const clampedHeight = Math.max(STAGE_DIM_MIN, Math.min(STAGE_DIM_MAX, Math.round(height)));
+    return {width: clampedWidth, height: clampedHeight};
+};
 
 class UsernameModal extends React.Component {
     constructor (props) {
@@ -146,11 +173,20 @@ class UsernameModal extends React.Component {
         });
     }
     handleStageWidthChange (value) {
-        this.props.vm.setStageSize(value, this.props.customStageSize.height);
+        const sanitized = sanitizeStageDimension(value, this.props.customStageSize.height);
+        if (!sanitized) return;
+        // Keep vm and Redux in sync so Stage re-renders, the renderer projection
+        // updates, the URL `?size=` param updates, and a page refresh preserves
+        // the new size (see src/reducers/custom-stage-size.js for the reducer).
+        this.props.vm.setStageSize(sanitized.width, sanitized.height);
+        this.props.onSetCustomStageSize(sanitized.width, sanitized.height);
         this.storeStageSizeInProject();
     }
     handleStageHeightChange (value) {
-        this.props.vm.setStageSize(this.props.customStageSize.width, value);
+        const sanitized = sanitizeStageDimension(this.props.customStageSize.width, value);
+        if (!sanitized) return;
+        this.props.vm.setStageSize(sanitized.width, sanitized.height);
+        this.props.onSetCustomStageSize(sanitized.width, sanitized.height);
         this.storeStageSizeInProject();
     }
     storeStageSizeInProject () {
@@ -432,6 +468,7 @@ UsernameModal.propTypes = {
         width: PropTypes.number,
         height: PropTypes.number
     }),
+    onSetCustomStageSize: PropTypes.func,
     disableCompiler: PropTypes.bool,
     caseSensitiveLists: PropTypes.bool,
     realLayerIndexes: PropTypes.bool,
@@ -460,6 +497,7 @@ const mapStateToProps = state => ({
 const mapDispatchToProps = dispatch => ({
     onClose: () => dispatch(closeSettingsModal()),
     onSetCloudHost: cloudHost => dispatch(setCloudHost(cloudHost)),
+    onSetCustomStageSize: (width, height) => dispatch(setCustomStageSize(width, height)),
     onChangeTheme: theme => {
         dispatch(setTheme(theme));
         applyTheme(theme);
