@@ -11,7 +11,7 @@ import SettingsModalComponent from '../components/tw-settings-modal/settings-mod
 import {defaultStageSize, setCustomStageSize} from '../reducers/custom-stage-size';
 import {CustomTheme} from '../lib/themes/custom-themes.js';
 import {setSearchParams} from '../lib/utils/navigation';
-import {getAppearanceSetting, setAppearanceSetting, getFrostedGlassParams, setFrostedGlassParam}
+import {getAppearanceSetting, setAppearanceSetting}
     from '../lib/mw-appearance-settings';
 import {getStyleSetting, getStyleSettings, setStyleSetting} from '../lib/mw-style-settings';
 import {applyTheme} from '../lib/themes/themePersistance';
@@ -83,8 +83,6 @@ class UsernameModal extends React.Component {
             hideExtensionButton: getAppearanceSetting('hide-extension-button'),
             unclipPalette: getAppearanceSetting('unclip-palette'),
             hideBackpack: getAppearanceSetting('hide-backpack'),
-            frostedGlass: getAppearanceSetting('frosted-glass'),
-            frostedGlassParams: getFrostedGlassParams()
         };
 
         bindAll(this, [
@@ -118,8 +116,7 @@ class UsernameModal extends React.Component {
             'handleHideExtensionButtonChange',
             'handleUnclipPaletteChange',
             'handleHideBackpackChange',
-            'handleFrostedGlassChange',
-            'handleFrostedGlassParamChange',
+            
             'handleTabStyleChange',
             'handleTabLooksChange',
             'handleWindowStyleChange'
@@ -353,17 +350,6 @@ handleWindowAnimationChange (e) {
         this.setAppearance_('hideBackpack', 'hide-backpack', e.target.checked);
     }
 
-    handleFrostedGlassChange (e) {
-        this.setAppearance_('frostedGlass', 'frosted-glass', e.target.checked);
-    }
-
-    handleFrostedGlassParamChange (name) {
-        return value => {
-            setFrostedGlassParam(name, value);
-            this.setState({frostedGlassParams: getFrostedGlassParams()});
-        };
-    }
-
     handleUnclipPaletteChange (e) {
         this.setAppearance_('unclipPalette', 'unclip-palette', e.target.checked);
     }
@@ -453,10 +439,6 @@ handleWindowAnimationChange (e) {
                 storeThemeInProject={this.state.storeThemeInProject}
                 enableStageResize={this.state.enableStageResize}
                 windowAnimation={this.state.windowAnimation}
-                frostedGlass={this.state.frostedGlass}
-                frostedGlassParams={this.state.frostedGlassParams}
-                onFrostedGlassChange={this.handleFrostedGlassChange}
-                onFrostedGlassParamChange={this.handleFrostedGlassParamChange}
                 theme={this.props.theme}
                 {...props}
             />

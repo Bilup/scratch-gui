@@ -779,12 +779,6 @@
         "mw.settingsModal.enableStageResizeHelp": "启用舞台调整大小功能，允许您拖动调整舞台面板的大小。(需要刷新)",
         "mw.settingsModal.windowAnimation": "开启窗口动画",
         "mw.settingsModal.windowAnimationHelp": "启用打开或关闭窗口时的淡入淡出和缩放动画效果。",
-        "mw.settingsModal.frostedGlass": "毛玻璃主题",
-        "mw.settingsModal.frostedGlassHelp": "为编辑器 UI、积木栏和作品栏区域应用毛玻璃模糊效果。仅对编辑器内部有效。",
-        "mw.settingsModal.frostedGlass.blur": "模糊半径",
-        "mw.settingsModal.frostedGlass.alpha": "面板不透明度",
-        "mw.settingsModal.frostedGlass.saturation": "饱和度",
-        "mw.settingsModal.frostedGlass.border": "边框亮度",
         "mw.settingsModal.squareStageCorners": "方角舞台",
         "mw.settingsModal.squareStageCornersHelp": "移除舞台的圆角。",
         "mw.settingsModal.hideDeleteButton": "隐藏删除按钮",
@@ -1429,7 +1423,7 @@
         "mw.projectMeta.storageDescription": "当前大小、服务器用量和上传限制。",
         "mw.projectMeta.vmSizeNote": "编辑器中的大小直接来自 VM。最终压缩在上传时测量。",
         "mw.projectMeta.bilupLimits": "Bilup 允许 20 MB 压缩项目数据、1 GB 展开数据、50 MB 素材，以及每个素材 10 MB。",
-        "mw.projectMeta.sprites": "精灵",
+        "mw.projectMeta.sprites": "角色",
         "mw.projectMeta.costumes": "造型",
         "mw.projectMeta.sounds": "声音",
         "mw.projectMeta.blocks": "积木",
@@ -1545,6 +1539,13 @@
         "block-count/open-analysis": "打开项目复杂度分析",
         "gui.customProcedures.global": "[Beta]将此积木设为全局",
         "gui.customProcedures.duplicateName": "已有同名积木",
+        "bl.frostedGlass.pageTitle": "毛玻璃",
+        "bl.frostedGlass.enabled": "启用毛玻璃效果",
+        "bl.frostedGlass.blurRadius": "模糊强度",
+        "bl.frostedGlass.opacity": "透明度",
+        "bl.frostedGlass.target.window": "窗口",
+        "bl.frostedGlass.target.alert": "弹窗通知",
+        "bl.frostedGlass.target.menuBarMenu": "顶部菜单栏下拉菜单",
         "":""
     },
     "en": {
@@ -1649,6 +1650,13 @@
         "gui.stageHeader.stageHidden": "Hide the stage",
         "block-count/blocks": "{num, plural, one {1 block} other {# blocks}}",
         "block-count/open-analysis": "Open project complexity analysis",
-        "mw.settings.wallpaperUpload": "Upload Image"
+        "mw.settings.wallpaperUpload": "Upload Image",
+        "bl.frostedGlass.pageTitle": "Frosted Glass",
+        "bl.frostedGlass.enabled": "Enable Frosted Glass",
+        "bl.frostedGlass.blurRadius": "Blur Intensity",
+        "bl.frostedGlass.opacity": "Opacity",
+        "bl.frostedGlass.target.window": "Window",
+        "bl.frostedGlass.target.alert": "Popup Notification",
+        "bl.frostedGlass.target.menuBarMenu": "Menu Bar Dropdown"
     }
 }

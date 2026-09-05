@@ -1,4 +1,4 @@
-import {defineMessages, FormattedMessage, intlShape, injectIntl} from 'react-intl';
+﻿import {defineMessages, FormattedMessage, intlShape, injectIntl} from 'react-intl';
 import PropTypes from 'prop-types';
 import React from 'react';
 import classNames from 'classnames';
@@ -26,13 +26,14 @@ import MenuBarLayoutSetting from './menu-bar-layout.jsx';
 import MenuBarFeatureSettings from './menu-bar-settings.jsx';
 import {LanguagePage, ThemePage, WallpaperPage, FontsPage} from './appearance-pages.jsx';
 import LoadingScreenPage from './loading-screen-page.jsx';
+import FrostedGlassPage from './frosted-glass-page.jsx';
 import ShortcutManager from '../shortcut-manager/shortcut-manager.jsx';
 import {takeSettingsModalInitialView} from '../../lib/settings/modal-view.js';
 import isScratchDesktop from '../../lib/utils/isScratchDesktop.js';
 
 import {Settings, Zap, Blocks, Palette, PanelTop, Bug, GitBranch, Variable, Radio,
     Globe, SunMoon, Wallpaper, Type, Monitor, Keyboard, ChevronLeft,
-    Hourglass} from 'lucide-react';
+    Hourglass, Droplets} from 'lucide-react';
 import {connect} from 'react-redux';
 
 import {DEFINITIONS as DEBUGGER_SETTINGS, getSetting as getDebuggerSetting,
@@ -452,18 +453,6 @@ const settingDefinitions = {
             id: 'mw.settingsModal.windowAnimationHelp'
         }
     },
-    frostedGlass: {
-        label: {
-            defaultMessage: 'Frosted Glass Theme',
-            description: 'Frosted Glass Theme setting',
-            id: 'mw.settingsModal.frostedGlass'
-        },
-        help: {
-            defaultMessage: 'Applies a frosted glass blur effect to the editor UI, blocks palette, and stage area. Only affects the editor.',
-            description: 'Frosted Glass Theme setting help',
-            id: 'mw.settingsModal.frostedGlassHelp'
-        }
-    },
     squareStageCorners: {
         label: {
             defaultMessage: 'Square Stage Corners',
@@ -627,7 +616,6 @@ const CaseSensitiveLists = createBooleanSetting('CaseSensitiveLists', settingDef
 const RealLayerIndexes = createBooleanSetting('RealLayerIndexes', settingDefinitions.realLayerIndexes);
 const EnableStageResize = createBooleanSetting('EnableStageResize', settingDefinitions.enableStageResize);
 const WindowAnimation = createBooleanSetting('WindowAnimation', settingDefinitions.windowAnimation);
-const FrostedGlass = createBooleanSetting('FrostedGlass', settingDefinitions.frostedGlass);
 const SquareStageCorners = createBooleanSetting('SquareStageCorners', settingDefinitions.squareStageCorners);
 const HideDeleteButton = createBooleanSetting('HideDeleteButton', settingDefinitions.hideDeleteButton);
 const HideExtensionButton = createBooleanSetting('HideExtensionButton', settingDefinitions.hideExtensionButton);
@@ -665,97 +653,6 @@ DisableCompiler.propTypes = {
     value: PropTypes.bool,
     onChange: PropTypes.func.isRequired
 };
-
-const FrostedGlassControls = ({params, onParamChange}) => {
-    const handle = name => e => onParamChange(name)(parseFloat(e.target.value));
-    return (
-        <div className={styles.frostedControls}>
-            <label className={styles.sliderRow}>
-                <span className={styles.sliderLabel}>
-                    <FormattedMessage
-                        defaultMessage="Blur radius"
-                        id="mw.settingsModal.frostedGlass.blur"
-                    />
-                </span>
-                <input
-                    type="range"
-                    className={styles.gcSlider}
-                    min="0"
-                    max="40"
-                    step="1"
-                    value={params.blur}
-                    onChange={handle('blur')}
-                />
-                <span className={styles.sliderValue}>{`${Math.round(params.blur)} px`}</span>
-            </label>
-            <label className={styles.sliderRow}>
-                <span className={styles.sliderLabel}>
-                    <FormattedMessage
-                        defaultMessage="Panel opacity"
-                        id="mw.settingsModal.frostedGlass.alpha"
-                    />
-                </span>
-                <input
-                    type="range"
-                    className={styles.gcSlider}
-                    min="0"
-                    max="100"
-                    step="1"
-                    value={params.alpha}
-                    onChange={handle('alpha')}
-                />
-                <span className={styles.sliderValue}>{`${Math.round(params.alpha)}%`}</span>
-            </label>
-            <label className={styles.sliderRow}>
-                <span className={styles.sliderLabel}>
-                    <FormattedMessage
-                        defaultMessage="Saturation"
-                        id="mw.settingsModal.frostedGlass.saturation"
-                    />
-                </span>
-                <input
-                    type="range"
-                    className={styles.gcSlider}
-                    min="100"
-                    max="300"
-                    step="5"
-                    value={params.saturation}
-                    onChange={handle('saturation')}
-                />
-                <span className={styles.sliderValue}>{`${Math.round(params.saturation)}%`}</span>
-            </label>
-            <label className={styles.sliderRow}>
-                <span className={styles.sliderLabel}>
-                    <FormattedMessage
-                        defaultMessage="Border brightness"
-                        id="mw.settingsModal.frostedGlass.border"
-                    />
-                </span>
-                <input
-                    type="range"
-                    className={styles.gcSlider}
-                    min="0"
-                    max="100"
-                    step="1"
-                    value={params.border}
-                    onChange={handle('border')}
-                />
-                <span className={styles.sliderValue}>{`${Math.round(params.border)}%`}</span>
-            </label>
-        </div>
-    );
-};
-
-FrostedGlassControls.propTypes = {
-    params: PropTypes.shape({
-        blur: PropTypes.number,
-        alpha: PropTypes.number,
-        saturation: PropTypes.number,
-        border: PropTypes.number
-    }).isRequired,
-    onParamChange: PropTypes.func.isRequired
-};
-
 const STYLE_OPTIONS = {
     'tab-style': [
         {value: 'mistwarp', labelId: 'mw.settingsModal.tabStyle.mistwarp', label: 'MistWarp'},
@@ -1396,25 +1293,6 @@ const pageConfigurations = {
                             value: props.windowAnimation,
                             onChange: props.onWindowAnimationChange
                         })
-                    }
-                ]
-            },
-            {
-                settings: [
-                    {
-                        component: FrostedGlass,
-                        props: props => ({
-                            value: props.frostedGlass,
-                            onChange: props.onFrostedGlassChange
-                        })
-                    },
-                    {
-                        component: FrostedGlassControls,
-                        props: props => ({
-                            params: props.frostedGlassParams,
-                            onParamChange: props.onFrostedGlassParamChange
-                        }),
-                        condition: props => props.frostedGlass
                     }
                 ]
             }
@@ -2193,6 +2071,8 @@ const SettingsRouter = ({view, ...handlers}) => {
         return <WallpaperPage />;
     case 'fonts':
         return <FontsPage />;
+    case 'frostedGlass':
+        return <FrostedGlassPage />;
     case 'loadingScreen':
         return <LoadingScreenPage />;
     case 'debugger':
@@ -2308,6 +2188,11 @@ class SettingsModalComponent extends React.Component {
                         id: 'fonts',
                         label: intl.formatMessage({id: 'tw.menuBar.fonts', defaultMessage: 'Fonts'}),
                         icon: Type
+                    },
+                    {
+                        id: 'frostedGlass',
+                        label: intl.formatMessage({id: 'bl.frostedGlass.pageTitle', defaultMessage: 'Frosted Glass'}),
+                        icon: Droplets
                     },
                     {
                         id: 'editor',
@@ -2516,9 +2401,7 @@ SettingsModalComponent.propTypes = {
     cloudVariableServer: PropTypes.string,
     onCloudVariableServerChange: PropTypes.func,
     windowAnimation: PropTypes.bool,
-    onWindowAnimationChange: PropTypes.func,
-    frostedGlass: PropTypes.bool,
-    onFrostedGlassChange: PropTypes.func
+    onWindowAnimationChange: PropTypes.func
 };
 
 export default injectIntl(SettingsModalComponent);

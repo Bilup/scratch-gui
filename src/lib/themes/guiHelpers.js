@@ -467,8 +467,7 @@ const applyGuiColors = theme => {
     // Apply fonts (async but don't block UI)
     applyThemeFonts(theme.fonts).catch(console.error);
 
-    // Notify modules that generate CSS with theme-dependent colors (e.g. the
-    // frosted-glass generator, whose border color depends on light/dark mode)
+    // Notify modules that generate CSS with theme-dependent colors
     // so they can regenerate with the new --color-scheme.
     if (typeof window !== 'undefined' && typeof window.CustomEvent === 'function') {
         window.dispatchEvent(new window.CustomEvent('mw:theme-applied'));
