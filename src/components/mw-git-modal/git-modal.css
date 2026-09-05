@@ -590,6 +590,21 @@
     flex-shrink: 0;
 }
 
+.remoteLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    font-size: 0.82rem;
+    color: $looks-secondary;
+    text-decoration: none;
+    cursor: pointer;
+    margin-top: 0.15rem;
+}
+
+.remoteLink:hover {
+    text-decoration: underline;
+}
+
 /* Merge / conflicts */
 .conflicts {
     margin: 0.75rem 0;

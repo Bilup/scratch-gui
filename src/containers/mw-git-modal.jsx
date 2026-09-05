@@ -40,16 +40,6 @@ import {
 } from '../lib/git/browser-git.js';
 import {buildSb3FromFractchTree} from '../lib/git/fractch-tree.js';
 import {
-    listMyRepos as listRoturRepos,
-    createRepo as createRoturRepo,
-    deleteRepo as deleteRoturRepoApi,
-    getAuth as getRoturGitAuth,
-    getRemoteUrl as getRoturRemoteUrl,
-    isRoturGitUrl,
-    parseRepoUrl as parseRoturRepoUrl
-} from '../lib/rotur/git-api.js';
-import {getRoturSessionApi} from '../lib/rotur/session-api.js';
-import {
     getFileContentAtCommit,
     getChangedFilesBetweenCommits,
     getCommitParents,
@@ -182,6 +172,7 @@ export class TWGitModal extends React.Component {
             pushRemote: preloaded.pushRemote || 'origin',
             pushBranch: preloaded.pushBranch || '',
             remoteToken: readLocal(TOKEN_KEY, ''),
+            remoteService: '',
             // Clone
             cloneUrl: '',
             cloneConfirm: false,
@@ -198,17 +189,7 @@ export class TWGitModal extends React.Component {
             // Settings
             defaultBranch: readLocal(DEFAULT_BRANCH_KEY, 'main'),
             autoCommit: readLocal(AUTO_COMMIT_KEY, 'false') === 'true',
-            // Bilup Git
-            roturRepos: [],
-            roturReposLoaded: false,
-            roturReposLoading: false,
-            roturNewRepoName: '',
-            roturNewRepoDesc: '',
-            roturNewRepoPrivate: false,
-            roturCloneOther: '',
-            roturCloneConfirm: null,
-            roturDeleteConfirm: null
-        };
+            };
 
         this._lastProgressUpdate = 0;
 
@@ -255,6 +236,7 @@ export class TWGitModal extends React.Component {
             'handleChangePushRemote',
             'handleChangePushBranch',
             'handleChangeRemoteToken',
+            'handleChangeRemoteService',
             'handleAddRemote',
             'handleRemoveRemote',
             'handlePush',
@@ -262,18 +244,7 @@ export class TWGitModal extends React.Component {
             'handleToggleAutoCommit',
             'handleChangeReadme',
             'handleSaveReadme',
-            'handleRoturLogin',
-            'handleLoadRoturRepos',
-            'handleChangeRoturNewRepoName',
-            'handleChangeRoturNewRepoDesc',
-            'handleToggleRoturNewRepoPrivate',
-            'handleCreateRoturRepo',
-            'handleRoturPush',
-            'handleRoturClone',
-            'handleRoturDelete',
-            'handleChangeRoturCloneOther',
-            'handleRoturCloneOther'
-        ]);
+            ]);
     }
 
     componentDidMount () {
@@ -462,9 +433,7 @@ export class TWGitModal extends React.Component {
         try {
             await this.waitForPollIdle();
             const cloneOpts = {url, onProgress: this.handleGitProgress};
-            if (isRoturGitUrl(url) && this.props.roturUsername) {
-                cloneOpts.onAuth = getRoturGitAuth;
-            } else if (token) {
+            if (token) {
                 cloneOpts.onAuth = () => (username ?
                     {username, password: token} :
                     {username: token, password: token});
@@ -774,6 +743,19 @@ export class TWGitModal extends React.Component {
         writeLocal(TOKEN_KEY, token);
     }
 
+    handleChangeRemoteService (e) {
+        const service = e.target.value;
+        let url = '';
+        if (service === 'github') {
+            url = 'https://github.com/';
+        } else if (service === 'gitlab') {
+            url = 'https://gitlab.com/';
+        } else if (service === 'gitee') {
+            url = 'https://gitee.com/';
+        }
+        this.setState({remoteService: service, newRemoteUrl: url});
+    }
+
     async handleAddRemote () {
         const url = this.state.newRemoteUrl.trim();
         if (!url) {
@@ -995,209 +977,10 @@ export class TWGitModal extends React.Component {
         }
     }
 
-    async handleRoturLogin () {
-        const api = getRoturSessionApi();
-        if (!api || typeof api.login !== 'function') {
-            this.setState({error: 'Bilup Accounts session is not ready yet. Try again in a moment.'});
-            return;
-        }
-        try {
-            const user = await api.login();
-            if (user) {
-                await this.handleLoadRoturRepos();
-            }
-        } catch (err) {
-            this.setState({error: err && err.message ? err.message : String(err)});
-        }
-    }
-
-    async handleLoadRoturRepos () {
-        if (this.state.roturReposLoading) return;
-        this.setState({roturReposLoading: true, error: null});
-        try {
-            const repos = await listRoturRepos();
-            this.setState({roturRepos: repos, roturReposLoaded: true, roturReposLoading: false});
-        } catch (err) {
-            this.setState({
-                roturReposLoading: false,
-                error: err && err.message ? err.message : String(err)
-            });
-        }
-    }
-
-    handleChangeRoturNewRepoName (e) {
-        this.setState({roturNewRepoName: e.target.value});
-    }
-
-    handleChangeRoturNewRepoDesc (e) {
-        this.setState({roturNewRepoDesc: e.target.value});
-    }
-
-    handleToggleRoturNewRepoPrivate () {
-        this.setState(prev => ({roturNewRepoPrivate: !prev.roturNewRepoPrivate}));
-    }
-
-    async handleCreateRoturRepo () {
-        const name = this.state.roturNewRepoName.trim();
-        if (!name) {
-            this.setState({error: 'Repository name is required'});
-            return;
-        }
-        this.setState({busy: true, busyMessage: `Creating ${name}…`, busyProgress: null, error: null});
-        try {
-            await createRoturRepo({
-                name,
-                description: this.state.roturNewRepoDesc.trim(),
-                isPrivate: this.state.roturNewRepoPrivate,
-                defaultBranch: this.state.defaultBranch || 'main'
-            });
-            this.setState({roturNewRepoName: '', roturNewRepoDesc: '', roturNewRepoPrivate: false});
-            await this.handleLoadRoturRepos();
-        } catch (err) {
-            this.setState({error: err && err.message ? err.message : String(err)});
-        } finally {
-            this.setState({busy: false, busyMessage: null, busyProgress: null});
-        }
-    }
-
-    async handleRoturPush (repo) {
-        if (!repo || !repo.owner || !repo.name) return;
-        this.setState({busy: true, busyMessage: `Pushing to ${repo.fullName}…`, busyProgress: null, error: null});
-        try {
-            await this.waitForPollIdle();
-            let branch = this.state.currentBranch;
-            if (!this.state.initialized) {
-                branch = this.state.defaultBranch || 'main';
-                await initRepo({
-                    vm: this.props.vm,
-                    defaultBranch: branch,
-                    onProgress: this.handleGitProgress
-                });
-            }
-            branch = branch || this.state.defaultBranch || 'main';
-
-            const url = getRoturRemoteUrl(repo.owner, repo.name);
-            const remotes = await getRemotes(this.props.vm);
-            let remoteName = null;
-            const matching = remotes.find(r => r.url === url);
-            if (matching) {
-                remoteName = matching.name;
-            } else {
-                remoteName = 'bilup';
-                if (remotes.some(r => r.name === 'bilup')) {
-                    await removeRemote({vm: this.props.vm, name: 'bilup'});
-                }
-                await addRemote({vm: this.props.vm, name: 'bilup', url});
-            }
-
-            // Use the same inline onAuth as handlePush: commit author name as
-            // username (Gitea/Forgejo smart HTTP requires non-token username for
-            // git-receive-pack), falling back to token-as-username (GitHub PAT).
-            const token = this.state.remoteToken;
-            const username = (this.state.authorName || '').trim();
-            await push({
-                vm: this.props.vm,
-                remote: remoteName,
-                ref: branch,
-                setUpstream: true,
-                onProgress: this.handleGitProgress,
-                onAuth: () => (username ?
-                    {username, password: token} :
-                    {username: token || 'x-access-token', password: token})
-            });
-            await this.handleLoadRoturRepos();
-            await this.refresh();
-        } catch (err) {
-            this.setState({error: err && err.message ? err.message : String(err)});
-        } finally {
-            this.setState({busy: false, busyMessage: null, busyProgress: null});
-        }
-    }
-
-    async handleRoturClone (repo) {
-        if (!repo || !repo.cloneUrl) return;
-        if (this.props.projectChanged && this.state.roturCloneConfirm !== repo.fullName) {
-            this.setState({roturCloneConfirm: repo.fullName, error: null});
-            return;
-        }
-        this.setState({
-            roturCloneConfirm: null,
-            busy: true,
-            busyMessage: `Cloning ${repo.fullName}…`,
-            busyProgress: null,
-            error: null
-        });
-        try {
-            await this.waitForPollIdle();
-            await cloneRepo({
-                url: repo.cloneUrl,
-                onAuth: getRoturGitAuth,
-                onProgress: this.handleGitProgress
-            });
-            await this.loadProjectFromClonedRepo();
-            this.setState({roturCloneOther: ''});
-            await this.refresh();
-        } catch (err) {
-            this.setState({error: err && err.message ? err.message : String(err)});
-        } finally {
-            this.setState({busy: false, busyMessage: null, busyProgress: null});
-        }
-    }
-
-    handleChangeRoturCloneOther (e) {
-        this.setState({roturCloneOther: e.target.value, roturCloneConfirm: null});
-    }
-
-    async handleRoturCloneOther () {
-        const parsed = parseRoturRepoUrl(this.state.roturCloneOther.trim());
-        if (!parsed) {
-            this.setState({error: 'Enter a repo as owner/name or a git.bilup.org URL'});
-            return;
-        }
-        await this.handleRoturClone({
-            fullName: parsed.fullName,
-            cloneUrl: getRoturRemoteUrl(parsed.owner, parsed.name)
-        });
-    }
-
-    async handleRoturDelete (repo) {
-        if (!repo || !repo.owner || !repo.name) return;
-        if (this.state.roturDeleteConfirm !== repo.fullName) {
-            this.setState({roturDeleteConfirm: repo.fullName, error: null});
-            return;
-        }
-        this.setState({
-            roturDeleteConfirm: null,
-            busy: true,
-            busyMessage: `Deleting ${repo.fullName}…`,
-            busyProgress: null,
-            error: null
-        });
-        try {
-            await deleteRoturRepoApi(repo.owner, repo.name);
-            await this.handleLoadRoturRepos();
-        } catch (err) {
-            this.setState({error: err && err.message ? err.message : String(err)});
-        } finally {
-            this.setState({busy: false, busyMessage: null, busyProgress: null});
-        }
-    }
-
     render () {
         const canUndoCommit = Boolean(this.state.currentBranch) &&
             Array.isArray(this.state.commits) &&
             this.state.commits.length >= 2;
-
-        let connectedRoturRepo = null;
-        for (const remote of this.state.remotes || []) {
-            if (isRoturGitUrl(remote.url)) {
-                const parsed = parseRoturRepoUrl(remote.url);
-                if (parsed) {
-                    connectedRoturRepo = {...parsed, remoteName: remote.name};
-                    break;
-                }
-            }
-        }
 
         return (
             <GitModalComponent
@@ -1228,6 +1011,7 @@ export class TWGitModal extends React.Component {
                 pushRemote={this.state.pushRemote}
                 pushBranch={this.state.pushBranch}
                 remoteToken={this.state.remoteToken}
+                remoteService={this.state.remoteService}
                 diffLoading={this.state.diffLoading}
                 diffFilepath={this.state.diffFilepath}
                 diffData={this.state.diffData}
@@ -1273,34 +1057,13 @@ export class TWGitModal extends React.Component {
                 onChangePushRemote={this.handleChangePushRemote}
                 onChangePushBranch={this.handleChangePushBranch}
                 onChangeRemoteToken={this.handleChangeRemoteToken}
+                onChangeRemoteService={this.handleChangeRemoteService}
                 onAddRemote={this.handleAddRemote}
                 onRemoveRemote={this.handleRemoveRemote}
                 onPush={this.handlePush}
                 onChangeDefaultBranch={this.handleChangeDefaultBranch}
                 onToggleAutoCommit={this.handleToggleAutoCommit}
                 onClose={this.handleClose}
-                roturUsername={this.props.roturUsername}
-                roturRepos={this.state.roturRepos}
-                roturReposLoaded={this.state.roturReposLoaded}
-                roturReposLoading={this.state.roturReposLoading}
-                roturNewRepoName={this.state.roturNewRepoName}
-                roturNewRepoDesc={this.state.roturNewRepoDesc}
-                roturNewRepoPrivate={this.state.roturNewRepoPrivate}
-                roturCloneOther={this.state.roturCloneOther}
-                roturCloneConfirm={this.state.roturCloneConfirm}
-                roturDeleteConfirm={this.state.roturDeleteConfirm}
-                connectedRoturRepo={connectedRoturRepo}
-                onRoturLogin={this.handleRoturLogin}
-                onLoadRoturRepos={this.handleLoadRoturRepos}
-                onChangeRoturNewRepoName={this.handleChangeRoturNewRepoName}
-                onChangeRoturNewRepoDesc={this.handleChangeRoturNewRepoDesc}
-                onToggleRoturNewRepoPrivate={this.handleToggleRoturNewRepoPrivate}
-                onCreateRoturRepo={this.handleCreateRoturRepo}
-                onRoturPush={this.handleRoturPush}
-                onRoturClone={this.handleRoturClone}
-                onRoturDelete={this.handleRoturDelete}
-                onChangeRoturCloneOther={this.handleChangeRoturCloneOther}
-                onRoturCloneOther={this.handleRoturCloneOther}
             />
         );
     }
@@ -1310,15 +1073,13 @@ TWGitModal.propTypes = {
     onClose: PropTypes.func.isRequired,
     vm: PropTypes.instanceOf(VM).isRequired,
     projectChanged: PropTypes.bool,
-    projectTitle: PropTypes.string,
-    roturUsername: PropTypes.string
+    projectTitle: PropTypes.string
 };
 
 const mapStateToProps = state => ({
     vm: state.scratchGui.vm,
     projectChanged: state.scratchGui.projectChanged,
-    projectTitle: state.scratchGui.projectTitle,
-    roturUsername: (state.scratchGui.rotur && state.scratchGui.rotur.username) || null
+    projectTitle: state.scratchGui.projectTitle
 });
 
 const mapDispatchToProps = dispatch => ({

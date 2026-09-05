@@ -27,11 +27,6 @@ import storage from '../persistence/storage.js';
 
 import VM from 'scratch-vm';
 import {fetchProjectMeta} from './tw-project-meta-fetcher-hoc.jsx';
-import {cloneRepo, deleteRepo} from '../git/browser-git.js';
-import {checkoutMwpBranch, importMwp} from '../git/mwp.js';
-import {markProjectHistoryLoading, preloadProjectHistory} from '../git/project-history.js';
-import {buildSb3FromFractchTree} from '../git/fractch-tree.js';
-import {getAuth as getRoturGitAuth} from '../rotur/git-api.js';
 import {rememberPlatformProject} from '../community/publish.js';
 import {
     fetchWorkspace,
@@ -48,7 +43,7 @@ const cloneProjectFromRepo = async url => {
         import('../git/browser-git.js'),
         import('../git/fractch-tree.js')
     ]);
-    const {fs, dir} = await cloneRepo({url, onAuth: getRoturGitAuth});
+    const {fs, dir} = await cloneRepo({url});
     const sb3 = await buildSb3FromFractchTree({fs, dir});
     return {data: sb3 instanceof ArrayBuffer ? sb3 : await sb3.arrayBuffer()};
 };
