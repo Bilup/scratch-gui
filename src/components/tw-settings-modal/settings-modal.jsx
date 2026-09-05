@@ -1,4 +1,4 @@
-import {defineMessages, FormattedMessage, intlShape, injectIntl} from 'react-intl';
+﻿import {defineMessages, FormattedMessage, intlShape, injectIntl} from 'react-intl';
 import PropTypes from 'prop-types';
 import React from 'react';
 import classNames from 'classnames';
@@ -24,13 +24,14 @@ import MenuBarLayoutSetting from './menu-bar-layout.jsx';
 import MenuBarFeatureSettings from './menu-bar-settings.jsx';
 import {LanguagePage, ThemePage, WallpaperPage, FontsPage} from './appearance-pages.jsx';
 import LoadingScreenPage from './loading-screen-page.jsx';
+import FrostedGlassPage from './frosted-glass-page.jsx';
 import ShortcutManager from '../shortcut-manager/shortcut-manager.jsx';
 import {takeSettingsModalInitialView} from '../../lib/settings/modal-view.js';
 import isScratchDesktop from '../../lib/utils/isScratchDesktop.js';
 
 import {Settings, Zap, Blocks, Palette, PanelTop, Bug, GitBranch, Variable, Radio,
     Globe, SunMoon, Wallpaper, Type, Monitor, Keyboard, ChevronLeft,
-    Hourglass} from 'lucide-react';
+    Hourglass, Droplets} from 'lucide-react';
 import {connect} from 'react-redux';
 
 import {DEFINITIONS as DEBUGGER_SETTINGS, getSetting as getDebuggerSetting,
@@ -347,18 +348,6 @@ const settingDefinitions = {
             id: 'mw.settingsModal.windowAnimationHelp'
         }
     },
-    frostedGlass: {
-        label: {
-            defaultMessage: 'Frosted Glass Theme',
-            description: 'Frosted Glass Theme setting',
-            id: 'mw.settingsModal.frostedGlass'
-        },
-        help: {
-            defaultMessage: 'Applies a frosted glass blur effect to the editor UI, blocks palette, and stage area. Only affects the editor.',
-            description: 'Frosted Glass Theme setting help',
-            id: 'mw.settingsModal.frostedGlassHelp'
-        }
-    },
     squareStageCorners: {
         label: {
             defaultMessage: 'Square Stage Corners',
@@ -522,7 +511,6 @@ const CaseSensitiveLists = createBooleanSetting('CaseSensitiveLists', settingDef
 const RealLayerIndexes = createBooleanSetting('RealLayerIndexes', settingDefinitions.realLayerIndexes);
 const EnableStageResize = createBooleanSetting('EnableStageResize', settingDefinitions.enableStageResize);
 const WindowAnimation = createBooleanSetting('WindowAnimation', settingDefinitions.windowAnimation);
-const FrostedGlass = createBooleanSetting('FrostedGlass', settingDefinitions.frostedGlass);
 const SquareStageCorners = createBooleanSetting('SquareStageCorners', settingDefinitions.squareStageCorners);
 const HideDeleteButton = createBooleanSetting('HideDeleteButton', settingDefinitions.hideDeleteButton);
 const HideExtensionButton = createBooleanSetting('HideExtensionButton', settingDefinitions.hideExtensionButton);
@@ -560,7 +548,6 @@ DisableCompiler.propTypes = {
     value: PropTypes.bool,
     onChange: PropTypes.func.isRequired
 };
-
 const STYLE_OPTIONS = {
     'tab-style': [
         {value: 'mistwarp', labelId: 'mw.settingsModal.tabStyle.mistwarp', label: 'MistWarp'},
@@ -1172,9 +1159,8 @@ const pageConfigurations = {
         ]
     },
     experimental: {
-        sections: [
+        groups: [
             {
-                headerMessage: 'headerExperimental',
                 settings: [
                     {
                         component: RealLayerIndexes,
@@ -1189,7 +1175,11 @@ const pageConfigurations = {
                             value: props.caseSensitiveLists,
                             onChange: props.onCaseSensitiveListsChange
                         })
-                    },
+                    }
+                ]
+            },
+            {
+                settings: [
                     {
                         component: EnableStageResize,
                         props: props => ({
@@ -1202,13 +1192,6 @@ const pageConfigurations = {
                         props: props => ({
                             value: props.windowAnimation,
                             onChange: props.onWindowAnimationChange
-                        })
-                    },
-                    {
-                        component: FrostedGlass,
-                        props: props => ({
-                            value: props.frostedGlass,
-                            onChange: props.onFrostedGlassChange
                         })
                     }
                 ]
@@ -1247,14 +1230,46 @@ UnwrappedPageRenderer.propTypes = {
     config: PropTypes.object.isRequired,
     intl: intlShape.isRequired
 };
-
 const PageRenderer = injectIntl(UnwrappedPageRenderer);
+
+const UnwrappedExperimentalRenderer = ({config, intl, ...props}) => (
+    <Box className={styles.body}>
+        <Header>{intl.formatMessage(messages.headerExperimental)}</Header>
+        {config.groups.map((group, groupIdx) => (
+            <div
+                key={groupIdx}
+                className={styles.experimentalGroup}
+            >
+                {group.settings.map((setting, settingIdx) => {
+                    if (setting.condition && !setting.condition(props)) {
+                        return null;
+                    }
+                    const SettingComponent = setting.component;
+                    const settingProps = setting.props(props);
+                    return (
+                        <SettingComponent
+                            key={settingIdx}
+                            {...settingProps}
+                            intl={intl}
+                        />
+                    );
+                })}
+            </div>
+        ))}
+    </Box>
+);
+
+UnwrappedExperimentalRenderer.propTypes = {
+    config: PropTypes.object.isRequired,
+    intl: intlShape.isRequired
+};
+const ExperimentalRenderer = injectIntl(UnwrappedExperimentalRenderer);
 
 const GeneralPage = props => (<PageRenderer
     config={pageConfigurations.general}
     {...props}
 />);
-const ExperimentalPage = props => (<PageRenderer
+const ExperimentalPage = props => (<ExperimentalRenderer
     config={pageConfigurations.experimental}
     {...props}
 />);
@@ -1958,6 +1973,8 @@ const SettingsRouter = ({view, ...handlers}) => {
         return <WallpaperPage />;
     case 'fonts':
         return <FontsPage />;
+    case 'frostedGlass':
+        return <FrostedGlassPage />;
     case 'loadingScreen':
         return <LoadingScreenPage />;
     case 'debugger':
@@ -2073,6 +2090,11 @@ class SettingsModalComponent extends React.Component {
                         id: 'fonts',
                         label: intl.formatMessage({id: 'tw.menuBar.fonts', defaultMessage: 'Fonts'}),
                         icon: Type
+                    },
+                    {
+                        id: 'frostedGlass',
+                        label: intl.formatMessage({id: 'bl.frostedGlass.pageTitle', defaultMessage: 'Frosted Glass'}),
+                        icon: Droplets
                     },
                     {
                         id: 'editor',
@@ -2203,9 +2225,9 @@ class SettingsModalComponent extends React.Component {
                         >
                             <ChevronLeft size={18} />
                             <FormattedMessage
-                                defaultMessage="Settings"
+                                defaultMessage="Back"
                                 description="Back button in the settings window on mobile"
-                                id="tw.settingsModal.back"
+                                id="mw.settingsModal.back"
                             />
                         </button>
                         <SettingsRouter
@@ -2282,9 +2304,7 @@ SettingsModalComponent.propTypes = {
     cloudVariableServer: PropTypes.string,
     onCloudVariableServerChange: PropTypes.func,
     windowAnimation: PropTypes.bool,
-    onWindowAnimationChange: PropTypes.func,
-    frostedGlass: PropTypes.bool,
-    onFrostedGlassChange: PropTypes.func
+    onWindowAnimationChange: PropTypes.func
 };
 
 export default injectIntl(SettingsModalComponent);

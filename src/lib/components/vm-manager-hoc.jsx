@@ -106,8 +106,21 @@ const vmManagerHOC = function (WrappedComponent) {
                             log.error('Could not preload MistWarp version history:', error);
                         }
                     }
-                    if (!this._isMounted || loadGeneration !== this.loadGeneration) return false;
-                    handleLoadedProject(loadingState, canSave);
+                    if (process.env.DEBUG) {
+                        // eslint-disable-next-line no-console
+                        console.log('[VM Manager] Project loaded successfully');
+                    }
+                    this.props.onLoadedProject(this.props.loadingState, this.props.canSave);
+                    // tw: eagerly compile all scripts to avoid runtime compilation latency
+                    // This is safe to do after the project is parsed and targets are created.
+                    try {
+                        this.props.vm.runtime.precompile();
+                    } catch (e) {
+                        // Precompilation is best-effort; individual compile errors are handled by the compiler
+                        if (process.env.DEBUG) {
+                            console.warn('[VM Manager] Precompilation encountered errors:', e);
+                        }
+                    }
                     // Wrap in a setTimeout because skin loading in
                     // the renderer can be async.
                     const unchangedTimeout = setTimeout(() => {
