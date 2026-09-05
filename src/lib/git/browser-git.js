@@ -603,20 +603,8 @@ const getRemotes = async vm => {
 };
 
 const DEFAULT_CORS_PROXY = 'https://cors.isomorphic-git.org';
-const DIRECT_CORS_HOSTS = [
-    'git.bilup.org'
-];
 
-const corsProxyForUrl = url => {
-    try {
-        if (DIRECT_CORS_HOSTS.includes(new URL(url).host)) {
-            return null;
-        }
-    } catch (e) {
-        // ignore
-    }
-    return DEFAULT_CORS_PROXY;
-};
+const corsProxyForUrl = url => DEFAULT_CORS_PROXY;
 
 const corsProxyForRemote = async (fs, remoteName) => {
     try {
