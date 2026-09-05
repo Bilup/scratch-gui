@@ -156,7 +156,7 @@ import '!!style-loader!css-loader!./block-count.css';
 
 import ChevronDown from './ChevronDown.jsx';
 
-import bilupLogo from './bilup-logo.svg';
+import BilupLogo from './bilup-logo.jsx';
 import ninetiesLogo from './nineties_logo.svg';
 import catLogo from './cat_logo.svg';
 import prehistoricLogo from './prehistoric-logo.svg';
@@ -1602,11 +1602,9 @@ class MenuBar extends React.Component {
                         title={this.props.intl.formatMessage(twMessages.bilupHome)}
                         data-mw-item="__home"
                     >
-                        <img
-                            src={bilupLogo}
-                            alt={this.props.intl.formatMessage(twMessages.bilupLogoAlt)}
+                        <BilupLogo
                             className={styles.homeLogo}
-                            draggable={false}
+                            alt={this.props.intl.formatMessage(twMessages.bilupLogoAlt)}
                         />
                     </a>
                     {this.state.menuCollapsed && (
