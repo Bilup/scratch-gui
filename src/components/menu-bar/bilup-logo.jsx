@@ -7,7 +7,7 @@ const BilupLogo = ({className, alt}) => (
         aria-label={alt}
         version="1.1"
         xmlns="http://www.w3.org/2000/svg"
-        width="120"
+        width="125"
         height="50.70186"
         viewBox="0,0,120,50.70186"
     >
