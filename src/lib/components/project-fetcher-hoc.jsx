@@ -35,6 +35,7 @@ import {
 import {hasBridge, bridgeFetch} from '../community/embed-bridge.js';
 import {cachedFetchBuffer} from '../community/cached-fetch.js';
 import {markProjectHistoryLoading, preloadProjectHistory} from '../git/project-history.js';
+import {deleteRepo} from '../git/browser-git.js';
 
 const cloneProjectFromRepo = async url => {
     const [
