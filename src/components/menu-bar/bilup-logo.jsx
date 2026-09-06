@@ -7,9 +7,9 @@ const BilupLogo = ({className, alt}) => (
         aria-label={alt}
         version="1.1"
         xmlns="http://www.w3.org/2000/svg"
-        width="170.80177"
+        width="120"
         height="50.70186"
-        viewBox="0,0,170.80177,50.70186"
+        viewBox="0,0,120,50.70186"
     >
         <g transform="translate(-154.59911,-154.64907)">
             <g fill="currentColor" stroke="none" strokeMiterlimit="10">
