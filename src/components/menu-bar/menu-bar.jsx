@@ -892,10 +892,12 @@ handleClickLoadFromComputer () {
         } catch (e) {
             console.error(e);
             this.props.onCloseGitStatus('gitPushing');
-            this.showAutosaveNotification(`Push failed. ${e && e.message ? e.message : e}`, 'error');
-            return false;
-        } finally {
-            this.gitActionInFlight = false;
+            // eslint-disable-next-line no-alert
+            window.alert(this.props.intl.formatMessage({
+                defaultMessage: 'Push failed: ',
+                description: 'Alert prefix when a git push from the File menu fails',
+                id: 'mw.menuBar.gitPush.failed'
+            }) + (e && e.message ? e.message : e));
         }
     }
 
@@ -941,10 +943,12 @@ handleClickLoadFromComputer () {
         } catch (e) {
             console.error(e);
             this.props.onCloseGitStatus('gitPulling');
-            this.showAutosaveNotification(`Pull failed. ${e && e.message ? e.message : e}`, 'error');
-            return false;
-        } finally {
-            this.gitActionInFlight = false;
+            // eslint-disable-next-line no-alert
+            window.alert(this.props.intl.formatMessage({
+                defaultMessage: 'Pull failed: ',
+                description: 'Alert prefix when a git pull from the File menu fails',
+                id: 'mw.menuBar.gitPull.failed'
+            }) + (e && e.message ? e.message : e));
         }
     }
 

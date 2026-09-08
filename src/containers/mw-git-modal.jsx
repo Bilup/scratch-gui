@@ -40,6 +40,7 @@ import {
     writeReadme
 } from '../lib/git/browser-git.js';
 import {buildSb3FromFractchTree} from '../lib/git/fractch-tree.js';
+import buildCommitGraphLayout from '../lib/git/graph-layout.js';
 import {
     getFileContentAtCommit,
     getChangedFilesBetweenCommits,
@@ -313,14 +314,13 @@ export class TWGitModal extends React.Component {
             busyMessage: historyState.phase === 'loading' ? 'Loading version history…' : null,
             busyProgress: null,
             error: null,
-            initialized: preloaded.initialized || false,
-            currentBranch: preloaded.currentBranch || null,
-            branches: preloaded.branches || [],
-            commits: preloaded.commits || [],
-            graphBranches: preloaded.graphBranches || [],
-            graphNodes: preloaded.graphNodes || [],
-            graphBranchLogs: preloaded.graphBranchLogs || [],
-            branchColors: preloaded.branchColors || {},
+            initialized: false,
+            currentBranch: null,
+            branches: [],
+            commits: [],
+            graphBranches: [],
+            graphNodes: [],
+            commitGraphLayout: null,
             commitMessage: '',
             authorName: author.name,
             authorEmail: author.email,
@@ -545,8 +545,64 @@ export class TWGitModal extends React.Component {
             error: null
         });
         try {
-            const data = await preloadProjectHistory(this.props.vm, {force: true});
-            this.setState(current => stateFromHistory(data, current));
+            const status = await getRepoStatus(this.props.vm);
+            const hasCommits = Array.isArray(status.commits) && status.commits.length > 0;
+            const graph = status.initialized ?
+                (await computeCommitGraph({depth: 50})) :
+                {branches: [], nodes: [], branchLogs: []};
+
+            const palette = [
+                '#4db6ac', '#9575cd', '#64b5f6',
+                '#f06292', '#ba68c8', '#4fc3f7',
+                '#81c784', '#ffb74d', '#e57373'
+            ];
+            const branchColors = {};
+            graph.branches.forEach((b, i) => {
+                branchColors[b] = palette[i % palette.length];
+            });
+
+            let remotes = [];
+            let readme = this.state.readmeContent;
+            if (status.initialized) {
+                try {
+                    remotes = await getRemotes(this.props.vm);
+                } catch (e) {
+                    remotes = [];
+                }
+                // Don't clobber unsaved README edits with the on-disk copy.
+                if (!this.state.readmeDirty) {
+                    try {
+                        readme = await readReadme();
+                    } catch (e) {
+                        readme = '';
+                    }
+                }
+            }
+
+            this.setState({
+                initialized: Boolean(status.initialized) && hasCommits,
+                currentBranch: status.currentBranch,
+                branches: status.branches,
+                commits: status.commits,
+                graphBranches: graph.branches,
+                graphNodes: graph.nodes,
+                graphBranchLogs: graph.branchLogs,
+                branchColors,
+                commitGraphLayout: buildCommitGraphLayout({
+                    graphNodes: graph.nodes,
+                    graphBranchLogs: graph.branchLogs,
+                    branchColors
+                }),
+                changes: status.changes,
+                remotes,
+                readmeContent: readme,
+                pushRemote: (remotes[0] && remotes[0].name) || this.state.pushRemote,
+                pushBranch: this.state.pushBranch ||
+                    status.currentBranch ||
+                    (Array.isArray(status.branches) && status.branches.includes('main') ?
+                        'main' : (status.branches && status.branches[0])) ||
+                    ''
+            });
         } catch (err) {
             this.setState({error: err && err.message ? err.message : String(err)});
         } finally {
@@ -830,7 +886,7 @@ export class TWGitModal extends React.Component {
         try {
             await this.waitForPollIdle();
             await deleteRepo();
-            this.setState({diffData: null, diffFilepath: null, selectedCommitOid: null, commitFiles: []});
+            this.setState({diffData: null, diffFilepath: null, selectedCommitOid: null, commitFiles: [], commitGraphLayout: null});
             await this.refresh();
         } catch (err) {
             this.setState({error: err && err.message ? err.message : String(err)});
@@ -1251,6 +1307,7 @@ export class TWGitModal extends React.Component {
                 graphNodes={this.state.graphNodes}
                 graphBranchLogs={this.state.graphBranchLogs}
                 branchColors={this.state.branchColors}
+                commitGraphLayout={this.state.commitGraphLayout}
                 commitMessage={this.state.commitMessage}
                 authorName={this.state.authorName}
                 authorEmail={this.state.authorEmail}

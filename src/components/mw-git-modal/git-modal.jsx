@@ -36,6 +36,61 @@ import {takeGitModalInitialView} from '../../lib/git/modal-view.js';
 
 import styles from './git-modal.css';
 
+const pad2 = n => String(n).padStart(2, '0');
+
+const formatYmd = ts => {
+    const d = new Date(ts * 1000);
+    return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+};
+
+const formatYmdHms = ts => {
+    const d = new Date(ts * 1000);
+    return `${formatYmd(ts)} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+};
+
+const formatRelativeTime = (intl, ts) => {
+    if (!ts) return '';
+    const diff = Math.floor(Date.now() / 1000) - ts;
+    if (diff < 0) {
+        return intl.formatMessage(
+            {id: 'mw.git.time.on', defaultMessage: 'on {date}'},
+            {date: formatYmd(ts)}
+        );
+    }
+    if (diff < 60) {
+        return intl.formatMessage({id: 'mw.git.time.justNow', defaultMessage: 'just now'});
+    }
+    const min = Math.floor(diff / 60);
+    if (min < 60) {
+        return intl.formatMessage(
+            {id: 'mw.git.time.minutesAgo', defaultMessage: '{n} min ago'},
+            {n: min}
+        );
+    }
+    const hr = Math.floor(min / 60);
+    if (hr < 24) {
+        return intl.formatMessage(
+            {id: 'mw.git.time.hoursAgo', defaultMessage: '{n} h ago'},
+            {n: hr}
+        );
+    }
+    const day = Math.floor(hr / 24);
+    if (day < 30) {
+        return intl.formatMessage(
+            {id: 'mw.git.time.daysAgo', defaultMessage: '{n} d ago'},
+            {n: day}
+        );
+    }
+    const mo = Math.floor(day / 30);
+    if (mo < 12) {
+        return intl.formatMessage(
+            {id: 'mw.git.time.monthsAgo', defaultMessage: '{n} mo ago'},
+            {n: mo}
+        );
+    }
+    return formatYmd(ts);
+};
+
 const messages = defineMessages({
     title: {
         defaultMessage: 'Version Control',
@@ -363,7 +418,15 @@ class GitModalComponent extends React.Component {
     }
 
     renderHistory () {
-        const {commits, branchColors} = this.props;
+        const {intl, commits, branchColors, currentBranch, commitGraphLayout} = this.props;
+        const layout = commitGraphLayout || {
+            rows: [],
+            lanesCount: 1,
+            laneWidth: 14,
+            dotRadius: 4,
+            rowHeight: 28
+        };
+        const hasCommits = Array.isArray(layout.rows) && layout.rows.length > 0;
         return (
             <Box className={styles.section}>
                 <h2 className={styles.sectionTitle}>
@@ -373,43 +436,122 @@ class GitModalComponent extends React.Component {
                         id="mw.git.history.heading"
                     />
                 </h2>
-                {Array.isArray(commits) && commits.length ? (
+                {hasCommits ? (
                     <ul className={styles.commitList}>
-                        {commits.map(entry => {
-                            const branchesForCommit = (this.props.graphNodes || [])
-                                .find(n => n.oid === entry.oid);
-                            const chips = branchesForCommit ? branchesForCommit.branches : [];
-                            const message = entry.commit && entry.commit.message ?
-                                entry.commit.message.split('\n')[0] : '';
+                        {layout.rows.map(row => {
+                            const author = (row.commit && row.commit.author) || {};
+                            const authorName = author.name || '';
+                            const authorEmail = author.email || '';
+                            const subject = row.commit && row.commit.message ?
+                                row.commit.message.split('\n')[0] : '';
+                            const timestamp = author.timestamp || 0;
+                            const selected = this.props.selectedCommitOid === row.oid;
+                            const graphWidth = layout.lanesCount * layout.laneWidth + 12;
+                            const isHeadHere = Boolean(currentBranch) && row.branches.indexOf(currentBranch) !== -1;
+                            const laneX = lane => 6 + lane * layout.laneWidth;
+                            const rowY = idx => idx * layout.rowHeight + layout.rowHeight / 2;
+
+                            // Lane vertical rails (one per lane, full height).
+                            const railLines = [];
+                            for (let l = 0; l < layout.lanesCount; l++) {
+                                railLines.push(
+                                    <line
+                                        key={`rail-${l}`}
+                                        x1={laneX(l)}
+                                        y1={0}
+                                        x2={laneX(l)}
+                                        y2={layout.rows.length * layout.rowHeight}
+                                        stroke="rgba(125,135,150,0.35)"
+                                        strokeWidth="1"
+                                    />
+                                );
+                            }
+
+                            // Parent connections: from current row down to parent row,
+                            // either straight (same lane) or via an elbow.
+                            const parentLines = row.parents.map((p, idx) => {
+                                const ySelf = rowY(row.index);
+                                const yParent = p.index >= 0 ? rowY(p.index) : 0;
+                                const xSelf = laneX(row.lane);
+                                const xParent = laneX(p.lane);
+                                if (xSelf === xParent) {
+                                    if (p.index < row.index) {
+                                        return (
+                                            <line
+                                                key={`p-${idx}`}
+                                                x1={xSelf}
+                                                y1={yParent + layout.dotRadius}
+                                                x2={xSelf}
+                                                y2={ySelf - layout.dotRadius}
+                                                stroke={row.color}
+                                                strokeWidth="1.5"
+                                            />
+                                        );
+                                    }
+                                    return null;
+                                }
+                                // Elbow: down from parent, then horizontal to current lane, ending above the dot.
+                                const path = `M ${xParent} ${yParent + layout.dotRadius} V ${ySelf - layout.dotRadius} H ${xSelf}`;
+                                return (
+                                    <path
+                                        key={`p-${idx}`}
+                                        d={path}
+                                        stroke={row.color}
+                                        strokeWidth="1.5"
+                                        fill="none"
+                                    />
+                                );
+                            });
+
                             return (
                                 <li
-                                    key={entry.oid}
+                                    key={row.oid}
                                     className={classNames(styles.commitRow, {
-                                        [styles.commitRowSelected]: this.props.selectedCommitOid === entry.oid
+                                        [styles.commitRowSelected]: selected
                                     })}
                                 >
+                                    <svg
+                                        className={styles.commitGraph}
+                                        width={graphWidth}
+                                        height={layout.rowHeight}
+                                        viewBox={`0 0 ${graphWidth} ${layout.rowHeight}`}
+                                        aria-hidden="true"
+                                    >
+                                        {railLines}
+                                        {parentLines}
+                                        <circle
+                                            cx={laneX(row.lane)}
+                                            cy={rowY(row.index)}
+                                            r={layout.dotRadius}
+                                            fill={row.color}
+                                            stroke="rgba(0,0,0,0.4)"
+                                            strokeWidth="0.5"
+                                        />
+                                    </svg>
                                     <div
                                         className={styles.commitMain}
-                                        onClick={() => this.props.onSelectCommit(entry.oid)}
+                                        onClick={() => this.props.onSelectCommit(row.oid)}
                                     >
-                                        <span className={styles.commitMessage}>{message}</span>
+                                        <span className={styles.commitMessage}>{subject}</span>
                                         <span className={styles.commitMeta}>
-                                            <span className={styles.commitHash}>{entry.oid.slice(0, 7)}</span>
-                                            {chips.map(b => (
+                                            <span className={styles.commitHash}>{row.oid.slice(0, 7)}</span>
+                                            {row.branches.map(b => (
                                                 <span
                                                     key={b}
                                                     className={styles.branchChip}
                                                     style={{backgroundColor: (branchColors || {})[b] || '#888'}}
-                                                >{b}</span>
+                                                >{isHeadHere && b === currentBranch ? `@${b}` : b}</span>
                                             ))}
+                                            <span className={styles.commitTime}>{formatRelativeTime(intl, timestamp)}</span>
+                                            <span className={styles.commitAuthor}>{authorName}</span>
                                         </span>
                                     </div>
                                     <div className={styles.commitActions}>
                                         <button
                                             className={styles.iconButton}
-                                            data-oid={entry.oid}
+                                            data-oid={row.oid}
                                             disabled={this.props.busy}
-                                            title={this.props.intl.formatMessage({
+                                            title={intl.formatMessage({
                                                 defaultMessage: 'Restore this commit',
                                                 description: 'Restore commit tooltip',
                                                 id: 'mw.git.history.restore'
@@ -420,9 +562,9 @@ class GitModalComponent extends React.Component {
                                         </button>
                                         <button
                                             className={styles.iconButton}
-                                            data-oid={entry.oid}
+                                            data-oid={row.oid}
                                             disabled={this.props.busy}
-                                            title={this.props.intl.formatMessage({
+                                            title={intl.formatMessage({
                                                 defaultMessage: 'Download as .sb3',
                                                 description: 'Download commit tooltip',
                                                 id: 'mw.git.history.download'
@@ -445,51 +587,181 @@ class GitModalComponent extends React.Component {
                         />
                     </p>
                 )}
-                {this.props.selectedCommitOid && (
-                    <Box className={styles.subSection}>
-                        <h3 className={styles.subTitle}>
-                            <FormattedMessage
-                                defaultMessage="Files changed in this commit"
-                                description="Commit files heading"
-                                id="mw.git.history.files"
-                            />
-                        </h3>
-                        {Array.isArray(this.props.commitFiles) && this.props.commitFiles.length ? (
-                            <ul className={styles.fileList}>
-                                {this.props.commitFiles.map(file => (
-                                    <li
-                                        key={file.path}
-                                        className={classNames(styles.fileRow, {
-                                            [styles.fileRowClickable]: /\.(fractch|svg|json|txt|md)$/i.test(file.path)
-                                        })}
-                                        onClick={() => this.props.onDiffCommitFile(file.path)}
-                                    >
-                                        <FileBadge
-                                            filepath={file.path}
-                                            description={file.type}
-                                        />
-                                        <span className={styles.filePath}>{file.path}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        ) : (
-                            <p className={styles.muted}>
-                                <FormattedMessage
-                                    defaultMessage="No file-level changes to show."
-                                    description="No commit file changes"
-                                    id="mw.git.history.noFiles"
-                                />
-                            </p>
-                        )}
-                        {this.props.diffFilepath && this.props.diffContext === 'commit' && (
-                            <DiffViewer
-                                diff={this.props.diffData}
-                                loading={this.props.diffLoading}
-                                filepath={this.props.diffFilepath}
-                            />
-                        )}
-                    </Box>
+                {this.props.selectedCommitOid && this.renderCommitDetail()}
+            </Box>
+        );
+    }
+
+    renderCommitDetail () {
+        const {intl, commitGraphLayout, branchColors, selectedCommitOid} = this.props;
+        const layout = commitGraphLayout;
+        const row = layout && Array.isArray(layout.rows) ?
+            layout.rows.find(r => r.oid === selectedCommitOid) : null;
+        if (!row) {
+            return null;
+        }
+        const commit = row.commit || {};
+        const author = commit.author || {};
+        const committer = commit.committer || author;
+        const fullMessage = commit.message || '';
+        const subject = fullMessage.split('\n')[0] || '';
+        const body = fullMessage.indexOf('\n') >= 0 ?
+            fullMessage.split('\n').slice(1).join('\n').trim() : '';
+        const parentOids = (commit.parent && commit.parent.length ? commit.parent :
+            (commit.parents || []));
+        const files = Array.isArray(this.props.commitFiles) ? this.props.commitFiles : [];
+        const authorEmail = author.email || '';
+        const committerName = committer.name || author.name || '';
+        const committerEmail = committer.email || authorEmail;
+
+        return (
+            <Box className={styles.commitDetail}>
+                <Box className={styles.detailHeader}>
+                    <h3 className={styles.detailSubject}>{subject}</h3>
+                    <code className={styles.detailHash}>{row.oid.slice(0, 7)}</code>
+                </Box>
+                {body && (
+                    <pre className={styles.detailBody}>{body}</pre>
                 )}
+                <Box className={styles.detailGrid}>
+                    <Box className={styles.detailRow}>
+                        <span className={styles.detailLabel}>
+                            <FormattedMessage
+                                defaultMessage="Author"
+                                description="Commit author label"
+                                id="mw.git.history.detail.author"
+                            />
+                        </span>
+                        <span className={styles.detailValue}>
+                            {author.name || ''}{' '}
+                            {authorEmail && <span className={styles.detailMuted}>&lt;{authorEmail}&gt;</span>}
+                        </span>
+                    </Box>
+                    {committer && (committer.name || committer.email) && (committer.name !== author.name || committer.email !== authorEmail) && (
+                        <Box className={styles.detailRow}>
+                            <span className={styles.detailLabel}>
+                                <FormattedMessage
+                                    defaultMessage="Committer"
+                                    description="Commit committer label"
+                                    id="mw.git.history.detail.committer"
+                                />
+                            </span>
+                            <span className={styles.detailValue}>
+                                {committerName}{' '}
+                                {committerEmail && <span className={styles.detailMuted}>&lt;{committerEmail}&gt;</span>}
+                            </span>
+                        </Box>
+                    )}
+                    <Box className={styles.detailRow}>
+                        <span className={styles.detailLabel}>
+                            <FormattedMessage
+                                defaultMessage="Date"
+                                description="Commit date label"
+                                id="mw.git.history.detail.committedAt"
+                            />
+                        </span>
+                        <span className={styles.detailValue}>{formatYmdHms(author.timestamp || 0)}</span>
+                    </Box>
+                    <Box className={styles.detailRow}>
+                        <span className={styles.detailLabel}>
+                            {parentOids.length > 1 ? (
+                                <FormattedMessage
+                                    defaultMessage="Parents"
+                                    description="Commit parents label (merge)"
+                                    id="mw.git.history.detail.parents"
+                                />
+                            ) : (
+                                <FormattedMessage
+                                    defaultMessage="Parent"
+                                    description="Commit parent label"
+                                    id="mw.git.history.detail.parent"
+                                />
+                            )}
+                        </span>
+                        <span className={styles.detailValue}>
+                            {parentOids.length === 0 ? (
+                                <span className={styles.detailMuted}>
+                                    <FormattedMessage
+                                        defaultMessage="(root commit)"
+                                        description="Shown for root commit"
+                                        id="mw.git.history.detail.rootCommit"
+                                    />
+                                </span>
+                            ) : (
+                                parentOids.map((poid, i) => (
+                                    <code
+                                        key={poid}
+                                        className={classNames(styles.detailParent, styles.detailParentLink)}
+                                        onClick={() => this.props.onSelectCommit(poid)}
+                                    >{(poid || '').slice(0, 7)}</code>
+                                ))
+                            )}
+                        </span>
+                    </Box>
+                    {row.branches && row.branches.length > 0 && (
+                        <Box className={styles.detailRow}>
+                            <span className={styles.detailLabel}>
+                                <FormattedMessage
+                                    defaultMessage="Branches"
+                                    description="Branches label in commit detail"
+                                    id="mw.git.history.detail.branches"
+                                />
+                            </span>
+                            <span className={styles.detailValue}>
+                                {row.branches.map(b => (
+                                    <span
+                                        key={b}
+                                        className={styles.branchChip}
+                                        style={{backgroundColor: (branchColors || {})[b] || '#888'}}
+                                    >{b}</span>
+                                ))}
+                            </span>
+                        </Box>
+                    )}
+                </Box>
+                <Box className={styles.subSection}>
+                    <h3 className={styles.subTitle}>
+                        <FormattedMessage
+                            defaultMessage="Files changed in this commit"
+                            description="Commit files heading"
+                            id="mw.git.history.files"
+                        />
+                    </h3>
+                    {files.length ? (
+                        <ul className={styles.fileList}>
+                            {files.map(file => (
+                                <li
+                                    key={file.path}
+                                    className={classNames(styles.fileRow, {
+                                        [styles.fileRowClickable]: /\.(fractch|svg|json|txt|md)$/i.test(file.path)
+                                    })}
+                                    onClick={() => this.props.onDiffCommitFile(file.path)}
+                                >
+                                    <FileBadge
+                                        filepath={file.path}
+                                        description={file.type}
+                                    />
+                                    <span className={styles.filePath}>{file.path}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p className={styles.muted}>
+                            <FormattedMessage
+                                defaultMessage="No file-level changes to show."
+                                description="No commit file changes"
+                                id="mw.git.history.noFiles"
+                            />
+                        </p>
+                    )}
+                    {this.props.diffFilepath && this.props.diffContext === 'commit' && (
+                        <DiffViewer
+                            diff={this.props.diffData}
+                            loading={this.props.diffLoading}
+                            filepath={this.props.diffFilepath}
+                        />
+                    )}
+                </Box>
             </Box>
         );
     }
@@ -1132,7 +1404,15 @@ GitModalComponent.propTypes = {
     branches: PropTypes.arrayOf(PropTypes.string),
     commits: PropTypes.arrayOf(PropTypes.object),
     graphNodes: PropTypes.arrayOf(PropTypes.object),
+    graphBranchLogs: PropTypes.arrayOf(PropTypes.object),
     branchColors: PropTypes.object,
+    commitGraphLayout: PropTypes.shape({
+        rows: PropTypes.arrayOf(PropTypes.object),
+        lanesCount: PropTypes.number,
+        laneWidth: PropTypes.number,
+        dotRadius: PropTypes.number,
+        rowHeight: PropTypes.number
+    }),
     commitMessage: PropTypes.string,
     newBranchName: PropTypes.string,
     mergeSourceBranch: PropTypes.string,
