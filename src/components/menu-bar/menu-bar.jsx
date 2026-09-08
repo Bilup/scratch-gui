@@ -751,7 +751,11 @@ class MenuBar extends React.Component {
             console.error(e);
             this.props.onCloseGitStatus('gitPushing');
             // eslint-disable-next-line no-alert
-            window.alert(`Push failed: ${e && e.message ? e.message : e}`);
+            window.alert(this.props.intl.formatMessage({
+                defaultMessage: 'Push failed: ',
+                description: 'Alert prefix when a git push from the File menu fails',
+                id: 'mw.menuBar.gitPush.failed'
+            }) + (e && e.message ? e.message : e));
         }
     }
 
@@ -795,7 +799,11 @@ class MenuBar extends React.Component {
             console.error(e);
             this.props.onCloseGitStatus('gitPulling');
             // eslint-disable-next-line no-alert
-            window.alert(`Pull failed: ${e && e.message ? e.message : e}`);
+            window.alert(this.props.intl.formatMessage({
+                defaultMessage: 'Pull failed: ',
+                description: 'Alert prefix when a git pull from the File menu fails',
+                id: 'mw.menuBar.gitPull.failed'
+            }) + (e && e.message ? e.message : e));
         }
     }
 

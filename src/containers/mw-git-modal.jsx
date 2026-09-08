@@ -42,6 +42,7 @@ import {
     writeReadme
 } from '../lib/git/browser-git.js';
 import {buildSb3FromFractchTree} from '../lib/git/fractch-tree.js';
+import buildCommitGraphLayout from '../lib/git/graph-layout.js';
 import {
     getFileContentAtCommit,
     getChangedFilesBetweenCommits,
@@ -255,6 +256,7 @@ class TWGitModal extends React.Component {
             commits: [],
             graphBranches: [],
             graphNodes: [],
+            commitGraphLayout: null,
             commitMessage: '',
             authorName: author.name,
             authorEmail: author.email,
@@ -492,6 +494,11 @@ class TWGitModal extends React.Component {
                 graphNodes: graph.nodes,
                 graphBranchLogs: graph.branchLogs,
                 branchColors,
+                commitGraphLayout: buildCommitGraphLayout({
+                    graphNodes: graph.nodes,
+                    graphBranchLogs: graph.branchLogs,
+                    branchColors
+                }),
                 changes: status.changes,
                 remotes,
                 readmeContent: readme,
@@ -785,7 +792,7 @@ class TWGitModal extends React.Component {
         try {
             await this.waitForPollIdle();
             await deleteRepo();
-            this.setState({diffData: null, diffFilepath: null, selectedCommitOid: null, commitFiles: []});
+            this.setState({diffData: null, diffFilepath: null, selectedCommitOid: null, commitFiles: [], commitGraphLayout: null});
             await this.refresh();
         } catch (err) {
             this.setState({error: err && err.message ? err.message : String(err)});
@@ -1213,6 +1220,7 @@ class TWGitModal extends React.Component {
                 graphNodes={this.state.graphNodes}
                 graphBranchLogs={this.state.graphBranchLogs}
                 branchColors={this.state.branchColors}
+                commitGraphLayout={this.state.commitGraphLayout}
                 commitMessage={this.state.commitMessage}
                 authorName={this.state.authorName}
                 authorEmail={this.state.authorEmail}
