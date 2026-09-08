@@ -10,6 +10,7 @@ import {
     buildSb3FromFractchTree
 } from './fractch-tree.js';
 import RestorePointAPI from '../api/restore-points.js';
+import {getFormattedMessage} from './i18n.js';
 
 const FS_NAME = 'bilup-git';
 const REPO_DIR = '/repo';
@@ -152,7 +153,12 @@ const stageAll = async (fs, dir, {onProgress} = {}) => {
     }
 
     if (typeof onProgress === 'function') {
-        onProgress({phase: 'status', message: 'Computing file status…', completed: 0, total: 1});
+        onProgress({
+            phase: 'status',
+            message: getFormattedMessage('mw.git.computing', 'Computing file status…'),
+            completed: 0,
+            total: 1
+        });
     }
 
     const matrix = await git.statusMatrix({fs, dir});
@@ -168,7 +174,7 @@ const stageAll = async (fs, dir, {onProgress} = {}) => {
         lastReport = now;
         onProgress({
             phase: 'stage',
-            message: 'Staging files…',
+            message: getFormattedMessage('mw.git.staging', 'Staging files…'),
             completed,
             total
         });
@@ -277,7 +283,12 @@ const initRepo = async ({defaultBranch = 'main', vm = null, initialMessage = 'In
     const already = await repoExists();
     if (!already) {
         if (typeof onProgress === 'function') {
-            onProgress({phase: 'init', message: 'Initializing repository…', completed: 0, total: 1});
+            onProgress({
+                phase: 'init',
+                message: getFormattedMessage('mw.git.initializing', 'Initializing repository…'),
+                completed: 0,
+                total: 1
+            });
         }
 
         try {
@@ -287,7 +298,12 @@ const initRepo = async ({defaultBranch = 'main', vm = null, initialMessage = 'In
 
             if (vm) {
                 if (typeof onProgress === 'function') {
-                    onProgress({phase: 'snapshot', message: 'Saving project snapshot…', completed: 0, total: 1});
+                    onProgress({
+                        phase: 'snapshot',
+                        message: getFormattedMessage('mw.git.savingSnapshot', 'Saving project snapshot…'),
+                        completed: 0,
+                        total: 1
+                    });
                 }
 
                 if (typeof vm.saveProjectSb3 !== 'function') {
@@ -301,7 +317,7 @@ const initRepo = async ({defaultBranch = 'main', vm = null, initialMessage = 'In
             await git.commit({
                 fs,
                 dir: REPO_DIR,
-                message: initialMessage,
+                message: getFormattedMessage('mw.git.initialCommit', 'Initialize repository'),
                 author: getDefaultAuthor()
             });
         } catch (e) {
@@ -666,7 +682,11 @@ const push = async ({vm, remote, branch, ref, setUpstream = true, onProgress, ..
             if (typeof onProgress === 'function' && evt) {
                 onProgress({
                     phase: 'push',
-                    message: `Pushing… ${evt.phase || ''}`.trim(),
+                    message: getFormattedMessage(
+                        'mw.git.pushProgress',
+                        'Pushing… {phase}',
+                        {phase: evt.phase || ''}
+                    ).trim(),
                     completed: evt.loaded,
                     total: evt.total
                 });
@@ -721,7 +741,11 @@ const pull = async ({vm, remote, ref, author, onAuth, onProgress} = {}) => {
             if (typeof onProgress === 'function' && evt) {
                 onProgress({
                     phase: 'pull',
-                    message: `Pulling… ${evt.phase || ''}`.trim(),
+                    message: getFormattedMessage(
+                        'mw.git.pullProgress',
+                        'Pulling… {phase}',
+                        {phase: evt.phase || ''}
+                    ).trim(),
                     completed: evt.loaded,
                     total: evt.total
                 });
@@ -764,7 +788,12 @@ const commitProject = async ({vm, message, author, onProgress} = {}) => {
     }
 
     if (typeof onProgress === 'function') {
-        onProgress({phase: 'snapshot', message: 'Saving project snapshot…', completed: 0, total: 1});
+        onProgress({
+            phase: 'snapshot',
+            message: getFormattedMessage('mw.git.savingSnapshot', 'Saving project snapshot…'),
+            completed: 0,
+            total: 1
+        });
     }
 
     try {
@@ -797,7 +826,12 @@ const commitProject = async ({vm, message, author, onProgress} = {}) => {
         if (author) setDefaultAuthor(author);
 
         if (typeof onProgress === 'function') {
-            onProgress({phase: 'commit', message: 'Creating commit…', completed: 1, total: 1});
+            onProgress({
+                phase: 'commit',
+                message: getFormattedMessage('mw.git.commit', 'Creating commit…'),
+                completed: 1,
+                total: 1
+            });
         }
 
 
@@ -1211,7 +1245,10 @@ const commitSb3 = async ({
     }
 
     if (typeof onProgress === 'function') {
-        onProgress({phase: 'snapshot', message: 'Converting project to fractch…'});
+        onProgress({
+            phase: 'snapshot',
+            message: getFormattedMessage('mw.git.convertingFractch', 'Converting project to fractch…')
+        });
     }
 
     await writeProjectToFractchTree({
@@ -1332,7 +1369,11 @@ const cloneRepo = async ({url, ref, onAuth, onProgress} = {}) => {
                 if (typeof onProgress === 'function' && evt) {
                     onProgress({
                         phase: 'clone',
-                        message: `Cloning… ${evt.phase || ''}`.trim(),
+                        message: getFormattedMessage(
+                            'mw.git.cloneProgress',
+                            'Cloning… {phase}',
+                            {phase: evt.phase || ''}
+                        ).trim(),
                         completed: evt.loaded,
                         total: evt.total
                     });

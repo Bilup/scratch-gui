@@ -91,6 +91,31 @@ const messages = defineMessages({
         defaultMessage: 'Generate a GitHub token',
         description: 'Link to GitHub token page',
         id: 'mw.git.remote.githubTokenLink'
+    },
+    serviceOther: {
+        defaultMessage: 'Other',
+        description: 'Remote service option for non-GitHub/GitLab/Gitee hosts',
+        id: 'mw.git.remote.serviceOther'
+    },
+    tokenPlaceholder: {
+        defaultMessage: 'Personal access token…',
+        description: 'Placeholder for the personal access token input',
+        id: 'mw.git.remote.tokenPlaceholder'
+    },
+    readmePlaceholder: {
+        defaultMessage: '# My Project\n\nDescribe your project here…',
+        description: 'Placeholder for the README editor',
+        id: 'mw.git.readme.placeholder'
+    },
+    sidebarAriaLabel: {
+        defaultMessage: 'Version control sections',
+        description: 'Accessible label for the git sidebar navigation',
+        id: 'mw.git.sidebar.ariaLabel'
+    },
+    working: {
+        defaultMessage: 'Working…',
+        description: 'Generic busy message',
+        id: 'mw.git.working'
     }
 });
 
@@ -811,7 +836,9 @@ class GitModalComponent extends React.Component {
                         <option value="github">GitHub</option>
                         <option value="gitlab">GitLab</option>
                         <option value="gitee">Gitee</option>
-                        <option value="other">Other</option>
+                        <option value="other">
+                            {this.props.intl.formatMessage(messages.serviceOther)}
+                        </option>
                     </select>
                 </Box>
                 <Box className={styles.field}>
@@ -861,7 +888,7 @@ class GitModalComponent extends React.Component {
                         type="password"
                         value={this.props.remoteToken}
                         onChange={this.props.onChangeRemoteToken}
-                        placeholder="Personal access token…"
+                        placeholder={this.props.intl.formatMessage(messages.tokenPlaceholder)}
                     />
                     <p className={styles.muted}>
                         <FormattedMessage
@@ -974,7 +1001,7 @@ class GitModalComponent extends React.Component {
                     value={this.props.readmeContent}
                     onChange={this.props.onChangeReadme}
                     disabled={this.props.busy}
-                    placeholder={'# My Project\n\nDescribe your project here…'}
+                    placeholder={this.props.intl.formatMessage(messages.readmePlaceholder)}
                 />
                 <Box className={styles.rowButtons}>
                     <button
@@ -1039,7 +1066,7 @@ class GitModalComponent extends React.Component {
             >
                 <ModalSidebarLayout>
                     <ModalSidebar
-                        ariaLabel="Version control sections"
+                        ariaLabel={intl.formatMessage(messages.sidebarAriaLabel)}
                         width="narrow"
                         footer={
                             <ModalSidebarFooter>
@@ -1072,7 +1099,7 @@ class GitModalComponent extends React.Component {
                     <ModalSidebarContent className={styles.contentArea}>
                         {this.props.busy && (
                             <Box className={styles.busyBar}>
-                                <span>{this.props.busyMessage || 'Working…'}</span>
+                                <span>{this.props.busyMessage || intl.formatMessage(messages.working)}</span>
                                 {typeof this.props.busyProgress === 'number' && (
                                     <div className={styles.progressBar}>
                                         <div
