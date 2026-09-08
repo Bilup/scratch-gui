@@ -3,6 +3,7 @@ import {getItem as getStorageItem} from '../lib/utils/safe-storage.js';
 import React from 'react';
 import bindAll from 'lodash.bindall';
 import {connect} from 'react-redux';
+import {defineMessages, injectIntl, intlShape} from 'react-intl';
 import VM from 'scratch-vm';
 
 import GitModalComponent from '../components/mw-git-modal/git-modal.jsx';
@@ -51,6 +52,169 @@ import {
 const TOKEN_KEY = 'mw:git-token';
 const DEFAULT_BRANCH_KEY = 'mw:git-default-branch';
 const AUTO_COMMIT_KEY = 'mw:git-autocommit';
+
+const messages = defineMessages({
+    working: {
+        defaultMessage: 'Working…',
+        description: 'Generic busy fallback',
+        id: 'mw.git.working'
+    },
+    refreshing: {
+        defaultMessage: 'Refreshing…',
+        description: 'Busy message while refreshing repo status',
+        id: 'mw.git.busy.refreshing'
+    },
+    initializing: {
+        defaultMessage: 'Initializing repository…',
+        description: 'Busy message while initializing the repository',
+        id: 'mw.git.busy.initializing'
+    },
+    cloning: {
+        defaultMessage: 'Cloning…',
+        description: 'Busy message while cloning a repository',
+        id: 'mw.git.busy.cloning'
+    },
+    committing: {
+        defaultMessage: 'Committing…',
+        description: 'Busy message while committing',
+        id: 'mw.git.busy.committing'
+    },
+    undoing: {
+        defaultMessage: 'Undoing commit…',
+        description: 'Busy message while undoing a commit',
+        id: 'mw.git.busy.undoing'
+    },
+    creatingBranch: {
+        defaultMessage: 'Creating branch…',
+        description: 'Busy message while creating a branch',
+        id: 'mw.git.busy.creatingBranch'
+    },
+    checkingOut: {
+        defaultMessage: 'Checking out branch…',
+        description: 'Busy message while checking out a branch',
+        id: 'mw.git.busy.checkingOut'
+    },
+    restoring: {
+        defaultMessage: 'Restoring commit…',
+        description: 'Busy message while restoring a commit',
+        id: 'mw.git.busy.restoring'
+    },
+    preparingDownload: {
+        defaultMessage: 'Preparing download…',
+        description: 'Busy message while preparing a commit download',
+        id: 'mw.git.busy.preparingDownload'
+    },
+    deletingRepo: {
+        defaultMessage: 'Deleting repository…',
+        description: 'Busy message while deleting the repository',
+        id: 'mw.git.busy.deletingRepo'
+    },
+    deletingBranch: {
+        defaultMessage: 'Deleting branch…',
+        description: 'Busy message while deleting a branch',
+        id: 'mw.git.busy.deletingBranch'
+    },
+    addingRemote: {
+        defaultMessage: 'Adding remote…',
+        description: 'Busy message while adding a remote',
+        id: 'mw.git.busy.addingRemote'
+    },
+    removingRemote: {
+        defaultMessage: 'Removing remote…',
+        description: 'Busy message while removing a remote',
+        id: 'mw.git.busy.removingRemote'
+    },
+    pushing: {
+        defaultMessage: 'Pushing {branch} to {remote}…',
+        description: 'Busy message while pushing a branch to a remote',
+        id: 'mw.git.busy.pushing'
+    },
+    pushed: {
+        defaultMessage: 'Pushed',
+        description: 'Brief confirmation after a successful push',
+        id: 'mw.git.pushed'
+    },
+    savingReadme: {
+        defaultMessage: 'Saving README…',
+        description: 'Busy message while saving the README',
+        id: 'mw.git.busy.savingReadme'
+    },
+    analyzingMerge: {
+        defaultMessage: 'Analyzing merge…',
+        description: 'Busy message while analyzing a merge',
+        id: 'mw.git.busy.analyzingMerge'
+    },
+    preparingMerge: {
+        defaultMessage: 'Preparing merge…',
+        description: 'Busy message while preparing an editor merge',
+        id: 'mw.git.busy.preparingMerge'
+    },
+    merging: {
+        defaultMessage: 'Merging…',
+        description: 'Busy message while applying a merge',
+        id: 'mw.git.busy.merging'
+    },
+    cloneUrlRequired: {
+        defaultMessage: 'Enter a git URL to clone',
+        description: 'Error when cloning with an empty URL',
+        id: 'mw.git.error.cloneUrl'
+    },
+    notFractch: {
+        defaultMessage: 'That repository is not a fractch project (no .fractch files found).',
+        description: 'Error when cloning a non-fractch repository',
+        id: 'mw.git.error.notFractch'
+    },
+    commitMessageRequired: {
+        defaultMessage: 'Commit message is required',
+        description: 'Error when committing with an empty message',
+        id: 'mw.git.error.commitMessageRequired'
+    },
+    undoDetached: {
+        defaultMessage: 'Cannot undo commit while detached. Check out a branch first.',
+        description: 'Error when undoing a commit in detached HEAD state',
+        id: 'mw.git.error.undoDetached'
+    },
+    noPreviousCommit: {
+        defaultMessage: 'No previous commit to undo to.',
+        description: 'Error when there is no earlier commit to undo to',
+        id: 'mw.git.error.noPreviousCommit'
+    },
+    branchNameRequired: {
+        defaultMessage: 'Branch name is required',
+        description: 'Error when creating a branch with an empty name',
+        id: 'mw.git.error.branchNameRequired'
+    },
+    noProjectData: {
+        defaultMessage: 'No project data found at this commit',
+        description: 'Error when a commit has no downloadable project data',
+        id: 'mw.git.error.noProjectData'
+    },
+    remoteRequired: {
+        defaultMessage: 'Remote name and URL are required',
+        description: 'Error when adding a remote without a name or URL',
+        id: 'mw.git.error.remoteRequired'
+    },
+    selectRemote: {
+        defaultMessage: 'Select a remote to push to',
+        description: 'Error when pushing with no remote selected',
+        id: 'mw.git.error.selectRemote'
+    },
+    selectBranch: {
+        defaultMessage: 'Select a branch to push',
+        description: 'Error when pushing with no branch selected',
+        id: 'mw.git.error.selectBranch'
+    },
+    selectDifferentBranch: {
+        defaultMessage: 'Select a different branch to merge.',
+        description: 'Error when merging a branch into itself',
+        id: 'mw.git.error.selectDifferentBranch'
+    },
+    binaryConflicts: {
+        defaultMessage: 'Only binary files conflict here; pick a side for each file instead.',
+        description: 'Message when a merge only has binary conflicts',
+        id: 'mw.git.error.binaryConflicts'
+    }
+});
 
 const readLocal = (key, fallback) => {
     try {
@@ -122,8 +286,8 @@ class TWGitModal extends React.Component {
             commitFiles: [],
             // Settings
             defaultBranch: readLocal(DEFAULT_BRANCH_KEY, 'main'),
-            autoCommit: readLocal(AUTO_COMMIT_KEY, 'false') === 'true',
-            };
+            autoCommit: readLocal(AUTO_COMMIT_KEY, 'false') === 'true'
+        };
 
         this._lastProgressUpdate = 0;
 
@@ -176,8 +340,8 @@ class TWGitModal extends React.Component {
             'handleChangeDefaultBranch',
             'handleToggleAutoCommit',
             'handleChangeReadme',
-            'handleSaveReadme',
-            ]);
+            'handleSaveReadme'
+        ]);
     }
 
     componentDidMount () {
@@ -264,7 +428,7 @@ class TWGitModal extends React.Component {
         const total = typeof progress.total === 'number' ? progress.total : null;
         const ratio = completed !== null && total && total > 0 ? Math.max(0, Math.min(1, completed / total)) : null;
 
-        let message = progress.message || 'Working…';
+        let message = progress.message || this.props.intl.formatMessage(messages.working);
         if (ratio !== null) {
             message = `${message} ${Math.round(ratio * 100)}%`;
         } else if (completed !== null && completed > 0) {
@@ -278,7 +442,12 @@ class TWGitModal extends React.Component {
     }
 
     async refresh () {
-        this.setState({busy: true, busyMessage: 'Refreshing…', busyProgress: null, error: null});
+        this.setState({
+            busy: true,
+            busyMessage: this.props.intl.formatMessage(messages.refreshing),
+            busyProgress: null,
+            error: null
+        });
         try {
             const status = await getRepoStatus(this.props.vm);
             const hasCommits = Array.isArray(status.commits) && status.commits.length > 0;
@@ -345,7 +514,12 @@ class TWGitModal extends React.Component {
     }
 
     async handleInit () {
-        this.setState({busy: true, busyMessage: 'Initializing repository…', busyProgress: 0, error: null});
+        this.setState({
+            busy: true,
+            busyMessage: this.props.intl.formatMessage(messages.initializing),
+            busyProgress: 0,
+            error: null
+        });
         try {
             await this.waitForPollIdle();
             await initRepo({
@@ -372,7 +546,7 @@ class TWGitModal extends React.Component {
     async handleClone () {
         const url = (this.state.cloneUrl || '').trim();
         if (!url) {
-            this.setState({error: 'Enter a git URL to clone'});
+            this.setState({error: this.props.intl.formatMessage(messages.cloneUrlRequired)});
             return;
         }
         // Cloning replaces the current project (and any repo). Confirm first when
@@ -384,7 +558,12 @@ class TWGitModal extends React.Component {
         this.setState({cloneConfirm: false});
         const token = this.state.remoteToken;
         const username = (this.state.authorName || '').trim();
-        this.setState({busy: true, busyMessage: 'Cloning…', busyProgress: null, error: null});
+        this.setState({
+            busy: true,
+            busyMessage: this.props.intl.formatMessage(messages.cloning),
+            busyProgress: null,
+            error: null
+        });
         try {
             await this.waitForPollIdle();
             const cloneOpts = {url, onProgress: this.handleGitProgress};
@@ -408,7 +587,7 @@ class TWGitModal extends React.Component {
     async loadProjectFromClonedRepo () {
         if (!(await repoHasFractch())) {
             await deleteRepo();
-            throw new Error('That repository is not a fractch project (no .fractch files found).');
+            throw new Error(this.props.intl.formatMessage(messages.notFractch));
         }
 
         const fs = getFs();
@@ -425,11 +604,16 @@ class TWGitModal extends React.Component {
     async handleCommit () {
         const message = this.state.commitMessage.trim();
         if (!message) {
-            this.setState({error: 'Commit message is required'});
+            this.setState({error: this.props.intl.formatMessage(messages.commitMessageRequired)});
             return;
         }
 
-        this.setState({busy: true, busyMessage: 'Committing…', busyProgress: 0, error: null});
+        this.setState({
+            busy: true,
+            busyMessage: this.props.intl.formatMessage(messages.committing),
+            busyProgress: 0,
+            error: null
+        });
         try {
             await this.waitForPollIdle();
             await commitProject({
@@ -453,19 +637,24 @@ class TWGitModal extends React.Component {
     async handleUndoCommit () {
         if (!this.state.initialized) return;
         if (!this.state.currentBranch) {
-            this.setState({error: 'Cannot undo commit while detached. Check out a branch first.'});
+            this.setState({error: this.props.intl.formatMessage(messages.undoDetached)});
             return;
         }
 
         if (!Array.isArray(this.state.commits) || this.state.commits.length < 2) {
-            this.setState({error: 'No previous commit to undo to.'});
+            this.setState({error: this.props.intl.formatMessage(messages.noPreviousCommit)});
             return;
         }
 
         const head = this.state.commits[0];
         const previous = this.state.commits[1];
 
-        this.setState({busy: true, busyMessage: 'Undoing commit…', busyProgress: null, error: null});
+        this.setState({
+            busy: true,
+            busyMessage: this.props.intl.formatMessage(messages.undoing),
+            busyProgress: null,
+            error: null
+        });
         try {
             await this.waitForPollIdle();
             const snapshot = await readSnapshotAtCommit(previous.oid);
@@ -496,11 +685,16 @@ class TWGitModal extends React.Component {
     async handleCreateBranch () {
         const ref = this.state.newBranchName.trim();
         if (!ref) {
-            this.setState({error: 'Branch name is required'});
+            this.setState({error: this.props.intl.formatMessage(messages.branchNameRequired)});
             return;
         }
 
-        this.setState({busy: true, busyMessage: 'Creating branch…', busyProgress: null, error: null});
+        this.setState({
+            busy: true,
+            busyMessage: this.props.intl.formatMessage(messages.creatingBranch),
+            busyProgress: null,
+            error: null
+        });
         try {
             await this.waitForPollIdle();
             await createBranch({ref, vm: this.props.vm});
@@ -518,7 +712,12 @@ class TWGitModal extends React.Component {
         const ref = e && e.target ? e.target.value : null;
         if (!ref) return;
 
-        this.setState({busy: true, busyMessage: 'Checking out branch…', busyProgress: null, error: null});
+        this.setState({
+            busy: true,
+            busyMessage: this.props.intl.formatMessage(messages.checkingOut),
+            busyProgress: null,
+            error: null
+        });
         try {
             await this.waitForPollIdle();
             await checkoutBranchAndRestore({vm: this.props.vm, ref});
@@ -534,7 +733,12 @@ class TWGitModal extends React.Component {
         const oid = e && e.currentTarget ? e.currentTarget.dataset.oid : null;
         if (!oid) return;
 
-        this.setState({busy: true, busyMessage: 'Restoring commit…', busyProgress: null, error: null});
+        this.setState({
+            busy: true,
+            busyMessage: this.props.intl.formatMessage(messages.restoring),
+            busyProgress: null,
+            error: null
+        });
         try {
             await this.waitForPollIdle();
             await checkoutCommitAndRestore({vm: this.props.vm, oid});
@@ -550,11 +754,16 @@ class TWGitModal extends React.Component {
         const oid = e && e.currentTarget ? e.currentTarget.dataset.oid : null;
         if (!oid) return;
 
-        this.setState({busy: true, busyMessage: 'Preparing download…', busyProgress: null, error: null});
+        this.setState({
+            busy: true,
+            busyMessage: this.props.intl.formatMessage(messages.preparingDownload),
+            busyProgress: null,
+            error: null
+        });
         try {
             const sb3ArrayBuffer = await readSnapshotAtCommit(oid);
             if (!sb3ArrayBuffer || sb3ArrayBuffer.byteLength === 0) {
-                throw new Error('No project data found at this commit');
+                throw new Error(this.props.intl.formatMessage(messages.noProjectData));
             }
 
             const short = oid.slice(0, 7);
@@ -567,7 +776,12 @@ class TWGitModal extends React.Component {
     }
 
     async handleDeleteRepo () {
-        this.setState({busy: true, busyMessage: 'Deleting repository…', busyProgress: null, error: null});
+        this.setState({
+            busy: true,
+            busyMessage: this.props.intl.formatMessage(messages.deletingRepo),
+            busyProgress: null,
+            error: null
+        });
         try {
             await this.waitForPollIdle();
             await deleteRepo();
@@ -589,7 +803,12 @@ class TWGitModal extends React.Component {
         }
         if (!ref) return;
 
-        this.setState({busy: true, busyMessage: 'Deleting branch…', busyProgress: null, error: null});
+        this.setState({
+            busy: true,
+            busyMessage: this.props.intl.formatMessage(messages.deletingBranch),
+            busyProgress: null,
+            error: null
+        });
         try {
             await deleteBranch(ref);
             await this.refresh();
@@ -728,10 +947,15 @@ class TWGitModal extends React.Component {
         const name = this.state.newRemoteName.trim();
         const url = this.state.newRemoteUrl.trim();
         if (!name || !url) {
-            this.setState({error: 'Remote name and URL are required'});
+            this.setState({error: this.props.intl.formatMessage(messages.remoteRequired)});
             return;
         }
-        this.setState({busy: true, busyMessage: 'Adding remote…', busyProgress: null, error: null});
+        this.setState({
+            busy: true,
+            busyMessage: this.props.intl.formatMessage(messages.addingRemote),
+            busyProgress: null,
+            error: null
+        });
         try {
             await addRemote({vm: this.props.vm, name, url});
             this.setState({newRemoteUrl: ''});
@@ -751,7 +975,12 @@ class TWGitModal extends React.Component {
             name = eOrName.currentTarget.dataset.name || null;
         }
         if (!name) return;
-        this.setState({busy: true, busyMessage: 'Removing remote…', busyProgress: null, error: null});
+        this.setState({
+            busy: true,
+            busyMessage: this.props.intl.formatMessage(messages.removingRemote),
+            busyProgress: null,
+            error: null
+        });
         try {
             await removeRemote({vm: this.props.vm, name});
             await this.refresh();
@@ -769,14 +998,19 @@ class TWGitModal extends React.Component {
         // The commit author name doubles as the remote username (Settings tab).
         const username = (this.state.authorName || '').trim();
         if (!remote) {
-            this.setState({error: 'Select a remote to push to'});
+            this.setState({error: this.props.intl.formatMessage(messages.selectRemote)});
             return;
         }
         if (!branch) {
-            this.setState({error: 'Select a branch to push'});
+            this.setState({error: this.props.intl.formatMessage(messages.selectBranch)});
             return;
         }
-        this.setState({busy: true, busyMessage: `Pushing ${branch} to ${remote}…`, busyProgress: null, error: null});
+        this.setState({
+            busy: true,
+            busyMessage: this.props.intl.formatMessage(messages.pushing, {branch, remote}),
+            busyProgress: null,
+            error: null
+        });
         try {
             await push({
                 vm: this.props.vm,
@@ -791,7 +1025,7 @@ class TWGitModal extends React.Component {
                     {username, password: token} :
                     {username: token || 'x-access-token', password: token})
             });
-            this.setState({error: null, busyMessage: 'Pushed'});
+            this.setState({error: null, busyMessage: this.props.intl.formatMessage(messages.pushed)});
         } catch (err) {
             this.setState({error: err && err.message ? err.message : String(err)});
         } finally {
@@ -804,7 +1038,12 @@ class TWGitModal extends React.Component {
     }
 
     async handleSaveReadme () {
-        this.setState({busy: true, busyMessage: 'Saving README…', busyProgress: null, error: null});
+        this.setState({
+            busy: true,
+            busyMessage: this.props.intl.formatMessage(messages.savingReadme),
+            busyProgress: null,
+            error: null
+        });
         try {
             await writeReadme(this.state.readmeContent);
             this.setState({readmeDirty: false});
@@ -857,12 +1096,12 @@ class TWGitModal extends React.Component {
         const theirs = this.state.mergeSourceBranch;
         if (!ours || !theirs) return;
         if (ours === theirs) {
-            this.setState({error: 'Select a different branch to merge.'});
+            this.setState({error: this.props.intl.formatMessage(messages.selectDifferentBranch)});
             return;
         }
         this.setState({
             busy: true,
-            busyMessage: 'Analyzing merge…',
+            busyMessage: this.props.intl.formatMessage(messages.analyzingMerge),
             busyProgress: null,
             error: null,
             mergeConflicts: [],
@@ -889,7 +1128,12 @@ class TWGitModal extends React.Component {
         const ours = this.state.currentBranch;
         const theirs = this.state.mergeSourceBranch;
         if (!ours || !theirs) return;
-        this.setState({busy: true, busyMessage: 'Preparing merge…', busyProgress: null, error: null});
+        this.setState({
+            busy: true,
+            busyMessage: this.props.intl.formatMessage(messages.preparingMerge),
+            busyProgress: null,
+            error: null
+        });
         try {
             await this.waitForPollIdle();
             const {conflicts, merged} = await startEditorMerge({
@@ -907,7 +1151,7 @@ class TWGitModal extends React.Component {
                 return;
             }
             if (conflicts.length === 0) {
-                this.setState({error: 'Only binary files conflict here; pick a side for each file instead.'});
+                this.setState({error: this.props.intl.formatMessage(messages.binaryConflicts)});
                 return;
             }
             this.props.onClose();
@@ -923,7 +1167,12 @@ class TWGitModal extends React.Component {
         const ours = this.state.currentBranch;
         const theirs = this.state.mergeSourceBranch;
         if (!ours || !theirs) return;
-        this.setState({busy: true, busyMessage: 'Merging…', busyProgress: null, error: null});
+        this.setState({
+            busy: true,
+            busyMessage: this.props.intl.formatMessage(messages.merging),
+            busyProgress: null,
+            error: null
+        });
         try {
             await this.waitForPollIdle();
             await mergeBranchesApply({
@@ -1038,6 +1287,7 @@ class TWGitModal extends React.Component {
 }
 
 TWGitModal.propTypes = {
+    intl: intlShape,
     onClose: PropTypes.func.isRequired,
     vm: PropTypes.instanceOf(VM).isRequired,
     projectChanged: PropTypes.bool,
@@ -1054,7 +1304,7 @@ const mapDispatchToProps = dispatch => ({
     onClose: () => dispatch(closeGitModal())
 });
 
-export default connect(
+export default injectIntl(connect(
     mapStateToProps,
     mapDispatchToProps
-)(TWGitModal);
+)(TWGitModal));
