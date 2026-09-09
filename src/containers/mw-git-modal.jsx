@@ -16,6 +16,8 @@ import RestorePointAPI from '../lib/api/restore-points.js';
 
 import {
     getDefaultAuthor,
+    setDefaultAuthor,
+    getRepoStatus,
     getRepoChanges,
     getFs,
     REPO_DIR,
@@ -31,16 +33,22 @@ import {
     mergeBranchesApply,
     startEditorMerge,
     restoreProjectFromCurrentRef,
+    computeCommitGraph,
+    getRemoteTrackingState,
     getRemotes,
     addRemote,
     removeRemote,
     push,
+    pull,
+    fetchRemote,
     cloneRepo,
     repoHasFractch,
     writeReadme
 } from '../lib/git/browser-git.js';
 import {buildSb3FromFractchTree} from '../lib/git/fractch-tree.js';
 import buildCommitGraphLayout from '../lib/git/graph-layout.js';
+import buildHttpAuth from '../lib/git/auth.js';
+import {setDefaultBranch as persistDefaultBranch} from '../lib/git/config.js';
 import {
     getFileContentAtCommit,
     getChangedFilesBetweenCommits,
@@ -55,7 +63,6 @@ import {
 } from '../lib/git/project-history.js';
 
 const DEFAULT_BRANCH_KEY = 'mw:git-default-branch';
-const AUTO_COMMIT_KEY = 'mw:git-autocommit';
 
 const messages = defineMessages({
     working: {
@@ -133,10 +140,15 @@ const messages = defineMessages({
         description: 'Busy message while pushing a branch to a remote',
         id: 'mw.git.busy.pushing'
     },
-    pushed: {
-        defaultMessage: 'Pushed',
-        description: 'Brief confirmation after a successful push',
-        id: 'mw.git.pushed'
+    pulling: {
+        defaultMessage: 'Pulling…',
+        description: 'Busy message while pulling from a remote',
+        id: 'mw.git.busy.pulling'
+    },
+    pullReplaceConfirm: {
+        defaultMessage: 'Pulling will replace your open project with the repository version. Continue?',
+        description: 'Confirmation before git pull replaces the open project',
+        id: 'mw.git.confirm.pullReplace'
     },
     savingReadme: {
         defaultMessage: 'Saving README…',
@@ -172,6 +184,12 @@ const messages = defineMessages({
         defaultMessage: 'Commit message is required',
         description: 'Error when committing with an empty message',
         id: 'mw.git.error.commitMessageRequired'
+    },
+    detachedCommitConfirm: {
+        // eslint-disable-next-line max-len
+        defaultMessage: 'You are on a detached HEAD (not on any branch). This commit will not show up in any branch and cannot be pushed. Create or switch to a branch first (Branches tab). Commit anyway?',
+        description: 'Confirm before committing while HEAD is detached',
+        id: 'mw.git.confirm.detachedCommit'
     },
     undoDetached: {
         defaultMessage: 'Cannot undo commit while detached. Check out a branch first.',
@@ -305,10 +323,6 @@ export class TWGitModal extends React.Component {
     constructor (props) {
         super(props);
 
-        const author = getDefaultAuthor();
-        const historyState = getProjectHistoryState();
-        const preloaded = historyState.phase === 'ready' ? stateFromHistory(historyState.data) : {};
-
         this.state = {
             busy: historyState.phase === 'loading',
             busyMessage: historyState.phase === 'loading' ? 'Loading version history…' : null,
@@ -320,10 +334,10 @@ export class TWGitModal extends React.Component {
             commits: [],
             graphBranches: [],
             graphNodes: [],
+            graphRemoteBranches: [],
             commitGraphLayout: null,
             commitMessage: '',
-            authorName: author.name,
-            authorEmail: author.email,
+            commitType: 'feat',
             newBranchName: '',
             mergeSourceBranch: '',
             mergeConflicts: [],
@@ -351,15 +365,17 @@ export class TWGitModal extends React.Component {
             selectedCommitOid: null,
             commitFiles: [],
             // Settings
-            defaultBranch: readLocal(DEFAULT_BRANCH_KEY, 'main'),
-            autoCommit: readLocal(AUTO_COMMIT_KEY, 'false') === 'true'
+            defaultBranch: readLocal(DEFAULT_BRANCH_KEY, 'main')
         };
 
         this._lastProgressUpdate = 0;
+        this._successTimer = null;
 
         this._pollTimer = null;
         this._pollPromise = null;
         this._openDiffSig = null;
+        this._graphKey = null;
+        this._graphCache = null;
 
         bindAll(this, [
             'refresh',
@@ -382,9 +398,9 @@ export class TWGitModal extends React.Component {
             'handleDeleteBranch',
             'handleClose',
             'handleChangeCommitMessage',
-            'handleChangeAuthorName',
-            'handleChangeAuthorEmail',
+            'handleChangeCommitType',
             'handleChangeNewBranchName',
+            'handleChangeReadme',
             'handleGitProgress',
             'handleChangeMergeSourceBranch',
             'handlePreviewMerge',
@@ -404,9 +420,10 @@ export class TWGitModal extends React.Component {
             'handleAddRemote',
             'handleRemoveRemote',
             'handlePush',
-            'handleChangeDefaultBranch',
-            'handleToggleAutoCommit',
-            'handleChangeReadme',
+            'handlePull',
+            'handleFetch',
+            'handleExportRepoConfig',
+            'handleImportRepoConfig',
             'handleSaveReadme'
         ]);
     }
@@ -435,6 +452,23 @@ export class TWGitModal extends React.Component {
             clearTimeout(this._pollTimer);
             this._pollTimer = null;
         }
+        if (this._successTimer) {
+            clearTimeout(this._successTimer);
+            this._successTimer = null;
+        }
+    }
+
+    // Transient green confirmation at the top of the panel ("Pulled latest
+    // changes", "Config exported"…). Auto-clears after a few seconds.
+    showSuccess (message) {
+        if (this._successTimer) {
+            clearTimeout(this._successTimer);
+        }
+        this.setState({success: message});
+        this._successTimer = setTimeout(() => {
+            this._successTimer = null;
+            this.setState({success: null});
+        }, 3200);
     }
 
     handleHistoryState (historyState) {
@@ -547,17 +581,45 @@ export class TWGitModal extends React.Component {
         try {
             const status = await getRepoStatus(this.props.vm);
             const hasCommits = Array.isArray(status.commits) && status.commits.length > 0;
-            const graph = status.initialized ?
-                (await computeCommitGraph({depth: 50})) :
-                {branches: [], nodes: [], branchLogs: []};
+            // The commit graph is only needed by the History/Branches views but is
+            // expensive to recompute (walks refs + full log), so cache it keyed by
+            // the current branch + the visible commit oids. Any history-affecting
+            // operation (commit/checkout/merge/delete-branch) changes the key and
+            // rebuilds it; pure status refreshes reuse it.
+            let graph;
+            if (status.initialized) {
+                const commitsKey = Array.isArray(status.commits) ?
+                    status.commits.map(c => c.oid).join('|') : '';
+                // Remote-tracking refs (refs/remotes/*) can move on push/fetch/
+                // pull without touching local history, so fold their state into
+                // the cache key — otherwise a fresh remote chip ("origin/main")
+                // would stay hidden behind a stale graph.
+                const remoteKey = await getRemoteTrackingState();
+                const graphKey = `${status.currentBranch}|${commitsKey}|${remoteKey}`;
+                if (this._graphKey === graphKey && this._graphCache) {
+                    graph = this._graphCache;
+                } else {
+                    graph = await computeCommitGraph({depth: 50});
+                    this._graphKey = graphKey;
+                    this._graphCache = graph;
+                }
+            } else {
+                graph = {branches: [], nodes: [], branchLogs: [], remoteBranches: []};
+                this._graphKey = null;
+                this._graphCache = null;
+            }
 
             const palette = [
                 '#4db6ac', '#9575cd', '#64b5f6',
                 '#f06292', '#ba68c8', '#4fc3f7',
                 '#81c784', '#ffb74d', '#e57373'
             ];
+            // Local branches first, remote-tracking refs ("origin/main") after:
+            // chips get their type colour from the view layer, while the graph
+            // lanes/dots keep a per-ref palette colour for legibility.
+            const colorRefs = (graph.branches || []).concat(graph.remoteBranches || []);
             const branchColors = {};
-            graph.branches.forEach((b, i) => {
+            colorRefs.forEach((b, i) => {
                 branchColors[b] = palette[i % palette.length];
             });
 
@@ -587,6 +649,7 @@ export class TWGitModal extends React.Component {
                 graphBranches: graph.branches,
                 graphNodes: graph.nodes,
                 graphBranchLogs: graph.branchLogs,
+                graphRemoteBranches: graph.remoteBranches || [],
                 branchColors,
                 commitGraphLayout: buildCommitGraphLayout({
                     graphNodes: graph.nodes,
@@ -658,7 +721,7 @@ export class TWGitModal extends React.Component {
         }
         this.setState({cloneConfirm: false});
         const token = this.state.remoteToken;
-        const username = (this.state.authorName || '').trim();
+        const username = (getDefaultAuthor().name || '').trim();
         this.setState({
             busy: true,
             busyMessage: this.props.intl.formatMessage(messages.cloning),
@@ -667,12 +730,11 @@ export class TWGitModal extends React.Component {
         });
         try {
             await this.waitForPollIdle();
-            const cloneOpts = {url, onProgress: this.handleGitProgress};
-            if (token) {
-                cloneOpts.onAuth = () => (username ?
-                    {username, password: token} :
-                    {username: token, password: token});
-            }
+            const cloneOpts = {
+                url,
+                onProgress: this.handleGitProgress,
+                onAuth: buildHttpAuth({token, username})
+            };
             await cloneRepo(cloneOpts);
             await this.loadProjectFromClonedRepo();
 
@@ -703,10 +765,28 @@ export class TWGitModal extends React.Component {
     }
 
     async handleCommit () {
-        const message = this.state.commitMessage.trim();
-        if (!message) {
+        const rawMessage = this.state.commitMessage.trim();
+        if (!rawMessage) {
             this.setState({error: this.props.intl.formatMessage(messages.commitMessageRequired)});
             return;
+        }
+        // Follow Conventional Commits: the type comes from the selector, e.g.
+        // "feat: ...". If the user already typed a prefixed message like
+        // "fix: ..." themselves, keep it untouched to avoid double prefixes.
+        const type = (this.state.commitType || 'feat').trim();
+        const alreadyPrefixed = /^[a-z]+(\([^)]*\))?!?: /i.test(rawMessage);
+        const message = alreadyPrefixed ? rawMessage : `${type}: ${rawMessage}`;
+
+        // Detached HEAD guard: a commit made while HEAD points straight at an
+        // oid (after "restore to this commit") belongs to no branch — it would
+        // be invisible in branch history and unpushable. Ask before creating
+        // such a commit so users don't lose track of it.
+        if (!this.state.currentBranch && this.state.initialized) {
+            // eslint-disable-next-line no-alert
+            const proceed = window.confirm(
+                this.props.intl.formatMessage(messages.detachedCommitConfirm)
+            );
+            if (!proceed) return;
         }
 
         this.setState({
@@ -720,10 +800,7 @@ export class TWGitModal extends React.Component {
             await commitProject({
                 vm: this.props.vm,
                 message,
-                author: {
-                    name: this.state.authorName || 'User',
-                    email: this.state.authorEmail || 'user@example.com'
-                },
+                author: getDefaultAuthor(),
                 onProgress: this.handleGitProgress
             });
             this.setState({commitMessage: '', diffData: null, diffFilepath: null});
@@ -758,8 +835,13 @@ export class TWGitModal extends React.Component {
         });
         try {
             await this.waitForPollIdle();
+            // Undo rewrites the open project (loadProject + a new commit), so keep
+            // a safety restore point first, consistent with pull/clone/restore.
+            await RestorePointAPI.createSafetyRestorePoint(this.props.vm, 'Before git undo');
             const snapshot = await readSnapshotAtCommit(previous.oid);
             this.props.vm.quit();
+            // skipGitImport: never let loading a commit snapshot re-import an
+            // embedded repo and clobber the current one.
             await this.props.vm.loadProject(snapshot, {skipGitImport: true});
 
             const headLine = head && head.commit && head.commit.message ? head.commit.message.split('\n')[0] : '';
@@ -768,10 +850,7 @@ export class TWGitModal extends React.Component {
             await commitProject({
                 vm: this.props.vm,
                 message: undoMessage,
-                author: {
-                    name: this.state.authorName || 'User',
-                    email: this.state.authorEmail || 'user@example.com'
-                },
+                author: getDefaultAuthor(),
                 onProgress: this.handleGitProgress
             });
 
@@ -886,7 +965,13 @@ export class TWGitModal extends React.Component {
         try {
             await this.waitForPollIdle();
             await deleteRepo();
-            this.setState({diffData: null, diffFilepath: null, selectedCommitOid: null, commitFiles: [], commitGraphLayout: null});
+            this.setState({
+                diffData: null,
+                diffFilepath: null,
+                selectedCommitOid: null,
+                commitFiles: [],
+                commitGraphLayout: null
+            });
             await this.refresh();
         } catch (err) {
             this.setState({error: err && err.message ? err.message : String(err)});
@@ -1094,7 +1179,9 @@ export class TWGitModal extends React.Component {
     async handlePush () {
         const remote = this.state.pushRemote;
         const branch = this.state.pushBranch || this.state.currentBranch;
-        const selected = (this.state.remotes || []).find(item => item.name === remote);
+        const token = this.state.remoteToken;
+        // The commit author name doubles as the remote username (Advanced settings).
+        const username = (getDefaultAuthor().name || '').trim();
         if (!remote) {
             this.setState({error: this.props.intl.formatMessage(messages.selectRemote)});
             return;
@@ -1116,13 +1203,200 @@ export class TWGitModal extends React.Component {
                 ref: branch,
                 setUpstream: true,
                 onProgress: this.handleGitProgress,
-                onAuth: authForRemoteUrl(selected ? selected.url : '')
+                // Shared auth rule (see lib/git/auth.js): author name as username
+                // (Gitea/GitLab/self-hosted) or 'x-access-token' placeholder when
+                // unset (GitHub PAT style). Anonymous when no token is stored.
+                onAuth: buildHttpAuth({token, username})
             });
-            this.setState({error: null, busyMessage: this.props.intl.formatMessage(messages.pushed)});
+            // Re-read repo state so the new remote-tracking ref immediately
+            // shows up as a purple "origin/<branch>" chip in History/Branches.
+            await this.refresh();
         } catch (err) {
             this.setState({error: err && err.message ? err.message : String(err)});
         } finally {
             this.setState({busy: false, busyMessage: null, busyProgress: null});
+        }
+    }
+
+    async handlePull () {
+        const remote = this.state.pushRemote;
+        const token = this.state.remoteToken;
+        const username = (getDefaultAuthor().name || '').trim();
+        const {vm} = this.props;
+        if (!remote) {
+            this.setState({error: this.props.intl.formatMessage(messages.selectRemote)});
+            return;
+        }
+        if (!this.state.currentBranch) {
+            // Detached HEAD: pull needs a branch to fast-forward into.
+            this.setState({error: this.props.intl.formatMessage(messages.selectBranch)});
+            return;
+        }
+        if (this.props.projectChanged) {
+            // Pulling rewrites the project working copy; confirm like the
+            // menu-bar pull does before replacing the open project.
+            // eslint-disable-next-line no-alert
+            const ok = window.confirm(this.props.intl.formatMessage(messages.pullReplaceConfirm));
+            if (!ok) {
+                return;
+            }
+        }
+        this.setState({
+            busy: true,
+            busyMessage: this.props.intl.formatMessage(messages.pulling),
+            busyProgress: null,
+            error: null
+        });
+        try {
+            await RestorePointAPI.createSafetyRestorePoint(vm, this.props.projectTitle);
+            const result = await pull({
+                vm,
+                remote,
+                onAuth: buildHttpAuth({token, username}),
+                onProgress: this.handleGitProgress
+            });
+            // pull() already fetched and (when possible) fast-forwarded the
+            // fractch working tree. "ahead" means the remote had nothing new —
+            // but the fetch may still have discovered other remote branches,
+            // so refresh the graph either way.
+            await this.refresh();
+            if (!result || result.status === 'ahead' || result.status === 'up-to-date') {
+                this.showSuccess(this.props.intl.formatMessage(messages.noticePullNoUpdate));
+                return;
+            }
+            // Rebuild the project from the fetched fractch tree and reload it
+            // into the VM (mirrors menu-bar git pull).
+            const fs = getFs();
+            const bytes = await buildSb3FromFractchTree({fs: fs.promises, dir: REPO_DIR});
+            const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+            vm.quit();
+            await vm.loadProject(buffer, {skipGitImport: true});
+            if (vm.renderer) {
+                vm.renderer.draw();
+            }
+            await this.refresh();
+            this.showSuccess(this.props.intl.formatMessage(messages.noticePullDone));
+        } catch (err) {
+            this.setState({error: err && err.message ? err.message : String(err)});
+        } finally {
+            this.setState({busy: false, busyMessage: null, busyProgress: null});
+        }
+    }
+
+    async handleFetch () {
+        const remote = this.state.pushRemote;
+        const token = this.state.remoteToken;
+        const username = (getDefaultAuthor().name || '').trim();
+        if (!remote) {
+            this.setState({error: this.props.intl.formatMessage(messages.selectRemote)});
+            return;
+        }
+        this.setState({
+            busy: true,
+            busyMessage: this.props.intl.formatMessage(messages.fetching),
+            busyProgress: null,
+            error: null
+        });
+        try {
+            await this.waitForPollIdle();
+            await fetchRemote({
+                remote,
+                onAuth: buildHttpAuth({token, username}),
+                onProgress: this.handleGitProgress
+            });
+            // refs/remotes/* changed: rebuild the graph so the purple
+            // "origin/<branch>" chips appear/disappear right away.
+            await this.refresh();
+            this.showSuccess(this.props.intl.formatMessage(messages.noticeFetchDone));
+        } catch (err) {
+            this.setState({error: err && err.message ? err.message : String(err)});
+        } finally {
+            this.setState({busy: false, busyMessage: null, busyProgress: null});
+        }
+    }
+
+    async handleExportRepoConfig () {
+        const vm = this.props.vm;
+        try {
+            let remotes = [];
+            try {
+                remotes = await getRemotes(vm);
+            } catch (e) {
+                remotes = [];
+            }
+            const author = getDefaultAuthor();
+            const payload = {
+                app: 'bilup',
+                kind: 'git-repo-config',
+                version: 1,
+                exportedAt: new Date().toISOString(),
+                defaultBranch: this.state.defaultBranch || 'main',
+                author: {
+                    name: author.name || '',
+                    email: author.email || ''
+                },
+                remotes: remotes.map(r => ({name: r.name, url: r.url}))
+            };
+            const safeTitle = (this.props.projectTitle || 'project')
+                .replace(/[\\/:*?"<>|.#\s]+/g, '-')
+                .replace(/^-+|-+$/g, '') || 'project';
+            const blob = new Blob([JSON.stringify(payload, null, 2)], {
+                type: 'application/json'
+            });
+            downloadBlob(`${safeTitle}-git-config.json`, blob);
+            this.showSuccess(this.props.intl.formatMessage(messages.noticeConfigExported));
+        } catch (err) {
+            this.setState({error: err && err.message ? err.message : String(err)});
+        }
+    }
+
+    async handleImportRepoConfig (e) {
+        const file = e && e.target && e.target.files && e.target.files[0];
+        if (!file) return;
+        const vm = this.props.vm;
+        try {
+            const text = await file.text();
+            const config = JSON.parse(text);
+            if (!config || typeof config !== 'object' || !Array.isArray(config.remotes)) {
+                throw new Error('invalid');
+            }
+            const author = getDefaultAuthor();
+            const cfgAuthor = config.author && typeof config.author === 'object' ?
+                config.author : {};
+            const nextAuthor = {
+                name: cfgAuthor.name ? String(cfgAuthor.name) : author.name,
+                email: cfgAuthor.email ? String(cfgAuthor.email) : author.email
+            };
+            if (nextAuthor.name || nextAuthor.email) {
+                setDefaultAuthor(nextAuthor);
+            }
+            if (config.defaultBranch && typeof config.defaultBranch === 'string') {
+                persistDefaultBranch(config.defaultBranch);
+                this.setState({defaultBranch: config.defaultBranch});
+            }
+            // Rebuild the remote list: same-named remotes are replaced.
+            for (const remote of config.remotes) {
+                if (!remote || !remote.name || !remote.url) continue;
+                try {
+                    await removeRemote({vm, name: remote.name});
+                } catch (removeError) {
+                    // Not present — addRemote will create it.
+                }
+                await addRemote({vm, name: remote.name, url: remote.url});
+            }
+            await this.refresh();
+            this.showSuccess(this.props.intl.formatMessage(messages.noticeConfigImported));
+        } catch (err) {
+            const invalid = !err || !err.message || err.message === 'invalid';
+            this.setState({
+                error: invalid ?
+                    this.props.intl.formatMessage(messages.configInvalid) :
+                    (err && err.message ? err.message : String(err))
+            });
+        } finally {
+            if (e && e.target) {
+                e.target.value = '';
+            }
         }
     }
 
@@ -1148,18 +1422,6 @@ export class TWGitModal extends React.Component {
         }
     }
 
-    handleChangeDefaultBranch (e) {
-        const value = e.target.value;
-        this.setState({defaultBranch: value});
-        writeLocal(DEFAULT_BRANCH_KEY, value);
-    }
-
-    handleToggleAutoCommit () {
-        const next = !this.state.autoCommit;
-        this.setState({autoCommit: next});
-        writeLocal(AUTO_COMMIT_KEY, next ? 'true' : 'false');
-    }
-
     handleClose () {
         if (this.state.busy) return;
         this.props.onClose();
@@ -1169,12 +1431,8 @@ export class TWGitModal extends React.Component {
         this.setState({commitMessage: e.target.value});
     }
 
-    handleChangeAuthorName (e) {
-        this.setState({authorName: e.target.value});
-    }
-
-    handleChangeAuthorEmail (e) {
-        this.setState({authorEmail: e.target.value});
+    handleChangeCommitType (e) {
+        this.setState({commitType: e.target.value});
     }
 
     handleChangeNewBranchName (e) {
@@ -1233,10 +1491,7 @@ export class TWGitModal extends React.Component {
             const {conflicts, merged} = await startEditorMerge({
                 ours,
                 theirs,
-                author: {
-                    name: this.state.authorName || 'User',
-                    email: this.state.authorEmail || 'user@example.com'
-                }
+                author: getDefaultAuthor()
             });
             if (merged) {
                 await restoreProjectFromCurrentRef(this.props.vm);
@@ -1273,10 +1528,7 @@ export class TWGitModal extends React.Component {
                 ours,
                 theirs,
                 resolutions: this.state.mergeResolutions,
-                author: {
-                    name: this.state.authorName || 'User',
-                    email: this.state.authorEmail || 'user@example.com'
-                }
+                author: getDefaultAuthor()
             });
             await restoreProjectFromCurrentRef(this.props.vm);
             this.setState({mergeConflicts: [], mergeResolutions: {}, mergeSourceBranch: ''});
@@ -1306,11 +1558,9 @@ export class TWGitModal extends React.Component {
                 graphBranches={this.state.graphBranches}
                 graphNodes={this.state.graphNodes}
                 graphBranchLogs={this.state.graphBranchLogs}
-                branchColors={this.state.branchColors}
+                graphRemoteBranches={this.state.graphRemoteBranches}
                 commitGraphLayout={this.state.commitGraphLayout}
                 commitMessage={this.state.commitMessage}
-                authorName={this.state.authorName}
-                authorEmail={this.state.authorEmail}
                 newBranchName={this.state.newBranchName}
                 mergeSourceBranch={this.state.mergeSourceBranch}
                 mergeConflicts={this.state.mergeConflicts}
@@ -1330,15 +1580,13 @@ export class TWGitModal extends React.Component {
                 diffContext={this.state.diffContext}
                 selectedCommitOid={this.state.selectedCommitOid}
                 commitFiles={this.state.commitFiles}
-                defaultBranch={this.state.defaultBranch}
-                autoCommit={this.state.autoCommit}
                 readmeContent={this.state.readmeContent}
                 readmeDirty={this.state.readmeDirty}
                 onChangeReadme={this.handleChangeReadme}
                 onSaveReadme={this.handleSaveReadme}
                 onChangeCommitMessage={this.handleChangeCommitMessage}
-                onChangeAuthorName={this.handleChangeAuthorName}
-                onChangeAuthorEmail={this.handleChangeAuthorEmail}
+                commitType={this.state.commitType}
+                onChangeCommitType={this.handleChangeCommitType}
                 onChangeNewBranchName={this.handleChangeNewBranchName}
                 onCheckoutBranch={this.handleCheckoutBranch}
                 onCreateBranch={this.handleCreateBranch}
@@ -1373,8 +1621,10 @@ export class TWGitModal extends React.Component {
                 onAddRemote={this.handleAddRemote}
                 onRemoveRemote={this.handleRemoveRemote}
                 onPush={this.handlePush}
-                onChangeDefaultBranch={this.handleChangeDefaultBranch}
-                onToggleAutoCommit={this.handleToggleAutoCommit}
+                onPull={this.handlePull}
+                onFetch={this.handleFetch}
+                onExportRepoConfig={this.handleExportRepoConfig}
+                onImportRepoConfig={this.handleImportRepoConfig}
                 onClose={this.handleClose}
             />
         );
