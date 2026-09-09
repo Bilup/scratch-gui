@@ -10,7 +10,8 @@ import {
     buildSb3FromFractchTree
 } from './fractch-tree.js';
 import RestorePointAPI from '../api/restore-points.js';
-import {getFormattedMessage} from './i18n.js';
+import {getFormattedMessage, translateGitProgressPhase} from './i18n.js';
+import {DETACHED_BRANCH} from './graph-layout.js';
 
 const FS_NAME = 'bilup-git';
 const REPO_DIR = '/repo';
@@ -43,24 +44,41 @@ const getFs = () => {
 let lastProjectHash = null;
 let worktreeInitialized = false;
 
-const computeProjectHash = async vm => {
+// cyrb53: a fast, well-distributed 53-bit string hash. The previous 32-bit
+// rolling hash (Java String#hashCode style) collided too easily on long
+// project.json bodies: a collision made "project changed" look like "unchanged",
+// which skipped the working-tree resync and silently missed changes in the
+// Changes view. 53-bit space keeps that risk negligible while staying cheap.
+const cyrb53 = (str, seed = 0) => {
+    let h1 = 0xdeadbeef ^ seed;
+    let h2 = 0x41c6ce57 ^ seed;
+    for (let i = 0; i < str.length; i++) {
+        const ch = str.charCodeAt(i);
+        h1 = Math.imul(h1 ^ ch, 2654435761);
+        h2 = Math.imul(h2 ^ ch, 1597334677);
+    }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507);
+    h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507);
+    h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return ((4294967296 * (2097151 & h2)) + (h1 >>> 0)).toString(16);
+};
+
+// Synchronous on purpose (pure string hash); callers `await` it, which works
+// identically for a plain value.
+const computeProjectHash = vm => {
     if (!vm || typeof vm.toJSON !== 'function') {
         return null;
     }
     try {
-        // 只用 project.json 内容做哈希（轻量），不序列化资产字节。
-        // 资产的任何变化都会通过引用它的 project.json（md5ext 等）反映出来，
-        // 因此 project.json 的哈希足以代表"项目是否变化"。
+        // Only hash the project.json body (lightweight), not asset bytes.
+        // Any asset change is reflected through the project.json entries that
+        // reference it (md5ext etc.), so hashing project.json is enough to
+        // answer "did the project change?".
         const projectJson = vm.toJSON();
-        let hash = 0;
-        for (let i = 0; i < projectJson.length; i++) {
-            const c = projectJson.charCodeAt(i);
-            hash = ((hash << 5) - hash) + c;
-            hash = hash & hash;
-        }
-        return hash.toString(16);
+        return cyrb53(projectJson);
     } catch (e) {
-        // 序列化失败时返回 null，调用方按"需要重建"处理
+        // Serialization failed: return null so callers treat it as "rebuild needed".
         return null;
     }
 };
@@ -451,7 +469,11 @@ const getRepoChanges = async vm => {
     const projectHash = await computeProjectHash(vm);
     if (!worktreeInitialized || projectHash !== lastProjectHash) {
         await writeProjectToFractchTree({vm, fs: pfs, dir});
+        // 写入完成后才翻转同步标记。所有调用方（面板轮询 / 提交短路）都由
+        // _pollPromise 或 busy 状态串行，不存在并发 getRepoChanges，安全。
+        // eslint-disable-next-line require-atomic-updates
         worktreeInitialized = true;
+        // eslint-disable-next-line require-atomic-updates
         lastProjectHash = projectHash;
     }
 
@@ -620,6 +642,10 @@ const getRemotes = async vm => {
 
 const DEFAULT_CORS_PROXY = 'https://cors.isomorphic-git.org';
 
+// All browser-side git HTTP goes through this CORS proxy (a pure-browser
+// implementation cannot talk to git remotes directly). Kept as a function so a
+// per-remote proxy (e.g. a self-hosted one) can be plugged in later.
+// eslint-disable-next-line no-unused-vars
 const corsProxyForUrl = url => DEFAULT_CORS_PROXY;
 
 const corsProxyForRemote = async (fs, remoteName) => {
@@ -633,6 +659,23 @@ const corsProxyForRemote = async (fs, remoteName) => {
         // ignore
     }
     return DEFAULT_CORS_PROXY;
+};
+
+// Point refs/remotes/<remote>/<branch> at the local branch's tip, mirroring the
+// bookkeeping that a fetch would do. Creates the containing directories because
+// isomorphic-git's writeRef does not.
+const writeRemoteTrackingRef = async (fs, remote, branch) => {
+    const pfs = fs.promises;
+    const refName = `refs/remotes/${remote}/${branch}`;
+    const oid = await git.resolveRef({fs, dir: REPO_DIR, ref: branch});
+    const refDir = refName.substring(0, refName.lastIndexOf('/'));
+    const parts = refDir.split('/').filter(Boolean);
+    let current = `${REPO_DIR}/.git`;
+    for (const part of parts) {
+        current = `${current}/${part}`;
+        await ensureDir(pfs, current);
+    }
+    await git.writeRef({fs, dir: REPO_DIR, ref: refName, value: oid, force: true});
 };
 
 const push = async ({vm, remote, branch, ref, setUpstream = true, onProgress, ...options}) => {
@@ -685,7 +728,7 @@ const push = async ({vm, remote, branch, ref, setUpstream = true, onProgress, ..
                     message: getFormattedMessage(
                         'mw.git.pushProgress',
                         'Pushing… {phase}',
-                        {phase: evt.phase || ''}
+                        {phase: translateGitProgressPhase(evt.phase)}
                     ).trim(),
                     completed: evt.loaded,
                     total: evt.total
@@ -706,9 +749,98 @@ const push = async ({vm, remote, branch, ref, setUpstream = true, onProgress, ..
         }
     }
 
+    // Real `git push` also advances the local remote-tracking ref
+    // (refs/remotes/<remote>/<branch>). isomorphic-git's push does not, so do it
+    // by hand — otherwise the History view would show the remote branch chip
+    // ("origin/main") only after the next pull/fetch.
+    if (result && result.ok) {
+        try {
+            await writeRemoteTrackingRef(fs, remote, localRef);
+        } catch (e) {
+            console.warn('Failed to update remote-tracking ref after push:', e);
+        }
+    }
+
     return result;
 };
 
+// Shared git.fetch wrapper: every fetch (standalone Fetch, pull's internal
+// fetch) funnels through here so auth/CORS/progress handling stays in one place.
+const runFetch = async ({
+    remote,
+    ref,
+    tags = true,
+    prune = true,
+    onAuth,
+    onProgress
+}) => {
+    const fs = getFs();
+    await git.fetch({
+        fs,
+        http,
+        corsProxy: await corsProxyForRemote(fs, remote),
+        dir: REPO_DIR,
+        remote,
+        ref,
+        singleBranch: Boolean(ref),
+        tags: Boolean(tags),
+        prune: Boolean(prune),
+        onAuth,
+        onProgress: evt => {
+            if (typeof onProgress === 'function' && evt) {
+                onProgress({
+                    phase: 'fetch',
+                    message: getFormattedMessage(
+                        'mw.git.fetchProgress',
+                        'Fetching… {phase}',
+                        {phase: translateGitProgressPhase(evt.phase)}
+                    ).trim(),
+                    completed: evt.loaded,
+                    total: evt.total
+                });
+            }
+        }
+    });
+};
+
+// Standalone fetch: update refs/remotes/* (and prune deleted ones) without
+// touching the working tree or HEAD. This is what populates the purple
+// "origin/xxx" branch chips before any pull/merge happens.
+const fetchRemote = async ({remote = 'origin', ref, onAuth, onProgress} = {}) => {
+    if (!(await repoExists())) {
+        throw new Error('Repository not initialized');
+    }
+    await runFetch({remote, ref, tags: true, prune: true, onAuth, onProgress});
+    return {status: 'fetched'};
+};
+
+// The configured upstream ({remote, branch}) of a local branch, from
+// branch.<name>.remote / branch.<name>.merge (set by push -u or clone).
+const getUpstreamBranch = async ({branch} = {}) => {
+    const fs = getFs();
+    if (!(await repoExists())) return null;
+    const name = branch || await git.currentBranch({fs, dir: REPO_DIR, fullname: false});
+    if (!name) return null;
+    try {
+        const remote = await git.getConfig({fs, dir: REPO_DIR, path: `branch.${name}.remote`});
+        const merge = await git.getConfig({fs, dir: REPO_DIR, path: `branch.${name}.merge`});
+        if (remote && merge && merge.startsWith('refs/heads/')) {
+            return {remote, branch: merge.slice('refs/heads/'.length)};
+        }
+    } catch (e) {
+        // Config not readable — treat as no upstream.
+    }
+    return null;
+};
+
+// Behavioural clone of `git pull`: fetch first, then fast-forward the checked
+// out branch when the remote is ahead of it. Returns a structured result so the
+// UI can distinguish "nothing to do" from "updated":
+//   {status: 'ahead'}  — local is at or ahead of the remote tip (nothing pulled)
+//   {status: 'pulled'} — remote commits were fast-forwarded into the branch
+// A diverged branch (both sides have commits the other lacks) throws a
+// localized error steering the user to the visual merge flow instead of
+// leaving them with a raw FastForwardError.
 const pull = async ({vm, remote, ref, author, onAuth, onProgress} = {}) => {
     if (!vm) {
         throw new Error('VM is required');
@@ -725,35 +857,80 @@ const pull = async ({vm, remote, ref, author, onAuth, onProgress} = {}) => {
     if (!localRef) {
         throw new Error('No branch checked out to pull into');
     }
+    const remoteName = remote || 'origin';
+    const trackingRef = `refs/remotes/${remoteName}/${localRef}`;
 
-    await git.pull({
-        fs,
-        http,
-        corsProxy: await corsProxyForRemote(fs, remote || 'origin'),
-        dir: REPO_DIR,
-        ref: localRef,
-        remote: remote || 'origin',
-        singleBranch: true,
-        fastForward: true,
-        author: author || getDefaultAuthor(),
+    // 1) Always fetch first (real `git pull` does; the tracking ref may be stale).
+    await runFetch({
+        remote: remoteName,
+        tags: false,
+        prune: false,
         onAuth,
-        onProgress: evt => {
-            if (typeof onProgress === 'function' && evt) {
-                onProgress({
-                    phase: 'pull',
-                    message: getFormattedMessage(
-                        'mw.git.pullProgress',
-                        'Pulling… {phase}',
-                        {phase: evt.phase || ''}
-                    ).trim(),
-                    completed: evt.loaded,
-                    total: evt.total
-                });
-            }
-        }
+        onProgress
     });
 
-    return 'ok';
+    let remoteOid;
+    try {
+        remoteOid = await git.resolveRef({fs, dir: REPO_DIR, ref: trackingRef});
+    } catch (e) {
+        throw new Error(
+            `No upstream branch ${remoteName}/${localRef} on the remote. ` +
+            'Push the branch once with "Push" to publish it, then pull will track it.'
+        );
+    }
+
+    const headOid = await git.resolveRef({fs, dir: REPO_DIR, ref: 'HEAD'});
+    const isDescendent = (oid, ancestor) => git.isDescendent({
+        fs,
+        dir: REPO_DIR,
+        oid,
+        ancestor,
+        depth: -1
+    }).catch(() => false);
+
+    const remoteReachableFromHead = headOid === remoteOid ||
+        await isDescendent(remoteOid, headOid);
+    const headReachableFromRemote = headOid === remoteOid ||
+        await isDescendent(headOid, remoteOid);
+
+    if (remoteReachableFromHead) {
+        // Local branch already contains the remote tip (or matches it): nothing
+        // to pull. If only the local side is ahead, the fix is a push.
+        return {status: 'ahead'};
+    }
+    if (!headReachableFromRemote) {
+        // Neither side contains the other: diverged histories.
+        throw new Error(
+            'Diverged branches: your local branch and the remote have commits ' +
+            'the other side does not. Fast-forward is impossible — merge manually ' +
+            'in the Branches view (Merge…) then pull again.'
+        );
+    }
+
+    // 2) Fast-forward: move the local branch (and the fractch working tree) to
+    // the remote tip. fastForwardOnly is safe here because we proved above that
+    // the remote tip is a descendent of HEAD.
+    try {
+        await git.merge({
+            fs,
+            dir: REPO_DIR,
+            ours: localRef,
+            theirs: trackingRef,
+            fastForwardOnly: true,
+            author: author || getDefaultAuthor()
+        });
+    } catch (e) {
+        if (e && (e.code === 'FastForwardError' || /fast-forward/i.test(e.message || ''))) {
+            throw new Error(
+                'Diverged branches: your local branch and the remote have commits ' +
+                'the other side does not. Fast-forward is impossible — merge manually ' +
+                'in the Branches view (Merge…) then pull again.'
+            );
+        }
+        throw new Error(`Failed to pull: ${e && e.message ? e.message : String(e)}`);
+    }
+
+    return {status: 'pulled', oid: remoteOid};
 };
 
 const commitProject = async ({vm, message, author, onProgress} = {}) => {
@@ -774,6 +951,14 @@ const commitProject = async ({vm, message, author, onProgress} = {}) => {
 
     if (typeof vm.saveProjectSb3 !== 'function' || typeof vm.loadProject !== 'function') {
         throw new Error('VM does not support save/load project');
+    }
+
+    // Fast path: if the working tree still mirrors the current project (same
+    // project hash as the last sync), there is nothing to commit. Bail out
+    // before the expensive full working-tree rebuild + staging pass.
+    const projectHash = await computeProjectHash(vm);
+    if (worktreeInitialized && lastProjectHash !== null && lastProjectHash === projectHash) {
+        throw new Error('No changes to commit');
     }
 
     let sb3ArrayBuffer;
@@ -1093,12 +1278,118 @@ const completeEditorMerge = async ({author} = {}) => {
     return oid;
 };
 
+// Remote-tracking refs (refs/remotes/<remote>/<branch>) only exist once a
+// clone/fetch/pull (or a push through this module) has happened. Each becomes a
+// *label* on the commits it points at ("origin/main"), never a lane of its own.
+const listRemoteBranchLogs = async ({fs, depth = 50} = {}) => {
+    const out = [];
+    let remotes = [];
+    try {
+        remotes = await git.listRemotes({fs, dir: REPO_DIR});
+    } catch (e) {
+        remotes = [];
+    }
+    for (const entry of remotes) {
+        const remote = entry.remote || entry.name;
+        if (!remote) continue;
+        let names = [];
+        try {
+            names = await git.listBranches({fs, dir: REPO_DIR, remote});
+        } catch (e) {
+            continue; // nothing fetched for this remote yet
+        }
+        for (const name of names) {
+            // Skip the per-remote "HEAD" symbolic ref if a tool created one —
+            // it would duplicate the branch it points at as a separate label.
+            if (!name || name === 'HEAD') continue;
+            let commits = [];
+            try {
+                commits = await git.log({
+                    fs,
+                    dir: REPO_DIR,
+                    ref: `refs/remotes/${remote}/${name}`,
+                    depth
+                });
+            } catch (e) {
+                continue;
+            }
+            if (Array.isArray(commits) && commits.length > 0) {
+                out.push({branch: `${remote}/${name}`, commits});
+            }
+        }
+    }
+    return out;
+};
+
+// Cheap signature of every remote-tracking ref (name + oid). Used by the UI
+// container to key the commit-graph cache: a push/fetch/pull that only moves a
+// refs/remotes/* ref (without touching the local history) must still rebuild
+// the graph so the new remote chips show up.
+const getRemoteTrackingState = async () => {
+    const fs = getFs();
+    let remotes = [];
+    try {
+        remotes = await git.listRemotes({fs, dir: REPO_DIR});
+    } catch (e) {
+        return '';
+    }
+    const parts = [];
+    for (const entry of remotes) {
+        const remote = entry.remote || entry.name;
+        if (!remote) continue;
+        let names = [];
+        try {
+            names = await git.listBranches({fs, dir: REPO_DIR, remote});
+        } catch (e) {
+            continue;
+        }
+        for (const name of names) {
+            if (!name || name === 'HEAD') continue;
+            try {
+                const oid = await git.resolveRef({
+                    fs,
+                    dir: REPO_DIR,
+                    ref: `refs/remotes/${remote}/${name}`
+                });
+                parts.push(`${remote}/${name}:${oid}`);
+            } catch (e) {
+                // Dangling or missing ref — skip it.
+            }
+        }
+    }
+    return parts.sort().join('|');
+};
+
 const computeCommitGraph = async ({depth = 50} = {}) => {
     const fs = getFs();
     const branches = await git.listBranches({fs, dir: REPO_DIR});
     const logs = await getBranchLogs({depth});
+
+    // Detached HEAD: after "restore this commit" the HEAD points straight at an
+    // oid (no local branch). Any commit made in that state lives on no branch,
+    // so walking only local branches would silently hide it from History —
+    // the graph would show just the fetched/remote history. Fold the HEAD chain
+    // in as a virtual branch so those local commits stay visible.
+    const headBranch = await git.currentBranch({fs, dir: REPO_DIR, fullname: false});
+    if (!headBranch) {
+        try {
+            const headLog = await git.log({fs, dir: REPO_DIR, depth});
+            if (Array.isArray(headLog) && headLog.length > 0) {
+                logs.push({branch: DETACHED_BRANCH, commits: headLog});
+            }
+        } catch (e) {
+            // HEAD may not resolve yet (unborn branch); nothing to fold in.
+        }
+    }
+
+    // Remote-tracking refs feed the same node map as *extra labels only*: they
+    // stay out of `logs`/`branchLogs`, so graph-layout never grants them a lane.
+    // A pulled branch therefore renders with both chips on one lane —
+    // local "main" (blue) plus remote "origin/main" (purple).
+    const remoteLogs = await listRemoteBranchLogs({fs, depth});
+
     const map = new Map();
-    for (const entry of logs) {
+    const absorb = entry => {
         for (const c of entry.commits) {
             const key = c.oid;
             if (!map.has(key)) {
@@ -1110,12 +1401,20 @@ const computeCommitGraph = async ({depth = 50} = {}) => {
             }
             map.get(key).branches.add(entry.branch);
         }
-    }
+    };
+    logs.forEach(absorb);
+    remoteLogs.forEach(absorb);
+
     const nodes = Array.from(map.values())
         .map(n => ({oid: n.oid, commit: n.commit, branches: Array.from(n.branches), parents: n.parents}))
         .sort((a, b) => (b.commit.author.timestamp || 0) - (a.commit.author.timestamp || 0));
     const branchLogs = logs.map(l => ({branch: l.branch, oids: l.commits.map(c => c.oid)}));
-    return {branches, nodes, branchLogs};
+    return {
+        branches,
+        nodes,
+        branchLogs,
+        remoteBranches: remoteLogs.map(l => l.branch)
+    };
 };
 
 const exportRepoToZip = async ({includeGitDir = true} = {}) => {
@@ -1315,7 +1614,7 @@ const cloneRepo = async ({url, ref, onAuth, onProgress} = {}) => {
                         message: getFormattedMessage(
                             'mw.git.cloneProgress',
                             'Cloning… {phase}',
-                            {phase: evt.phase || ''}
+                            {phase: translateGitProgressPhase(evt.phase)}
                         ).trim(),
                         completed: evt.loaded,
                         total: evt.total
@@ -1449,10 +1748,14 @@ const embedRepoIntoSb3Blob = async blob => {
         }
     }
 
+    // Level 1 (not 6): this re-compresses the ENTIRE project zip on every save,
+    // including the whole embedded .git object store. Git objects are already
+    // compressed internally, so level 6 buys little extra ratio here while making
+    // every Ctrl+S noticeably slower on medium/large repos.
     return zip.generateAsync({
         type: 'blob',
         compression: 'DEFLATE',
-        compressionOptions: {level: 6}
+        compressionOptions: {level: 1}
     });
 };
 
@@ -1481,6 +1784,13 @@ const importRepoFromSb3 = async input => {
     const pfs = fs.promises;
 
     if (entryPaths.length === 0) {
+        // Deliberate "switch workspace" semantics: the git panel's repository is
+        // bound to the project that was saved/loaded. Loading a project without
+        // an embedded repo (e.g. an external .sb3) therefore clears any stale
+        // repo from a previous session, otherwise the panel would show the old
+        // project's history. Note: locally saved Bilup projects always embed the
+        // repo (see embedRepoIntoSb3Blob), so reopening your own file restores it.
+        console.info('[git] loaded project has no embedded repo; clearing stale repo');
         try {
             await deleteRepo();
         } catch (e) {
@@ -1549,6 +1859,7 @@ export {
     readSnapshotAtCommit,
     getBranchLogs,
     computeCommitGraph,
+    getRemoteTrackingState,
     deleteRepo,
     deleteBranch,
     commitProject,
@@ -1559,6 +1870,8 @@ export {
     getRemotes,
     push,
     pull,
+    fetchRemote,
+    getUpstreamBranch,
     exportRepoToZip,
     downloadRepoZip,
     commitSb3,

@@ -120,6 +120,8 @@ import {setProjectUnchanged} from '../../reducers/project-changed';
 import {showStandardAlert, showAlertWithTimeout, closeAlertWithId} from '../../reducers/alerts';
 import collectMetadata from '../../lib/collect-metadata';
 import LazyScratchBlocks from '../../lib/tw-lazy-scratch-blocks';
+import buildHttpAuth from '../../lib/git/auth.js';
+import translateGitError from '../../lib/git/errors.js';
 import {mediaRecorderSupported} from '../../addons/environment.js';
 import addonEnglish from '../../addons/addons-l10n/en.json';
 import addonChinese from '../../addons/addons-l10n/zh-cn.json';
@@ -730,9 +732,9 @@ class MenuBar extends React.Component {
             token = '';
         }
         const {getDefaultAuthor} = await import('../../lib/git/browser-git');
-        const username = (getDefaultAuthor().name || '').trim();
-        if (!token) return null;
-        return () => (username ? {username, password: token} : {username: token, password: token});
+        // Shared auth rule (lib/git/auth.js): anonymous when no token is stored,
+        // otherwise author name as username or 'x-access-token' (GitHub PAT style).
+        return buildHttpAuth({token, username: getDefaultAuthor().name});
     }
 
     async handleClickGitPush (remote) {
@@ -751,11 +753,7 @@ class MenuBar extends React.Component {
             console.error(e);
             this.props.onCloseGitStatus('gitPushing');
             // eslint-disable-next-line no-alert
-            window.alert(this.props.intl.formatMessage({
-                defaultMessage: 'Push failed: ',
-                description: 'Alert prefix when a git push from the File menu fails',
-                id: 'mw.menuBar.gitPush.failed'
-            }) + (e && e.message ? e.message : e));
+            window.alert(translateGitError(e && e.message ? e.message : String(e)));
         }
     }
 
@@ -799,11 +797,7 @@ class MenuBar extends React.Component {
             console.error(e);
             this.props.onCloseGitStatus('gitPulling');
             // eslint-disable-next-line no-alert
-            window.alert(this.props.intl.formatMessage({
-                defaultMessage: 'Pull failed: ',
-                description: 'Alert prefix when a git pull from the File menu fails',
-                id: 'mw.menuBar.gitPull.failed'
-            }) + (e && e.message ? e.message : e));
+            window.alert(translateGitError(e && e.message ? e.message : String(e)));
         }
     }
 
@@ -836,11 +830,7 @@ class MenuBar extends React.Component {
                 console.error(e);
                 this.props.onCloseGitStatus('gitCommitting');
                 // eslint-disable-next-line no-alert
-                window.alert(this.props.intl.formatMessage({
-                    defaultMessage: 'Commit failed: ',
-                    description: 'Alert prefix when a git commit from the File menu fails',
-                    id: 'mw.menuBar.gitCommit.failed'
-                }) + (e && e.message ? e.message : e));
+                window.alert(translateGitError(e && e.message ? e.message : String(e)));
             }
         }, 0);
     }

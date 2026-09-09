@@ -42,7 +42,7 @@ import {DEFINITIONS as VARIABLE_MANAGER_SETTINGS, getSetting as getVariableManag
     setSetting as setVariableManagerSetting} from '../../lib/variable-manager/settings.js';
 import {
     getAuthorName, getAuthorEmail, setAuthorName, setAuthorEmail,
-    getDefaultBranch, setDefaultBranch, getAutoCommit, setAutoCommit
+    getDefaultBranch, setDefaultBranch
 } from '../../lib/git/config.js';
 import {
     getRoturSettings,
@@ -1436,14 +1436,12 @@ class UnwrappedVersionControlPage extends React.Component {
         bindAll(this, [
             'handleNameChange',
             'handleEmailChange',
-            'handleBranchChange',
-            'handleAutoCommitChange'
+            'handleBranchChange'
         ]);
         this.state = {
             authorName: getAuthorName(),
             authorEmail: getAuthorEmail(),
-            defaultBranch: getDefaultBranch(),
-            autoCommit: getAutoCommit()
+            defaultBranch: getDefaultBranch()
         };
     }
     handleNameChange (value) {
@@ -1457,11 +1455,6 @@ class UnwrappedVersionControlPage extends React.Component {
     handleBranchChange (value) {
         setDefaultBranch(value);
         this.setState({defaultBranch: getDefaultBranch()});
-    }
-    handleAutoCommitChange (e) {
-        const value = e.target.checked;
-        setAutoCommit(value);
-        this.setState({autoCommit: value});
     }
     render () {
         const {intl} = this.props;
@@ -1510,19 +1503,6 @@ class UnwrappedVersionControlPage extends React.Component {
                     value={this.state.defaultBranch}
                     onSubmit={this.handleBranchChange}
                     placeholder={intl.formatMessage(messages.defaultBranchPlaceholder)}
-                />
-                <BooleanSetting
-                    value={this.state.autoCommit}
-                    onChange={this.handleAutoCommitChange}
-                    label={<FormattedMessage
-                        defaultMessage="Commit automatically when the project is saved"
-                        id="mw.settings.vc.autoCommit"
-                    />}
-                    help={<FormattedMessage
-                        // eslint-disable-next-line max-len
-                        defaultMessage="Creates a commit each time you save the project so your history stays up to date without manual commits."
-                        id="mw.settings.vc.autoCommitHelp"
-                    />}
                 />
             </Box>
         );

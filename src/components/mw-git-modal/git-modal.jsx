@@ -16,9 +16,7 @@ import {
     Trash,
     Check,
     Upload,
-    GitMerge,
-    ExternalLink,
-    Lock
+    GitMerge
 } from 'lucide-react';
 
 import Box from '../box/box.jsx';
@@ -35,6 +33,8 @@ import isScratchDesktop from '../../lib/utils/isScratchDesktop.js';
 import {takeGitModalInitialView} from '../../lib/git/modal-view.js';
 
 import styles from './git-modal.css';
+import translateGitError from '../../lib/git/errors.js';
+import {DETACHED_BRANCH} from '../../lib/git/graph-layout.js';
 
 const pad2 = n => String(n).padStart(2, '0');
 
@@ -90,6 +90,23 @@ const formatRelativeTime = (intl, ts) => {
     }
     return formatYmd(ts);
 };
+
+// Conventional Commit types offered in the Changes view. The value is the
+// literal `type` that ends up in the commit message ("feat: ..."). Display
+// text is localised per type through mw.git.commitType.* messages.
+const COMMIT_TYPES = [
+    {value: 'feat', messageId: 'mw.git.commitType.feat', defaultMessage: 'New feature'},
+    {value: 'fix', messageId: 'mw.git.commitType.fix', defaultMessage: 'Bug fix'},
+    {value: 'docs', messageId: 'mw.git.commitType.docs', defaultMessage: 'Documentation'},
+    {value: 'style', messageId: 'mw.git.commitType.style', defaultMessage: 'Code style'},
+    {value: 'refactor', messageId: 'mw.git.commitType.refactor', defaultMessage: 'Refactor'},
+    {value: 'perf', messageId: 'mw.git.commitType.perf', defaultMessage: 'Performance'},
+    {value: 'test', messageId: 'mw.git.commitType.test', defaultMessage: 'Tests'},
+    {value: 'build', messageId: 'mw.git.commitType.build', defaultMessage: 'Build system'},
+    {value: 'ci', messageId: 'mw.git.commitType.ci', defaultMessage: 'Continuous integration'},
+    {value: 'chore', messageId: 'mw.git.commitType.chore', defaultMessage: 'Chore'},
+    {value: 'revert', messageId: 'mw.git.commitType.revert', defaultMessage: 'Revert'}
+];
 
 const messages = defineMessages({
     title: {
@@ -198,16 +215,148 @@ FileBadge.propTypes = {
     description: PropTypes.string
 };
 
+// Branch label chip. Local branches render blue, remote-tracking refs
+// ("origin/main") purple — matching mainstream git UIs. After a pull the same
+// commit carries both chips ("main" + "origin/main"). `current` prefixes the
+// checked-out branch with "@" (History view only).
+const BranchChip = ({name, isRemote, current}) => (
+    <span
+        className={classNames(
+            styles.branchChip,
+            isRemote ? styles.branchChipRemote : styles.branchChipLocal
+        )}
+    >
+        {current && !isRemote ? `@${name}` : name}
+    </span>
+);
+
+BranchChip.propTypes = {
+    name: PropTypes.string.isRequired,
+    isRemote: PropTypes.bool,
+    current: PropTypes.bool
+};
+
+// Given the remote-tracking refs ("origin/main") and a local branch name,
+// return the upstream ref that tracks it, if any. Matched by identical suffix
+// after the first "/" (the remote name), mirroring git's default upstream rule.
+const remoteUpstreamOf = (remoteBranches, localBranch) => {
+    if (!localBranch || !Array.isArray(remoteBranches)) return '';
+    const match = remoteBranches.find(rb => {
+        const slash = rb.indexOf('/');
+        return slash > 0 && rb.slice(slash + 1) === localBranch;
+    });
+    return match || '';
+};
+
+// Clone form shared by the empty state and the Remote view. Cloning replaces
+// the current project and its git repository with the given remote's fractch
+// project — the current project's own history stays embedded in its .sb3, so
+// this behaves like opening a different repository in an IDE.
+const ClonePanel = ({
+    cloneUrl,
+    onChangeCloneUrl,
+    busy,
+    cloneConfirm,
+    onClone,
+    onCancelClone
+}) => (
+    <Box>
+        <Box className={styles.cloneForm}>
+            <input
+                className={styles.input}
+                type="text"
+                value={cloneUrl}
+                onChange={onChangeCloneUrl}
+                disabled={busy}
+                placeholder="https://git.example.com/user/project.git"
+            />
+            <button
+                className={styles.button}
+                disabled={busy || !cloneUrl || !cloneUrl.trim()}
+                onClick={onClone}
+            >
+                <Download className={styles.buttonIcon} />
+                <FormattedMessage
+                    defaultMessage="Clone"
+                    description="Clone button"
+                    id="mw.git.empty.clone"
+                />
+            </button>
+        </Box>
+        {cloneConfirm ? (
+            <Box className={styles.cloneConfirm}>
+                <p>
+                    <FormattedMessage
+                        // eslint-disable-next-line max-len
+                        defaultMessage="Cloning replaces your current project and its git repository. Discard unsaved changes and clone?"
+                        description="Clone overwrite confirmation"
+                        id="mw.git.empty.cloneConfirm"
+                    />
+                </p>
+                <Box className={styles.rowButtons}>
+                    <button
+                        className={classNames(styles.button, styles.dangerButton)}
+                        disabled={busy}
+                        onClick={onClone}
+                    >
+                        <FormattedMessage
+                            defaultMessage="Clone anyway"
+                            description="Confirm clone button"
+                            id="mw.git.empty.cloneAnyway"
+                        />
+                    </button>
+                    <button
+                        className={styles.button}
+                        disabled={busy}
+                        onClick={onCancelClone}
+                    >
+                        <FormattedMessage
+                            defaultMessage="Cancel"
+                            description="Cancel clone button"
+                            id="mw.git.empty.cloneCancel"
+                        />
+                    </button>
+                </Box>
+            </Box>
+        ) : (
+            <p className={styles.muted}>
+                <FormattedMessage
+                    defaultMessage="Private repos use your token (Remote) and author name (Settings)."
+                    description="Clone auth hint"
+                    id="mw.git.empty.cloneHint"
+                />
+            </p>
+        )}
+    </Box>
+);
+
+ClonePanel.propTypes = {
+    cloneUrl: PropTypes.string,
+    onChangeCloneUrl: PropTypes.func,
+    busy: PropTypes.bool,
+    cloneConfirm: PropTypes.bool,
+    onClone: PropTypes.func,
+    onCancelClone: PropTypes.func
+};
+
 class GitModalComponent extends React.Component {
     constructor (props) {
         super(props);
         this.state = {currentView: takeGitModalInitialView() || 'changes'};
         this.handleNavigate = this.handleNavigate.bind(this);
+        this.handleImportConfigClick = this.handleImportConfigClick.bind(this);
     }
 
     handleNavigate (view) {
         this.setState({currentView: view});
         this.props.onClearDiff();
+    }
+
+    // Opens the hidden file picker used to import a repo config JSON.
+    handleImportConfigClick () {
+        if (this._configInput) {
+            this._configInput.click();
+        }
     }
 
     renderNotInitialized () {
@@ -239,72 +388,14 @@ class GitModalComponent extends React.Component {
                         id="mw.git.empty.or"
                     />
                 </div>
-                <Box className={styles.cloneForm}>
-                    <input
-                        className={styles.input}
-                        type="text"
-                        value={this.props.cloneUrl}
-                        onChange={this.props.onChangeCloneUrl}
-                        disabled={this.props.busy}
-                        placeholder="https://git.example.com/user/project.git"
-                    />
-                    <button
-                        className={styles.button}
-                        disabled={this.props.busy || !this.props.cloneUrl || !this.props.cloneUrl.trim()}
-                        onClick={this.props.onClone}
-                    >
-                        <Download className={styles.buttonIcon} />
-                        <FormattedMessage
-                            defaultMessage="Clone"
-                            description="Clone button"
-                            id="mw.git.empty.clone"
-                        />
-                    </button>
-                </Box>
-                {this.props.cloneConfirm ? (
-                    <Box className={styles.cloneConfirm}>
-                        <p>
-                            <FormattedMessage
-                                // eslint-disable-next-line max-len
-                                defaultMessage="Cloning replaces your current project. Discard unsaved changes and clone?"
-                                description="Clone overwrite confirmation"
-                                id="mw.git.empty.cloneConfirm"
-                            />
-                        </p>
-                        <Box className={styles.rowButtons}>
-                            <button
-                                className={classNames(styles.button, styles.dangerButton)}
-                                disabled={this.props.busy}
-                                onClick={this.props.onClone}
-                            >
-                                <FormattedMessage
-                                    defaultMessage="Clone anyway"
-                                    description="Confirm clone button"
-                                    id="mw.git.empty.cloneAnyway"
-                                />
-                            </button>
-                            <button
-                                className={styles.button}
-                                disabled={this.props.busy}
-                                onClick={this.props.onCancelClone}
-                            >
-                                <FormattedMessage
-                                    defaultMessage="Cancel"
-                                    description="Cancel clone button"
-                                    id="mw.git.empty.cloneCancel"
-                                />
-                            </button>
-                        </Box>
-                    </Box>
-                ) : (
-                    <p className={styles.muted}>
-                        <FormattedMessage
-                            defaultMessage="Private repos use your token (Remote) and author name (Settings)."
-                            description="Clone auth hint"
-                            id="mw.git.empty.cloneHint"
-                        />
-                    </p>
-                )}
+                <ClonePanel
+                    cloneUrl={this.props.cloneUrl}
+                    onChangeCloneUrl={this.props.onChangeCloneUrl}
+                    busy={this.props.busy}
+                    cloneConfirm={this.props.cloneConfirm}
+                    onClone={this.props.onClone}
+                    onCancelClone={this.props.onCancelClone}
+                />
             </Box>
         );
     }
@@ -321,17 +412,42 @@ class GitModalComponent extends React.Component {
                         id="mw.git.changes.heading"
                     />
                 </h2>
-                <textarea
-                    className={styles.commitBox}
-                    placeholder={this.props.intl.formatMessage({
-                        defaultMessage: 'Describe your changes…',
-                        description: 'Commit message placeholder',
-                        id: 'mw.git.changes.placeholder'
-                    })}
-                    value={this.props.commitMessage}
-                    onChange={this.props.onChangeCommitMessage}
-                    disabled={this.props.busy}
-                />
+                <Box className={styles.commitTypeRow}>
+                    <select
+                        className={styles.commitTypeSelect}
+                        value={this.props.commitType || 'feat'}
+                        onChange={this.props.onChangeCommitType}
+                        disabled={this.props.busy}
+                        aria-label={this.props.intl.formatMessage({
+                            defaultMessage: 'Commit type',
+                            description: 'Commit type selector label',
+                            id: 'mw.git.changes.typeLabel'
+                        })}
+                    >
+                        {COMMIT_TYPES.map(t => (
+                            <option
+                                key={t.value}
+                                value={t.value}
+                            >
+                                {`${t.value} · ${this.props.intl.formatMessage({
+                                    id: t.messageId,
+                                    defaultMessage: t.defaultMessage
+                                })}`}
+                            </option>
+                        ))}
+                    </select>
+                    <textarea
+                        className={styles.commitBox}
+                        placeholder={this.props.intl.formatMessage({
+                            defaultMessage: 'Describe your changes…',
+                            description: 'Commit message placeholder',
+                            id: 'mw.git.changes.placeholder'
+                        })}
+                        value={this.props.commitMessage}
+                        onChange={this.props.onChangeCommitMessage}
+                        disabled={this.props.busy}
+                    />
+                </Box>
                 <Box className={styles.rowButtons}>
                     <button
                         className={styles.primaryButton}
@@ -418,15 +534,34 @@ class GitModalComponent extends React.Component {
     }
 
     renderHistory () {
-        const {intl, commits, branchColors, currentBranch, commitGraphLayout} = this.props;
+        const {intl, currentBranch, commitGraphLayout, graphRemoteBranches} = this.props;
+        const remoteBranchSet = new Set(graphRemoteBranches || []);
         const layout = commitGraphLayout || {
             rows: [],
             lanesCount: 1,
-            laneWidth: 14,
-            dotRadius: 4,
-            rowHeight: 28
+            laneWidth: 16,
+            dotRadius: 5,
+            rowHeight: 42
         };
-        const hasCommits = Array.isArray(layout.rows) && layout.rows.length > 0;
+        const rows = Array.isArray(layout.rows) ? layout.rows : [];
+        const hasCommits = rows.length > 0;
+        const rowHeight = layout.rowHeight || 42;
+        const laneWidth = layout.laneWidth || 16;
+        const dotRadius = layout.dotRadius || 5;
+        const lanesCount = Math.max(layout.lanesCount || 1, 1);
+        const graphLeft = 10;
+        const graphWidth = graphLeft + (lanesCount * laneWidth) + 10;
+        const svgHeight = rows.length * rowHeight;
+        const xOf = lane => graphLeft + (lane * laneWidth) + (laneWidth / 2);
+        const yOf = index => (index * rowHeight) + (rowHeight / 2);
+
+        // One background colour per lane: the first commit drawn on that lane
+        // decides its hue, so parallel rails read as distinct tracks.
+        const laneColors = [];
+        for (let l = 0; l < lanesCount; l++) {
+            const first = rows.find(r => r.lane === l);
+            laneColors[l] = (first && first.color) || '#888';
+        }
         return (
             <Box className={styles.section}>
                 <h2 className={styles.sectionTitle}>
@@ -437,147 +572,168 @@ class GitModalComponent extends React.Component {
                     />
                 </h2>
                 {hasCommits ? (
-                    <ul className={styles.commitList}>
-                        {layout.rows.map(row => {
-                            const author = (row.commit && row.commit.author) || {};
-                            const authorName = author.name || '';
-                            const authorEmail = author.email || '';
-                            const subject = row.commit && row.commit.message ?
-                                row.commit.message.split('\n')[0] : '';
-                            const timestamp = author.timestamp || 0;
-                            const selected = this.props.selectedCommitOid === row.oid;
-                            const graphWidth = layout.lanesCount * layout.laneWidth + 12;
-                            const isHeadHere = Boolean(currentBranch) && row.branches.indexOf(currentBranch) !== -1;
-                            const laneX = lane => 6 + lane * layout.laneWidth;
-                            const rowY = idx => idx * layout.rowHeight + layout.rowHeight / 2;
-
-                            // Lane vertical rails (one per lane, full height).
-                            const railLines = [];
-                            for (let l = 0; l < layout.lanesCount; l++) {
-                                railLines.push(
-                                    <line
-                                        key={`rail-${l}`}
-                                        x1={laneX(l)}
-                                        y1={0}
-                                        x2={laneX(l)}
-                                        y2={layout.rows.length * layout.rowHeight}
-                                        stroke="rgba(125,135,150,0.35)"
-                                        strokeWidth="1"
-                                    />
-                                );
-                            }
-
-                            // Parent connections: from current row down to parent row,
-                            // either straight (same lane) or via an elbow.
-                            const parentLines = row.parents.map((p, idx) => {
-                                const ySelf = rowY(row.index);
-                                const yParent = p.index >= 0 ? rowY(p.index) : 0;
-                                const xSelf = laneX(row.lane);
-                                const xParent = laneX(p.lane);
-                                if (xSelf === xParent) {
-                                    if (p.index < row.index) {
-                                        return (
-                                            <line
-                                                key={`p-${idx}`}
-                                                x1={xSelf}
-                                                y1={yParent + layout.dotRadius}
-                                                x2={xSelf}
-                                                y2={ySelf - layout.dotRadius}
-                                                stroke={row.color}
-                                                strokeWidth="1.5"
-                                            />
-                                        );
-                                    }
-                                    return null;
-                                }
-                                // Elbow: down from parent, then horizontal to current lane, ending above the dot.
-                                const path = `M ${xParent} ${yParent + layout.dotRadius} V ${ySelf - layout.dotRadius} H ${xSelf}`;
+                    <div className={styles.historyWrap}>
+                        <svg
+                            className={styles.historyGraph}
+                            width={graphWidth}
+                            height={svgHeight}
+                            aria-hidden="true"
+                        >
+                            {laneColors.map((color, l) => (
+                                <line
+                                    key={`rail-${l}`}
+                                    x1={xOf(l)}
+                                    y1={0}
+                                    x2={xOf(l)}
+                                    y2={svgHeight}
+                                    stroke={color}
+                                    strokeOpacity={0.3}
+                                    strokeWidth={2}
+                                />
+                            ))}
+                            {rows.map(row => {
+                                const ySelf = yOf(row.index);
+                                const xSelf = xOf(row.lane);
+                                const isHead = Boolean(currentBranch) &&
+                                    Array.isArray(row.branches) &&
+                                    row.branches.indexOf(currentBranch) !== -1;
+                                const isMerge = Array.isArray(row.parents) &&
+                                    row.parents.length > 1;
+                                const dotR = isHead ? dotRadius + 2.2 :
+                                    (isMerge ? dotRadius + 0.6 : dotRadius - 0.5);
+                                const dotColor = row.color || laneColors[row.lane] || '#888';
                                 return (
-                                    <path
-                                        key={`p-${idx}`}
-                                        d={path}
-                                        stroke={row.color}
-                                        strokeWidth="1.5"
-                                        fill="none"
-                                    />
-                                );
-                            });
-
-                            return (
-                                <li
-                                    key={row.oid}
-                                    className={classNames(styles.commitRow, {
-                                        [styles.commitRowSelected]: selected
-                                    })}
-                                >
-                                    <svg
-                                        className={styles.commitGraph}
-                                        width={graphWidth}
-                                        height={layout.rowHeight}
-                                        viewBox={`0 0 ${graphWidth} ${layout.rowHeight}`}
-                                        aria-hidden="true"
-                                    >
-                                        {railLines}
-                                        {parentLines}
+                                    <g key={`g-${row.oid}`}>
+                                        {(row.parents || []).map(p => {
+                                            const yParent = p.index >= 0 ? yOf(p.index) : 0;
+                                            const xParent = xOf(p.lane);
+                                            const color = laneColors[p.lane] || dotColor;
+                                            if (xParent === xSelf) {
+                                                return (
+                                                    <line
+                                                        key={`e-${row.oid}-${p.oid}`}
+                                                        x1={xSelf}
+                                                        y1={yParent + dotRadius}
+                                                        x2={xSelf}
+                                                        y2={ySelf - dotRadius}
+                                                        stroke={color}
+                                                        strokeWidth={1.6}
+                                                    />
+                                                );
+                                            }
+                                            return (
+                                                <path
+                                                    key={`e-${row.oid}-${p.oid}`}
+                                                    d={`M ${xParent} ${yParent + dotRadius} ` +
+                                                        `V ${ySelf - dotRadius} H ${xSelf}`}
+                                                    stroke={color}
+                                                    strokeWidth={1.6}
+                                                    fill="none"
+                                                />
+                                            );
+                                        })}
                                         <circle
-                                            cx={laneX(row.lane)}
-                                            cy={rowY(row.index)}
-                                            r={layout.dotRadius}
-                                            fill={row.color}
-                                            stroke="rgba(0,0,0,0.4)"
-                                            strokeWidth="0.5"
+                                            cx={xSelf}
+                                            cy={ySelf}
+                                            r={dotR}
+                                            fill={dotColor}
+                                            stroke={isHead ? 'rgba(255,255,255,0.85)' : 'none'}
+                                            strokeWidth={isHead ? 1.6 : 0}
                                         />
-                                    </svg>
-                                    <div
-                                        className={styles.commitMain}
+                                    </g>
+                                );
+                            })}
+                        </svg>
+                        <ul className={styles.commitList}>
+                            {rows.map(row => {
+                                const author = (row.commit && row.commit.author) || {};
+                                const authorName = author.name || '';
+                                const subject = row.commit && row.commit.message ?
+                                    row.commit.message.split('\n')[0] : '';
+                                const timestamp = author.timestamp || 0;
+                                const selected = this.props.selectedCommitOid === row.oid;
+                                // Detached-HEAD-only commits carry the virtual
+                                // "(detached)" label; hide it from the chips.
+                                const branchChips = (row.branches || [])
+                                    .filter(b => b !== DETACHED_BRANCH);
+                                const isHeadHere = Boolean(currentBranch) &&
+                                    Array.isArray(row.branches) &&
+                                    row.branches.indexOf(currentBranch) !== -1;
+                                return (
+                                    <li
+                                        key={row.oid}
+                                        className={classNames(styles.commitRow, {
+                                            [styles.commitRowSelected]: selected
+                                        })}
                                         onClick={() => this.props.onSelectCommit(row.oid)}
                                     >
-                                        <span className={styles.commitMessage}>{subject}</span>
-                                        <span className={styles.commitMeta}>
-                                            <span className={styles.commitHash}>{row.oid.slice(0, 7)}</span>
-                                            {row.branches.map(b => (
-                                                <span
-                                                    key={b}
-                                                    className={styles.branchChip}
-                                                    style={{backgroundColor: (branchColors || {})[b] || '#888'}}
-                                                >{isHeadHere && b === currentBranch ? `@${b}` : b}</span>
-                                            ))}
-                                            <span className={styles.commitTime}>{formatRelativeTime(intl, timestamp)}</span>
-                                            <span className={styles.commitAuthor}>{authorName}</span>
-                                        </span>
-                                    </div>
-                                    <div className={styles.commitActions}>
-                                        <button
-                                            className={styles.iconButton}
-                                            data-oid={row.oid}
-                                            disabled={this.props.busy}
-                                            title={intl.formatMessage({
-                                                defaultMessage: 'Restore this commit',
-                                                description: 'Restore commit tooltip',
-                                                id: 'mw.git.history.restore'
-                                            })}
-                                            onClick={this.props.onRestoreCommit}
+                                        <div
+                                            className={styles.commitMain}
+                                            style={{paddingLeft: graphWidth}}
                                         >
-                                            <RotateCcw className={styles.buttonIcon} />
-                                        </button>
-                                        <button
-                                            className={styles.iconButton}
-                                            data-oid={row.oid}
-                                            disabled={this.props.busy}
-                                            title={intl.formatMessage({
-                                                defaultMessage: 'Download as .sb3',
-                                                description: 'Download commit tooltip',
-                                                id: 'mw.git.history.download'
-                                            })}
-                                            onClick={this.props.onDownloadCommit}
-                                        >
-                                            <Download className={styles.buttonIcon} />
-                                        </button>
-                                    </div>
-                                </li>
-                            );
-                        })}
-                    </ul>
+                                            <div className={styles.commitMessageRow}>
+                                                <span className={styles.commitMessage}>{subject}</span>
+                                                {branchChips.length > 0 && (
+                                                    <span className={styles.commitChips}>
+                                                        {branchChips.map(b => (
+                                                            <BranchChip
+                                                                key={b}
+                                                                name={b}
+                                                                isRemote={remoteBranchSet.has(b)}
+                                                                current={isHeadHere && b === currentBranch}
+                                                            />
+                                                        ))}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className={styles.commitMetaRow}>
+                                                {authorName && (
+                                                    <span className={styles.commitAuthor}>{authorName}</span>
+                                                )}
+                                                {authorName && (
+                                                    <span className={styles.commitMetaSep}>{'·'}</span>
+                                                )}
+                                                <span className={styles.commitTime}>
+                                                    {formatRelativeTime(intl, timestamp)}
+                                                </span>
+                                                <span className={styles.commitHash}>
+                                                    {row.oid.slice(0, 7)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className={styles.commitActions}>
+                                            <button
+                                                className={styles.iconButton}
+                                                data-oid={row.oid}
+                                                disabled={this.props.busy}
+                                                title={intl.formatMessage({
+                                                    defaultMessage: 'Restore this commit',
+                                                    description: 'Restore commit tooltip',
+                                                    id: 'mw.git.history.restore'
+                                                })}
+                                                onClick={this.props.onRestoreCommit}
+                                            >
+                                                <RotateCcw className={styles.buttonIcon} />
+                                            </button>
+                                            <button
+                                                className={styles.iconButton}
+                                                data-oid={row.oid}
+                                                disabled={this.props.busy}
+                                                title={intl.formatMessage({
+                                                    defaultMessage: 'Download as .sb3',
+                                                    description: 'Download commit tooltip',
+                                                    id: 'mw.git.history.download'
+                                                })}
+                                                onClick={this.props.onDownloadCommit}
+                                            >
+                                                <Download className={styles.buttonIcon} />
+                                            </button>
+                                        </div>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    </div>
                 ) : (
                     <p className={styles.muted}>
                         <FormattedMessage
@@ -593,7 +749,8 @@ class GitModalComponent extends React.Component {
     }
 
     renderCommitDetail () {
-        const {intl, commitGraphLayout, branchColors, selectedCommitOid} = this.props;
+        const {commitGraphLayout, graphRemoteBranches, selectedCommitOid} = this.props;
+        const remoteBranchSet = new Set(graphRemoteBranches || []);
         const layout = commitGraphLayout;
         const row = layout && Array.isArray(layout.rows) ?
             layout.rows.find(r => r.oid === selectedCommitOid) : null;
@@ -606,13 +763,20 @@ class GitModalComponent extends React.Component {
         const fullMessage = commit.message || '';
         const subject = fullMessage.split('\n')[0] || '';
         const body = fullMessage.indexOf('\n') >= 0 ?
-            fullMessage.split('\n').slice(1).join('\n').trim() : '';
+            fullMessage
+                .split('\n')
+                .slice(1)
+                .join('\n')
+                .trim() : '';
         const parentOids = (commit.parent && commit.parent.length ? commit.parent :
             (commit.parents || []));
         const files = Array.isArray(this.props.commitFiles) ? this.props.commitFiles : [];
         const authorEmail = author.email || '';
         const committerName = committer.name || author.name || '';
         const committerEmail = committer.email || authorEmail;
+        // Hide the virtual "(detached)" branch label from the chips.
+        const rowBranches = Array.isArray(row.branches) ?
+            row.branches.filter(b => b !== DETACHED_BRANCH) : [];
 
         return (
             <Box className={styles.commitDetail}>
@@ -634,10 +798,13 @@ class GitModalComponent extends React.Component {
                         </span>
                         <span className={styles.detailValue}>
                             {author.name || ''}{' '}
-                            {authorEmail && <span className={styles.detailMuted}>&lt;{authorEmail}&gt;</span>}
+                            {authorEmail && (
+                                <span className={styles.detailMuted}>{`<${authorEmail}>`}</span>
+                            )}
                         </span>
                     </Box>
-                    {committer && (committer.name || committer.email) && (committer.name !== author.name || committer.email !== authorEmail) && (
+                    {committer && (committer.name || committer.email) &&
+                        (committer.name !== author.name || committer.email !== authorEmail) && (
                         <Box className={styles.detailRow}>
                             <span className={styles.detailLabel}>
                                 <FormattedMessage
@@ -648,7 +815,9 @@ class GitModalComponent extends React.Component {
                             </span>
                             <span className={styles.detailValue}>
                                 {committerName}{' '}
-                                {committerEmail && <span className={styles.detailMuted}>&lt;{committerEmail}&gt;</span>}
+                                {committerEmail && (
+                                    <span className={styles.detailMuted}>{`<${committerEmail}>`}</span>
+                                )}
                             </span>
                         </Box>
                     )}
@@ -688,7 +857,7 @@ class GitModalComponent extends React.Component {
                                     />
                                 </span>
                             ) : (
-                                parentOids.map((poid, i) => (
+                                parentOids.map(poid => (
                                     <code
                                         key={poid}
                                         className={classNames(styles.detailParent, styles.detailParentLink)}
@@ -698,7 +867,7 @@ class GitModalComponent extends React.Component {
                             )}
                         </span>
                     </Box>
-                    {row.branches && row.branches.length > 0 && (
+                    {rowBranches.length > 0 && (
                         <Box className={styles.detailRow}>
                             <span className={styles.detailLabel}>
                                 <FormattedMessage
@@ -708,12 +877,12 @@ class GitModalComponent extends React.Component {
                                 />
                             </span>
                             <span className={styles.detailValue}>
-                                {row.branches.map(b => (
-                                    <span
+                                {rowBranches.map(b => (
+                                    <BranchChip
                                         key={b}
-                                        className={styles.branchChip}
-                                        style={{backgroundColor: (branchColors || {})[b] || '#888'}}
-                                    >{b}</span>
+                                        name={b}
+                                        isRemote={remoteBranchSet.has(b)}
+                                    />
                                 ))}
                             </span>
                         </Box>
@@ -767,7 +936,13 @@ class GitModalComponent extends React.Component {
     }
 
     renderBranches () {
-        const {branches, currentBranch, mergeConflicts, mergeResolutions} = this.props;
+        const {
+            branches,
+            currentBranch,
+            graphRemoteBranches,
+            mergeConflicts,
+            mergeResolutions
+        } = this.props;
         return (
             <Box className={styles.section}>
                 <h2 className={styles.sectionTitle}>
@@ -831,41 +1006,89 @@ class GitModalComponent extends React.Component {
                     </Box>
                 </Box>
                 <ul className={styles.branchList}>
-                    {(branches || []).map(b => (
-                        <li
-                            key={b}
-                            className={styles.branchRow}
-                        >
-                            <span className={styles.filePath}>
-                                {b}
-                                {b === currentBranch && (
-                                    <span className={styles.currentTag}>
+                    {(branches || []).map(b => {
+                        const upstream = remoteUpstreamOf(graphRemoteBranches, b);
+                        return (
+                            <li
+                                key={b}
+                                className={styles.branchRow}
+                            >
+                                <span className={styles.filePath}>
+                                    {b}
+                                    {b === currentBranch && (
+                                        <span className={styles.currentTag}>
+                                            <FormattedMessage
+                                                defaultMessage="current"
+                                                description="Current branch tag"
+                                                id="mw.git.branches.currentTag"
+                                            />
+                                        </span>
+                                    )}
+                                    {upstream && (
+                                        <BranchChip
+                                            name={upstream}
+                                            isRemote
+                                        />
+                                    )}
+                                </span>
+                                {b !== currentBranch && (
+                                    <button
+                                        className={styles.iconButton}
+                                        data-ref={b}
+                                        disabled={this.props.busy}
+                                        onClick={this.props.onDeleteBranch}
+                                        title={this.props.intl.formatMessage({
+                                            defaultMessage: 'Delete branch',
+                                            description: 'Delete branch tooltip',
+                                            id: 'mw.git.branches.delete'
+                                        })}
+                                    >
+                                        <Trash className={styles.buttonIcon} />
+                                    </button>
+                                )}
+                            </li>
+                        );
+                    })}
+                </ul>
+                {Array.isArray(graphRemoteBranches) && graphRemoteBranches.length > 0 && (
+                    <Box className={styles.subSection}>
+                        <h3 className={styles.subTitle}>
+                            <Cloud className={styles.buttonIcon} />
+                            <FormattedMessage
+                                defaultMessage="Remote branches"
+                                description="Remote branches heading"
+                                id="mw.git.branches.remoteHeading"
+                            />
+                        </h3>
+                        <p className={styles.muted}>
+                            <FormattedMessage
+                                defaultMessage="Fetched from your remotes (read-only). Pull or push keeps them in sync."
+                                description="Explains the remote branches list"
+                                id="mw.git.branches.remoteHint"
+                            />
+                        </p>
+                        <ul className={styles.branchList}>
+                            {graphRemoteBranches.map(rb => (
+                                <li
+                                    key={rb}
+                                    className={styles.branchRow}
+                                >
+                                    <BranchChip
+                                        name={rb}
+                                        isRemote
+                                    />
+                                    <span className={styles.readOnlyTag}>
                                         <FormattedMessage
-                                            defaultMessage="current"
-                                            description="Current branch tag"
-                                            id="mw.git.branches.currentTag"
+                                            defaultMessage="read-only"
+                                            description="Read-only tag for remote branches"
+                                            id="mw.git.branches.readOnly"
                                         />
                                     </span>
-                                )}
-                            </span>
-                            {b !== currentBranch && (
-                                <button
-                                    className={styles.iconButton}
-                                    data-ref={b}
-                                    disabled={this.props.busy}
-                                    onClick={this.props.onDeleteBranch}
-                                    title={this.props.intl.formatMessage({
-                                        defaultMessage: 'Delete branch',
-                                        description: 'Delete branch tooltip',
-                                        id: 'mw.git.branches.delete'
-                                    })}
-                                >
-                                    <Trash className={styles.buttonIcon} />
-                                </button>
-                            )}
-                        </li>
-                    ))}
-                </ul>
+                                </li>
+                            ))}
+                        </ul>
+                    </Box>
+                )}
                 <Box className={styles.subSection}>
                     <h3 className={styles.subTitle}>
                         <GitMerge className={styles.buttonIcon} />
@@ -1245,6 +1468,204 @@ class GitModalComponent extends React.Component {
                         />
                     </p>
                 </Box>
+                <Box className={styles.field}>
+                    <label className={styles.fieldLabel}>
+                        <FormattedMessage
+                            defaultMessage="Pull into current branch"
+                            description="Pull field label"
+                            id="mw.git.remote.pullBranch"
+                        />
+                    </label>
+                    <Box className={styles.inlineForm}>
+                        <select
+                            className={styles.select}
+                            value={this.props.pushRemote}
+                            disabled={this.props.busy || !remotes || remotes.length === 0}
+                            onChange={this.props.onChangePushRemote}
+                        >
+                            {(!remotes || remotes.length === 0) && (
+                                <option value="">
+                                    {this.props.intl.formatMessage({
+                                        defaultMessage: 'No remotes',
+                                        description: 'Placeholder when no remotes exist',
+                                        id: 'mw.git.remote.noneOption'
+                                    })}
+                                </option>
+                            )}
+                            {(remotes || []).map(remote => (
+                                <option
+                                    key={remote.name}
+                                    value={remote.name}
+                                >{remote.name}</option>
+                            ))}
+                        </select>
+                        {this.props.currentBranch ? (
+                            <BranchChip
+                                name={this.props.currentBranch}
+                                current
+                            />
+                        ) : (
+                            <span className={styles.muted}>
+                                <FormattedMessage
+                                    defaultMessage="no branch (detached HEAD)"
+                                    description="Shown when HEAD is detached so pull is impossible"
+                                    id="mw.git.remote.noBranch"
+                                />
+                            </span>
+                        )}
+                        <button
+                            className={styles.primaryButton}
+                            disabled={this.props.busy || !remotes || remotes.length === 0 ||
+                                !this.props.currentBranch}
+                            onClick={this.props.onPull}
+                        >
+                            <Download className={styles.buttonIcon} />
+                            <FormattedMessage
+                                defaultMessage="Pull"
+                                description="Pull button"
+                                id="mw.git.remote.pull"
+                            />
+                        </button>
+                    </Box>
+                    <p className={styles.muted}>
+                        <FormattedMessage
+                            // eslint-disable-next-line max-len
+                            defaultMessage="Fetches from the remote and fast-forwards your current branch (git pull). Needs a checked-out local branch."
+                            description="Pull help text"
+                            id="mw.git.remote.pullHelp"
+                        />
+                    </p>
+                </Box>
+                <Box className={styles.field}>
+                    <label className={styles.fieldLabel}>
+                        <FormattedMessage
+                            defaultMessage="Fetch from remote"
+                            description="Fetch field label"
+                            id="mw.git.remote.fetchLabel"
+                        />
+                    </label>
+                    <Box className={styles.inlineForm}>
+                        <select
+                            className={styles.select}
+                            value={this.props.pushRemote}
+                            disabled={this.props.busy || !remotes || remotes.length === 0}
+                            onChange={this.props.onChangePushRemote}
+                        >
+                            {(!remotes || remotes.length === 0) && (
+                                <option value="">
+                                    {this.props.intl.formatMessage({
+                                        defaultMessage: 'No remotes',
+                                        description: 'Placeholder when no remotes exist',
+                                        id: 'mw.git.remote.noneOption'
+                                    })}
+                                </option>
+                            )}
+                            {(remotes || []).map(remote => (
+                                <option
+                                    key={remote.name}
+                                    value={remote.name}
+                                >{remote.name}</option>
+                            ))}
+                        </select>
+                        <button
+                            className={styles.primaryButton}
+                            disabled={this.props.busy || !remotes || remotes.length === 0}
+                            onClick={this.props.onFetch}
+                        >
+                            <RefreshCcw className={styles.buttonIcon} />
+                            <FormattedMessage
+                                defaultMessage="Fetch"
+                                description="Fetch button"
+                                id="mw.git.remote.fetch"
+                            />
+                        </button>
+                    </Box>
+                    <p className={styles.muted}>
+                        <FormattedMessage
+                            // eslint-disable-next-line max-len
+                            defaultMessage={'Downloads remote branches and tags without touching your project (like git fetch). New origin/… refs then show up in History and Branches.'}
+                            description="Fetch help text"
+                            id="mw.git.remote.fetchHelp"
+                        />
+                    </p>
+                </Box>
+                <Box className={styles.subSection}>
+                    <h3 className={styles.subTitle}>
+                        <FormattedMessage
+                            defaultMessage="Clone another repository"
+                            description="Remote clone heading"
+                            id="mw.git.remote.cloneHeading"
+                        />
+                    </h3>
+                    <p className={styles.muted}>
+                        <FormattedMessage
+                            // eslint-disable-next-line max-len
+                            defaultMessage="Open a different project from a remote URL, like switching repositories in an IDE. The current project's own history stays inside its .sb3 file."
+                            description="Remote clone explanation"
+                            id="mw.git.remote.cloneHelp"
+                        />
+                    </p>
+                    <ClonePanel
+                        cloneUrl={this.props.cloneUrl}
+                        onChangeCloneUrl={this.props.onChangeCloneUrl}
+                        busy={this.props.busy}
+                        cloneConfirm={this.props.cloneConfirm}
+                        onClone={this.props.onClone}
+                        onCancelClone={this.props.onCancelClone}
+                    />
+                </Box>
+                <Box className={styles.subSection}>
+                    <h3 className={styles.subTitle}>
+                        <FormattedMessage
+                            defaultMessage="Repository config"
+                            description="Repo config heading"
+                            id="mw.git.remote.configHeading"
+                        />
+                    </h3>
+                    <p className={styles.muted}>
+                        <FormattedMessage
+                            // eslint-disable-next-line max-len
+                            defaultMessage="Export this repository's remotes, author and default branch as a .json file, then import it in any other repository (or another machine) to reuse the same setup without re-typing URLs."
+                            description="Repo config explanation"
+                            id="mw.git.remote.configHelp"
+                        />
+                    </p>
+                    <Box className={styles.inlineForm}>
+                        <button
+                            className={styles.button}
+                            disabled={this.props.busy}
+                            onClick={this.props.onExportRepoConfig}
+                        >
+                            <Download className={styles.buttonIcon} />
+                            <FormattedMessage
+                                defaultMessage="Export config"
+                                description="Export config button"
+                                id="mw.git.remote.configExport"
+                            />
+                        </button>
+                        <button
+                            className={styles.button}
+                            disabled={this.props.busy}
+                            onClick={this.handleImportConfigClick}
+                        >
+                            <Upload className={styles.buttonIcon} />
+                            <FormattedMessage
+                                defaultMessage="Import config…"
+                                description="Import config button"
+                                id="mw.git.remote.configImport"
+                            />
+                        </button>
+                        <input
+                            ref={el => {
+                                this._configInput = el;
+                            }}
+                            className={styles.hiddenInput}
+                            type="file"
+                            accept=".json,application/json"
+                            onChange={this.props.onImportRepoConfig}
+                        />
+                    </Box>
+                </Box>
             </Box>
         );
     }
@@ -1383,7 +1804,13 @@ class GitModalComponent extends React.Component {
                             </Box>
                         )}
                         {this.props.error && (
-                            <Box className={styles.errorBar}>{this.props.error}</Box>
+                            <Box className={styles.errorBar}>{translateGitError(this.props.error)}</Box>
+                        )}
+                        {this.props.success && !this.props.busy && (
+                            <Box
+                                className={styles.successBar}
+                                role="status"
+                            >{this.props.success}</Box>
                         )}
                         {this.renderContent()}
                     </ModalSidebarContent>
@@ -1399,13 +1826,14 @@ GitModalComponent.propTypes = {
     busyMessage: PropTypes.string,
     busyProgress: PropTypes.number,
     error: PropTypes.string,
+    success: PropTypes.string,
     initialized: PropTypes.bool,
     currentBranch: PropTypes.string,
     branches: PropTypes.arrayOf(PropTypes.string),
     commits: PropTypes.arrayOf(PropTypes.object),
     graphNodes: PropTypes.arrayOf(PropTypes.object),
     graphBranchLogs: PropTypes.arrayOf(PropTypes.object),
-    branchColors: PropTypes.object,
+    graphRemoteBranches: PropTypes.arrayOf(PropTypes.string),
     commitGraphLayout: PropTypes.shape({
         rows: PropTypes.arrayOf(PropTypes.object),
         lanesCount: PropTypes.number,
@@ -1414,6 +1842,8 @@ GitModalComponent.propTypes = {
         rowHeight: PropTypes.number
     }),
     commitMessage: PropTypes.string,
+    commitType: PropTypes.string,
+    onChangeCommitType: PropTypes.func,
     newBranchName: PropTypes.string,
     mergeSourceBranch: PropTypes.string,
     onResolveInEditor: PropTypes.func,
@@ -1472,6 +1902,10 @@ GitModalComponent.propTypes = {
     onAddRemote: PropTypes.func,
     onRemoveRemote: PropTypes.func,
     onPush: PropTypes.func,
+    onPull: PropTypes.func,
+    onFetch: PropTypes.func,
+    onExportRepoConfig: PropTypes.func,
+    onImportRepoConfig: PropTypes.func,
     onClose: PropTypes.func
 };
 

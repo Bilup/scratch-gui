@@ -20,9 +20,17 @@
  * (or -1 if the parent isn't in the visible window).
  */
 
-const DEFAULT_LANE_WIDTH = 14;
-const DEFAULT_DOT_RADIUS = 4;
-const DEFAULT_ROW_HEIGHT = 28;
+const DEFAULT_LANE_WIDTH = 16;
+const DEFAULT_DOT_RADIUS = 5;
+const DEFAULT_ROW_HEIGHT = 42;
+
+/**
+ * Virtual branch label used for commits that only exist on a detached HEAD
+ * (i.e. commits made after "restore to this commit", which belong to no local
+ * branch). Real branch names can never collide with it: they are validated
+ * against /^[a-zA-Z0-9._/-]+$/ and cannot contain parentheses.
+ */
+export const DETACHED_BRANCH = '(detached)';
 
 const layoutCommitGraph = ({
     graphNodes,
@@ -64,8 +72,9 @@ const layoutCommitGraph = ({
     // contain the commit, else inherit the first parent's lane.
     nodes.forEach(node => {
         if (!node || !node.oid) return;
-        if (oidToLane[node.oid] !== undefined) return;
-        const containing = (node.branches || []).filter(b => branchToLane[b] !== undefined);
+        if (Object.prototype.hasOwnProperty.call(oidToLane, node.oid)) return;
+        const containing = (node.branches || [])
+            .filter(b => Object.prototype.hasOwnProperty.call(branchToLane, b));
         if (containing.length) {
             let best = containing[0];
             for (const b of containing) {
@@ -75,7 +84,7 @@ const layoutCommitGraph = ({
             return;
         }
         const firstParent = (node.parents || [])[0];
-        if (firstParent && oidToLane[firstParent] !== undefined) {
+        if (firstParent && Object.prototype.hasOwnProperty.call(oidToLane, firstParent)) {
             oidToLane[node.oid] = oidToLane[firstParent];
             return;
         }
@@ -86,11 +95,14 @@ const layoutCommitGraph = ({
         const lane = oidToLane[node.oid] || 0;
         const firstBranch = (node.branches || [])[0];
         const color = (firstBranch && colors[firstBranch]) || '#888';
-        const parents = (node.parents || []).map(poid => ({
-            oid: poid,
-            lane: oidToLane[poid] !== undefined ? oidToLane[poid] : 0,
-            index: oidToIndex.has(poid) ? oidToIndex.get(poid) : -1
-        }));
+        const parents = (node.parents || []).map(poid => {
+            const hasLane = Object.prototype.hasOwnProperty.call(oidToLane, poid);
+            return {
+                oid: poid,
+                lane: hasLane ? oidToLane[poid] : 0,
+                index: oidToIndex.has(poid) ? oidToIndex.get(poid) : -1
+            };
+        });
         return {
             oid: node.oid,
             index: i,
