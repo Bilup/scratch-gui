@@ -239,11 +239,26 @@ const SBFileUploaderHOC = function (WrappedComponent) {
                         }
                         this.props.vm.renderer.draw();
                         console.log('[SBFileUploader] Step 6: Renderer draw called');
-                        // Restore any git history embedded in the .sb3 (fractch tree + .git),
-                        // or clear a stale repo if the loaded project has none.
+                        // Restore any git history embedded in the .sb3 (fractch tree + .git).
+                        //
+                        // Decision D4: a project WITHOUT an embedded repository no
+                        // longer wipes the current one. The old behaviour silently
+                        // destroyed the user's repository (and every branch in it)
+                        // just because they opened an external .sb3; now the
+                        // "preserve" policy leaves it untouched and reports why.
                         try {
-                            const {importRepoFromSb3} = await import('../git/browser-git');
-                            await importRepoFromSb3(loadedBytes);
+                            const {default: workspace} = await import('../git/workspace/adapter.js');
+                            const result = await workspace.importRepo({
+                                input: loadedBytes,
+                                policy: workspace.IMPORT_POLICIES.PRESERVE
+                            });
+                            if (result.imported) {
+                                console.log('[SBFileUploader] Restored embedded git repository');
+                            } else if (result.reason === 'absent') {
+                                console.info(
+                                    '[SBFileUploader] No embedded git repository; existing repository preserved'
+                                );
+                            }
                         } catch (gitError) {
                             log.error('Failed to restore embedded git history:', gitError);
                         }
