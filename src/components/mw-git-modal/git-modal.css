@@ -999,3 +999,155 @@
 .hiddenInput {
     display: none;
 }
+
+/* ---------------------------------------------------------------------------
+   Staging area (decision D2).
+   The changes list is split into "Staged changes" and "Changes" groups, each
+   row carrying a real checkbox that moves the path in or out of the index.
+   Appended last so none of the frozen rules above are touched.
+   --------------------------------------------------------------------------- */
+
+.changeGroup {
+    margin-top: 0.85rem;
+}
+
+.changeGroupHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0 0.15rem;
+}
+
+.changeGroupTitle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.76rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: $text-primary;
+}
+
+.changeCount {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 9px;
+    background: $ui-tertiary;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0;
+}
+
+.linkButton {
+    border: none;
+    background: none;
+    padding: 0.15rem 0.25rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    color: $looks-secondary;
+    cursor: pointer;
+}
+
+.linkButton:hover:not(:disabled) {
+    text-decoration: underline;
+}
+
+.linkButton:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.changeCheckbox {
+    flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+    margin: 0;
+    accent-color: $looks-secondary;
+    cursor: pointer;
+}
+
+/* Renamed files read as a single entry: "old → new". */
+.badgeRename {
+    background: #0277bd;
+}
+
+.filePathOld {
+    opacity: 0.6;
+    text-decoration: line-through;
+}
+
+.filePathArrow {
+    margin: 0 0.35rem;
+    opacity: 0.7;
+}
+
+/* ---------------------------------------------------------------------------
+   Sync banner (decision D3): drift between the checked-out branch and its
+   upstream, so Push / Pull never has to be guessed at.
+   --------------------------------------------------------------------------- */
+
+.syncBar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: -0.35rem 0 0.85rem;
+    padding: 0.35rem 0.6rem;
+    border-radius: 6px;
+    background: $ui-tertiary;
+    font-size: 0.75rem;
+}
+
+.syncText {
+    flex: 1;
+    color: $text-primary;
+    opacity: 0.85;
+    word-break: break-all;
+}
+
+.syncCount {
+    flex-shrink: 0;
+    font-family: monospace;
+    font-weight: 700;
+}
+
+.syncAhead {
+    color: #2e7d32;
+}
+
+.syncBehind {
+    color: #c62828;
+}
+
+/* ---------------------------------------------------------------------------
+   Detached HEAD banner.
+   HEAD holding a raw commit is a dead end in this product: the commit can be
+   neither pushed nor seen on a branch. The window used to show only "no branch
+   (detached HEAD)" in the Remote view, with no way back — the recovery picker
+   below is the way out. Appended last so none of the frozen rules above move.
+   --------------------------------------------------------------------------- */
+.detachedBar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 1.5rem;
+    background: color-mix(in srgb, #ff8c1a 18%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, #ff8c1a 45%, transparent);
+}
+
+.detachedText {
+    flex: 1;
+    color: #8a4b00;
+    font-size: 0.82rem;
+    word-break: break-word;
+}
+
+.detachedSelect {
+    flex-shrink: 0;
+    max-width: 14rem;
+}

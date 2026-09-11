@@ -12,6 +12,7 @@ import {
 import RestorePointAPI from '../api/restore-points.js';
 import {getFormattedMessage, translateGitProgressPhase} from './i18n.js';
 import {DETACHED_BRANCH} from './graph-layout.js';
+import {classifyPull, PULL_VERDICTS} from './remote/reconcile.js';
 
 const FS_NAME = 'bilup-git';
 const REPO_DIR = '/repo';
@@ -836,11 +837,17 @@ const getUpstreamBranch = async ({branch} = {}) => {
 // Behavioural clone of `git pull`: fetch first, then fast-forward the checked
 // out branch when the remote is ahead of it. Returns a structured result so the
 // UI can distinguish "nothing to do" from "updated":
-//   {status: 'ahead'}  — local is at or ahead of the remote tip (nothing pulled)
-//   {status: 'pulled'} — remote commits were fast-forwarded into the branch
+//   {status: 'up-to-date'} — the tips already match (no working tree change)
+//   {status: 'ahead'}      — local is ahead of the remote tip (nothing pulled)
+//   {status: 'pulled'}     — remote commits were fast-forwarded into the branch
 // A diverged branch (both sides have commits the other lacks) throws a
 // localized error steering the user to the visual merge flow instead of
 // leaving them with a raw FastForwardError.
+//
+// The direction of the two reachability checks lives in `remote/reconcile.js`:
+// getting it backwards means the one case `git pull` exists for ("the remote
+// has commits I do not") reports "nothing to pull", and the no-op case rebuilds
+// the open project for nothing. Covered by test/unit/git/remote-reconcile.test.js.
 const pull = async ({vm, remote, ref, author, onAuth, onProgress} = {}) => {
     if (!vm) {
         throw new Error('VM is required');
@@ -880,7 +887,9 @@ const pull = async ({vm, remote, ref, author, onAuth, onProgress} = {}) => {
     }
 
     const headOid = await git.resolveRef({fs, dir: REPO_DIR, ref: 'HEAD'});
-    const isDescendent = (oid, ancestor) => git.isDescendent({
+    // `git.isDescendent({oid, ancestor})` answers "is `ancestor` reachable from
+    // `oid`" — the wrapper keeps the argument order honest at the call site.
+    const contains = (oid, ancestor) => git.isDescendent({
         fs,
         dir: REPO_DIR,
         oid,
@@ -888,18 +897,15 @@ const pull = async ({vm, remote, ref, author, onAuth, onProgress} = {}) => {
         depth: -1
     }).catch(() => false);
 
-    const remoteReachableFromHead = headOid === remoteOid ||
-        await isDescendent(remoteOid, headOid);
-    const headReachableFromRemote = headOid === remoteOid ||
-        await isDescendent(headOid, remoteOid);
-
-    if (remoteReachableFromHead) {
-        // Local branch already contains the remote tip (or matches it): nothing
-        // to pull. If only the local side is ahead, the fix is a push.
+    const verdict = await classifyPull({headOid, remoteOid, contains});
+    if (verdict === PULL_VERDICTS.UP_TO_DATE) {
+        return {status: 'up-to-date'};
+    }
+    if (verdict === PULL_VERDICTS.LOCAL_AHEAD) {
+        // Only the local side moved on: nothing to pull, the fix is a push.
         return {status: 'ahead'};
     }
-    if (!headReachableFromRemote) {
-        // Neither side contains the other: diverged histories.
+    if (verdict === PULL_VERDICTS.DIVERGED) {
         throw new Error(
             'Diverged branches: your local branch and the remote have commits ' +
             'the other side does not. Fast-forward is impossible — merge manually ' +
@@ -911,7 +917,7 @@ const pull = async ({vm, remote, ref, author, onAuth, onProgress} = {}) => {
     // the remote tip. fastForwardOnly is safe here because we proved above that
     // the remote tip is a descendent of HEAD.
     try {
-        await git.merge({
+        const result = await git.merge({
             fs,
             dir: REPO_DIR,
             ours: localRef,
@@ -919,6 +925,23 @@ const pull = async ({vm, remote, ref, author, onAuth, onProgress} = {}) => {
             fastForwardOnly: true,
             author: author || getDefaultAuthor()
         });
+        // Trust the merge's own report over the pre-flight verdict: a race or a
+        // stale tracking ref must not be reported as "pulled" when the branch
+        // never moved (the caller then rebuilds the whole open project).
+        if (result && result.oid === remoteOid && result.oid !== headOid) {
+            // A fast-forward only moves the branch ref: isomorphic-git, unlike
+            // `git pull`, leaves the working tree alone. Refresh it from the new
+            // tip, otherwise the editor would rebuild the project from a stale
+            // tree and the pull would be invisible in the project. Same recipe as
+            // checkoutBranch: clear first so files the commit deleted are gone.
+            await clearWorkdirExceptGit(fs.promises);
+            await git.checkout({fs, dir: REPO_DIR, ref: localRef, force: true});
+            return {status: 'pulled', oid: remoteOid};
+        }
+        if (result && (result.alreadyMerged || result.oid === headOid)) {
+            return {status: 'up-to-date'};
+        }
+        return {status: 'pulled', oid: (result && result.oid) || remoteOid};
     } catch (e) {
         if (e && (e.code === 'FastForwardError' || /fast-forward/i.test(e.message || ''))) {
             throw new Error(
@@ -929,11 +952,15 @@ const pull = async ({vm, remote, ref, author, onAuth, onProgress} = {}) => {
         }
         throw new Error(`Failed to pull: ${e && e.message ? e.message : String(e)}`);
     }
-
-    return {status: 'pulled', oid: remoteOid};
 };
 
-const commitProject = async ({vm, message, author, onProgress} = {}) => {
+// `onlyStaged` (decision D2): when true the index is left exactly as the user
+// staged it, so committing never silently stages the whole working tree. The
+// working tree is still refreshed from the project first — that is what makes
+// the freshly edited files visible to `git status` — but the staging call is
+// skipped. Callers that own no staging UI (the File menu) keep the old
+// stage-everything behaviour by leaving it false.
+const commitProject = async ({vm, message, author, onProgress, onlyStaged = false} = {}) => {
     if (!message || typeof message !== 'string' || !message.trim()) {
         throw new Error('Commit message is required');
     }
@@ -986,7 +1013,9 @@ const commitProject = async ({vm, message, author, onProgress} = {}) => {
 
         // Ensure any new files are discoverable by isomorphic-git (it uses callback fs,
         // but LightningFS mirrors state).
-        await stageAll(fs, REPO_DIR, {onProgress});
+        if (!onlyStaged) {
+            await stageAll(fs, REPO_DIR, {onProgress});
+        }
 
         // After staging, ensure there are changes to commit.
         // If there are no differences, abort the commit.
@@ -1004,7 +1033,7 @@ const commitProject = async ({vm, message, author, onProgress} = {}) => {
         });
 
         if (!hasChanges) {
-            throw new Error('No changes to commit');
+            throw new Error(onlyStaged ? 'No staged changes to commit' : 'No changes to commit');
         }
 
         const effectiveAuthor = author || getDefaultAuthor();

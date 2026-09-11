@@ -5,6 +5,7 @@
 
 const KNOWN_PREFIXES = [
     [/^Repository not initialized/, '尚未初始化 Git 仓库'],
+    [/^No staged changes to commit/, '没有已暂存的更改。请先在“更改”列表中勾选要提交的文件，或点击“全部暂存”。'],
     [/^No changes to commit/, '没有可提交的更改（工作区与上次提交一致）'],
     [/^Project snapshot not found/, '找不到项目快照'],
     [/^No branch to push/, '没有可推送的分支，请先检出一个分支'],
@@ -28,6 +29,14 @@ const KNOWN_PREFIXES = [
     [/^Failed to read snapshot at commit/, '读取该提交的项目快照失败'],
     [/^Failed to delete repo/, '删除仓库失败'],
     [/^Invalid workspace path/, '非法文件路径'],
+    [/^Invalid git configuration file/, 'Git 配置文件格式不正确或已损坏'],
+    [/^No merge in progress/, '当前没有进行中的合并'],
+    [/^Commit message is required/, '提交信息不能为空'],
+    [/^Cannot undo commit while detached/, '处于游离 HEAD 状态（未在任何分支上），无法撤销提交。请先检出一个分支。'],
+    [/^No previous commit to undo to/, '没有可撤销的上一个提交。'],
+    [/^Failed to undo commit/, '撤销提交失败'],
+    [/^VM is required/, '需要先打开一个项目（未获取到编辑器实例）'],
+    [/^VM not provided/, '需要先打开一个项目（未获取到编辑器实例）'],
     [/^Failed to initialize/, '初始化仓库失败']
 ];
 
@@ -36,6 +45,104 @@ const KNOWN_PREFIXES = [
 const DETAILED = [
     /^Failed to (clone|commit|push|pull|merge|checkout|restore|save project|read snapshot)/
 ];
+
+// ---------------------------------------------------------------------------
+// Typed errors
+//
+// The legacy layer communicates failures as plain English strings, which forces
+// every caller to re-parse prose to decide what to do. `GitError` adds a stable
+// `code` so the UI can branch on intent (e.g. DIVERGED → offer a merge flow)
+// while `raw` keeps the original detail for diagnostics.
+// ---------------------------------------------------------------------------
+
+export const GIT_ERROR_CODES = Object.freeze({
+    NOT_INITIALIZED: 'NOT_INITIALIZED',
+    NO_CHANGES: 'NO_CHANGES',
+    SNAPSHOT_MISSING: 'SNAPSHOT_MISSING',
+    NO_BRANCH: 'NO_BRANCH',
+    NO_UPSTREAM: 'NO_UPSTREAM',
+    DIVERGED: 'DIVERGED',
+    NON_FAST_FORWARD: 'NON_FAST_FORWARD',
+    AUTH: 'AUTH',
+    FORBIDDEN: 'FORBIDDEN',
+    NOT_FOUND: 'NOT_FOUND',
+    NETWORK: 'NETWORK',
+    INVALID_NAME: 'INVALID_NAME',
+    NOT_FRACTCH: 'NOT_FRACTCH',
+    DETACHED_HEAD: 'DETACHED_HEAD',
+    NO_PREVIOUS_COMMIT: 'NO_PREVIOUS_COMMIT',
+    ABORTED: 'ABORTED',
+    UNKNOWN: 'UNKNOWN'
+});
+
+const CODE_PATTERNS = [
+    [/^Repository not initialized/, GIT_ERROR_CODES.NOT_INITIALIZED],
+    [/^No staged changes to commit/, GIT_ERROR_CODES.NO_CHANGES],
+    [/^No changes to commit/, GIT_ERROR_CODES.NO_CHANGES],
+    [/^Project snapshot not found/, GIT_ERROR_CODES.SNAPSHOT_MISSING],
+    [/^No branch to push/, GIT_ERROR_CODES.NO_BRANCH],
+    [/^No branch checked out to pull into/, GIT_ERROR_CODES.NO_BRANCH],
+    [/^No upstream branch/, GIT_ERROR_CODES.NO_UPSTREAM],
+    [/^Diverged branches/, GIT_ERROR_CODES.DIVERGED],
+    [/^No previous commit/, GIT_ERROR_CODES.NO_PREVIOUS_COMMIT],
+    [/^Cannot undo commit while detached/, GIT_ERROR_CODES.DETACHED_HEAD],
+    [/^Invalid branch name/, GIT_ERROR_CODES.INVALID_NAME],
+    [/^Invalid workspace path/, GIT_ERROR_CODES.INVALID_NAME],
+    [/not a fractch project/i, GIT_ERROR_CODES.NOT_FRACTCH],
+    [/detached/i, GIT_ERROR_CODES.DETACHED_HEAD]
+];
+
+// Transport-level failures are matched on loose substrings because
+// isomorphic-git wraps server responses in prose.
+const TRANSPORT_PATTERNS = [
+    [/non-fast-forward|not a fast-forward|rejected/i, GIT_ERROR_CODES.NON_FAST_FORWARD],
+    [/401|unauthorized|authentication/i, GIT_ERROR_CODES.AUTH],
+    [/403|forbidden/i, GIT_ERROR_CODES.FORBIDDEN],
+    [/404|not found/i, GIT_ERROR_CODES.NOT_FOUND],
+    [/cors|failed to fetch|networkerror|network error/i, GIT_ERROR_CODES.NETWORK]
+];
+
+// Best-effort classification of a raw English git error into a stable code.
+// Unrecognized text yields UNKNOWN — callers must still handle that case.
+export const classifyGitError = raw => {
+    if (typeof raw !== 'string' || raw.length === 0) {
+        return GIT_ERROR_CODES.UNKNOWN;
+    }
+    for (const [pattern, code] of CODE_PATTERNS) {
+        if (pattern.test(raw)) return code;
+    }
+    for (const [pattern, code] of TRANSPORT_PATTERNS) {
+        if (pattern.test(raw)) return code;
+    }
+    return GIT_ERROR_CODES.UNKNOWN;
+};
+
+export class GitError extends Error {
+    constructor (code, message, options = {}) {
+        super(message);
+        this.name = 'GitError';
+        this.code = code || GIT_ERROR_CODES.UNKNOWN;
+        // Original text before any localization, kept for diagnostics.
+        this.raw = options.raw || message || '';
+        this.hint = options.hint || '';
+        if ('cause' in options) {
+            this.cause = options.cause;
+        }
+    }
+}
+
+// Normalize anything thrown by the git layer into a GitError. Already-typed
+// errors pass through untouched so codes survive re-wrapping.
+export const toGitError = (err, fallbackCode = GIT_ERROR_CODES.UNKNOWN) => {
+    if (err instanceof GitError) return err;
+    const raw = err && err.message ? err.message : String(err);
+    const code = classifyGitError(raw);
+    return new GitError(
+        code === GIT_ERROR_CODES.UNKNOWN ? fallbackCode : code,
+        raw,
+        {cause: err, raw}
+    );
+};
 
 const translateGitError = (raw, fallback = raw) => {
     if (typeof raw !== 'string' || raw.length === 0) {

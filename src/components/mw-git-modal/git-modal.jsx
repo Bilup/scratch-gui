@@ -33,7 +33,6 @@ import isScratchDesktop from '../../lib/utils/isScratchDesktop.js';
 import {takeGitModalInitialView} from '../../lib/git/modal-view.js';
 
 import styles from './git-modal.css';
-import translateGitError from '../../lib/git/errors.js';
 import {DETACHED_BRANCH} from '../../lib/git/graph-layout.js';
 
 const pad2 = n => String(n).padStart(2, '0');
@@ -188,6 +187,31 @@ const messages = defineMessages({
         defaultMessage: 'Working…',
         description: 'Generic busy message',
         id: 'mw.git.working'
+    },
+    stageFile: {
+        defaultMessage: 'Stage {filepath}',
+        description: 'Checkbox label that stages one file',
+        id: 'mw.git.changes.stageFile'
+    },
+    unstageFile: {
+        defaultMessage: 'Unstage {filepath}',
+        description: 'Checkbox label that unstages one file',
+        id: 'mw.git.changes.unstageFile'
+    },
+    syncUntracked: {
+        defaultMessage: '{ref} is not fetched yet — push once to start tracking it.',
+        description: 'Sync banner when the branch has no upstream',
+        id: 'mw.git.sync.untracked'
+    },
+    syncUpToDate: {
+        defaultMessage: 'In sync with {ref}.',
+        description: 'Sync banner when local and remote match',
+        id: 'mw.git.sync.upToDate'
+    },
+    syncDrift: {
+        defaultMessage: 'Compared with {ref}:',
+        description: 'Sync banner prefix before the ahead/behind counters',
+        id: 'mw.git.sync.drift'
     }
 });
 
@@ -198,12 +222,14 @@ const changeTypeClass = (styleMap, description) => {
         return styleMap.badgeAdd;
     case 'deleted':
         return styleMap.badgeDelete;
+    case 'renamed':
+        return styleMap.badgeRename;
     default:
         return styleMap.badgeModify;
     }
 };
 
-// Git status badge: the change-type letter (M/A/D/U) coloured by its kind.
+// Git status badge: the change-type letter (M/A/D/U/R) coloured by its kind.
 const FileBadge = ({description}) => {
     const letter = description && description[0] ? description[0].toUpperCase() : '?';
     return (
@@ -345,6 +371,40 @@ class GitModalComponent extends React.Component {
         this.state = {currentView: takeGitModalInitialView() || 'changes'};
         this.handleNavigate = this.handleNavigate.bind(this);
         this.handleImportConfigClick = this.handleImportConfigClick.bind(this);
+        this.handleChangeRowClick = this.handleChangeRowClick.bind(this);
+        this.handleStopPropagation = this.handleStopPropagation.bind(this);
+        this.handleStageToggle = this.handleStageToggle.bind(this);
+        this.handleUnstageToggle = this.handleUnstageToggle.bind(this);
+    }
+
+    // Delegated handlers for the staging rows. Those rows are produced inside a
+    // map, so a per-row arrow function would allocate a closure on every render
+    // (and trip react/jsx-no-bind); the path travels in a data attribute
+    // instead.
+    handleChangeRowClick (e) {
+        const filepath = e.currentTarget.getAttribute('data-filepath');
+        if (filepath && this.props.onDiffChangedFile) {
+            this.props.onDiffChangedFile(filepath);
+        }
+    }
+
+    handleStopPropagation (e) {
+        // Ticking a checkbox must not also open the file diff.
+        e.stopPropagation();
+    }
+
+    handleStageToggle (e) {
+        const filepath = e.currentTarget.getAttribute('data-filepath');
+        if (filepath && this.props.onStageFile) {
+            this.props.onStageFile(filepath);
+        }
+    }
+
+    handleUnstageToggle (e) {
+        const filepath = e.currentTarget.getAttribute('data-filepath');
+        if (filepath && this.props.onUnstageFile) {
+            this.props.onUnstageFile(filepath);
+        }
     }
 
     handleNavigate (view) {
@@ -400,9 +460,84 @@ class GitModalComponent extends React.Component {
         );
     }
 
+    // One row of the working-changes list. `checked` is the staging state: the
+    // checkbox adds the path to the index, clearing it removes it again, so the
+    // list is a real staging area rather than a decorative toggle.
+    renderChangeRow (change, checked, toggleHandler) {
+        const showArrow = Boolean(change.oldPath) && change.oldPath !== change.filepath;
+        return (
+            <li
+                key={`${change.oldPath || ''}->${change.filepath}`}
+                data-filepath={change.filepath}
+                className={classNames(styles.fileRow, {
+                    [styles.fileRowClickable]: /\.(fractch|svg|json|txt|md)$/i.test(change.filepath)
+                })}
+                onClick={this.handleChangeRowClick}
+            >
+                <input
+                    type="checkbox"
+                    className={styles.changeCheckbox}
+                    checked={checked}
+                    disabled={this.props.busy}
+                    onClick={this.handleStopPropagation}
+                    onChange={toggleHandler}
+                    data-filepath={change.filepath}
+                    aria-label={this.props.intl.formatMessage(
+                        checked ? messages.unstageFile : messages.stageFile,
+                        {filepath: change.filepath}
+                    )}
+                />
+                <FileBadge description={change.description} />
+                <span className={styles.filePath}>
+                    {showArrow ? (
+                        <>
+                            <span className={styles.filePathOld}>{change.oldPath}</span>
+                            <span className={styles.filePathArrow}>{'→'}</span>
+                            {change.filepath}
+                        </>
+                    ) : change.filepath}
+                </span>
+            </li>
+        );
+    }
+
+    // Working-tree sync banner: how far the checked-out branch has drifted from
+    // its upstream. Rendered above the staging area so Push/Pull never has to be
+    // guessed at.
+    renderSyncStatus () {
+        const {upstream, intl} = this.props;
+        if (!upstream || !upstream.remote) return null;
+        const ahead = Number(upstream.ahead) || 0;
+        const behind = Number(upstream.behind) || 0;
+        const ref = `${upstream.remote}/${upstream.branch || ''}`;
+        let label;
+        if (!upstream.tracking) {
+            label = intl.formatMessage(messages.syncUntracked, {ref});
+        } else if (ahead === 0 && behind === 0) {
+            label = intl.formatMessage(messages.syncUpToDate, {ref});
+        } else {
+            label = intl.formatMessage(messages.syncDrift, {ref});
+        }
+        return (
+            <Box className={styles.syncBar}>
+                <span className={styles.syncText}>{label}</span>
+                {ahead > 0 && (
+                    <span className={classNames(styles.syncCount, styles.syncAhead)}>{`↑${ahead}`}</span>
+                )}
+                {behind > 0 && (
+                    <span className={classNames(styles.syncCount, styles.syncBehind)}>{`↓${behind}`}</span>
+                )}
+            </Box>
+        );
+    }
+
     renderChanges () {
         const {changes} = this.props;
-        const hasChanges = Array.isArray(changes) && changes.length > 0;
+        const list = Array.isArray(changes) ? changes : [];
+        const stagedEntries = list.filter(change => change.staged);
+        const unstagedEntries = list.filter(change => change.unstaged);
+        const hasChanges = list.length > 0;
+        const canCommit = stagedEntries.length > 0;
         return (
             <Box className={styles.section}>
                 <h2 className={styles.sectionTitle}>
@@ -412,6 +547,7 @@ class GitModalComponent extends React.Component {
                         id="mw.git.changes.heading"
                     />
                 </h2>
+                {this.renderSyncStatus()}
                 <Box className={styles.commitTypeRow}>
                     <select
                         className={styles.commitTypeSelect}
@@ -451,7 +587,7 @@ class GitModalComponent extends React.Component {
                 <Box className={styles.rowButtons}>
                     <button
                         className={styles.primaryButton}
-                        disabled={this.props.busy || !hasChanges}
+                        disabled={this.props.busy || !canCommit}
                         onClick={this.props.onCommit}
                     >
                         <Check className={styles.buttonIcon} />
@@ -475,23 +611,77 @@ class GitModalComponent extends React.Component {
                     </button>
                 </Box>
                 {hasChanges ? (
-                    <ul className={styles.fileList}>
-                        {changes.map(change => (
-                            <li
-                                key={change.filepath}
-                                className={classNames(styles.fileRow, {
-                                    [styles.fileRowClickable]: /\.(fractch|svg|json|txt|md)$/i.test(change.filepath)
-                                })}
-                                onClick={() => this.props.onDiffChangedFile(change.filepath)}
-                            >
-                                <FileBadge
-                                    filepath={change.filepath}
-                                    description={change.description}
+                    <>
+                        {stagedEntries.length > 0 && (
+                            <Box className={styles.changeGroup}>
+                                <Box className={styles.changeGroupHeader}>
+                                    <span className={styles.changeGroupTitle}>
+                                        <FormattedMessage
+                                            defaultMessage="Staged changes"
+                                            description="Staged changes group heading"
+                                            id="mw.git.changes.staged"
+                                        />
+                                        <span className={styles.changeCount}>{stagedEntries.length}</span>
+                                    </span>
+                                    <button
+                                        className={styles.linkButton}
+                                        disabled={this.props.busy}
+                                        onClick={this.props.onUnstageAll}
+                                    >
+                                        <FormattedMessage
+                                            defaultMessage="Unstage all"
+                                            description="Unstage everything button"
+                                            id="mw.git.changes.unstageAll"
+                                        />
+                                    </button>
+                                </Box>
+                                <ul className={styles.fileList}>
+                                    {stagedEntries.map(change => this.renderChangeRow(
+                                        change, true, this.handleUnstageToggle
+                                    ))}
+                                </ul>
+                            </Box>
+                        )}
+                        {unstagedEntries.length > 0 && (
+                            <Box className={styles.changeGroup}>
+                                <Box className={styles.changeGroupHeader}>
+                                    <span className={styles.changeGroupTitle}>
+                                        <FormattedMessage
+                                            defaultMessage="Changes"
+                                            description="Unstaged changes group heading"
+                                            id="mw.git.changes.unstaged"
+                                        />
+                                        <span className={styles.changeCount}>{unstagedEntries.length}</span>
+                                    </span>
+                                    <button
+                                        className={styles.linkButton}
+                                        disabled={this.props.busy}
+                                        onClick={this.props.onStageAll}
+                                    >
+                                        <FormattedMessage
+                                            defaultMessage="Stage all"
+                                            description="Stage everything button"
+                                            id="mw.git.changes.stageAll"
+                                        />
+                                    </button>
+                                </Box>
+                                <ul className={styles.fileList}>
+                                    {unstagedEntries.map(change => this.renderChangeRow(
+                                        change, false, this.handleStageToggle
+                                    ))}
+                                </ul>
+                            </Box>
+                        )}
+                        {!canCommit && (
+                            <p className={styles.muted}>
+                                <FormattedMessage
+                                    defaultMessage="Check files above to stage them, then commit."
+                                    description="Hint shown when nothing is staged yet"
+                                    id="mw.git.changes.nothingStaged"
                                 />
-                                <span className={styles.filePath}>{change.filepath}</span>
-                            </li>
-                        ))}
-                    </ul>
+                            </p>
+                        )}
+                    </>
                 ) : (
                     <p className={styles.muted}>
                         <FormattedMessage
@@ -1803,8 +1993,45 @@ class GitModalComponent extends React.Component {
                                 )}
                             </Box>
                         )}
-                        {this.props.error && (
-                            <Box className={styles.errorBar}>{translateGitError(this.props.error)}</Box>
+                        {/* A3: failures are toasted in the bottom-right corner
+                            from the container, not drawn here — the File menu
+                            reports through the same channel now. */}
+                        {this.props.detached && !this.props.busy && (
+                            <Box className={styles.detachedBar}>
+                                <span className={styles.detachedText}>
+                                    <FormattedMessage
+                                        defaultMessage={
+                                            'Detached HEAD: you are not on any branch, so commits here ' +
+                                            'cannot be pushed. Switch back to a branch to continue.'
+                                        }
+                                        description="Warning shown while HEAD is detached"
+                                        id="mw.git.detached.banner"
+                                    />
+                                </span>
+                                <select
+                                    className={styles.detachedSelect}
+                                    value=""
+                                    disabled={this.props.busy || (this.props.branches || []).length === 0}
+                                    onChange={this.props.onCheckoutBranch}
+                                >
+                                    <option
+                                        value=""
+                                        disabled
+                                    >
+                                        {intl.formatMessage({
+                                            defaultMessage: 'Switch to branch…',
+                                            description: 'Detached banner branch picker placeholder',
+                                            id: 'mw.git.detached.pick'
+                                        })}
+                                    </option>
+                                    {(this.props.branches || []).map(b => (
+                                        <option
+                                            key={b}
+                                            value={b}
+                                        >{b}</option>
+                                    ))}
+                                </select>
+                            </Box>
                         )}
                         {this.props.success && !this.props.busy && (
                             <Box
@@ -1825,10 +2052,10 @@ GitModalComponent.propTypes = {
     busy: PropTypes.bool,
     busyMessage: PropTypes.string,
     busyProgress: PropTypes.number,
-    error: PropTypes.string,
     success: PropTypes.string,
     initialized: PropTypes.bool,
     currentBranch: PropTypes.string,
+    detached: PropTypes.bool,
     branches: PropTypes.arrayOf(PropTypes.string),
     commits: PropTypes.arrayOf(PropTypes.object),
     graphNodes: PropTypes.arrayOf(PropTypes.object),
@@ -1851,6 +2078,13 @@ GitModalComponent.propTypes = {
     mergeResolutions: PropTypes.object,
     canUndoCommit: PropTypes.bool,
     changes: PropTypes.arrayOf(PropTypes.object),
+    upstream: PropTypes.shape({
+        remote: PropTypes.string,
+        branch: PropTypes.string,
+        tracking: PropTypes.bool,
+        ahead: PropTypes.number,
+        behind: PropTypes.number
+    }),
     remotes: PropTypes.arrayOf(PropTypes.object),
     newRemoteName: PropTypes.string,
     newRemoteUrl: PropTypes.string,
@@ -1880,6 +2114,10 @@ GitModalComponent.propTypes = {
     onCreateBranch: PropTypes.func,
     onCommit: PropTypes.func,
     onUndoCommit: PropTypes.func,
+    onStageFile: PropTypes.func,
+    onUnstageFile: PropTypes.func,
+    onStageAll: PropTypes.func,
+    onUnstageAll: PropTypes.func,
     onInit: PropTypes.func,
     onRefresh: PropTypes.func,
     onRestoreCommit: PropTypes.func,

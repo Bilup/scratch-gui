@@ -45,8 +45,10 @@ const MenuBarHOC = function (WrappedComponent) {
             });
         }
 
-        showToast (message, type = 'info') {
-            this.props.showToast(message, type);
+        // `position` lets a caller ask for the bottom-right corner (git failures
+        // do — see A3); everything else keeps the original top-right toast.
+        showToast (message, type = 'info', position = 'top-right') {
+            this.props.showToast(message, type, position);
         }
 
         render () {
@@ -70,6 +72,7 @@ const MenuBarHOC = function (WrappedComponent) {
                         message={this.props.toastMessage}
                         sequence={this.props.toastSequence}
                         type={this.props.toastType}
+                        position={this.props.toastPosition}
                         visible={this.props.toastVisible}
                         onClose={this.props.handleHideToast}
                     />
@@ -90,9 +93,12 @@ const MenuBarHOC = function (WrappedComponent) {
         showToast: PropTypes.func.isRequired,
         toastVisible: PropTypes.bool,
         toastMessage: PropTypes.oneOfType([PropTypes.string, PropTypes.node]),
-        toastSequence: PropTypes.number,
         toastType: PropTypes.oneOf(['success', 'error', 'info', 'warning']),
-        vm: PropTypes.object.isRequired // eslint-disable-line react/forbid-prop-types
+        toastPosition: PropTypes.oneOf(['top-right', 'bottom-right'])
+    };
+    MenuBarContainer.defaultProps = {
+        // default to using standard js confirm
+        confirmWithMessage: message => (confirm(message)) // eslint-disable-line no-alert
     };
     const mapStateToProps = state => ({
         projectChanged: state.scratchGui.projectChanged,
@@ -100,17 +106,16 @@ const MenuBarHOC = function (WrappedComponent) {
         toastVisible: state.scratchGui.toast && state.scratchGui.toast.visible,
         toastMessage: state.scratchGui.toast && state.scratchGui.toast.message,
         toastType: state.scratchGui.toast && state.scratchGui.toast.type,
-        customShortcuts: state.scratchGui.shortcuts.customShortcuts,
-        toastSequence: state.scratchGui.toast && state.scratchGui.toast.sequence,
-        vm: state.scratchGui.vm
+        toastPosition: state.scratchGui.toast && state.scratchGui.toast.position,
+        customShortcuts: state.scratchGui.shortcuts.customShortcuts
     });
     const mapDispatchToProps = dispatch => ({
         openSimpleDialog: config => dispatch(openSimpleDialog(config)),
-        onProjectUnchanged: () => dispatch(setProjectUnchanged()),
-        showToast: (message, type) => dispatch({
+        showToast: (message, type, position) => dispatch({
             type: 'scratch-gui/SHOW_TOAST',
             message,
-            toastType: type
+            toastType: type,
+            position
         }),
         handleHideToast: () => dispatch({
             type: 'scratch-gui/HIDE_TOAST'

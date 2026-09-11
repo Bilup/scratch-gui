@@ -49,26 +49,6 @@ import CloudVariablesToggler from '../../containers/tw-cloud-toggler.jsx';
 import TWSaveStatus from './tw-save-status.jsx';
 import TWNews from './tw-news.jsx';
 import CollaborationContainer from '../../containers/collaboration-container.jsx';
-import {
-    commitProject,
-    getDefaultAuthor,
-    repoExists,
-    getRemotes,
-    push as gitPush,
-    pull as gitPull,
-    REPO_DIR as GIT_REPO_DIR,
-    getFs as getGitFs
-} from '../../lib/git/browser-git';
-import {buildSb3FromFractchTree} from '../../lib/git/fractch-tree';
-import {createMwp} from '../../lib/git/mwp.js';
-import {
-    getProjectHistoryState,
-    preloadProjectHistory,
-    subscribeProjectHistory
-} from '../../lib/git/project-history.js';
-import downloadBlob from '../../lib/utils/download-blob.js';
-import {projectFilename} from '../../lib/utils/safe-filename.js';
-import RestorePointAPI from '../../lib/api/restore-points';
 
 import TWDesktopSettings from './tw-desktop-settings.jsx';
 import RoturAccount from './mw-rotur-account.jsx';
@@ -839,23 +819,15 @@ handleClickLoadFromComputer () {
     }
 
     async refreshGitMenuState () {
-        const history = getProjectHistoryState();
-        if (history.phase === 'ready' && history.data) {
-            this.setState({
-                gitRepoExists: Boolean(history.data.status && history.data.status.initialized),
-                gitRemotes: Array.isArray(history.data.remotes) ? history.data.remotes : []
-            });
-            return;
-        }
+        // Keep this cheap (no project re-serialization): a status refresh with
+        // no VM only reads the index + the remote config. "Has changes" is
+        // derived from the redux projectChanged flag in render.
         try {
-            const {repoExists, getRemotes} = await import('../../lib/git/browser-git');
-            if (!(await repoExists())) {
-                this.setState({gitRepoExists: false, gitRemotes: []});
-                return;
-            }
-            const remotes = await getRemotes(this.props.vm).catch(() => []);
+            const {default: gitOps} = await import('../../lib/git/ops/index.js');
+            await gitOps.refreshRepository();
+            const {repo, remotes} = gitOps.getState();
             this.setState({
-                gitRepoExists: true,
+                gitRepoExists: Boolean(repo.initialized),
                 gitRemotes: Array.isArray(remotes) ? remotes : []
             });
         } catch (e) {
@@ -876,14 +848,31 @@ handleClickLoadFromComputer () {
         return buildHttpAuth({token, username: getDefaultAuthor().name});
     }
 
+    // Every File → Git action goes through the shared ops layer, so it takes the
+    // same single-flight lock as the git window (the two used to be able to
+    // write the same OPFS repository at the same time) and reports into the
+    // same store.
+    //
+    // A3: a failure surfaces as the app-wide bottom-right toast marked ❌️ —
+    // exactly what the git window does — instead of a blocking browser alert.
+    // The two surfaces used to disagree about how to report the same error.
+    showGitError (e) {
+        const message = translateGitError(e && e.message ? e.message : String(e));
+        if (this.props.showToast) {
+            this.props.showToast(message, 'error', 'bottom-right');
+        } else {
+            // eslint-disable-next-line no-alert
+            window.alert(message);
+        }
+    }
     async handleClickGitPush (remote) {
         if (this.gitActionInFlight) return false;
         this.gitActionInFlight = true;
         this.props.onRequestCloseFile();
         this.props.onShowGitStatus('gitPushing');
         try {
-            const {push: gitPush} = await import('../../lib/git/browser-git');
-            await gitPush({
+            const {default: gitOps} = await import('../../lib/git/ops/index.js');
+            await gitOps.pushBranch({
                 vm: this.props.vm,
                 remote,
                 setUpstream: true,
@@ -894,8 +883,7 @@ handleClickLoadFromComputer () {
         } catch (e) {
             console.error(e);
             this.props.onCloseGitStatus('gitPushing');
-            // eslint-disable-next-line no-alert
-            window.alert(translateGitError(e && e.message ? e.message : String(e)));
+            this.showGitError(e);
         }
     }
 
@@ -904,45 +892,28 @@ handleClickLoadFromComputer () {
         this.gitActionInFlight = true;
         this.props.onRequestCloseFile();
         try {
-            if (this.props.projectChanged) {
-                const ok = await this.showConfirm(
-                    'Replace this project?',
-                    this.props.intl.formatMessage({
-                        defaultMessage: 'Pulling will replace your project with the repository version. Continue?',
-                        description: 'Confirmation before git pull replaces the open project',
-                        id: 'mw.menuBar.gitPull.confirmReplace'
-                    })
-                );
-                if (!ok) return false;
-            }
-            this.props.onShowGitStatus('gitPulling');
-            await RestorePointAPI.createSafetyRestorePoint(this.props.vm, this.props.projectTitle);
-            const [
-                {pull: gitPull, getFs: getGitFs, REPO_DIR: GIT_REPO_DIR},
-                {buildSb3FromFractchTree}
-            ] = await Promise.all([
-                import('../../lib/git/browser-git'),
-                import('../../lib/git/fractch-tree')
-            ]);
-            await gitPull({
+            const {default: gitOps} = await import('../../lib/git/ops/index.js');
+            const {getDefaultAuthor} = await import('../../lib/git/browser-git');
+            // pullBranch raises its own safety restore point, and rebuilds +
+            // reloads the open project ONLY when the working tree actually
+            // moved. When the remote had nothing new it resolves with kind
+            // 'ahead'/'up-to-date' — the old code called quit() + loadProject()
+            // anyway, rebuilding the project for no reason and throwing away
+            // the undo stack (the "drift" bug). Nothing to do here but report
+            // success.
+            await gitOps.pullBranch({
                 vm: this.props.vm,
                 remote,
-                onAuth: await this.gitAuth()
+                author: getDefaultAuthor(),
+                onAuth: await this.gitAuth(),
+                restorePointLabel: this.props.projectTitle
             });
-            // The working tree changed; rebuild the project and reload it.
-            const fs = getGitFs();
-            const bytes = await buildSb3FromFractchTree({fs: fs.promises, dir: GIT_REPO_DIR});
-            const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
-            this.props.vm.quit();
-            await this.props.vm.loadProject(buffer, {skipGitImport: true});
-            this.props.vm.renderer.draw();
             this.props.onGitStatusDone('gitPullSuccess');
             return true;
         } catch (e) {
             console.error(e);
             this.props.onCloseGitStatus('gitPulling');
-            // eslint-disable-next-line no-alert
-            window.alert(translateGitError(e && e.message ? e.message : String(e)));
+            this.showGitError(e);
         }
     }
 
@@ -965,18 +936,22 @@ handleClickLoadFromComputer () {
             }
             this.props.onShowGitStatus('gitCommitting');
             try {
-                const {commitProject, getDefaultAuthor} = await import('../../lib/git/browser-git');
-                await commitProject({
+                const {default: gitOps} = await import('../../lib/git/ops/index.js');
+                const {getDefaultAuthor} = await import('../../lib/git/browser-git');
+                await gitOps.commit({
                     vm: this.props.vm,
                     message: message.trim(),
-                    author: getDefaultAuthor()
+                    author: getDefaultAuthor(),
+                    // The File menu has no staging area, so it keeps the historic
+                    // "commit everything" behaviour (decision D2 lives in the
+                    // git window, which stages explicitly).
+                    all: true
                 });
                 this.props.onGitStatusDone('gitCommitSuccess');
             } catch (e) {
                 console.error(e);
                 this.props.onCloseGitStatus('gitCommitting');
-                // eslint-disable-next-line no-alert
-                window.alert(translateGitError(e && e.message ? e.message : String(e)));
+                this.showGitError(e);
             }
             const filename = projectFilename(this.props.projectTitle, 'MistWarp Project', 'mwp');
             let handle = saveAs ? null : this.state.mwpFileHandle;
