@@ -2,12 +2,9 @@ import {connect} from 'react-redux';
 import PropTypes from 'prop-types';
 import bindAll from 'lodash.bindall';
 import React from 'react';
+import SB3Downloader from './sb3-downloader.jsx';
 import {openSimpleDialog} from '../reducers/modals';
 import ToastNotification from '../components/toast-notification/toast-notification.jsx';
-import smartSave from '../lib/mw/smart-save.js';
-import {setProjectUnchanged} from '../reducers/project-changed';
-
-const shouldConfirmProjectReplacement = ({projectChanged, canSave}) => projectChanged && !canSave;
 
 const MenuBarHOC = function (WrappedComponent) {
     class MenuBarContainer extends React.PureComponent {
@@ -16,33 +13,19 @@ const MenuBarHOC = function (WrappedComponent) {
 
             bindAll(this, [
                 'confirmReadyToReplaceProject',
-                'handleSaveProject',
                 'shouldSaveBeforeTransition',
                 'showToast'
             ]);
         }
         confirmReadyToReplaceProject (message) {
-            if (!shouldConfirmProjectReplacement(this.props)) return true;
-            if (this.props.confirmWithMessage) return this.props.confirmWithMessage(message);
-            return new Promise(resolve => {
-                this.props.openSimpleDialog({
-                    type: 'confirm',
-                    title: 'Replace this project?',
-                    message,
-                    onOk: () => resolve(true),
-                    onCancel: () => resolve(false)
-                });
-            });
+            let readyToReplaceProject = true;
+            if (this.props.projectChanged && !this.props.canCreateNew) {
+                readyToReplaceProject = this.props.confirmWithMessage(message);
+            }
+            return readyToReplaceProject;
         }
         shouldSaveBeforeTransition () {
             return (this.props.canSave && this.props.projectChanged);
-        }
-        handleSaveProject () {
-            return smartSave({
-                vm: this.props.vm,
-                title: this.props.projectTitle,
-                onSaved: this.props.onProjectUnchanged
-            });
         }
 
         // `position` lets a caller ask for the bottom-right corner (git failures
@@ -60,21 +43,26 @@ const MenuBarHOC = function (WrappedComponent) {
             } = this.props;
             return (
                 <React.Fragment>
-                    <WrappedComponent
-                        confirmReadyToReplaceProject={this.confirmReadyToReplaceProject}
-                        shouldSaveBeforeTransition={this.shouldSaveBeforeTransition}
-                        openSimpleDialog={this.props.openSimpleDialog}
-                        showToast={this.showToast}
-                        {...{handleSaveProject: this.handleSaveProject}}
-                        {...props}
-                    />
+                    <SB3Downloader
+                        showSaveFilePicker={this.props.showSaveFilePicker}
+                    >
+                        {(_className, _downloadProject, extended) => (
+                            <WrappedComponent
+                                confirmReadyToReplaceProject={this.confirmReadyToReplaceProject}
+                                shouldSaveBeforeTransition={this.shouldSaveBeforeTransition}
+                                handleSaveProject={extended.smartSave}
+                                openSimpleDialog={this.props.openSimpleDialog}
+                                showToast={this.showToast}
+                                {...props}
+                            />
+                        )}
+                    </SB3Downloader>
                     <ToastNotification
                         message={this.props.toastMessage}
-                        sequence={this.props.toastSequence}
                         type={this.props.toastType}
                         position={this.props.toastPosition}
                         visible={this.props.toastVisible}
-                        onClose={this.props.handleHideToast}
+                        onClose={this.props.hideToast}
                     />
                 </React.Fragment>
             );
@@ -85,11 +73,8 @@ const MenuBarHOC = function (WrappedComponent) {
         canCreateNew: PropTypes.bool,
         canSave: PropTypes.bool,
         confirmWithMessage: PropTypes.func,
-        handleHideToast: PropTypes.func.isRequired,
-        openSimpleDialog: PropTypes.func.isRequired,
-        onProjectUnchanged: PropTypes.func.isRequired,
         projectChanged: PropTypes.bool,
-        projectTitle: PropTypes.string,
+        showSaveFilePicker: PropTypes.func,
         showToast: PropTypes.func.isRequired,
         toastVisible: PropTypes.bool,
         toastMessage: PropTypes.oneOfType([PropTypes.string, PropTypes.node]),
@@ -102,7 +87,6 @@ const MenuBarHOC = function (WrappedComponent) {
     };
     const mapStateToProps = state => ({
         projectChanged: state.scratchGui.projectChanged,
-        projectTitle: state.scratchGui.projectTitle,
         toastVisible: state.scratchGui.toast && state.scratchGui.toast.visible,
         toastMessage: state.scratchGui.toast && state.scratchGui.toast.message,
         toastType: state.scratchGui.toast && state.scratchGui.toast.type,
@@ -117,7 +101,7 @@ const MenuBarHOC = function (WrappedComponent) {
             toastType: type,
             position
         }),
-        handleHideToast: () => dispatch({
+        hideToast: () => dispatch({
             type: 'scratch-gui/HIDE_TOAST'
         })
     });
@@ -133,5 +117,3 @@ const MenuBarHOC = function (WrappedComponent) {
 };
 
 export default MenuBarHOC;
-
-export {shouldConfirmProjectReplacement};

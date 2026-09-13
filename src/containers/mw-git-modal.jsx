@@ -10,7 +10,6 @@ import GitModalComponent from '../components/mw-git-modal/git-modal.jsx';
 import {closeGitModal} from '../reducers/modals.js';
 
 import downloadBlob from '../lib/utils/download-blob.js';
-import log from '../lib/utils/log.js';
 import {openFractchMode} from '../lib/git/fractch-mode.js';
 
 // Every repository mutation goes through the shared ops layer: it owns the
@@ -29,13 +28,8 @@ import {
     getCommitParents,
     computeLineDiff
 } from '../lib/git/git-diff.js';
-import {TOKEN_KEY, authForRemoteUrl} from '../lib/git/sync-remotes.js';
-import {
-    getProjectHistoryState,
-    preloadProjectHistory,
-    subscribeProjectHistory
-} from '../lib/git/project-history.js';
 
+const TOKEN_KEY = 'mw:git-token';
 const DEFAULT_BRANCH_KEY = 'mw:git-default-branch';
 
 const messages = defineMessages({
@@ -376,18 +370,18 @@ class TWGitModal extends React.Component {
             mergeConflicts: [],
             mergeResolutions: {},
             // Remotes
-            remotes: preloaded.remotes || [],
+            remotes: [],
             newRemoteName: 'origin',
             newRemoteUrl: '',
-            pushRemote: preloaded.pushRemote || 'origin',
-            pushBranch: preloaded.pushBranch || '',
+            pushRemote: 'origin',
+            pushBranch: '',
             remoteToken: readLocal(TOKEN_KEY, ''),
             remoteService: '',
             // Clone
             cloneUrl: '',
             cloneConfirm: false,
             // Readme
-            readmeContent: preloaded.readmeContent || '',
+            readmeContent: '',
             readmeDirty: false,
             // Diff
             diffLoading: false,
@@ -1082,6 +1076,7 @@ class TWGitModal extends React.Component {
     }
 
     async handleAddRemote () {
+        const name = this.state.newRemoteName.trim();
         const url = this.state.newRemoteUrl.trim();
         if (!name || !url) {
             this.setLocalError(this.props.intl.formatMessage(messages.remoteRequired));
@@ -1305,7 +1300,6 @@ class TWGitModal extends React.Component {
     }
 
     handleClose () {
-        if (this.state.busy) return;
         this.props.onClose();
     }
 

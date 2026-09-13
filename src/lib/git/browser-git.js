@@ -290,7 +290,7 @@ const clearWorkdirExceptGit = async pfs => {
     }
 };
 
-const initRepo = async ({defaultBranch = 'main', vm = null, initialMessage = 'Initial version', onProgress} = {}) => {
+const initRepo = async ({defaultBranch = 'main', vm = null, onProgress} = {}) => {
     if (!defaultBranch || typeof defaultBranch !== 'string') {
         throw new Error('Invalid default branch name');
     }
@@ -1259,10 +1259,8 @@ const startEditorMerge = async ({ours, theirs, author} = {}) => {
         const data = e.data || {};
         const conflicts = Array.isArray(data.filepaths) ? data.filepaths : [];
         const text = conflicts.filter(filepath => TEXT_MERGE_RE.test(filepath));
-        const binary = conflicts.filter(filepath => !TEXT_MERGE_RE.test(filepath));
         setPendingMerge({
-            binary,
-            binaryResolved: [],
+            binary: conflicts.filter(filepath => !TEXT_MERGE_RE.test(filepath)),
             conflicts: text,
             message,
             ours,
@@ -1270,32 +1268,8 @@ const startEditorMerge = async ({ours, theirs, author} = {}) => {
             theirs,
             theirsOid
         });
-        return {conflicts: text, binaryConflicts: binary, merged: false};
+        return {conflicts: text, merged: false};
     }
-};
-
-const resolveEditorMergeBinary = async (filepath, choice) => {
-    if (!pendingMerge || !pendingMerge.binary.includes(filepath)) {
-        throw new Error('This file is not an active binary conflict');
-    }
-    const fs = getFs();
-    const pfs = fs.promises;
-    const sideOid = choice === 'theirs' ? pendingMerge.theirsOid : pendingMerge.oursOid;
-    const destination = pathJoin(REPO_DIR, filepath);
-    try {
-        const {blob} = await git.readBlob({fs, dir: REPO_DIR, oid: sideOid, filepath});
-        await ensureParentDir(pfs, destination);
-        await pfs.writeFile(destination, blob instanceof Uint8Array ? blob : new Uint8Array(blob));
-        await git.add({fs, dir: REPO_DIR, filepath});
-    } catch (e) {
-        try {
-            await pfs.unlink(destination);
-        } catch (unlinkError) {
-            // already absent
-        }
-        await git.remove({fs, dir: REPO_DIR, filepath});
-    }
-    if (!pendingMerge.binaryResolved.includes(filepath)) pendingMerge.binaryResolved.push(filepath);
 };
 
 const abortEditorMerge = async () => {
@@ -1312,10 +1286,6 @@ const completeEditorMerge = async ({author} = {}) => {
     const fs = getFs();
     const pfs = fs.promises;
     const unresolved = [];
-    const unresolvedBinary = pendingMerge.binary.filter(path => !pendingMerge.binaryResolved.includes(path));
-    if (unresolvedBinary.length) {
-        throw new Error(`Choose a version for: ${unresolvedBinary.join(', ')}`);
-    }
     for (const filepath of pendingMerge.conflicts) {
         const data = await pfs.readFile(pathJoin(REPO_DIR, filepath), 'utf8');
         if (CONFLICT_MARKER_RE.test(String(data))) unresolved.push(filepath);
@@ -1915,7 +1885,6 @@ export {
     listBranches,
     checkoutCommitAndRestore,
     restoreProjectFromCurrentRef,
-    resolveEditorMergeBinary,
     readSnapshotAtCommit,
     getBranchLogs,
     computeCommitGraph,

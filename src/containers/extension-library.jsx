@@ -4,8 +4,6 @@ import React from 'react';
 import VM from 'scratch-vm';
 import { defineMessages, injectIntl, intlShape } from 'react-intl';
 import log from '../lib/utils/log';
-import {connect} from 'react-redux';
-import {showStandardAlert} from '../reducers/alerts';
 
 import extensionLibraryContent, {
     galleryError,
@@ -598,9 +596,6 @@ class ExtensionLibrary extends React.PureComponent {
             sourceStatuses: cachedSourceStatuses,
             customSources: cachedCustomSources
         };
-        this._isMounted = false;
-        this.galleryTimeout = null;
-        this.loadingExtensions = new Set();
     }
     
     componentDidMount() {
@@ -627,34 +622,20 @@ class ExtensionLibrary extends React.PureComponent {
         
         // 首次打开时拉取网络源；已注册的自定义库独立加载（互不阻塞）
         if (!this.state.gallery) {
-            this.galleryTimeout = setTimeout(() => {
-                if (this._isMounted) {
-                    this.setState({
-                        galleryTimedOut: true
-                    });
-                }
+            const timeout = setTimeout(() => {
+                this.setState({
+                    galleryTimedOut: true
+                });
             }, 750);
 
             fetchLibrary()
-                .then(gallery => {
-                    cachedGallery = gallery;
-                    if (this._isMounted) {
-                        this.setState({
-                            gallery
-                        });
-                    }
-                    clearTimeout(this.galleryTimeout);
-                    this.galleryTimeout = null;
-                })
+                .then(() => clearTimeout(timeout))
                 .catch(error => {
                     log.error(error);
-                    if (this._isMounted) {
-                        this.setState({
-                            galleryError: error
-                        });
-                    }
-                    clearTimeout(this.galleryTimeout);
-                    this.galleryTimeout = null;
+                    this.setState({
+                        galleryError: error
+                    });
+                    clearTimeout(timeout);
                 });
 
             cachedCustomSources.forEach(source => {
@@ -664,8 +645,8 @@ class ExtensionLibrary extends React.PureComponent {
             });
         }
     }
+    
     componentWillUnmount() {
-        this._isMounted = false;
         if (this.unsubscribeGalleryUpdate) {
             this.unsubscribeGalleryUpdate();
         }
@@ -674,8 +655,6 @@ class ExtensionLibrary extends React.PureComponent {
             vm.off('EXTENSION_ADDED', this.handleExtensionChange);
             vm.off('EXTENSION_REMOVED', this.handleExtensionChange);
         }
-        clearTimeout(this.galleryTimeout);
-        this.galleryTimeout = null;
     }
     getSourceStatus(tag) {
         // 内置本地数据始终可用（桌面端本地加载成功 → 蓝色）
@@ -741,25 +720,19 @@ class ExtensionLibrary extends React.PureComponent {
                     this.props.onCategorySelected(extensionId);
                 }
             } else {
-                if (this.loadingExtensions.has(extensionId)) return;
-                this.loadingExtensions.add(extensionId);
-                return this.props.vm.extensionManager.loadExtensionURL(url)
+                this.props.vm.extensionManager.loadExtensionURL(url)
                     .then(() => {
                         // 实时刷新"已加载"对钩
                         this.forceUpdate();
                         if (typeof this.props.onCategorySelected === 'function') {
                             this.props.onCategorySelected(extensionId);
                         }
-                        return true;
                     })
                     .catch(err => {
                         this.forceUpdate();
                         log.error(err);
-                        this.props.onShowExtensionError();
-                        return false;
-                    })
-                    .finally(() => {
-                        this.loadingExtensions.delete(extensionId);
+                        // eslint-disable-next-line no-alert
+                        alert(err);
                     });
             }
         }
@@ -846,21 +819,14 @@ ExtensionLibrary.propTypes = {
     onOpenCustomExtensionModal: PropTypes.func,
     onOpenCustomGalleryModal: PropTypes.func,
     onRequestClose: PropTypes.func,
-    onShowExtensionError: PropTypes.func.isRequired,
     visible: PropTypes.bool,
     vm: PropTypes.instanceOf(VM).isRequired // eslint-disable-line react/no-unused-prop-types
 };
 
-const mapDispatchToProps = dispatch => ({
-    onShowExtensionError: () => dispatch(showStandardAlert('extensionLoadError'))
-});
-
-export default injectIntl(connect(null, mapDispatchToProps)(ExtensionLibrary));
+export default injectIntl(ExtensionLibrary);
 
 export {
-    ExtensionLibrary,
     addCustomSource,
     removeCustomSource,
-    updateGallery,
-    fetchLibrary
+    updateGallery
 };
