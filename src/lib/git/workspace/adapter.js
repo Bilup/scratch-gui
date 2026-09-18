@@ -25,6 +25,7 @@ import {
 } from '../browser-git.js';
 import RestorePointAPI from '../../api/restore-points.js';
 import JSZip from 'jszip';
+import {zipHasEntryUnder} from '../zip-probe.js';
 import registry from './registry.js';
 
 export const IMPORT_POLICIES = Object.freeze({
@@ -99,13 +100,27 @@ export const embedRepo = blob => {
     return embedRepoIntoSb3Blob(blob);
 };
 
+// Directory `embedRepoIntoSb3Blob` (browser-git.js, which has its own
+// GIT_EMBED_DIR) writes an embedded repository under. Duplicated because that
+// module does not export the constant.
+const EMBEDDED_REPO_PREFIX = '.bilup-git/';
+
 // Peek inside an sb3 for `.bilup-git/` entries without touching the repo.
+//
+// This runs before the import on every "open from computer", so it answers from
+// the ZIP central directory (see ../zip-probe.js) rather than letting JSZip
+// build an entry object for every asset in the project -- ~110 ms on a 33 MB
+// project, against ~0.05 ms for the directory scan. JSZip remains the fallback
+// for anything the cheap scan declines to decide.
 export const hasEmbeddedRepo = async input => {
     if (!input) return false;
+    const scanned = zipHasEntryUnder(input, EMBEDDED_REPO_PREFIX);
+    if (scanned !== null) return scanned;
     try {
         const zip = await JSZip.loadAsync(input);
-        const prefix = '.bilup-git/';
-        return Object.keys(zip.files).some(path => path.startsWith(prefix) && !zip.files[path].dir);
+        return Object.keys(zip.files).some(
+            path => path.startsWith(EMBEDDED_REPO_PREFIX) && !zip.files[path].dir
+        );
     } catch (e) {
         return false;
     }
