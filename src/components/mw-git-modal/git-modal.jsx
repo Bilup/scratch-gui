@@ -505,8 +505,26 @@ class GitModalComponent extends React.Component {
     // its upstream. Rendered above the staging area so Push/Pull never has to be
     // guessed at.
     renderSyncStatus () {
-        const {upstream, intl} = this.props;
-        if (!upstream || !upstream.remote) return null;
+        const {upstream, remotes, currentBranch, intl} = this.props;
+        if (!upstream || !upstream.remote) {
+            // No upstream configured yet. `branch.<name>.remote` / `.merge` are
+            // only written by a push -u (or a clone), so a repository that has a
+            // remote but has never been pushed reported "no upstream" and the
+            // banner returned null — the "push once to start tracking it" hint
+            // below was unreachable (test C5). Show it as soon as a remote and a
+            // checked-out branch exist; the ref names what the push will create.
+            const known = Array.isArray(remotes) ? remotes : [];
+            if (known.length === 0 || !currentBranch) return null;
+            return (
+                <Box className={styles.syncBar}>
+                    <span className={styles.syncText}>
+                        {intl.formatMessage(messages.syncUntracked, {
+                            ref: `${known[0].name}/${currentBranch}`
+                        })}
+                    </span>
+                </Box>
+            );
+        }
         const ahead = Number(upstream.ahead) || 0;
         const behind = Number(upstream.behind) || 0;
         const ref = `${upstream.remote}/${upstream.branch || ''}`;

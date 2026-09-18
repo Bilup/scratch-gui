@@ -21,6 +21,8 @@ import {
     REPO_DIR,
     repoExists,
     repoHasFractch,
+    repoHasHead,
+    readCurrentBranch,
     getDefaultAuthor,
     initRepo,
     deleteRepo as deleteRepoRef,
@@ -132,7 +134,17 @@ const describeRow = (head, workdir, stage) => {
 
 const readStatusMatrix = async () => {
     const fs = getFs();
-    const matrix = await git.statusMatrix({fs, dir: REPO_DIR});
+    let matrix;
+    try {
+        matrix = await git.statusMatrix({fs, dir: REPO_DIR});
+    } catch (e) {
+        // A repository whose HEAD is unreadable (half-written by the sb3
+        // importer, or unborn) cannot be diffed; report "nothing changed"
+        // rather than failing the whole refresh. A change list is never worth
+        // failing an operation for.
+        console.warn('Could not read git status matrix', e);
+        return [];
+    }
     return matrix
         .filter(row => row && row[0] !== '.gitignore')
         .map(row => {
@@ -356,8 +368,7 @@ const syncHistory = async ({depth = 50} = {}) => {
 };
 
 const syncUpstream = async ({branch} = {}) => {
-    const fs = getFs();
-    const current = branch || await git.currentBranch({fs, dir: REPO_DIR, fullname: false});
+    const current = branch || await readCurrentBranch();
     const upstream = await loadUpstream({branch: current});
     gitStore.setUpstream(upstream);
     return upstream;
@@ -389,7 +400,13 @@ const syncStatusSummary = async () => {
 const loadRepository = async ({vm, projectId} = {}) => {
     if (projectId) gitStore.setRepo({projectId});
 
-    const initialized = await repoExists();
+    // `.git` existing is not yet proof of a readable repository: the sb3 importer
+    // writes an embedded repository file by file, so a refresh can catch the
+    // skeleton before HEAD lands — every isomorphic-git read would then throw
+    // "Could not find HEAD." (a spurious "Failed to refresh git state" error).
+    // Report that transient state as "not initialized"; the next refresh, after
+    // the import finished, reports the real repository.
+    const initialized = await repoHasHead();
     if (!initialized) {
         gitStore.setState(() => ({
             repo: {initialized: false, projectId: projectId || null, head: null, branch: null, detached: false},
@@ -405,7 +422,7 @@ const loadRepository = async ({vm, projectId} = {}) => {
     }
 
     const fs = getFs();
-    const branch = await git.currentBranch({fs, dir: REPO_DIR, fullname: false});
+    const branch = await readCurrentBranch();
     let head = null;
     try {
         head = await git.resolveRef({fs, dir: REPO_DIR, ref: 'HEAD'});
@@ -648,7 +665,7 @@ export const commit = ({vm, message, author, all = false} = {}) =>
 export const undoLastCommit = ({vm, restorePointLabel = 'Before git undo'} = {}) =>
     run('undo-commit', null, async () => {
         const fs = getFs();
-        const branch = await git.currentBranch({fs, dir: REPO_DIR, fullname: false});
+        const branch = await readCurrentBranch();
         if (!branch) {
             throw new GitError(
                 GIT_ERROR_CODES.DETACHED_HEAD,

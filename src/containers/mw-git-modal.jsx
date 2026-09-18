@@ -239,6 +239,12 @@ const messages = defineMessages({
             'view will treat your next commit as detached — until you switch back to a branch. Continue?',
         description: 'Confirmation before checking out a commit (detaches HEAD)',
         id: 'mw.git.confirm.restoreDetach'
+    },
+    deleteRepoConfirm: {
+        // eslint-disable-next-line max-len
+        defaultMessage: 'Delete this repository? Every commit, branch and remote stored in this browser is removed for good — this cannot be undone. Your open project is not affected. Continue?',
+        description: 'Confirmation before deleting the local git repository',
+        id: 'mw.git.confirm.deleteRepo'
     }
 });
 
@@ -920,6 +926,12 @@ class TWGitModal extends React.Component {
     }
 
     async handleDeleteRepo () {
+        // The Danger zone button used to delete the repository — every commit,
+        // branch and remote — on a single click, while "restore this commit"
+        // asked for confirmation first. Same rule for both now.
+        // eslint-disable-next-line no-alert
+        const ok = window.confirm(this.props.intl.formatMessage(messages.deleteRepoConfirm));
+        if (!ok) return;
         try {
             await gitOps.deleteRepository();
             this.setState({

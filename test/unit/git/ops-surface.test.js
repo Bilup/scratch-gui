@@ -37,6 +37,10 @@ jest.mock('../../../src/lib/git/browser-git', () => {
         REPO_DIR: '/repo',
         repoExists: jest.fn(async () => true),
         repoHasFractch: jest.fn(async () => true),
+        // A repository whose HEAD is readable; `readCurrentBranch` mirrors the
+        // backend helper that swallows "Could not find HEAD." instead of throwing.
+        repoHasHead: jest.fn(async () => true),
+        readCurrentBranch: jest.fn(async () => 'main'),
         initRepo: jest.fn(async () => {}),
         deleteRepo: jest.fn(async () => {}),
         readSnapshotAtCommit: jest.fn(async () => new ArrayBuffer(0)),
@@ -92,6 +96,8 @@ describe('git ops', () => {
         jest.clearAllMocks();
         gitStore.reset();
         bg.repoExists.mockImplementation(atResolve(true));
+        bg.repoHasHead.mockImplementation(atResolve(true));
+        bg.readCurrentBranch.mockImplementation(atResolve('main'));
         bg.git.currentBranch.mockImplementation(atResolve('main'));
         bg.git.statusMatrix.mockImplementation(atResolve([]));
         bg.git.listRemotes.mockImplementation(atResolve([]));
@@ -126,10 +132,27 @@ describe('git ops', () => {
 
     test('refreshRepository reports an uninitialized repo without throwing', async () => {
         bg.repoExists.mockImplementation(atResolve(false));
+        bg.repoHasHead.mockImplementation(atResolve(false));
         const result = await ops.refreshRepository({});
         expect(result.initialized).toBe(false);
         expect(gitStore.getState().repo.initialized).toBe(false);
         expect(gitStore.getState().changes).toEqual([]);
+    });
+
+    // The sb3 importer writes an embedded repository file by file, so a refresh
+    // can catch the skeleton (.git/ exists, HEAD not written yet) — every
+    // isomorphic-git read throws "Could not find HEAD." there, which used to
+    // surface as "Failed to refresh git state" (test F1). It must read as
+    // "not initialized yet" instead.
+    test('a repository without HEAD reads as uninitialized instead of erroring', async () => {
+        bg.repoExists.mockImplementation(atResolve(true));
+        bg.repoHasHead.mockImplementation(atResolve(false));
+        const result = await ops.refreshRepository({});
+        expect(result.initialized).toBe(false);
+        expect(gitStore.getState().repo.initialized).toBe(false);
+        expect(gitStore.getState().error).toBe(null);
+        // The read path must not even ask for the branch.
+        expect(bg.git.currentBranch).not.toHaveBeenCalled();
     });
 
     test('commit resolves with the new oid and leaves the ui idle', async () => {
@@ -322,7 +345,9 @@ describe('git ops', () => {
     });
 
     test('undoLastCommit refuses to run on a detached HEAD', async () => {
-        bg.git.currentBranch.mockImplementation(atResolve(null));
+        // ops reads the checked-out branch through the tolerant helper (null
+        // means detached *or* an unreadable HEAD), not via git.currentBranch.
+        bg.readCurrentBranch.mockImplementation(atResolve(null));
         let caught = null;
         try {
             await ops.undoLastCommit({vm: {}});
