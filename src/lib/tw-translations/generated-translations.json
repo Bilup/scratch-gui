@@ -1721,7 +1721,10 @@
         "mw.git.changes.unstageFile": "取消暂存 {filepath}",
         "mw.git.sync.untracked": "远端 {ref} 尚未获取，先推送一次以建立跟踪。",
         "mw.git.sync.upToDate": "与 {ref} 一致。",
-        "mw.git.sync.drift": "与 {ref} 相比："
+        "mw.git.sync.drift": "与 {ref} 相比：",
+        "tw.toast.close": "关闭通知",
+        "mw.git.notice.repoPreserved": "这个项目文件里没有内嵌 Git 仓库，浏览器中原有的仓库已保持原样。",
+        "mw.git.confirm.deleteRepo": "删除这个仓库？浏览器里保存的所有提交、分支和远端都会被永久删除，无法恢复。当前打开的项目不受影响。是否继续？"
     },
     "en": {
         "mw.menuBar.file": "File",

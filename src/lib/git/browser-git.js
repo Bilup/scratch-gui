@@ -259,6 +259,38 @@ const repoExists = () => {
     return exists(pfs, pathJoin(REPO_DIR, '.git'));
 };
 
+// A `.git` directory alone does not mean the repository can be read. The sb3
+// importer writes an embedded repository file by file (`importRepoFromSb3`), so
+// a refresh landing mid-import sees the skeleton — object directories created,
+// HEAD not written yet — and *every* isomorphic-git read then dies with
+// "Could not find HEAD." (observed as an error-level "Failed to refresh git
+// state" during E2). `repoHasHead` lets the read paths treat that transient
+// state as "no repository yet" instead of raising it as a UI error.
+const repoHasHead = async () => {
+    if (!(await repoExists())) return false;
+    try {
+        const head = await getFs().promises.readFile(pathJoin(REPO_DIR, '.git', 'HEAD'), 'utf8');
+        return Boolean(head && String(head).trim());
+    } catch (e) {
+        return false;
+    }
+};
+
+// `git.currentBranch` *throws* when HEAD is missing (unborn or half-written
+// repository) rather than reporting "no branch checked out", so callers kept
+// surfacing a raw NotFoundError where `null` was the expected answer. Reading
+// the branch is never worth an exception: null already means "detached or
+// unknown" everywhere in this module.
+const readCurrentBranch = async () => {
+    const fs = getFs();
+    try {
+        const branch = await git.currentBranch({fs, dir: REPO_DIR, fullname: false});
+        return branch || null;
+    } catch (e) {
+        return null;
+    }
+};
+
 const listFilesRecursive = async (pfs, rootDir) => {
     const out = [];
     const walk = async currentDir => {
@@ -507,7 +539,7 @@ const getRepoStatus = async vm => {
         };
     }
 
-    const currentBranch = await git.currentBranch({fs, dir: REPO_DIR, fullname: false});
+    const currentBranch = await readCurrentBranch();
     const branches = await git.listBranches({fs, dir: REPO_DIR});
     const commits = await git.log({fs, dir: REPO_DIR, depth: 20});
     const changes = await getRepoChanges(vm);
@@ -694,7 +726,7 @@ const push = async ({vm, remote, branch, ref, setUpstream = true, onProgress, ..
     // current branch, and create the same-named branch on the remote.
     let localRef = ref || branch;
     if (!localRef) {
-        localRef = await git.currentBranch({fs, dir: REPO_DIR, fullname: false});
+        localRef = await readCurrentBranch();
     }
     if (!localRef) {
         throw new Error('No branch to push. Check out a branch first.');
@@ -820,7 +852,7 @@ const fetchRemote = async ({remote = 'origin', ref, onAuth, onProgress} = {}) =>
 const getUpstreamBranch = async ({branch} = {}) => {
     const fs = getFs();
     if (!(await repoExists())) return null;
-    const name = branch || await git.currentBranch({fs, dir: REPO_DIR, fullname: false});
+    const name = branch || await readCurrentBranch();
     if (!name) return null;
     try {
         const remote = await git.getConfig({fs, dir: REPO_DIR, path: `branch.${name}.remote`});
@@ -859,7 +891,7 @@ const pull = async ({vm, remote, ref, author, onAuth, onProgress} = {}) => {
 
     let localRef = ref;
     if (!localRef) {
-        localRef = await git.currentBranch({fs, dir: REPO_DIR, fullname: false});
+        localRef = await readCurrentBranch();
     }
     if (!localRef) {
         throw new Error('No branch checked out to pull into');
@@ -1075,7 +1107,7 @@ const deleteBranch = async ref => {
 
     const fs = getFs();
     try {
-        const currentBranch = await git.currentBranch({fs, dir: REPO_DIR, fullname: false});
+        const currentBranch = await readCurrentBranch();
         if (currentBranch && currentBranch === ref) {
             throw new Error('Cannot delete the currently checked out branch');
         }
@@ -1399,7 +1431,7 @@ const computeCommitGraph = async ({depth = 50} = {}) => {
     // so walking only local branches would silently hide it from History —
     // the graph would show just the fetched/remote history. Fold the HEAD chain
     // in as a virtual branch so those local commits stay visible.
-    const headBranch = await git.currentBranch({fs, dir: REPO_DIR, fullname: false});
+    const headBranch = await readCurrentBranch();
     if (!headBranch) {
         try {
             const headLog = await git.log({fs, dir: REPO_DIR, depth});
@@ -1909,6 +1941,8 @@ export {
     importRepoFromSb3,
     cloneRepo,
     repoHasFractch,
+    repoHasHead,
+    readCurrentBranch,
     startEditorMerge,
     completeEditorMerge,
     abortEditorMerge,

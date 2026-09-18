@@ -1,7 +1,7 @@
 import bindAll from 'lodash.bindall';
 import React from 'react';
 import PropTypes from 'prop-types';
-import {intlShape, injectIntl} from 'react-intl';
+import {defineMessages, intlShape, injectIntl} from 'react-intl';
 import {connect} from 'react-redux';
 import log from '../utils/log';
 import sharedMessages from '../constants/shared-messages';
@@ -26,6 +26,15 @@ import {
 import {
     closeFileMenu
 } from '../../reducers/menus';
+
+const messages = defineMessages({
+    repoPreserved: {
+        defaultMessage: 'This project file has no embedded git repository, ' +
+            'so the repository in this browser was kept as it was.',
+        description: 'Notice shown after loading a project that has no embedded git repository',
+        id: 'mw.git.notice.repoPreserved'
+    }
+});
 
 /**
  * Higher Order Component to provide behavior for loading local project files into editor.
@@ -254,10 +263,28 @@ const SBFileUploaderHOC = function (WrappedComponent) {
                             });
                             if (result.imported) {
                                 console.log('[SBFileUploader] Restored embedded git repository');
+                                // Reload the shared git store so an already-open git
+                                // window shows the imported history instead of the
+                                // "no version control" empty state until the next
+                                // manual refresh.
+                                const {default: gitOps} = await import('../git/ops/index.js');
+                                await gitOps.refreshRepository({vm: this.props.vm});
+                                await gitOps.refreshHistory();
                             } else if (result.reason === 'absent') {
                                 console.info(
                                     '[SBFileUploader] No embedded git repository; existing repository preserved'
                                 );
+                                // The repository was deliberately kept, but only in
+                                // the console until now — the user saw their History
+                                // either stay as it was or look untouched, with no
+                                // explanation. Say it on screen too.
+                                if (typeof this.props.showToast === 'function') {
+                                    this.props.showToast(
+                                        this.props.intl.formatMessage(messages.repoPreserved),
+                                        'info',
+                                        'bottom-right'
+                                    );
+                                }
                             }
                         } catch (gitError) {
                             log.error('Failed to restore embedded git history:', gitError);
@@ -317,6 +344,10 @@ const SBFileUploaderHOC = function (WrappedComponent) {
                 projectChanged,
                 projectTitle,
                 requestProjectUpload: requestProjectUploadProp,
+                // Not part of the wrapped component's contract: it is this
+                // HOC's own toast channel, and leaking it would land the prop on
+                // a DOM element (React warns about unknown attributes).
+                showToast,
                 userOwnsProject,
                 /* eslint-enable no-unused-vars */
                 ...componentProps
@@ -349,6 +380,7 @@ const SBFileUploaderHOC = function (WrappedComponent) {
         projectTitle: PropTypes.string,
         requestProjectUpload: PropTypes.func,
         showOpenFilePicker: PropTypes.func,
+        showToast: PropTypes.func,
         userOwnsProject: PropTypes.bool,
         vm: PropTypes.shape({
             loadProject: PropTypes.func,
@@ -400,7 +432,15 @@ const SBFileUploaderHOC = function (WrappedComponent) {
         // project data. When this is done, the project state transition will be
         // noticed by componentDidUpdate()
         requestProjectUpload: loadingState => dispatch(requestProjectUpload(loadingState)),
-        onSetFileHandle: fileHandle => dispatch(setFileHandle(fileHandle))
+        onSetFileHandle: fileHandle => dispatch(setFileHandle(fileHandle)),
+        // App-wide corner toast (same channel the git layer reports through, so
+        // the "your repository was kept" notice looks like the rest of them).
+        showToast: (message, type = 'info', position = 'top-right') => dispatch({
+            type: 'scratch-gui/SHOW_TOAST',
+            message,
+            toastType: type,
+            position
+        })
     });
     // Allow incoming props to override redux-provided props. Used to mock in tests.
     const mergeProps = (stateProps, dispatchProps, ownProps) => Object.assign(

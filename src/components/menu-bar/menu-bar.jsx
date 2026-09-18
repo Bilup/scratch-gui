@@ -121,6 +121,7 @@ import collectMetadata from '../../lib/collect-metadata';
 import LazyScratchBlocks from '../../lib/tw-lazy-scratch-blocks';
 import buildHttpAuth from '../../lib/git/auth.js';
 import translateGitError from '../../lib/git/errors.js';
+import {hasChanges as gitHasChanges} from '../../lib/git/state/selectors.js';
 import {mediaRecorderSupported} from '../../addons/environment.js';
 import addonEnglish from '../../addons/addons-l10n/en.json';
 import addonChinese from '../../addons/addons-l10n/zh-cn.json';
@@ -336,6 +337,7 @@ class MenuBar extends React.Component {
             canUndo: true,
             canRedo: true,
             gitRepoExists: false,
+            gitHasChanges: false,
             gitRemotes: [],
             menuCollapsed: false,
             moreMenuOpen: false,
@@ -705,19 +707,28 @@ class MenuBar extends React.Component {
     }
 
     async refreshGitMenuState () {
-        // Keep this cheap (no project re-serialization): a status refresh with
-        // no VM only reads the index + the remote config. "Has changes" is
-        // derived from the redux projectChanged flag in render.
+        // Cheap on purpose: `getRepoChanges` is hash-cached, so a project that
+        // did not change since the last serialization is not rebuilt. The VM is
+        // still passed in, because the working tree is only kept current while
+        // the git window is mounted — edits made with the window closed would
+        // otherwise be invisible here.
         try {
             const {default: gitOps} = await import('../../lib/git/ops/index.js');
-            await gitOps.refreshRepository();
-            const {repo, remotes} = gitOps.getState();
+            await gitOps.refreshRepository({vm: this.props.vm});
+            const state = gitOps.getState();
+            const {repo, remotes} = state;
             this.setState({
                 gitRepoExists: Boolean(repo.initialized),
+                // The File menu has no staging area (it commits everything), so
+                // its Commit item is gated on "the repository has anything to
+                // commit" — the *git* signal the window uses — instead of the
+                // GUI's `projectChanged` flag. The old check offered Commit while
+                // git was clean and the window had its button greyed out (A2).
+                gitHasChanges: gitHasChanges(state),
                 gitRemotes: Array.isArray(remotes) ? remotes : []
             });
         } catch (e) {
-            this.setState({gitRepoExists: false, gitRemotes: []});
+            this.setState({gitRepoExists: false, gitHasChanges: false, gitRemotes: []});
         }
     }
 
@@ -1836,11 +1847,11 @@ class MenuBar extends React.Component {
                                         </MenuSection>
                                     )}
                                     {(
-                                        (this.state.gitRepoExists && this.props.projectChanged) ||
+                                        (this.state.gitRepoExists && this.state.gitHasChanges) ||
                                         (this.state.gitRepoExists && this.state.gitRemotes.length > 0)
                                     ) && (
                                         <MenuSection>
-                                            {this.state.gitRepoExists && this.props.projectChanged && (
+                                            {this.state.gitRepoExists && this.state.gitHasChanges && (
                                                 <MenuItem onClick={this.handleClickGitCommit}>
                                                     <GitBranch />
                                                     <FormattedMessage
