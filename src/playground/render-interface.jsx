@@ -30,6 +30,7 @@ import TWStateManagerHOC from '../lib/components/tw-state-manager-hoc.jsx';
 import SBFileUploaderHOC from '../lib/components/sb-file-uploader-hoc.jsx';
 import TWPackagerIntegrationHOC from '../lib/components/tw-packager-integration-hoc.jsx';
 import SettingsStore from '../addons/settings-store-singleton';
+import CustomPlugins from '../addons/custom-plugins';
 import '../lib/api/fix-history.js';
 import GUI from './render-gui.jsx';
 import MenuBar from '../components/menu-bar/menu-bar.jsx';
@@ -174,7 +175,9 @@ if (AddonChannels.reloadChannel) {
 }
 
 if (AddonChannels.changeChannel) {
-    AddonChannels.changeChannel.addEventListener('message', e => {
+    AddonChannels.changeChannel.addEventListener('message', async e => {
+        // 设置页可能新增/删除了自定义插件，先同步登记处再应用设置
+        await CustomPlugins.refreshFromDB();
         SettingsStore.setStoreWithVersionCheck(e.data);
     });
 }
