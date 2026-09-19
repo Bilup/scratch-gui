@@ -269,7 +269,17 @@ const SBFileUploaderHOC = function (WrappedComponent) {
                                 // manual refresh.
                                 const {default: gitOps} = await import('../git/ops/index.js');
                                 await gitOps.refreshRepository({vm: this.props.vm});
-                                await gitOps.refreshHistory();
+                                // The commit graph feeds the History view and
+                                // nothing else. The git lock serialises it
+                                // behind the refresh above anyway, so awaiting
+                                // it would only hold the loading overlay for
+                                // another 100-300 ms on a large repository.
+                                // Fire it off instead; `refreshRepository` has
+                                // already reset the history slice, so the graph
+                                // fills in rather than showing stale nodes.
+                                gitOps.refreshHistory().catch(gitError => {
+                                    log.error('Failed to refresh git history:', gitError);
+                                });
                             } else if (result.reason === 'absent') {
                                 console.info(
                                     '[SBFileUploader] No embedded git repository; existing repository preserved'
