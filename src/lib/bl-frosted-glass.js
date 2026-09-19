@@ -56,9 +56,22 @@ const TARGETS = [
                 backdrop-filter: blur(${blur}px) saturate(150%) !important;
                 -webkit-backdrop-filter: blur(${blur}px) saturate(150%) !important;
             }
-            /* addon 窗口标题栏 — 也有不透明背景 (var(--ui-primary))，需透明化让毛玻璃透过 */
-            [class*="addon-window-header"] {
+            /* addon 窗口标题栏 — 也有不透明背景（window-manager.js 内联 var(--ui-primary)），
+               需透明化让毛玻璃透过。
+               ⚠ 特异性必须是 (0,2,0)：window-theme 的 macOS / Windows 10 样式会声明
+               [.addon-window-header { background: var(--ui-secondary|--ui-tertiary) !important; }]，
+               而这些主题样式由 mw-style-settings.js / 插件 userstyles 追加到 <body> 末尾
+               （见 lib/mw-style-settings.js、addons/conditional-style.js，后者注释明确说明
+               "放在 <body> 末尾以获得比 <head> 更高的优先级"），本模块却注入在 <head>。
+               若这里用单类选择器，两者特异性同为 (0,1,0)，只能由文档顺序决定胜负 —— 主题永远赢，
+               于是 macOS / Windows 10 下标题栏残留不透明底色（表现为"毛玻璃只有 MistWarp 样式生效"）。
+               双属性选择器把特异性提到 (0,2,0)，使结果与样式表注入顺序无关。
+               同时清掉主题额外叠加的 backdrop-filter（macOS: blur(20px)），
+               让窗口模糊强度只由本模块的 blurRadius 决定，三种窗口样式观感一致。 */
+            [class*="addon-window"][class*="addon-window-header"] {
                 background-color: transparent !important;
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
             }
         /* React Modal 内容容器 — 直接渲染在 overlay 上、没有 addon-window 外层，
            backdrop-filter 与半透明背景都放在它自身 */
@@ -72,10 +85,15 @@ const TARGETS = [
            窗口系统所有形态的内容都挂在它下面：WindowedModal、AddonWindow(React)、
            命令式 createWindow、以及 windowed-modal 复用已有窗口时内容直挂该元素。
            若放在 .modal-window-content 上，复用分支等没有该容器的窗口会残留
-           var(--ui-modal-background) 纯色底。 */
-        .addon-window-content {
+           var(--ui-modal-background) 纯色底。
+           同上：必须是 (0,2,0)，否则会被 window-theme 的
+           [.addon-window-content { background: var(--ui-modal-background) !important; }]
+           （注入在 <body> 末尾、同特异性）覆盖成纯色，内容区毛玻璃同样失效。 */
+        [class*="addon-window"][class*="addon-window-content"] {
             background-color: ${glass} !important;
             box-shadow: ${hairline} !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
         }
         /* WindowedModal 内容容器 — 退为透明，玻璃面板已由 .addon-window-content 承担 */
         .modal-window-content {
@@ -273,6 +291,57 @@ const TARGETS = [
     background-color: rgba(${hoverR}, ${hoverG}, ${hoverB}, ${hoverA});
 }`;
         }
+    },
+    // 画板浮层面板 — 三类同源浮层：
+    //   1. scratch-paint 的 react-popover：颜色选择器、字体 / 模式下拉、角色方向选择器
+    //      （portal 到 <body> 下，类名是全局的 .Popover / .Popover-body / .Popover-tipShape）
+    //   2. Onion Skin 洋葱皮设置面板（插件 onion-skinning）→ .sa-onion-settings
+    //   3. Resize 大小 / 位置面板（插件 resize-selected-item）→ .sa-resize-settings
+    // 后两类都是"浮在画布上方、底部带一个小箭头"的面板，视觉语言与 popover 一致，
+    // 所以合并到同一个 target 里，箭头跟着面板一起玻璃化
+    // （只做面板不做箭头会出现"玻璃面板 + 实心箭头"的断层）。
+    {
+        id: 'popover',
+        labelId: 'bl.frostedGlass.target.popover',
+        defaultMessage: 'Popover / Panels',
+        css: (blur, alpha, r, g, b) => {
+            const glass = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+            const glassBlur = `blur(${blur}px) saturate(150%)`;
+            return `
+/* react-popover 浮层主体。主题层 lib/themes/global-styles.css 用
+   [.Popover-body { background: var(--popover-background) !important }]
+   铺了不透明底色（特异性 (0,1,0)），却同时写着"some of these are duplicated over
+   there too; !important makes sure these win"，所以这里必须用 body 前缀把特异性提到
+   (0,1,1) 才能稳胜，光靠 !important 拼不过同特异性的后置声明。
+   body 前缀同时也天然限定了作用域：react-popover 是 portal 到 <body> 下的。
+   不覆盖 box-shadow，保留浮层原有的投影 —— 它贴在画布 / 检查器上时靠投影分层次。 */
+body .Popover-body {
+    background-color: ${glass} !important;
+    backdrop-filter: ${glassBlur} !important;
+    -webkit-backdrop-filter: ${glassBlur} !important;
+}
+/* 浮层箭头（主题层同样以 (0,1,0) + !important 设成实心底色） */
+body .Popover-tipShape {
+    fill: ${glass} !important;
+}
+
+/* 画板插件的设置面板 —— 两者都是 .sa-xxx-settings + .sa-xxx-settings-polygon 结构，
+   实色底来自各自 style.css 的 background: var(--ui-modal-background)（无 !important，
+   但仍按上面的规矩统一用 !important 覆盖，避免以后被主题层加权重后失效）。
+   面板内部的行 / 输入框保持原样：resize 面板的输入框自带一层实底（表单可读性），
+   onion 面板的加减按钮本来就只有描边没有底色，玻璃底能直接透出来。 */
+.sa-onion-settings,
+.sa-resize-settings {
+    background-color: ${glass} !important;
+    backdrop-filter: ${glassBlur} !important;
+    -webkit-backdrop-filter: ${glassBlur} !important;
+}
+/* 面板下方指向按钮的小箭头 */
+.sa-onion-settings-polygon,
+.sa-resize-settings-polygon {
+    fill: ${glass} !important;
+}`;
+        }
     }
 ];
 
@@ -334,6 +403,7 @@ const removeFrostedGlassForTarget = targetId => {
 /**
  * 检测当前主题是否为深色模式。
  * 读取 document 根元素上的 --color-scheme CSS 变量（由主题系统设置）。
+ * @returns {boolean} 深色主题返回 true
  */
 const isDarkMode = () => {
     const scheme = getComputedStyle(document.documentElement)
@@ -347,6 +417,7 @@ const isDarkMode = () => {
  * 获取当前主题下毛玻璃背景的 RGB 值。
  * 深色模式使用黑色底色，亮色模式使用白色底色。
  * 结果缓存，避免频繁调用 getComputedStyle()。
+ * @returns {{r: number, g: number, b: number}} 主题底色 RGB
  */
 const getThemeRGB = () => {
     if (_cachedRGB) return _cachedRGB;
@@ -361,6 +432,7 @@ const getThemeRGB = () => {
 /**
  * 清除主题 RGB 缓存，下次调用 getThemeRGB() 时会重新计算。
  * 在主题切换时调用。
+ * @returns {void}
  */
 const clearThemeRGBCache = () => {
     _cachedRGB = null;
@@ -368,6 +440,12 @@ const clearThemeRGBCache = () => {
 
 /**
  * 检查参数是否与上次应用的一致，避免重复更新 style 标签。
+ * @param {number} blurRadius 模糊半径
+ * @param {number} opacity 生效后的不透明度
+ * @param {number} r 主题底色红通道
+ * @param {number} g 主题底色绿通道
+ * @param {number} b 主题底色蓝通道
+ * @returns {boolean} 与上次完全一致返回 true
  */
 const isSameAsLastApplied = (blurRadius, opacity, r, g, b) => {
     if (!_lastApplied) return false;
