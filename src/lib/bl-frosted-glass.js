@@ -64,6 +64,16 @@ const TARGETS = [
             //   3. .addon-window-content — AddonWindow(React)、命令式 createWindow、
             //      以及 windowed-modal 复用已有窗口分支 (contentContainer = window.contentElement)
             const inside = '[class*="modal-content"], .modal-window-content, .addon-window-content';
+            // ⚠ insideDescendant 必须用 :is() 包住！
+            // inside 是"逗号列表"，直接拼 `'${inside} X'` 只会把 X 接到**最后一个**
+            // 分支上，前两个分支变成裸选择器（历史写法，全模块如此，一直没暴露问题
+            // 是因为裸的 [class*="modal-content"] / .modal-window-content 本来就该透明）。
+            // 但当 X 自己也是一个带 [class*=] 的属性选择器、且语义要求"必须是后代"时，
+            // 裸写会产生 [class*="a"][class*="b"] 这种"同一元素同时含两个子串"的
+            // 永假条件，规则静默失效。凡是既可能被 addon-window 也可能被
+            // React modal 承载的元素（如有），必须用 :is() 得到真正的后代匹配。
+            const insideDescendant =
+                ':is([class*="modal-content"], .modal-window-content, .addon-window-content) ';
             return `
 /* ============================================================
    毛玻璃核心策略（与主题背景同源判断）
@@ -1064,7 +1074,165 @@ const TARGETS = [
 
 /* [U-3] 插件窗口里的品牌色（与 [J] 组同源，覆盖面扩到品牌色）
        计算器的运算符 / 等号已在 [J-1] 就近处理，此处补其余插件。
-       tag-button / library-item / backpack 等通用组件的品牌色已由 [U-2] 覆盖。 */`;
+       tag-button / library-item / backpack 等通用组件的品牌色已由 [U-2] 覆盖。 */
+
+/* ==================================================================
+   [V] 中性实色 = 最后一整类逃逸（2026-09-24 补）
+   ------------------------------------------------------------------
+   用户的判定：窗口里除"保留清单"外不允许出现 alpha=1 的纯色，
+   也不允许出现与主题无关的固定色。
+
+   上面 [A]~[U] 都是**按名字**扫的（body/header/card/panel/section/button…）。
+   按名字扫必然漏 —— 因为源 CSS 里同一个语义有十几套命名。
+   本轮用户截图（作品视频录制器）暴露的就是这个：
+     · .input-with-unit   → 输入框外壳，铺 $ui-modal-background（深色 #1e1e1e）
+     · .secondary-button  → 取消按钮，铺 $ui-primary（深色 #111111）
+   两个类名里都没有任何关键字，所以前面所有组都碰不到它们。
+
+   把 components + addons 下全部 css 的**中性不透明填充**（$ui-primary /
+   $ui-modal-background / $ui-white / $ui-secondary / $ui-tertiary 及其
+   --ui-* 变量形式）逐条与已有分组比对，得 184 个"名字不含关键字"的类。
+   其中大部分已被 [H]（输入框）/ [U]（品牌）/ [J]（插件）/ [S]（浮层）覆盖，
+   剩下真正没人管的，归纳成下面三类**结构模式**。按模式修，而不是按类名修，
+   这样以后新增同模式的元素自动被覆盖。
+
+   模式 A —— "包着表单控件的外壳"：父元素铺实色、子 input/select 已被 [H]
+             处理成玻璃 → 结果是"玻璃框里套一个黑框"。父元素应透明，
+             让 [H] 铺的那层玻璃成为唯一底板。
+   模式 B —— "中性次要/取消按钮"：铺 $ui-primary / $ui-secondary / $ui-white，
+             不带品牌色所以 [U] 跳过，类名不含关键字所以其它组也跳过。
+   模式 C —— "中性浅底小单元"：chip / row / box / tab / 预览缩略图等，
+             铺 $ui-white / $ui-primary / $ui-tertiary 的零散小块。
+   ================================================================== */
+
+/* [V-A] 模式 A：包着表单控件的外壳 → 透明，交给 [H] 的玻璃底
+       代表性源码（逐个核对过）：
+         media-recorder.css:102  .input-with-unit      { background: $ui-modal-background }
+         resize-selected-item   .sa-resize-settings-input { background: var(--ui-modal-background) }
+       这些壳子的类名不含任何关键字，且子 input 已被 [H] 铺成玻璃，
+       于是形成"玻璃框里套一个黑框"。壳子改透明，只留 [H] 那一层底板。
+       ⚠ 同样把三挂载点分别写全，不依赖 ${inside} 的列表展开写法。 */
+        [class*="modal-content"] [class*="input-with-unit"],
+        .modal-window-content [class*="input-with-unit"],
+        .addon-window-content [class*="input-with-unit"],
+        [class*="modal-content"] [class*="resize-settings-input"],
+        .modal-window-content [class*="resize-settings-input"],
+        .addon-window-content [class*="resize-settings-input"],
+        [class*="modal-content"] [class*="input-wrapper"],
+        .modal-window-content [class*="input-wrapper"],
+        .addon-window-content [class*="input-wrapper"],
+        [class*="modal-content"] [class*="fontInputContainer"],
+        .modal-window-content [class*="fontInputContainer"],
+        .addon-window-content [class*="fontInputContainer"],
+        [class*="modal-content"] [class*="fontInputOuter"],
+        .modal-window-content [class*="fontInputOuter"],
+        .addon-window-content [class*="fontInputOuter"] {
+            background-color: transparent !important;
+            background: transparent !important;
+        }
+        /* [V-A'] :has() 泛化 —— 任何"直接后代含 input/select/textarea"且
+           自己铺了底的窗口内元素（已知类名之外的新增元素靠这条兜住）。
+           本模块的 ${inside} 前缀是"逗号列表"，拼在后代选择器上时只会作用于
+           最后一个分支（历史写法，全模块一致）。所以这里把 :has() 单独写成
+           三段，保证三个挂载点都真正被限定为"后代"，不依赖该写法。
+           ⚠ 只匹配"直接子级"是 input/select/textarea，不递归；也**不含**
+             type=color / checkbox / radio / range —— 那几类在保留清单里，
+             混进来会把取色器和滑块的容器一起洗掉。
+           影响面：已知的 32 处"外壳+直接表单控件"结构里，只有
+             inputWithUnit / inputWrapper / searchContainer / fontInputContainer /
+             fontInputOuter / field / creditEditRow / composerBody 等中性底壳被命中；
+             含 color/range 的 paletteColorWrapper / gcAccentRow / gcDirectionRow /
+             slider-monitor row 全部不受影响（类型不在列表内）。 */
+        [class*="modal-content"] :has(> input[type="number"]),
+        .modal-window-content :has(> input[type="number"]),
+        .addon-window-content :has(> input[type="number"]),
+        [class*="modal-content"] :has(> input[type="text"]),
+        .modal-window-content :has(> input[type="text"]),
+        .addon-window-content :has(> input[type="text"]),
+        [class*="modal-content"] :has(> input[type="search"]),
+        .modal-window-content :has(> input[type="search"]),
+        .addon-window-content :has(> input[type="search"]),
+        [class*="modal-content"] :has(> select),
+        .modal-window-content :has(> select),
+        .addon-window-content :has(> select),
+        [class*="modal-content"] :has(> textarea),
+        .modal-window-content :has(> textarea),
+        .addon-window-content :has(> textarea) {
+            background-color: transparent !important;
+            background: transparent !important;
+        }
+
+/* [V-B] 模式 B：中性次要 / 取消按钮 —— 统一压成淡玻璃
+       命名族（扫出来的全部）：secondary-button / secondaryButton /
+       cancel-button / cancelButton / confirm-cancel-button。
+       覆盖窗口：
+         media-recorder .secondary-button（用户截图里的「取消」）
+         restore-point-modal .secondary-button / .confirm-cancel-button
+         project-theme-modal .secondaryButton
+         custom-gallery-modal .cancel-button
+         simple-dialog .cancelButton
+       ⚠ 这些源样式 hover 换的是更深的 **中性** token（$ui-secondary /
+         $ui-secondary-hover），不是品牌色。按 [U-1h] 的既有教训，
+         hover 不能换 token 否则会"玻璃 → 实心"跳变；这里统一
+         普通态 cardGlass、hover 提一档用 glass。 */
+        ${insideDescendant}[class*="secondary-button"],
+        ${insideDescendant}[class*="secondaryButton"],
+        ${insideDescendant}[class*="cancel-button"],
+        ${insideDescendant}[class*="cancelButton"],
+        ${insideDescendant}[class*="confirm-cancel-button"] {
+            background-color: ${cardGlass} !important;
+            background: ${cardGlass} !important;
+        }
+        ${insideDescendant}[class*="secondary-button"]:hover,
+        ${insideDescendant}[class*="secondaryButton"]:hover,
+        ${insideDescendant}[class*="cancel-button"]:hover,
+        ${insideDescendant}[class*="cancelButton"]:hover,
+        ${insideDescendant}[class*="confirm-cancel-button"]:hover {
+            background-color: ${glass} !important;
+            background: ${glass} !important;
+        }
+
+/* [V-C] 模式 C：中性浅底小单元 —— chip / row / box / tab 类
+       这些是窗口里成片出现、每条都独立铺底的"小方块"，单看面积不大，
+       但一屏十几条叠起来就是"玻璃窗里一片实色格子"。
+       逐个核对过源文件，只收**中性底**的；品牌底色归 [U] 管。
+         git-modal .remoteItem / .remoteRow / .chip / .commitBox / .readmeBox
+                   / .commitTypeSelect / .input / .inputSmall / .select
+         shortcut-manager .keycap / .hintKey / .toolbar
+         restore-point-modal .interval-selector
+         block-count .sa-complexity-score
+         sprite-folders .sa-toolbar-button / .sa-file-icon
+       注意 keycap 是"按键帽"—— 它是**视觉隐喻**（表示键盘按键），
+       透明化后仍靠 border 保持可辨，比实色更贴合玻璃主题。 */
+        ${insideDescendant}[class*="git-modal_remoteItem"],
+        ${insideDescendant}[class*="git-modal_remoteRow"],
+        ${insideDescendant}[class*="git-modal_chip"],
+        ${insideDescendant}[class*="git-modal_commitBox"],
+        ${insideDescendant}[class*="git-modal_readmeBox"],
+        ${insideDescendant}[class*="git-modal_commitTypeSelect"],
+        ${insideDescendant}[class*="git-modal_conflictRow"],
+        ${insideDescendant}[class*="shortcut-manager_keycap"],
+        ${insideDescendant}[class*="shortcut-manager_hintKey"],
+        ${insideDescendant}[class*="shortcut-manager_toolbar"],
+        ${insideDescendant}[class*="restore-point-modal_interval-selector"],
+        ${insideDescendant}[class*="block-count_sa-complexity-score"],
+        ${insideDescendant}[class*="sprite-folders_sa-toolbar-button"],
+        ${insideDescendant}[class*="sprite-folders_sa-file-icon"] {
+            background-color: ${cardGlass} !important;
+            background: ${cardGlass} !important;
+        }
+        /* [V-C] 的 hover / 选中态：同样不换 token，只提一档 */
+        ${insideDescendant}[class*="git-modal_remoteItem"]:hover,
+        ${insideDescendant}[class*="git-modal_remoteRow"]:hover,
+        ${insideDescendant}[class*="git-modal_chip"]:hover,
+        ${insideDescendant}[class*="sprite-folders_sa-toolbar-button"]:hover {
+            background-color: ${glass} !important;
+            background: ${glass} !important;
+        }
+        /* git-modal 的 .chip 选中态源样式铺 $looks-secondary（已由 [U-1] 的
+           git-modal_chipActive 覆盖），这里只需保证非选中态是玻璃，不重复。
+           .select / .input / .inputSmall 是原生表单控件，已被 [H] 的
+           input/select 规则覆盖（它们是 <select>/<input> 本身）。 */`;
         }
     },
     // 弹窗通知 — CSS Module 类名: alert_alert_xxxxx
