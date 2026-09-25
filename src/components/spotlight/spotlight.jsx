@@ -9,7 +9,6 @@ import LazyScratchBlocks from '../../lib/tw-lazy-scratch-blocks';
 import {updateCallbacks} from '../../lib/shortcuts/event-router.js';
 
 import WorkspaceQuerier from '../../lib/spotlight/WorkspaceQuerier.js';
-import {getBlockHeight} from '../../lib/spotlight/BlockRenderer.js';
 import {BlockTypeInfo} from '../../lib/spotlight/BlockTypeInfo.js';
 import {onClearTextWidthCache, offClearTextWidthCache} from '../../lib/spotlight/module.js';
 import {performSearch} from '../../lib/spotlight/searchUtils.js';
@@ -473,15 +472,15 @@ export default function NativeSpotlight ({vm, locale, activeTabIndex, isPlayerOn
                     svgBlock.addEventListener('mousedown', mouseDownListener);
                     svgBlock.classList.add('sa-mcp-preview-block');
 
-                    const bgOffset = (result.isHeader || result.isSprite || result.isCostume ||
-                        result.isSound || result.isCustomBlock || result.isAction) ? 0 : actualHeight / 10;
-                    svgBackground.setAttribute('transform', `translate(0, ${(y + bgOffset) * previewScale})`);
+                    // Every entry occupies exactly one row, so the highlight lines up with it.
+                    svgBackground.setAttribute('transform', `translate(0, ${y * previewScale})`);
                     svgBackground.setAttribute('height', `${actualHeight * previewScale}px`);
 
                     queryPreviews.push({
                         block: result.block,
                         autocompleteFactory: result.autocompleteFactory ?? null,
                         renderedBlock,
+                        rowHeight: actualHeight,
                         svgBlock,
                         svgBackground,
                         isSprite: result.isSprite,
@@ -607,22 +606,14 @@ export default function NativeSpotlight ({vm, locale, activeTabIndex, isPlayerOn
                             blockX += ((previewWidth / previewScale) - blockX - preview.renderedBlock.width) *
                                 previewScale * cursorPosRel;
                         }
-                        blockY = (y + 30) * previewScale;
+                        blockY = (y + preview.renderedBlock.top) * previewScale;
                     }
 
                     preview.svgBlock.setAttribute(
                         'transform', `translate(${blockX}, ${blockY}) scale(${previewScale})`
                     );
 
-                    if (preview.isHeader) {
-                        y += 40;
-                    } else if (preview.isSprite || preview.isCostume || preview.isSound ||
-                        preview.isCustomBlock || preview.isAction) {
-                        y += 60;
-                    } else if (preview.block) {
-                        const blockHeight = getBlockHeight(preview.block);
-                        y += (blockHeight && !isNaN(blockHeight)) ? blockHeight : 40;
-                    }
+                    y += preview.rowHeight;
                 }
 
                 popupInputSuggestion.scrollLeft = popupInput.scrollLeft;
