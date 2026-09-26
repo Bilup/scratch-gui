@@ -22,7 +22,7 @@ import {
 import {activateTab} from '../../reducers/editor-tab.js';
 import {HELP_ENTRIES} from '../../lib/help/index.js';
 import {renderMenuItem, calculateActualHeight} from '../../lib/spotlight/renderingUtils.js';
-import {beginPreviewBatch} from '../../lib/spotlight/previewRenderer.js';
+import {beginPreviewBatch} from '../../lib/block-preview/previewRenderer.js';
 import {
     findNextSelectableIndex,
     handleSpriteSelection,
