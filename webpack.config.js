@@ -246,6 +246,13 @@ const base = {
                 /node_modules[\\/]@xterm[\\/]/,
                 /node_modules[\\/]fractch[\\/]src/,
                 /node_modules[\\/]isomorphic-git/,
+                // `@isomorphic-git/lightning-fs`（Git 面板的 IndexedDB 文件系统）的
+                // package main 指向未编译的 src/，源码用了 ?? / ?. 等新语法。
+                // 上面的 `isomorphic-git` 正则匹配不到带 @ 作用域的这一段
+                // （pnpm 下实际路径为
+                //  node_modules/.pnpm/@isomorphic-git+lightning-fs@*/node_modules/@isomorphic-git/lightning-fs/），
+                // 必须单独放行，否则 webpack 报 "no loaders are configured to process this file"。
+                /node_modules[\\/]@isomorphic-git[\\/]/,
                 /node_modules[\\/]just-bash/,
                 /node_modules[\\/]monaco-editor/,
                 /node_modules[\\/]rotur-sdk/,
