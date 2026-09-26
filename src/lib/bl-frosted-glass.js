@@ -5,7 +5,11 @@ const STORAGE_KEY = 'bl:frosted-glass';
 const DEFAULT_SETTINGS = {
     enabled: false,
     blurRadius: 12,
-    opacity: 0.25
+    opacity: 0.25,
+    // "深浅比值"：深色下在用户透明度基础上额外加的幅度（浅色不加）。
+    // 越大 → 深浅两种主题的玻璃浓淡差异越明显；越小 → 越接近。
+    // 可调范围 0.10–0.55（见设置页滑块）
+    themeBoost: 0.15
 };
 
 // Style tag ID 前缀
@@ -1629,13 +1633,16 @@ const applyFrostedGlass = settings => {
 
     const blurRadius = settings.blurRadius || DEFAULT_SETTINGS.blurRadius;
     const opacity = settings.opacity || DEFAULT_SETTINGS.opacity;
+    // "深浅比值"：深色下额外加的透明度，浅色不加。由设置页滑块调整（0.10–0.55）
+    const themeBoost = settings.themeBoost || DEFAULT_SETTINGS.themeBoost;
     const {r, g, b} = getThemeRGB();
 
     // 深色模式暗度增强：深色下白字需要更不透明的深色玻璃底才清晰。
     // getThemeRGB() 只可能返回纯黑(0,0,0)或纯白(255,255,255)，
-    // 在用户透明度基础上加 0.30（上限 0.72），浅色模式维持用户设定不变。
+    // 在用户透明度基础上加 themeBoost（上限 0.72），浅色模式维持用户设定不变。
+    // themeBoost 即"深浅比值"：越小，深色与浅色的玻璃浓淡越接近。
     const isDark = r === 0 && g === 0 && b === 0;
-    const effectiveOpacity = isDark ? Math.min(0.72, opacity + 0.30) : opacity;
+    const effectiveOpacity = isDark ? Math.min(0.72, opacity + themeBoost) : opacity;
 
     // 如果参数没变，跳过更新以避免不必要的 style 重计算
     if (isSameAsLastApplied(blurRadius, effectiveOpacity, r, g, b)) {
