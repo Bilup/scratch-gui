@@ -3,18 +3,19 @@ import {Link} from 'react-router-dom';
 import {FormattedMessage} from 'react-intl';
 import {Github} from 'lucide-react';
 import {editorUrl} from '../api';
-import logo from '../assets/bilup-logo.svg';
 import styles from './Footer.module.css';
 
 const Footer = () => (
     <footer className={styles.footer}>
         <div className={styles.inner}>
             <div className={styles.brand}>
-                <img
+                <span
                     className={styles.logo}
-                    src={logo}
-                    alt=""
-                />
+                    role="img"
+                    aria-label="PineWarp"
+                >
+                    🍍
+                </span>
                 <div>
                     <span className={styles.wordmark}>PineWarp</span>
                     <p className={styles.tagline}>
