@@ -1,6 +1,6 @@
 // Rendering and block preview utilities
 
-import {renderPreviewBlock} from './previewRenderer.js';
+import {renderPreviewBlock} from '../block-preview/previewRenderer.js';
 import {
     createSpritePreviewItem,
     createCostumePreviewItem,

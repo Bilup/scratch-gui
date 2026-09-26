@@ -460,6 +460,10 @@ export default class FindBarController {
                 if (match) {
                     li.style.display = 'block';
 
+                    // Rows drawn as real blocks keep their rendering; only the text rows get their
+                    // content rebuilt with the matched part highlighted.
+                    if (li.isBlockPreview) continue;
+
                     this.clearChildren(li);
 
                     if (match.matchInOpcode && opcode) {
@@ -504,6 +508,9 @@ export default class FindBarController {
                 continue;
             }
             li.style.display = 'block';
+
+            // Rows drawn as real blocks keep their rendering instead of being replaced by text.
+            if (li.isBlockPreview) continue;
 
             const displayName = li.displayName;
             this.clearChildren(li);

@@ -206,6 +206,43 @@
     overflow: hidden;
 }
 
+/* Rows the find bar draws as real blocks, using the same renderer as the middle click popup.
+   The block brings its own colours and typography, so these rows only keep the layout. */
+:global(.sa-find-dropdown > li.sa-find-block-row) {
+    /* The find bar shows and hides rows with an inline `display`, which no stylesheet rule here can
+       win against, so the row stays a block and the counter is anchored to it with position
+       instead of being laid out as a flex item. */
+    position: relative;
+    padding: 0.35em 0.3em;
+    font-weight: normal;
+    text-overflow: clip;
+}
+
+:global(.sa-find-dropdown > li.sa-find-block-row::before) {
+    content: none;
+}
+
+:global(.sa-find-dropdown > li.sa-find-block-row > .sa-find-block-preview) {
+    display: block;
+    max-width: 100%;
+}
+
+/* Keeps the match counter on the block's line, at the right hand end of the row, instead of
+   letting it wrap onto a line of its own below the block. */
+:global(.sa-find-dropdown > li.sa-find-block-row > .sa-find-carousel) {
+    top: 0;
+    bottom: 0;
+    right: 0.3em;
+    display: flex;
+    align-items: center;
+}
+
+/* The frosted glass theme paints this row for every li, see [S-3] in lib/bl-frosted-glass.js. */
+:global(.sa-find-dropdown > li.sa-find-block-row:hover),
+:global(.sa-find-dropdown > li.sa-find-block-row.sel) {
+    background-color: var(--ui-tertiary, rgba(0, 0, 0, 0.08));
+}
+
 :global(.sa-find-code-result) {
     display: flex;
     align-items: baseline;

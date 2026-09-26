@@ -1,7 +1,31 @@
 import BlockInstance from '../../lib/find-bar/BlockInstance';
+import {renderWorkspaceBlockPreview} from '../../lib/block-preview/previewRenderer.js';
 
 import Carousel from './Carousel';
 import {getReactInternalKey} from './dom-utils';
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+/**
+ * Reference width used to derive the preview scale, the same way the middle click popup does
+ * (see POPUP_SCALE in spotlight.jsx).
+ * @type {number}
+ */
+const POPUP_SCALE = 48;
+
+/**
+ * Horizontal room the dropdown leaves around a preview row, in CSS pixels. Includes slack for a
+ * scrollbar appearing once the result list grows.
+ * @type {number}
+ */
+const PREVIEW_HORIZONTAL_INSET = 24;
+
+/**
+ * Fallback dropdown width, used before the dropdown has been laid out.
+ * @type {number}
+ */
+const FALLBACK_DROPDOWN_WIDTH = 320;
+
 
 // Opcode -> scratch-blocks message key remapping for blocks whose opcode has
 // underscores that the message table does not.
@@ -114,61 +138,149 @@ export default class Dropdown {
 
     addItem (proc, messagesList, colours) {
         const item = document.createElement('li');
-        item.innerText = proc.procCode;
         item.data = proc;
         item.displayName = this.translateProcCode(proc, messagesList);
-        const name = normalizeType(proc.procCode);
 
-        const colorIds = {
-            receive: 'events',
-            event: 'events',
-            define: 'more',
-            var: 'data',
-            VAR: 'data',
-            list: 'data-lists',
-            LIST: 'data-lists',
-            costume: 'looks',
-            sound: 'sounds',
-            block: 'more'
-        };
+        // Attach before anything is rendered: the block preview is measured with getBBox, which
+        // is not reliable for an SVG that is not in the document yet.
+        this.items.push(item);
+        this.el.appendChild(item);
 
-        if (proc.cls === 'flag') {
-            item.className = 'sa-find-flag';
-        } else {
-            let colorId = colorIds[proc.cls];
-            if (!colorId) {
-                const code = proc.procCode.split('_', 1)[0];
-                if ([
-                    'motion',
-                    'control',
-                    'looks',
-                    'event',
-                    'sound',
-                    'sensing',
-                    'data',
-                    'pen',
-                    'extensions',
-                    'other'
-                ].includes(code)) {
-                    colorId = code;
-                    if (colorId === 'sound') colorId = 'sounds';
-                } else if (code === 'operator') {
-                    colorId = 'operators';
-                } else {
-                    colorId = 'more';
-                }
-            }
-            if (colorId === 'more') {
-                item.className = 'sa-block-color sa-block-color-more';
-                item.style.color = colours[name];
+        // Blocks that exist in the project are drawn with the same renderer as the middle click
+        // popup, so a result looks exactly like the block it will jump to. Everything that is not
+        // a block (variables, lists, costumes, sounds, the value rows, and blocks the workspace
+        // has not rendered yet) keeps the plain text row.
+        item.isBlockPreview = this.buildBlockPreview(item, proc);
+
+        if (!item.isBlockPreview) {
+            const name = normalizeType(proc.procCode);
+            item.innerText = proc.procCode;
+
+            const colorIds = {
+                receive: 'events',
+                event: 'events',
+                define: 'more',
+                var: 'data',
+                VAR: 'data',
+                list: 'data-lists',
+                LIST: 'data-lists',
+                costume: 'looks',
+                sound: 'sounds',
+                block: 'more'
+            };
+
+            if (proc.cls === 'flag') {
+                item.className = 'sa-find-flag';
             } else {
-                item.className = `sa-block-color sa-block-color-${colorId}`;
+                let colorId = colorIds[proc.cls];
+                if (!colorId) {
+                    const code = proc.procCode.split('_', 1)[0];
+                    if ([
+                        'motion',
+                        'control',
+                        'looks',
+                        'event',
+                        'sound',
+                        'sensing',
+                        'data',
+                        'pen',
+                        'extensions',
+                        'other'
+                    ].includes(code)) {
+                        colorId = code;
+                        if (colorId === 'sound') colorId = 'sounds';
+                    } else if (code === 'operator') {
+                        colorId = 'operators';
+                    } else {
+                        colorId = 'more';
+                    }
+                }
+                if (colorId === 'more') {
+                    item.className = 'sa-block-color sa-block-color-more';
+                    item.style.color = colours[name];
+                } else {
+                    item.className = `sa-block-color sa-block-color-${colorId}`;
+                }
             }
         }
 
-        this.items.push(item);
-        this.el.appendChild(item);
         return item;
+    }
+
+    /**
+     * Draws the row as the real block it refers to.
+     * @param {HTMLLIElement} item The row being built.
+     * @param {object} proc The BlockItem describing the row.
+     * @returns {boolean} True when the row now shows a rendered block.
+     */
+    buildBlockPreview (item, proc) {
+        // Value rows exist to show the text that matched, so they deliberately stay as text.
+        if (!proc || proc.isTextInputEntry) return false;
+        if (proc.cls === 'costume' || proc.cls === 'sound') return false;
+
+        const labelID = proc.labelID;
+        if (!labelID || typeof labelID !== 'string') return false;
+        // Variables and lists are indexed by their own id, which is not a block id.
+        if (proc.cls === 'var' || proc.cls === 'VAR' ||
+            proc.cls === 'list' || proc.cls === 'LIST') {
+            return false;
+        }
+
+        const workspace = this.utils.getWorkspace() || this.ScratchBlocks.getMainWorkspace();
+        if (!workspace || typeof workspace.getBlockById !== 'function') return false;
+
+        const block = workspace.getBlockById(labelID);
+        if (!block) return false;
+        if (typeof block.isShadow === 'function' && block.isShadow()) return false;
+
+        const svg = document.createElementNS(SVG_NS, 'svg');
+        svg.setAttribute('class', 'sa-find-block-preview');
+        svg.setAttribute('aria-hidden', 'true');
+        svg.setAttribute('focusable', 'false');
+
+        // The row is already in the dropdown, so the preview can be measured as soon as it is
+        // attached. A preview that can not be rendered is dropped in favour of the text row.
+        item.appendChild(svg);
+        const rendered = renderWorkspaceBlockPreview(block, svg, this.ScratchBlocks);
+        if (!rendered) {
+            item.removeChild(svg);
+            return false;
+        }
+
+        const scale = this.getBlockPreviewScale(rendered.width);
+        // The viewBox is what scales the block. It also keeps a block intact when a narrow row
+        // shrinks it, because the contents are scaled to fit instead of being clipped.
+        svg.setAttribute('viewBox', `0 0 ${rendered.width} ${rendered.height}`);
+        svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+        svg.setAttribute('width', `${Math.ceil(rendered.width * scale)}`);
+        svg.setAttribute('height', `${Math.ceil(rendered.height * scale)}`);
+
+        item.classList.add('sa-find-block-row');
+        // The block already reads as its own name, but screen readers and the tooltip still
+        // need the text the row used to show.
+        item.title = item.displayName || proc.procCode;
+        return true;
+    }
+
+    /**
+     * The scale previews are drawn at: the middle click popup's scale, shrunk so a wide block
+     * still fits the dropdown.
+     * @param {number} width The width of the block in unscaled block units.
+     * @returns {number} The scale to apply.
+     */
+    getBlockPreviewScale (width) {
+        const viewportScale = (window.innerWidth * 0.00005) + (POPUP_SCALE / 100);
+        let scale = viewportScale > 0 && isFinite(viewportScale) ? viewportScale : 0.56;
+
+        let available = this.el && this.el.clientWidth ?
+            this.el.clientWidth - PREVIEW_HORIZONTAL_INSET :
+            FALLBACK_DROPDOWN_WIDTH;
+        if (!(available > 0)) available = FALLBACK_DROPDOWN_WIDTH;
+
+        if (width > 0 && (width * scale) > available) {
+            scale = available / width;
+        }
+        return scale;
     }
 
     /**
