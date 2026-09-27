@@ -113,7 +113,6 @@
     "redux": "3.7.2",
     "redux-throttle": "0.1.1",
     "remark-gfm": "^2.0.0",
-    "rotur-sdk": "github:Bilup/accounts-sdk#main",
     "scratch-audio": "github:Bilup/scratch-audio#develop-builds",
     "scratch-blocks": "github:Bilup/new-scratch-blocks#develop-builds",
     "scratch-parser": "github:Bilup/scratch-parser#main",
@@ -205,7 +204,7 @@
     },
     "testEnvironment": "jsdom",
     "transformIgnorePatterns": [
-      "/node_modules/(?!(scratch-audio|scratch-parser|fractch|pify|isomorphic-git|rotur-sdk|@vernier/godirect|@chenglou/pretext)/)"
+      "/node_modules/(?!(scratch-audio|scratch-parser|fractch|pify|isomorphic-git|@vernier/godirect|@chenglou/pretext)/)"
     ],
     "transform": {
       "^.+\\.(js|jsx|mjs|cjs)$": "<rootDir>/test/helpers/babel7-jest-transformer.js"
@@ -225,7 +224,6 @@
       "webpack@4.47.0>terser-webpack-plugin": "^1.4.1",
       "cheerio": "1.0.0-rc.12",
       "brace-expansion": "1.1.11",
-      "rotur-sdk": "github:Bilup/accounts-sdk#main",
       "escape-string-regexp": "4.0.0"
     }
   }

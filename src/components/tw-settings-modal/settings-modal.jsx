@@ -29,9 +29,8 @@ import LoadingScreenPage from './loading-screen-page.jsx';
 import FrostedGlassPage from './frosted-glass-page.jsx';
 import ShortcutManager from '../shortcut-manager/shortcut-manager.jsx';
 import {takeSettingsModalInitialView} from '../../lib/settings/modal-view.js';
-import isScratchDesktop from '../../lib/utils/isScratchDesktop.js';
 
-import {Settings, Zap, Blocks, Palette, PanelTop, Bug, GitBranch, Variable, Radio,
+import {Settings, Zap, Blocks, Palette, PanelTop, Bug, GitBranch, Variable,
     Globe, SunMoon, Wallpaper, Type, Monitor, Keyboard, ChevronLeft,
     Hourglass, Droplets} from 'lucide-react';
 import {connect} from 'react-redux';
@@ -44,13 +43,6 @@ import {
     getAuthorName, getAuthorEmail, setAuthorName, setAuthorEmail,
     getDefaultBranch, setDefaultBranch
 } from '../../lib/git/config.js';
-import {
-    getRoturSettings,
-    setRoturSetting,
-    formatActivityTitle,
-    formatActivityStatus
-} from '../../lib/rotur/settings.js';
-import {readActivityGrants, writeActivityGrants} from '../../lib/rotur/extension-bridge.js';
 
 const BufferedInput = BufferedInputHOC(Input);
 
@@ -161,22 +153,6 @@ const messages = defineMessages({
     headerVariableManager: {
         defaultMessage: 'Variable Manager',
         id: 'mw.settings.variableManagerHeader'
-    },
-    headerRotur: {
-        defaultMessage: 'Rotur',
-        id: 'mw.settings.roturHeader'
-    },
-    activitySharingAsk: {
-        defaultMessage: 'Ask each project',
-        id: 'mw.settings.rotur.activitySharing.ask'
-    },
-    activitySharingAll: {
-        defaultMessage: 'Always allow',
-        id: 'mw.settings.rotur.activitySharing.all'
-    },
-    activitySharingOff: {
-        defaultMessage: 'Never',
-        id: 'mw.settings.rotur.activitySharing.off'
     },
     cloudServerPlaceholder: {
         defaultMessage: 'ws://localhost:8000',
@@ -1651,179 +1627,6 @@ UnwrappedVariableManagerPage.propTypes = {
 };
 const VariableManagerPage = injectIntl(UnwrappedVariableManagerPage);
 
-class UnwrappedRoturPage extends React.Component {
-    constructor (props) {
-        super(props);
-        bindAll(this, [
-            'handlePresenceChange',
-            'handleIncludeDurationChange',
-            'handleActivitySharingChange',
-            'handleResetActivityGrants'
-        ]);
-        this.state = {...getRoturSettings(), activityGrantCount: Object.keys(readActivityGrants()).length};
-    }
-    setSetting (key, value) {
-        setRoturSetting(key, value);
-        this.setState({[key]: value});
-    }
-    handlePresenceChange (e) {
-        this.setSetting('presenceEnabled', e.target.checked);
-    }
-    handleIncludeDurationChange (e) {
-        this.setSetting('includeEditDuration', e.target.checked);
-    }
-    handleActivitySharingChange (e) {
-        this.setSetting('activitySharing', e.target.value);
-    }
-    handleResetActivityGrants () {
-        writeActivityGrants({});
-        this.setState({activityGrantCount: 0});
-    }
-    render () {
-        const {intl, loggedIn, username, projectTitle} = this.props;
-        const {presenceEnabled, includeEditDuration, activitySharing, activityGrantCount} = this.state;
-
-        return (
-            <Box className={styles.body}>
-                <Header>{intl.formatMessage(messages.headerRotur)}</Header>
-                <p className={styles.detail}>
-                    {loggedIn ? (
-                        <FormattedMessage
-                            defaultMessage="Signed in as {username}. These options control how Bilup appears on your Bilup Accounts profile."
-                            id="mw.settings.rotur.signedInAs"
-                            values={{username}}
-                        />
-                    ) : (
-                        <FormattedMessage
-                            defaultMessage="Log in with Bilup Accounts from the top-right of the menu bar to publish presence."
-                            id="mw.settings.rotur.notSignedIn"
-                        />
-                    )}
-                </p>
-
-                <BooleanSetting
-                    value={presenceEnabled}
-                    onChange={this.handlePresenceChange}
-                    label={<FormattedMessage
-                        defaultMessage="Show Bilup activity on Bilup Accounts"
-                        id="mw.settings.rotur.presenceEnabled"
-                    />}
-                    help={<FormattedMessage
-                        defaultMessage="When signed in, friends on Bilup Accounts can see that you are editing in Bilup."
-                        id="mw.settings.rotur.presenceEnabledHelp"
-                    />}
-                />
-                <BooleanSetting
-                    value={includeEditDuration}
-                    onChange={this.handleIncludeDurationChange}
-                    label={<FormattedMessage
-                        defaultMessage="Show how long I've been editing"
-                        id="mw.settings.rotur.includeEditDuration"
-                    />}
-                    help={<FormattedMessage
-                        defaultMessage="Uses Bilup Accounts's elapsed timer. Not added to the title or status text."
-                        id="mw.settings.rotur.includeEditDurationHelp"
-                    />}
-                />
-
-                <div className={styles.setting}>
-                    <div className={styles.textSettingLabel}>
-                        <FormattedMessage
-                            defaultMessage="Let projects show activity on your profile"
-                            id="mw.settings.rotur.activitySharing"
-                        />
-                    </div>
-                    <select
-                        value={activitySharing}
-                        onChange={this.handleActivitySharingChange}
-                    >
-                        <option value="ask">{intl.formatMessage(messages.activitySharingAsk)}</option>
-                        <option value="all">{intl.formatMessage(messages.activitySharingAll)}</option>
-                        <option value="off">{intl.formatMessage(messages.activitySharingOff)}</option>
-                    </select>
-                    <p className={styles.detail}>
-                        <FormattedMessage
-                            // eslint-disable-next-line max-len
-                            defaultMessage="Projects can show what you're playing on your profile. Be asked per project, always allow, or never."
-                            id="mw.settings.rotur.activitySharingHelp"
-                        />
-                    </p>
-                    {activityGrantCount > 0 ? (
-                        <button
-                            className={styles.button}
-                            onClick={this.handleResetActivityGrants}
-                        >
-                            <FormattedMessage
-                                defaultMessage="Reset per-project choices ({count})"
-                                id="mw.settings.rotur.resetActivityGrants"
-                                values={{count: activityGrantCount}}
-                            />
-                        </button>
-                    ) : null}
-                </div>
-
-                <p className={styles.detail}>
-                    <FormattedMessage
-                        defaultMessage="Themes and settings sync to your Bilup Accounts account when signed in."
-                        id="mw.settings.rotur.cloudSyncNote"
-                    />
-                </p>
-
-                <div className={styles.setting}>
-                    <div className={styles.textSettingLabel}>
-                        <FormattedMessage
-                            defaultMessage="Preview"
-                            id="mw.settings.rotur.preview"
-                        />
-                    </div>
-                    <p className={styles.detail}>
-                        <strong>{APP_NAME}</strong>
-                        <br />
-                        {formatActivityTitle()}
-                        <br />
-                        {formatActivityStatus(projectTitle)}
-                        {includeEditDuration ? (
-                            <React.Fragment>
-                                <br />
-                                <em>
-                                    <FormattedMessage
-                                        defaultMessage="(+ live edit timer on Rotur)"
-                                        id="mw.settings.rotur.previewTimer"
-                                    />
-                                </em>
-                            </React.Fragment>
-                        ) : null}
-                        {!presenceEnabled ? (
-                            <React.Fragment>
-                                <br />
-                                <em>
-                                    <FormattedMessage
-                                        defaultMessage="(Presence is disabled — nothing is published.)"
-                                        id="mw.settings.rotur.previewDisabled"
-                                    />
-                                </em>
-                            </React.Fragment>
-                        ) : null}
-                    </p>
-                </div>
-            </Box>
-        );
-    }
-}
-UnwrappedRoturPage.propTypes = {
-    intl: intlShape.isRequired,
-    loggedIn: PropTypes.bool,
-    username: PropTypes.string,
-    projectTitle: PropTypes.string
-};
-const RoturPage = injectIntl(connect(
-    state => ({
-        loggedIn: Boolean(state.scratchGui.rotur && state.scratchGui.rotur.username),
-        username: state.scratchGui.rotur ? state.scratchGui.rotur.username : null,
-        projectTitle: state.scratchGui.projectTitle
-    })
-)(UnwrappedRoturPage));
-
 const DesktopSelectSetting = ({label, help, value, options, onChange}) => (
     <Setting
         help={help}
@@ -2093,8 +1896,6 @@ const SettingsRouter = ({view, ...handlers}) => {
         return <StylesPage {...handlers} />;
     case 'menuBar':
         return <MenuBarPage {...handlers} />;
-    case 'rotur':
-        return <RoturPage {...handlers} />;
     case 'desktop':
         return <DesktopPage {...handlers} />;
     case 'experimental':
@@ -2249,12 +2050,7 @@ class SettingsModalComponent extends React.Component {
                         id: 'debugger',
                         label: intl.formatMessage({id: 'mw.settings.debugger', defaultMessage: 'Debugger'}),
                         icon: Bug
-                    },
-                    ...(isScratchDesktop() ? [] : [{
-                        id: 'rotur',
-                        label: intl.formatMessage({id: 'mw.settings.rotur', defaultMessage: 'Bilup Accounts'}),
-                        icon: Radio
-                    }])
+                    }
                 ]
             },
             {
