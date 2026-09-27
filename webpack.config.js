@@ -102,6 +102,8 @@ const base = {
         // allows ROUTING_STYLE=wildcard to work properly
         historyApiFallback: {
             rewrites: [
+                // 根路径默认进入编辑器
+                {from: /^\/?$/, to: '/editor.html'},
                 {from: /^\/editor\/?$/, to: '/editor.html'},
                 {from: /^\/fullscreen\/?$/, to: '/fullscreen.html'},
                 {from: /^\/embed\/?$/, to: '/embed.html'},
@@ -110,7 +112,7 @@ const base = {
                 {from: /^\/\d+\/fullscreen\/?$/, to: '/fullscreen.html'},
                 {from: /^\/\d+\/editor\/?$/, to: '/editor.html'},
                 {from: /^\/\d+\/embed\/?$/, to: '/embed.html'}
-                // anything else (/, /explore, /project/*, /users/*, /settings)
+                // anything else (/explore, /project/*, /users/*, /settings)
                 // falls through to index.html (the community app)
             ]
         },
@@ -528,16 +530,16 @@ module.exports = [
                 patterns: [
                     {
                         from: 'static',
-                        to: ''
-                    }
-                ]
-            }),
-            new CopyWebpackPlugin({
-                patterns: [
-                    {
-                        from: path.resolve(__dirname, '../docs/build'),
-                        to: 'docs',
-                        noErrorOnMissing: true
+                        to: '',
+                        // 只保留页面所需资源；测试/说明类 HTML 页面不构建进产物
+                        globOptions: {
+                            ignore: [
+                                '**/embedtest.html',
+                                '**/embedtestbad.html',
+                                '**/sb3-postmessage-test.html',
+                                '**/privacy.html'
+                            ]
+                        }
                     }
                 ]
             }),

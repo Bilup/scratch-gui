@@ -658,7 +658,7 @@ class ExtensionLibrary extends React.PureComponent {
     }
     getSourceStatus(tag) {
         // 内置本地数据始终可用（桌面端本地加载成功 → 蓝色）
-        if (tag === 'scratch' || tag === 'rotur') {
+        if (tag === 'scratch') {
             return 'local';
         }
         // 无状态时返回 'idle' 作为占位
@@ -781,7 +781,6 @@ class ExtensionLibrary extends React.PureComponent {
             ['scratch', 'Scratch'],
             ['tw', 'TurboWarp'],
             ['mistium', 'Mistium'],
-            ['rotur', 'Bilup Accounts'],
             ['sharkpool', 'SharkPool'],
             ['ae', 'AstraEditor'],
             ['bilup', 'Bilup'],

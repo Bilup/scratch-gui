@@ -45,12 +45,10 @@ import TWViewCounter from './tw-view-counter.jsx';
 
 import ChangeUsername from '../../containers/tw-change-username.jsx';
 import CloudVariablesToggler from '../../containers/tw-cloud-toggler.jsx';
-import TWSaveStatus from './tw-save-status.jsx';
 import TWNews from './tw-news.jsx';
 import CollaborationContainer from '../../containers/collaboration-container.jsx';
 
 import TWDesktopSettings from './tw-desktop-settings.jsx';
-import RoturAccount from './mw-rotur-account.jsx';
 import MwEditorNav from './mw-editor-nav.jsx';
 import CollabPresence from './mw-collab-presence.jsx';
 
@@ -1763,22 +1761,14 @@ class MenuBar extends React.Component {
                                     )}
                                     {this.props.roturReady ? (
                                         <MenuSection>
-                                            {mistwarpAction ? (
+                                            {mistwarpAction === 'remix' ? (
                                                 <MenuItem onClick={this.handleClickMistWarpShare}>
                                                     <Globe />
-                                                    {mistwarpAction === 'remix' ? (
-                                                        <FormattedMessage
-                                                            defaultMessage="Remix to Bilup"
-                                                            description="File menu item to remix a Bilup project"
-                                                            id="mw.menuBar.remix"
-                                                        />
-                                                    ) : (
-                                                        <FormattedMessage
-                                                            defaultMessage="Save to Bilup"
-                                                            description="File menu item to save the project to Bilup"
-                                                            id="mw.menuBar.share"
-                                                        />
-                                                    )}
+                                                    <FormattedMessage
+                                                        defaultMessage="Remix to Bilup"
+                                                        description="File menu item to remix a Bilup project"
+                                                        id="mw.menuBar.remix"
+                                                    />
                                                 </MenuItem>
                                             ) : null}
                                             {this.state.mistwarpProject ? (
@@ -2512,14 +2502,6 @@ class MenuBar extends React.Component {
                     data-mw-item="__account-group"
                     className={styles.accountInfoGroup}
                 >
-                    <div
-                        data-mw-item="save-status"
-                        className={styles.menuBarLayoutItem}
-                    >
-                        <TWSaveStatus
-                            showSaveFilePicker={this.props.showSaveFilePicker}
-                        />
-                    </div>
                     {aboutButton && (
                         <div
                             data-mw-item="about"
@@ -2539,12 +2521,6 @@ class MenuBar extends React.Component {
                         className={styles.menuBarLayoutItem}
                     >
                         <MwEditorNav />
-                    </div>
-                    <div
-                        data-mw-item="rotur-account"
-                        className={classNames(styles.menuBarLayoutItem, styles.roturAccountSlot)}
-                    >
-                        <RoturAccount />
                     </div>
                 </div>
             </Box>

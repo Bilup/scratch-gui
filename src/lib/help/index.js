@@ -29,7 +29,7 @@ const HELP_ENTRIES = [
         keywords: ['file', 'edit', 'tools', 'top bar'],
         short: 'The menu bar holds the File, Edit, Tools, Bookmarks, and Settings menus. Everything from saving to opening the debugger starts here.',
         howTo: [
-            'File holds New, Save to Bilup, Save to your computer, Package, and Restore points.',
+            'File holds New, Save to your computer, Package, and Restore points.',
             'Tools holds the Git panel, Terminal, Live Collaboration, Debugger, and Variable Manager.',
             'Edit holds Undo, Redo, Addons, and the tutorial.'
         ],

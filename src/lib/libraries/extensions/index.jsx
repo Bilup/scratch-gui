@@ -50,14 +50,6 @@ import gdxforConnectionIconURL from './gdxfor/gdxfor-illustration.svg';
 import gdxforConnectionSmallIconURL from './gdxfor/gdxfor-small.svg';
 
 import twIcon from './tw/tw.svg';
-import roturAccountIcon from './rotur/account.png';
-import roturEconomyIcon from './rotur/economy.png';
-import roturKeysIcon from './rotur/keys.png';
-import roturStatusIcon from './rotur/status.png';
-import roturSocialIcon from './rotur/social.png';
-import roturShopIcon from './rotur/shop.png';
-import roturGroupsIcon from './rotur/groups.png';
-import roturFilesIcon from './rotur/files.png';
 import patchingIcon from './patching/patching.png';
 import customExtensionIcon from './custom/custom.svg';
 import customURLIcon from './custom/customURL.svg';
@@ -108,174 +100,6 @@ export default [
         ),
         incompatibleWithScratch: true,
         tags: ['mistium'],
-        featured: true
-    },
-    {
-        name: (
-            <FormattedMessage
-                defaultMessage="Bilup Accounts"
-                description="Name of the Bilup Accounts extension"
-                id="tw.extension.rotur.name"
-            />
-        ),
-        extensionId: 'bilupAccounts',
-        iconURL: roturAccountIcon,
-        description: (
-            <FormattedMessage
-                defaultMessage="Log in with Bilup Accounts and read who the player is."
-                description="Description of the Bilup Accounts extension"
-                id="tw.extension.rotur.description"
-            />
-        ),
-        incompatibleWithScratch: true,
-        tags: ['rotur'],
-        featured: true
-    },
-    {
-        name: (
-            <FormattedMessage
-                defaultMessage="Bilup Accounts Economy"
-                description="Name of the Bilup Accounts Economy extension"
-                id="tw.extension.roturEconomy.name"
-            />
-        ),
-        extensionId: 'bilupEconomy',
-        iconURL: roturEconomyIcon,
-        description: (
-            <FormattedMessage
-                defaultMessage="Credits, transfers, and daily rewards."
-                description="Description of the Bilup Accounts Economy extension"
-                id="tw.extension.roturEconomy.description"
-            />
-        ),
-        incompatibleWithScratch: true,
-        tags: ['rotur'],
-        featured: true
-    },
-    {
-        name: (
-            <FormattedMessage
-                defaultMessage="Bilup Accounts Keys"
-                description="Name of the Bilup Accounts Keys extension"
-                id="tw.extension.roturKeys.name"
-            />
-        ),
-        extensionId: 'bilupKeys',
-        iconURL: roturKeysIcon,
-        description: (
-            <FormattedMessage
-                defaultMessage="Buy, sell, and check Bilup Accounts keys."
-                description="Description of the Bilup Accounts Keys extension"
-                id="tw.extension.roturKeys.description"
-            />
-        ),
-        incompatibleWithScratch: true,
-        tags: ['rotur'],
-        featured: true
-    },
-    {
-        name: (
-            <FormattedMessage
-                defaultMessage="Bilup Accounts Status"
-                description="Name of the Bilup Accounts Status extension"
-                id="tw.extension.roturStatus.name"
-            />
-        ),
-        extensionId: 'bilupStatus',
-        iconURL: roturStatusIcon,
-        description: (
-            <FormattedMessage
-                defaultMessage="Read and set Bilup Accounts status and presence."
-                description="Description of the Bilup Accounts Status extension"
-                id="tw.extension.roturStatus.description"
-            />
-        ),
-        incompatibleWithScratch: true,
-        tags: ['rotur'],
-        featured: true
-    },
-    {
-        name: (
-            <FormattedMessage
-                defaultMessage="Bilup Accounts Social"
-                description="Name of the Bilup Accounts Social extension"
-                id="tw.extension.roturSocial.name"
-            />
-        ),
-        extensionId: 'bilupSocial',
-        iconURL: roturSocialIcon,
-        description: (
-            <FormattedMessage
-                defaultMessage="Posts, follows, and friends on Bilup Accounts."
-                description="Description of the Bilup Accounts Social extension"
-                id="tw.extension.roturSocial.description"
-            />
-        ),
-        incompatibleWithScratch: true,
-        tags: ['rotur'],
-        featured: true
-    },
-    {
-        name: (
-            <FormattedMessage
-                defaultMessage="Bilup Accounts Shop"
-                description="Name of the Bilup Accounts Shop extension"
-                id="tw.extension.roturShop.name"
-            />
-        ),
-        extensionId: 'bilupShop',
-        iconURL: roturShopIcon,
-        description: (
-            <FormattedMessage
-                defaultMessage="Items and cosmetics marketplace."
-                description="Description of the Bilup Accounts Shop extension"
-                id="tw.extension.roturShop.description"
-            />
-        ),
-        incompatibleWithScratch: true,
-        tags: ['rotur'],
-        featured: true
-    },
-    {
-        name: (
-            <FormattedMessage
-                defaultMessage="Bilup Accounts Groups"
-                description="Name of the Bilup Accounts Groups extension"
-                id="tw.extension.roturGroups.name"
-            />
-        ),
-        extensionId: 'bilupGroups',
-        iconURL: roturGroupsIcon,
-        description: (
-            <FormattedMessage
-                defaultMessage="Communities, roles, and group economy."
-                description="Description of the Bilup Accounts Groups extension"
-                id="tw.extension.roturGroups.description"
-            />
-        ),
-        incompatibleWithScratch: true,
-        tags: ['rotur'],
-        featured: true
-    },
-    {
-        name: (
-            <FormattedMessage
-                defaultMessage="Bilup Accounts Files"
-                description="Name of the Bilup Accounts Files extension"
-                id="tw.extension.roturFiles.name"
-            />
-        ),
-        extensionId: 'bilupFiles',
-        iconURL: roturFilesIcon,
-        description: (
-            <FormattedMessage
-                defaultMessage="Read and manage your Bilup Accounts file storage."
-                description="Description of the Bilup Accounts Files extension"
-                id="tw.extension.roturFiles.description"
-            />
-        ),
-        incompatibleWithScratch: true,
-        tags: ['rotur'],
         featured: true
     },
     {
@@ -668,12 +492,12 @@ export const galleryMore = {
     description: (
         <FormattedMessage
             // eslint-disable-next-line max-len
-            defaultMessage="Including extensions from TurboWarp, Mistium, Bilup Accounts, SharkPool, Bilup, and AstraEditor."
+            defaultMessage="Including extensions from TurboWarp, Mistium, SharkPool, Bilup, and AstraEditor."
             description="Appears after the extension list from the gallery was loaded successfully"
             id="tw.extensionGallery.more"
         />
     ),
-    tags: ['tw', 'bilup', 'sharkpool', 'mistium', 'ae', 'rotur'],
+    tags: ['tw', 'bilup', 'sharkpool', 'mistium', 'ae'],
     featured: true
 };
 
