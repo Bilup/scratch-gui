@@ -8,10 +8,6 @@ import {APP_NAME} from '../../lib/constants/brand';
 
 const hosts = [
     {
-        name: 'Hong Kong (Bilup)',
-        cloudHost: 'wss://clouddata.bilup.org'
-    },
-    {
         name: 'US East (TurboWarp)',
         cloudHost: 'wss://clouddata.turbowarp.org'
     },
