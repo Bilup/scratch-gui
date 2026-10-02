@@ -253,13 +253,13 @@ const SOURCES = [
         cloudURL: 'https://extensions.turbowarp.org/generated-metadata/extensions-v0.json',
         localURL: 'tw-extensions://./generated-metadata/extensions-v0.json',
         // 主站不可用时的镜像代理地址（需自行部署反向代理）：
-        // 代理服务器需将 /turbowarp/ 路径反向代理到 extensions.turbowarp.org
-        // 例如：https://extensions.bilup.org/turbowarp/generated-metadata/extensions-v0.json
-        // 应返回与 cloudURL 相同的 JSON 内容
+        // 代理服务器需将 /turbowarp/ 路径反向代理到 extensions.turbowarp.org，
+        // fallbackURL 填代理上的元数据地址、fallbackBase 填代理上的资源基地址
+        // （例如 https://<your-proxy-host>/turbowarp），两者留空则直连主站。
         fallbackURL: '',
         fallbackBase: '',
-        map: (data, useProxy = false) => {
-            const base = useProxy ? 'https://extensions.bilup.org/turbowarp' : 'https://extensions.turbowarp.org';
+        map: (data, useProxy = false, proxyBase = '') => {
+            const base = useProxy && proxyBase ? proxyBase : 'https://extensions.turbowarp.org';
             return data.extensions.map(extension => ({
                 name: extension.name,
                 nameTranslations: extension.nameTranslations || {},
@@ -522,7 +522,7 @@ const fetchLibrary = async () => {
         const cachedData = readCachedMetadata(source.name);
         if (cachedData) {
             try {
-                const extensions = source.map(cachedData, useProxy);
+                const extensions = source.map(cachedData, useProxy, source.fallbackBase);
                 if (extensions.length) {
                     return extensions;
                 }

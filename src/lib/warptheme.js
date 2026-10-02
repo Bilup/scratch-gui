@@ -1,12 +1,19 @@
-import {getRotur, ensureScopes} from './rotur/client.js';
 import {getItem as getStorageItem} from './utils/safe-storage.js';
 
-const API = 'https://theme.bilup.org/api';
+// Network access to the BilupTheme backend (theme.bilup.org) has been removed
+// from this build. Everything below is either pure (storage / data shaping) or
+// a stub that fails fast, so callers keep their error-handling paths without
+// ever contacting a Bilup host.
+
 const TOKEN_KEY = 'mw:warptheme-token';
-const TOKEN_MANAGER = 'https://accounts.bilup.org/token-manager';
-// Must match the key the BilupTheme backend uses for generate_validator.
-const VALIDATOR_KEY = 'BilupTheme';
-const VALIDATOR_SCOPE = 'validators:generate';
+
+const OFFLINE_MESSAGE = 'BilupTheme is unavailable: network access was removed from this build.';
+
+const offlineError = () => {
+    const error = new Error(OFFLINE_MESSAGE);
+    error.code = 'OFFLINE';
+    return error;
+};
 
 const needsValidatorPermission = (status, data = {}) => (
     status === 401 ||
@@ -31,95 +38,15 @@ const storeToken = token => {
     }
 };
 
-const request = async (path, token, options = {}) => {
-    const response = await fetch(`${API}${path}`, {
-        ...options,
-        headers: {
-            ...(options.body ? {'Content-Type': 'application/json'} : {}),
-            ...(token ? {Authorization: `Bearer ${token}`} : {}),
-            ...options.headers
-        }
-    });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok || data.ok === false) {
-        const error = new Error(data.error || `BilupTheme request failed (${response.status})`);
-        error.status = response.status;
-        error.data = data;
-        throw error;
-    }
-    return data;
-};
+const request = () => Promise.reject(offlineError());
 
-const openSession = async expectedUsername => {
-    let token = readToken();
-    if (token) {
-        try {
-            const account = await request('/user', token);
-            const cachedName = account.user && account.user.username;
-            if (cachedName && cachedName.toLowerCase() === expectedUsername.toLowerCase()) {
-                return {token, ...account};
-            }
-        } catch (error) {
-            // Only discard the cached session on an explicit auth failure; a
-            // transient network error should not force a fresh login.
-            if (error && (error.status === 401 || error.status === 403)) {
-                storeToken(null);
-            }
-        }
-    }
-
-    const rotur = getRotur();
-    if (!rotur.loggedIn || !rotur.token) throw new Error('Sign in with Bilup Accounts first.');
-
-    // The BilupTheme backend (Bilup/BilupTheme) signs you in with a Bilup
-    // Accounts token: it exchanges the token for a validator, verifies it, and
-    // creates a session. The session id is returned and used as a bearer token
-    // for the rest of the API (the backend must return it as `token`).
-    //
-    // Pre-check the validator with the SDK first: a missing validators:generate
-    // permission is otherwise reported by the backend as a generic 502 and the
-    // user just sees "could not connect". Detecting it here lets us refresh the
-    // token with the required scope automatically (or guide the user to the
-    // Token Manager when re-authorization is impossible).
-    const generateValidator = async () => {
-        const result = await rotur.validators.generate(VALIDATOR_KEY);
-        return Boolean(result && result.validator);
-    };
-    try {
-        await generateValidator();
-    } catch (error) {
-        if (needsValidatorPermission(error && error.status, error && error.data)) {
-            const permissionError = new Error(
-                'Your Bilup Accounts token needs the validators:generate permission before it can access BilupTheme.'
-            );
-            try {
-                await ensureScopes([VALIDATOR_SCOPE]);
-                await generateValidator();
-            } catch (_) {
-                permissionError.code = 'validator-permission';
-                throw permissionError;
-            }
-        }
-        // Non-permission failures fall through; the request below will surface
-        // the backend's exact error.
-    }
-
-    const auth = await request('/auth/login', null, {
-        method: 'POST',
-        body: JSON.stringify({token: rotur.token})
-    });
-    if (!auth || !auth.token) {
-        const error = new Error((auth && auth.error) || 'Bilup Accounts could not authorize BilupTheme.');
-        if (needsValidatorPermission(502, auth || {})) {
-            error.code = 'validator-permission';
-        }
-        throw error;
-    }
-    token = auth.token;
-    storeToken(token);
-    const account = await request('/user', token);
-    return {token, ...account};
-};
+/**
+ * The BilupTheme sign-in flow used to exchange a Bilup Accounts token for a
+ * validator-backed session. That backend was removed from this build, so there
+ * is no session to open.
+ * @returns {Promise<never>} Always a rejected promise.
+ */
+const openSession = () => Promise.reject(offlineError());
 
 const gradientStyle = theme => {
     if (!theme) return {};
@@ -167,8 +94,6 @@ const exportCurrentTheme = theme => {
 };
 
 export {
-    API,
-    TOKEN_MANAGER,
     readToken,
     storeToken,
     request,

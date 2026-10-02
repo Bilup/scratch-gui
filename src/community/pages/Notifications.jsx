@@ -46,22 +46,11 @@ const ICONS = {
 
 const SYSTEM_TYPES = ['standing', 'moderation', 'news', 'report_update'];
 
-const GROUP_TYPES = [
-    'group_invite',
-    'group_request_accepted',
-    'group_request_declined',
-    'group_kicked',
-    'group_banned',
-    'group_ownership_transferred'
-];
-
 // Rotur / usernames follow this shape; titles that don't match are app
 // messages rather than account names.
 const USERNAME_RE = /^[A-Za-z0-9][A-Za-z0-9_-]{0,19}$/;
 
 const commentAnchor = n => (n.commentId ? `#comment-id-${n.commentId}` : '');
-
-const groupUrl = n => (n.group_tag ? `https://rotur.dev/groups/${encodeURIComponent(n.group_tag)}` : null);
 
 const REPORT_OUTCOMES = {
     dismiss: 'mw.community.notifications.outcome.dismiss',
@@ -441,12 +430,10 @@ const Notifications = ({hideHeading}) => {
                         if (!actor) {
                             return null;
                         }
-                        const groupLink = GROUP_TYPES.includes(n.type) ? groupUrl(n) : null;
-                        const body = groupLink ? (
-                            <a href={groupLink} target="_blank" rel="noreferrer" className={styles.body}>
-                                {describe(n, intl)}
-                            </a>
-                        ) : describe(n, intl);
+                        // Group notifications used to deep-link into
+                        // rotur.dev/groups/<tag>; that host was removed, so the
+                        // body is always plain text now.
+                        const body = describe(n, intl);
                         return (
                             <div key={n.id} className={n.read ? styles.item : styles.itemUnread}>
                                 <span className={styles.avatarWrap}>

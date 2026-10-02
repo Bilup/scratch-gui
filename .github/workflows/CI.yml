@@ -148,7 +148,7 @@ jobs:
         # Backup build folder and Cloudflare Pages functions.
         # The web branch is what com.bilup.org is served from (via Cloudflare
         # Pages), so the functions/ directory must live at the repo root there
-        # for /api/proxy and _middleware.js to actually execute.
+        # for /api/proxy to actually execute.
         rm -rf /tmp/web-build /tmp/functions /tmp/old-web-js
         mkdir -p /tmp/web-build
         cp -r /tmp/build/* /tmp/web-build/

@@ -34,10 +34,9 @@ class RoturExtensionHost extends React.Component {
             call: this.call,
             projectId: this.getProjectId,
             projectName: () => this.props.projectTitle || '',
-            projectImage: () => {
-                const id = this.getProjectId();
-                return id ? `https://api.bilup.org/thumbnails/${encodeURIComponent(id)}.png` : '';
-            },
+            // Project thumbnails used to come from api.bilup.org; that host was
+            // removed, so the host reports no image.
+            projectImage: () => '',
             grantedScopes: () => grantedScopesFor({name: this.props.vm.runtime.projectName || ''})
         };
     }
