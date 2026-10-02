@@ -2,7 +2,7 @@ import React, {useEffect, useState, useCallback, useMemo} from 'react';
 import {useParams, Link} from 'react-router-dom';
 import {useIntl} from '../../lib/tw-use-intl.jsx';
 import {
-    UserPlus, UserCheck, Calendar, MessageSquare, MessageSquareOff, ChevronRight, Flag, Coins, X
+    UserPlus, UserCheck, Calendar, MessageSquare, MessageSquareOff, ChevronRight, Pencil, Flag, Coins, X
 } from 'lucide-react';
 import api from '../api';
 import rotur from '../rotur';
@@ -412,6 +412,17 @@ const Profile = () => {
                                         <Flag size={15} />
                                     </button>
                                 ) : null}
+                                {isSelf ? (
+                                    <a
+                                        className={styles.followButton}
+                                        href="https://accounts.bilup.org/me"
+                                        target="_blank"
+                                        rel="noreferrer"
+                                    >
+                                        <Pencil size={15} />
+                                        {t('mw.community.profile.editProfile', 'Edit profile')}
+                                    </a>
+                                ) : null}
                             </div>
                             <div className={styles.railSection}>
                                 <h2>{t('mw.community.profile.aboutMe', 'About me')}</h2>
@@ -424,6 +435,14 @@ const Profile = () => {
                                     <span><Calendar size={14} />{t('mw.community.profile.joined', 'Joined {year}', {year})}</span>
                                 ) : null}
                                 {typeof profile.index === 'number' ? <span>{t('mw.community.profile.accountNumber', 'Account #{index}', {index: profile.index})}</span> : null}
+                                <a
+                                    className={styles.bilupAccountsLink}
+                                    href={`https://accounts.bilup.org/profile/${encodeURIComponent(profile.username || name)}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    {t('mw.community.profile.bilupAccountsProfile', '跳转到Bilup Accounts主页')}
+                                </a>
                             </div>
                             {activities.length ? (
                                 <div className={styles.railSection}>

@@ -8,7 +8,7 @@ import SecurityModals from '../lib/constants/security-manager.js';
 import {getPersistedUnsandboxed, setPersistedUnsandboxed} from '../lib/persistence/tw-unsandboxed.js';
 import isTrustedExtensionUrl, {isGalleryExtensionUrl} from '../lib/trusted-extension.js';
 import {getRememberedPlatformProjectState} from '../lib/community/publish.js';
-import {hashExtensionUrl} from '../lib/community/api.js';
+import {extensionSourceUrl, hashExtensionUrl} from '../lib/community/api.js';
 
 /* eslint-disable require-atomic-updates */
 
@@ -377,11 +377,13 @@ class TWSecurityManagerComponent extends React.Component {
         return mode;
     }
 
-    rewriteExtensionURL (url) {
-        // Extension sources used to be rewritten through api.bilup.org. That
-        // host was removed from this build, so the URL is used as-is. Kept as a
-        // promise so existing callers that await it keep working.
-        return Promise.resolve(url);
+    async rewriteExtensionURL (url) {
+        const project = isPlatformProjectLoad() && getRememberedPlatformProjectState();
+        if (project && project.id && project.projectJsonUrl && !isGalleryExtensionUrl(url)) {
+            const rewritten = await extensionSourceUrl(project, url);
+            return rewritten;
+        }
+        return url;
     }
 
     handleChangeUnsandboxed (e) {

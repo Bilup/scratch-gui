@@ -1,6 +1,6 @@
-// Bilup Accounts integration is disabled: the accounts SDK dependency is gone.
-// Icon payloads used to come from the accounts API; a raw SVG string is parsed
-// and sanitized directly, anything else renders nothing.
+// Bilup Accounts integration is disabled: no rotur-sdk dependency.
+// Icon payloads come from the (now blocked) accounts API; a raw SVG string
+// is parsed and sanitized directly, anything else renders nothing.
 
 const ALLOWED_TAGS = new Set(['svg', 'path', 'line', 'circle', 'rect', 'polyline', 'polygon']);
 const ALLOWED_ATTRIBUTES = new Set([

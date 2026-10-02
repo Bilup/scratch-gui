@@ -163,6 +163,12 @@ class RoturLoginModal extends React.Component {
             >
                 <Box className={styles.body}>
                     <div className={styles.hero}>
+                        <img
+                            alt=""
+                            className={styles.logo}
+                            draggable={false}
+                            src="https://accounts.bilup.org/logo.png"
+                        />
                         <div className={styles.heroText}>
                             <h2 className={styles.title}>
                                 {loggedIn ? (
@@ -300,7 +306,15 @@ class RoturLoginModal extends React.Component {
                             description="Privacy footnote under Bilup Accounts login"
                             id="mw.roturLogin.footnote"
                             values={{
-                                link: 'Bilup Accounts'
+                                link: (
+                                    <a
+                                        href="https://accounts.bilup.org"
+                                        rel="noopener noreferrer"
+                                        target="_blank"
+                                    >
+                                        accounts.bilup.org
+                                    </a>
+                                )
                             }}
                         />
                     </p>

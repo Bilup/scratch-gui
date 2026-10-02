@@ -29,33 +29,30 @@ const getClient = () => {
 };
 
 /**
- * Avatars used to be served from avatars.accounts.bilup.org. That host was
- * removed from this build, so there is no avatar URL to return.
- * @returns {null} Always null.
+ * Stable avatar URL derived only from username.
+ * @param {string} username - Account username
+ * @returns {string} Avatar URL
  */
-const getAvatarUrl = () => null;
+const getAvatarUrl = username => (
+    `https://avatars.accounts.bilup.org/${encodeURIComponent(String(username).toLowerCase())}`
+);
 
-/**
- * Restore a previous session from localStorage.
- * @returns {Promise<null>} Always resolves to null.
- */
-const restoreSession = () => Promise.resolve(null);
+/** Restore a previous session from localStorage. */
+const restoreSession = async () => null;
 
-/**
- * The Bilup Accounts login flow was removed from this build, so there is no
- * auth URL to send the user to.
- * @returns {string} Empty string.
- */
-const buildAuthUrl = () => '';
+const buildAuthUrl = (returnTo = (typeof window === 'undefined' ? '' : window.location.href)) => {
+    const params = new URLSearchParams({
+        system: 'web',
+        return_to: returnTo
+    });
+    return `https://accounts.bilup.org/auth?${params.toString()}`;
+};
 
-/**
- * Open the Bilup Accounts login flow (disabled).
- * @returns {Promise<never>} Always a rejected promise.
- */
-const login = () => {
+/** Open the Bilup Accounts login flow (disabled). */
+const login = async () => {
     const error = new Error('登录已禁用');
     error.needsReauth = true;
-    return Promise.reject(error);
+    throw error;
 };
 
 const clearActivity = () => {};
@@ -64,11 +61,8 @@ const logout = () => {
     getClient().logout();
 };
 
-/**
- * Whether the current token may publish status/activity over the status socket.
- * @returns {Promise<boolean>} Always false.
- */
-const presenceSupported = () => Promise.resolve(false);
+/** Whether the current token may publish status/activity over the status socket. */
+const presenceSupported = async () => false;
 
 const subscribeNotifications = () => () => {};
 const subscribeNotificationRemovals = () => () => {};
@@ -81,29 +75,29 @@ const syncActivity = async () => {};
 const isLoggedIn = () => getClient().loggedIn;
 const getRotur = () => getClient();
 
-const fetchNotifications = () => Promise.resolve([]);
+const fetchNotifications = async () => [];
 
-const markNotificationsRead = () => Promise.resolve(false);
+const markNotificationsRead = async () => false;
 
-const ensureScopes = () => Promise.resolve(false);
+const ensureScopes = async () => false;
 
-const getBalance = () => Promise.resolve(null);
+const getBalance = async () => null;
 
-const getAccountSummary = () => Promise.resolve(null);
+const getAccountSummary = async () => null;
 
-const payUser = () => {
+const payUser = async () => {
     const error = new Error('Log in to send credits');
     error.needsReauth = true;
-    return Promise.reject(error);
+    throw error;
 };
 
-const claimDaily = () => {
+const claimDaily = async () => {
     const error = new Error('Log in to claim daily credits');
     error.needsReauth = true;
-    return Promise.reject(error);
+    throw error;
 };
 
-const fetchCurrentUser = () => Promise.resolve(null);
+const fetchCurrentUser = async () => null;
 
 export {
     ACTIVITY_ID,
