@@ -124,7 +124,7 @@ const jsExecutionExtension = url => (/\/EvalPlus\.js$/i.test(url) ? 'EvalPlus' :
  * wait rather than a guarantee.
  * @const {number}
  */
-const MODAL_TIMEOUT_MS = 15000;
+const MODAL_TIMEOUT_MS = 20000;
 
 const isOwnedPlatformProject = () => {
     const project = getRememberedPlatformProjectState();
