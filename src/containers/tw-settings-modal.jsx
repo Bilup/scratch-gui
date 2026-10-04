@@ -17,7 +17,6 @@ import {getStyleSetting, getStyleSettings, setStyleSetting} from '../lib/mw-styl
 import {applyTheme} from '../lib/themes/themePersistance';
 import {getHideOperatorArrows, setHideOperatorArrows} from '../lib/mw-operator-arrows';
 import {getVanillaPalette, setVanillaPalette} from '../lib/mw-vanilla-palette';
-import {getEmbedGitOnSave, setEmbedGitOnSave} from '../lib/mw-embed-git-on-save';
 import LazyScratchBlocks from '../lib/tw-lazy-scratch-blocks';
 import AddonHooks from '../addons/hooks.js';
 import WindowManager from '../addons/window-system/window-manager';
@@ -82,7 +81,6 @@ class UsernameModal extends React.Component {
             scriptLazyLoading: LazyScratchBlocks.isScriptLazyLoadingEnabled(),
             hideOperatorArrows: getHideOperatorArrows(),
             vanillaPalette: getVanillaPalette(),
-            embedGitOnSave: getEmbedGitOnSave(),
             squareStageCorners: getAppearanceSetting('square-stage-corners'),
             hideDeleteButton: getAppearanceSetting('hide-delete-button'),
             hideExtensionButton: getAppearanceSetting('hide-extension-button'),
@@ -117,7 +115,6 @@ class UsernameModal extends React.Component {
             'handleScriptLazyLoadingChange',
             'handleHideOperatorArrowsChange',
             'handleVanillaPaletteChange',
-            'handleEmbedGitOnSaveChange',
             'handleSquareStageCornersChange',
             'handleHideDeleteButtonChange',
             'handleHideExtensionButtonChange',
@@ -349,12 +346,6 @@ handleWindowAnimationChange (e) {
         setVanillaPalette(e.target.checked);
     }
 
-    handleEmbedGitOnSaveChange (e) {
-        const enabled = e.target.checked;
-        this.setState({embedGitOnSave: enabled});
-        setEmbedGitOnSave(enabled);
-    }
-
     setAppearance_ (stateKey, id, checked) {
         this.setState({[stateKey]: checked});
         setAppearanceSetting(id, checked);
@@ -444,8 +435,6 @@ handleWindowAnimationChange (e) {
                 hideOperatorArrows={this.state.hideOperatorArrows}
                 onVanillaPaletteChange={this.handleVanillaPaletteChange}
                 vanillaPalette={this.state.vanillaPalette}
-                onEmbedGitOnSaveChange={this.handleEmbedGitOnSaveChange}
-                embedGitOnSave={this.state.embedGitOnSave}
                 onSquareStageCornersChange={this.handleSquareStageCornersChange}
                 squareStageCorners={this.state.squareStageCorners}
                 onHideDeleteButtonChange={this.handleHideDeleteButtonChange}

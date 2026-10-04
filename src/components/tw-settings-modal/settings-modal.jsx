@@ -443,21 +443,6 @@ const settingDefinitions = {
             id: 'mw.settingsModal.scriptLazyLoadingHelp'
         }
     },
-    embedGitOnSave: {
-        label: {
-            defaultMessage: 'Embed Git Repository on Save',
-            description: 'Include the git repository in files saved to the computer',
-            id: 'mw.settingsModal.embedGitOnSave'
-        },
-        help: {
-            defaultMessage: 'Packs the git repository (the fractch tree and .git) into the ' +
-                '.sb3 when you save to your computer. Leave this off to save a plain project ' +
-                'file: saving then streams straight to disk instead of buffering the whole ' +
-                'archive, and opening the file back will not import a repository.',
-            description: 'Embed Git Repository on Save setting help',
-            id: 'mw.settingsModal.embedGitOnSaveHelp'
-        }
-    },
     squareStageCorners: {
         label: {
             defaultMessage: 'Square Stage Corners',
@@ -622,7 +607,6 @@ const RealLayerIndexes = createBooleanSetting('RealLayerIndexes', settingDefinit
 const EnableStageResize = createBooleanSetting('EnableStageResize', settingDefinitions.enableStageResize);
 const WindowAnimation = createBooleanSetting('WindowAnimation', settingDefinitions.windowAnimation);
 const ScriptLazyLoading = createBooleanSetting('ScriptLazyLoading', settingDefinitions.scriptLazyLoading);
-const EmbedGitOnSave = createBooleanSetting('EmbedGitOnSave', settingDefinitions.embedGitOnSave);
 const SquareStageCorners = createBooleanSetting('SquareStageCorners', settingDefinitions.squareStageCorners);
 const HideDeleteButton = createBooleanSetting('HideDeleteButton', settingDefinitions.hideDeleteButton);
 const HideExtensionButton = createBooleanSetting('HideExtensionButton', settingDefinitions.hideExtensionButton);
@@ -1310,13 +1294,6 @@ const pageConfigurations = {
                         props: props => ({
                             value: props.scriptLazyLoading,
                             onChange: props.onScriptLazyLoadingChange
-                        })
-                    },
-                    {
-                        component: EmbedGitOnSave,
-                        props: props => ({
-                            value: props.embedGitOnSave,
-                            onChange: props.onEmbedGitOnSaveChange
                         })
                     }
                 ]
@@ -2228,9 +2205,7 @@ SettingsModalComponent.propTypes = {
     windowAnimation: PropTypes.bool,
     onWindowAnimationChange: PropTypes.func,
     scriptLazyLoading: PropTypes.bool,
-    onScriptLazyLoadingChange: PropTypes.func,
-    embedGitOnSave: PropTypes.bool,
-    onEmbedGitOnSaveChange: PropTypes.func
+    onScriptLazyLoadingChange: PropTypes.func
 };
 
 export default injectIntl(SettingsModalComponent);

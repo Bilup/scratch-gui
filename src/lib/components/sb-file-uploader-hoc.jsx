@@ -278,29 +278,20 @@ const SBFileUploaderHOC = function (WrappedComponent) {
                             });
                             if (result.imported) {
                                 console.log('[SBFileUploader] Restored embedded git repository');
+                                // Reload the shared git store so an already-open git
+                                // window shows the imported history instead of the
+                                // "no version control" empty state until the next
+                                // manual refresh.
                                 const {default: gitOps} = await import('../git/ops/index.js');
-                                // Both of these feed the git UI and nothing else:
-                                // the project is loaded and the repository is
-                                // already imported without them. Neither is cheap.
-                                // refreshRepository rebuilds the whole fractch
-                                // working tree and runs a status matrix over it --
-                                // measured at 19.5 s on a project with 16461 blocks
-                                // and 1774 costumes (the hash cache that would skip
-                                // it is per-session, so a freshly opened editor
-                                // always pays it). Awaiting it here is what held the
-                                // loading overlay on "Adding sprites ..." for twenty
-                                // seconds after the sprites had in fact been added.
-                                // The git lock serialises both behind whatever the
-                                // user does next, and getRepoChanges re-checks the
-                                // project hash, so a run that is overtaken redoes
-                                // itself instead of landing stale state.
-                                gitOps.refreshRepository({vm: this.props.vm}).catch(gitError => {
-                                    log.error('Failed to refresh git state after import:', gitError);
-                                });
+                                await gitOps.refreshRepository({vm: this.props.vm});
                                 // The commit graph feeds the History view and
-                                // nothing else, so it fills in rather than showing
-                                // stale nodes once the refresh above has reset the
-                                // history slice.
+                                // nothing else. The git lock serialises it
+                                // behind the refresh above anyway, so awaiting
+                                // it would only hold the loading overlay for
+                                // another 100-300 ms on a large repository.
+                                // Fire it off instead; `refreshRepository` has
+                                // already reset the history slice, so the graph
+                                // fills in rather than showing stale nodes.
                                 gitOps.refreshHistory().catch(gitError => {
                                     log.error('Failed to refresh git history:', gitError);
                                 });
