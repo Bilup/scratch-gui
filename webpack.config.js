@@ -72,6 +72,44 @@ class EditorChunkPrefetchPlugin {
     }
 }
 
+// pnpm stores its `.pnpm/...` junction *targets* with whatever drive-letter
+// case it saw when linking. On Windows, Webpack 4 then resolves the very same
+// physical file through two spellings (e.g. `D:\Bilup\...` and
+// `D:\bilup\...`), treats them as two distinct modules, and compiles them
+// twice. For `@bilup/scratch-svg-renderer` that means multiple SVGRenderer
+// instances with separate caches, which makes SVG costumes/render state
+// corrupt ("materials don't line up"), and it also emits a
+// "names that only differ in casing" warning for every such file.
+//
+// This plugin normalises each resolved module path to the on-disk casing via
+// `fs.realpathSync.native()`, collapsing the aliases into one module.
+class NormalisePathCasingPlugin {
+    constructor () {
+        this.cache = new Map();
+    }
+    apply (compiler) {
+        compiler.hooks.normalModuleFactory.tap('NormalisePathCasingPlugin', factory => {
+            factory.hooks.afterResolve.tap('NormalisePathCasingPlugin', result => {
+                if (result && result.resource && /\\/.test(result.resource)) {
+                    let real = this.cache.get(result.resource);
+                    if (real === undefined) {
+                        try {
+                            real = fs.realpathSync.native(result.resource);
+                        } catch (e) {
+                            real = result.resource;
+                        }
+                        this.cache.set(result.resource, real);
+                    }
+                    if (real !== result.resource) {
+                        result.resource = real;
+                    }
+                }
+                return result;
+            });
+        });
+    }
+}
+
 const STATIC_PATH = process.env.STATIC_PATH || '/static';
 const {APP_NAME} = require('./src/lib/constants/brand');
 
@@ -340,6 +378,7 @@ const base = {
         }]
     },
     plugins: [
+        new NormalisePathCasingPlugin(),
         new CopyWebpackPlugin({
             patterns: [
                 {

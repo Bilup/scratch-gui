@@ -217,6 +217,7 @@
     "tw.menuBar.cloudUnavailableAlert": "无法使用云变量，可能因为你打开了编辑器。",
     "tw.menuBar.compileError": "{sprite}:{error}",
     "tw.menuBar.desktopSettings": "桌面设置",
+    "tw.menuBar.moreMenu": "更多",
     "tw.menuBar.moreSettings": "高级设置",
     "tw.menuBar.newFramerate": "帧率:",
     "tw.menuBar.newWindow": "新窗口",
