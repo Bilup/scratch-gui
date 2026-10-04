@@ -107,25 +107,6 @@ const isTrustedExtension = url => {
 
 const jsExecutionExtension = url => (/\/EvalPlus\.js$/i.test(url) ? 'EvalPlus' : null);
 
-/**
- * How long a security prompt waits for an answer before it is treated as a
- * refusal.
- *
- * The answer has to be a refusal and not a rejection: every caller reads a false
- * result as "the user said no" and carries on (the extension is skipped, the
- * fetch is denied), but a rejected promise means the question could not be asked
- * at all and travels up as a failed load. An unanswered prompt used to reject
- * after 60s, which took the whole project down with it -- and, because the
- * sandbox question is asked while the loading overlay is up, a user who simply
- * looked away long enough got "invalid project" instead of their project
- * without that extension.
- *
- * Timers are throttled in background tabs, so this is a lower bound on the real
- * wait rather than a guarantee.
- * @const {number}
- */
-const MODAL_TIMEOUT_MS = 15000;
-
 const isOwnedPlatformProject = () => {
     const project = getRememberedPlatformProjectState();
     return Boolean(isPlatformProjectLoad() && project && project.isOwner === true);
@@ -257,26 +238,29 @@ class TWSecurityManagerComponent extends React.Component {
 
     // eslint-disable-next-line valid-jsdoc
     /**
-     * @returns {Promise<{showModal: (type: string, data?: object) => Promise<boolean>}>}
-     * Resolves with a function that shows the modal and answers whether the
-     * request was approved. An unanswered prompt answers false after
-     * MODAL_TIMEOUT_MS rather than leaving the caller -- and the load it is part
-     * of -- waiting.
+     * @returns {Promise<() => Promise<boolean>>} Resolves with a function that you can call to show the modal.
+     * The resolved function returns a promise that resolves with true if the request was approved.
      */
     async acquireModalLock () {
         // We need a two-step process for showing a modal so that we don't overwrite or overlap modals,
         // and so that multiple attempts to fetch resources from the same origin will all be allowed
         // with just one click. This means that some places have to wait until previous modals are
         // closed before it knows if it needs to display another modal.
+
+        console.log('[Security Manager] acquireModalLock called, current lock state:', this.modalLocked);
         if (this.modalLocked) {
+            console.log('[Security Manager] Modal is locked, waiting in queue...');
             await new Promise(resolve => {
                 this.nextModalCallbacks.push(resolve);
             });
+            console.log('[Security Manager] Wait complete, proceeding');
         } else {
             this.modalLocked = true;
+            console.log('[Security Manager] Lock acquired');
         }
 
         const releaseLock = () => {
+            console.log('[Security Manager] Releasing lock');
             if (this.nextModalCallbacks.length) {
                 const nextModalCallback = this.nextModalCallbacks.shift();
                 nextModalCallback();
@@ -289,45 +273,40 @@ class TWSecurityManagerComponent extends React.Component {
             }
         };
 
-        // Show the prompt and answer with the user's decision. `closeModal` is
-        // only needed when nobody answered: releaseLock() already clears the
-        // modal when the answer came from a button, but a timed-out prompt has to
-        // take itself off screen, or it would sit there answering nothing.
-        const showModal = (type, data) => new Promise(resolve => {
-            let answered = false;
-            let timeoutId = null;
-
-            /**
-             * @param {boolean} value The answer to report.
-             * @param {boolean} closeModal Whether this settlement must close the modal.
-             */
-            const settle = (value, closeModal) => {
-                if (answered) return;
-                answered = true;
-                if (timeoutId !== null) {
-                    clearTimeout(timeoutId);
-                    timeoutId = null;
-                }
-                resolve(value);
-                if (closeModal) this.setState({type: null});
-            };
-
-            timeoutId = setTimeout(() => {
-                log.info(`No answer to the ${type} security prompt within ${MODAL_TIMEOUT_MS}ms; ` +
-                    'treating it as refused');
-                settle(false, true);
-            }, MODAL_TIMEOUT_MS);
-
-            this.setState(oldState => ({
-                type,
-                data: data || {},
-                callback: value => settle(value, false),
-                modalCount: oldState.modalCount + 1
-            }));
-        }).then(answer => {
+        const showModal = async (type, data) => {
+            console.log('[Security Manager] showModal called for type:', type);
+            console.log('[Security Manager] showModal creating new Promise...');
+            
+            // 添加超时机制，防止无限等待
+            const TIMEOUT_MS = 60000; // 60秒超时
+            
+            const result = await new Promise((resolve, reject) => {
+                console.log('[Security Manager] Promise executor running, calling setState');
+                
+                // 设置超时
+                const timeoutId = setTimeout(() => {
+                    console.error('[Security Manager] Modal timeout after', TIMEOUT_MS, 'ms');
+                    reject(new Error('Modal timeout'));
+                }, TIMEOUT_MS);
+                
+                this.setState(oldState => ({
+                    type,
+                    data: data || {},
+                    callback: (value) => {
+                        clearTimeout(timeoutId);
+                        resolve(value);
+                    },
+                    modalCount: oldState.modalCount + 1
+                }), () => {
+                    console.log('[Security Manager] setState callback fired');
+                });
+                console.log('[Security Manager] setState called');
+            });
+            
+            console.log('[Security Manager] Modal resolved with result:', result);
             releaseLock();
-            return answer;
-        });
+            return result;
+        };
 
         return {
             showModal,
@@ -336,10 +315,12 @@ class TWSecurityManagerComponent extends React.Component {
     }
 
     handleAllowed () {
+        console.log('[Security Manager] handleAllowed called, callback:', this.state.callback);
         this.state.callback(true);
     }
 
     handleDenied () {
+        console.log('[Security Manager] handleDenied called, callback:', this.state.callback);
         this.state.callback(false);
     }
 
@@ -589,7 +570,9 @@ class TWSecurityManagerComponent extends React.Component {
     }
 
     render () {
+        console.log('[Security Manager] render called, this.state.type:', this.state.type);
         if (this.state.type) {
+            console.log('[Security Manager] Rendering modal, type:', this.state.type);
             return (
                 <SecurityManagerModal
                     type={this.state.type}
@@ -602,6 +585,7 @@ class TWSecurityManagerComponent extends React.Component {
                 />
             );
         }
+        console.log('[Security Manager] No modal to render, type is null');
         return null;
     }
 }
