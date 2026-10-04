@@ -5,13 +5,7 @@ import log from '../lib/utils/log.js';
 import bindAll from 'lodash.bindall';
 import SecurityManagerModal from '../components/tw-security-manager-modal/security-manager-modal.jsx';
 import SecurityModals from '../lib/constants/security-manager.js';
-import {
-    getPersistedUnsandboxed,
-    setPersistedUnsandboxed,
-    getPersistedGalleryTrust,
-    addPersistedGalleryTrust,
-    removePersistedGalleryTrustBySource
-} from '../lib/persistence/tw-unsandboxed.js';
+import {getPersistedUnsandboxed, setPersistedUnsandboxed} from '../lib/persistence/tw-unsandboxed.js';
 import isTrustedExtensionUrl, {isGalleryExtensionUrl} from '../lib/trusted-extension.js';
 import {getRememberedPlatformProjectState} from '../lib/community/publish.js';
 import {extensionSourceUrl, hashExtensionUrl} from '../lib/community/api.js';
@@ -25,47 +19,6 @@ const extensionsTrustedByUser = new Set();
 
 const manuallyTrustExtension = url => {
     extensionsTrustedByUser.add(url);
-};
-
-/**
- * Trust an extension because the gallery it belongs to has "run without the
- * sandbox" switched on, and remember that decision.
- *
- * This is the standing counterpart to `manuallyTrustExtension`: the plain one is
- * per-session (the load prompt's checkbox), whereas a gallery switch is an
- * authorisation of a whole source, so it is written to storage and re-applied on
- * every project load. Without the persistence, opening any project silently puts
- * these extensions back in the sandbox -- see skill bilup-extension-security §6.6.
- * @param {string} url The extension URL to authorise.
- * @param {string} galleryId Id of the gallery whose switch was turned on.
- */
-const trustGalleryExtension = (url, galleryId) => {
-    if (!url) return;
-    extensionsTrustedByUser.add(url);
-    if (galleryId) {
-        // Stay consistent with the "custom extensions always prompt" rule: being
-        // remembered as unsandboxed does not make it stop being a custom extension.
-        markExtensionAsCustom(url);
-        addPersistedGalleryTrust(url, galleryId);
-    }
-};
-
-/**
- * Withdraw a gallery's standing authorisation, e.g. when its switch is turned
- * back off or the gallery is removed.
- * @param {string} galleryId Id of the gallery to revoke.
- */
-const revokeGalleryTrust = galleryId => {
-    if (!galleryId) return;
-    const trust = getPersistedGalleryTrust();
-    for (const url of Object.keys(trust)) {
-        // Drop the in-memory trust only when no other gallery still vouches for
-        // this URL; two galleries can serve the same extension.
-        if (trust[url].includes(galleryId) && trust[url].length === 1) {
-            extensionsTrustedByUser.delete(url);
-        }
-    }
-    removePersistedGalleryTrustBySource(galleryId);
 };
 
 /**
@@ -97,14 +50,6 @@ const isCustomExtensionUrl = url => customExtensionUrls.has(url);
  * @type {Map<string, {mode: string, isCustom: boolean}>}
  */
 const sandboxModeCache = new Map();
-
-// Seed the in-memory sets from storage at module load, so a page that loads
-// extensions before any LOAD_PROGRESS/"building" event still sees the gallery
-// authorisations. `handleProjectLoading` re-applies them after every clear.
-for (const url of Object.keys(getPersistedGalleryTrust())) {
-    extensionsTrustedByUser.add(url);
-    customExtensionUrls.add(url);
-}
 
 /**
  * Get the sandbox status label and color for a given extension URL.
@@ -408,15 +353,6 @@ class TWSecurityManagerComponent extends React.Component {
         this.props.vm.runtime._mwProjectTrusted = false;
         extensionsTrustedByUser.clear();
         customExtensionUrls.clear();
-        // Re-apply the standing gallery authorisations. Everything above is
-        // per-session state, but a gallery switch is not: without this, opening
-        // any project drops every custom-library extension back into the sandbox
-        // even though the user turned that gallery's switch on.
-        const galleryTrust = getPersistedGalleryTrust();
-        for (const url of Object.keys(galleryTrust)) {
-            extensionsTrustedByUser.add(url);
-            customExtensionUrls.add(url);
-        }
         sandboxModeCache.clear();
         fetchHostsTrustedByUser.clear();
         embedHostsTrustedByUser.clear();
@@ -709,8 +645,6 @@ const ConnectedSecurityManagerComponent = connect(
 export {
     ConnectedSecurityManagerComponent as default,
     manuallyTrustExtension,
-    trustGalleryExtension,
-    revokeGalleryTrust,
     markExtensionAsCustom,
     isCustomExtensionUrl,
     getExtensionSandboxStatus,
