@@ -405,7 +405,17 @@ class TWSecurityManagerComponent extends React.Component {
 
     handleProjectLoading ({stage}) {
         if (stage !== 'building') return;
-        this.props.vm.runtime._mwProjectTrusted = false;
+        // A project the user opened from their own computer, or one they own on
+        // the platform, is trusted by provenance: whoever called loadProject says
+        // so, and the prompt this would otherwise lead to offers "trust this
+        // project" as one of its answers. Resetting that verdict to false on
+        // every load is what left the loading overlay sitting on "Adding sprites
+        // ..." for a minute: the security layer asked once per extension, each
+        // unanswered prompt burns MODAL_TIMEOUT_MS, and because the project no
+        // longer counted as unsandboxed, the data: URL extensions were handed to
+        // the sandbox, where they never finish loading at all. Everything else
+        // has no verdict to keep and is unaffected.
+        this.props.vm.runtime._mwProjectTrusted = canTrustLoadedProject(this.props.vm);
         extensionsTrustedByUser.clear();
         customExtensionUrls.clear();
         // Re-apply the standing gallery authorisations. Everything above is
