@@ -32,4 +32,3 @@ bun.lock
 /.workbuddy
 .env
 /temp
-.test-project
