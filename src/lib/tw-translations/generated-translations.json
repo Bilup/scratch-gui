@@ -782,8 +782,6 @@
     "mw.settingsModal.windowAnimationHelp": "启用打开或关闭窗口时的淡入淡出和缩放动画效果。",
     "mw.settingsModal.scriptLazyLoading": "积木懒加载",
     "mw.settingsModal.scriptLazyLoadingHelp": "只渲染屏幕及其周围区域（外圈面积为屏幕的 3 倍）内的积木，超出该范围的积木会取消渲染以节省性能，滚动回去时会自动重新渲染。",
-    "mw.settingsModal.embedGitOnSave": "保存时内嵌 Git 仓库",
-    "mw.settingsModal.embedGitOnSaveHelp": "保存到电脑时，把 Git 仓库（fractch 文件树与 .git）一并打包进 .sb3。关闭时保存的是普通作品文件：保存会直接流式写入磁盘，不需要在内存里缓冲整个压缩包，重新打开该文件也不会导入仓库。",
     "mw.settingsModal.squareStageCorners": "方角舞台",
     "mw.settingsModal.squareStageCornersHelp": "移除舞台的圆角。",
     "mw.settingsModal.hideDeleteButton": "隐藏删除按钮",

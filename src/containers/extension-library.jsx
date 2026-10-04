@@ -13,7 +13,7 @@ import extensionLibraryContent, {
 import {loadCustomGallery} from '../lib/custom-gallery-parser';
 import extensionTags from '../lib/libraries/tw-extension-tags';
 import {getVanillaPalette} from '../lib/mw-vanilla-palette';
-import {trustGalleryExtension, revokeGalleryTrust, markExtensionAsCustom} from './tw-security-manager.jsx';
+import {manuallyTrustExtension, markExtensionAsCustom} from './tw-security-manager.jsx';
 
 import LibraryComponent from '../components/tw-extension-library/extension-library.jsx';
 import extensionIcon from '../components/action-menu/icon--sprite.svg';
@@ -47,49 +47,11 @@ const translateGalleryItem = (extension, locale) => ({
     description: extension.descriptionTranslations[locale] || extension.description
 });
 
-// 用户添加的自定义扩展库要跨刷新保留。库列表（含各自的"非沙盒运行"开关）
-// 存在 localStorage，与库级持久授权（tw:persisted_unsandboxed_urls）配套：
-// 只留下授权而丢掉库本身，刷新后用户就看不到那个开关、也关不掉了。
-const CUSTOM_SOURCES_KEY = 'tw:custom-extension-sources';
-
-const readCustomSources = () => {
-    try {
-        const raw = localStorage.getItem(CUSTOM_SOURCES_KEY);
-        const parsed = raw ? JSON.parse(raw) : null;
-        if (!Array.isArray(parsed)) {
-            return [];
-        }
-        return parsed
-            .filter(item => item && typeof item.id === 'string' && item.id &&
-                typeof item.url === 'string' && item.url)
-            .map(item => ({
-                id: item.id,
-                name: typeof item.name === 'string' && item.name ? item.name : 'Custom',
-                url: item.url,
-                unsandboxed: item.unsandboxed === true
-            }));
-    } catch (error) {
-        return [];
-    }
-};
-
-const writeCustomSources = () => {
-    try {
-        localStorage.setItem(CUSTOM_SOURCES_KEY, JSON.stringify(cachedCustomSources));
-    } catch (error) {
-        // localStorage 不可用（隐私模式 / 配额已满）时退化成原来的纯内存行为
-    }
-};
-
 let cachedGallery = null;
 let cachedSourceStatuses = {};
-let cachedCustomSources = readCustomSources();
+let cachedCustomSources = []; // [{id, name, url}]
 let galleryUpdateListeners = [];
-// id 计数器从已有库的最大编号续上，避免恢复后 id 撞车
-let customSourceCounter = cachedCustomSources.reduce((max, source) => {
-    const match = /^custom_(\d+)$/.exec(source.id);
-    return match ? Math.max(max, Number(match[1])) : max;
-}, 0);
+let customSourceCounter = 0;
 
 const addGalleryUpdateListener = listener => {
     galleryUpdateListeners.push(listener);
@@ -166,15 +128,12 @@ const fetchCustomSource = async id => {
         const rawExtensions = await loadCustomGallery(source.url);
         const extensions = rawExtensions.map((extension, index) =>
             normalizeCustomExtension(extension, source, index));
-        // 先撤销该库的旧授权，再按当前内容重算：库里的扩展列表变了（作者增删条目）
-        // 时，不能把指向已删除扩展的"幽灵授权"留在 storage 里。
-        revokeGalleryTrust(source.id);
-        // 该库开启"非沙盒运行"时，为它的扩展写入持久授权，使其绕过沙盒
-        // （官方域名扩展无论是否开启都会自动非沙盒，由 isTrustedExtensionUrl 处理）。
+        // 该库开启"非沙盒运行"时，手动信任其扩展 URL，使其绕过沙盒
+        // （官方域名扩展无论是否开启都会自动非沙盒，由 isTrustedExtensionUrl 处理）
         if (source.unsandboxed) {
             extensions.forEach(extension => {
                 if (extension.extensionURL) {
-                    trustGalleryExtension(extension.extensionURL, source.id);
+                    manuallyTrustExtension(extension.extensionURL);
                 }
             });
         }
@@ -206,7 +165,6 @@ const addCustomSource = source => {
         });
     }
     cachedSourceStatuses[id] = 'loading';
-    writeCustomSources();
     notifyListeners();
     fetchCustomSource(id).catch(error => log.error(error));
     return id;
@@ -220,9 +178,6 @@ const removeCustomSource = id => {
         return;
     }
     cachedCustomSources.splice(index, 1);
-    writeCustomSources();
-    // 库被移除，它的持久非沙盒授权也一并撤销，避免残留
-    revokeGalleryTrust(id);
     delete cachedSourceStatuses[id];
     if (cachedGallery) {
         cachedGallery = cachedGallery.filter(item => item.source !== id);
@@ -757,8 +712,7 @@ class ExtensionLibrary extends React.PureComponent {
                 // will always show a sandbox permission modal.
                 markExtensionAsCustom(url);
                 if (customSource.unsandboxed) {
-                    // 持久授权：重开作品或刷新页面后依然非沙盒
-                    trustGalleryExtension(url, customSource.id);
+                    manuallyTrustExtension(url);
                 }
             }
             if (this.props.vm.extensionManager.isExtensionLoaded(extensionId)) {
