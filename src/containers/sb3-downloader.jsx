@@ -9,6 +9,7 @@ import {showStandardAlert, showAlertWithTimeout} from '../reducers/alerts';
 import {setFileHandle} from '../reducers/tw';
 import {getIsShowingProject} from '../reducers/project-state';
 import log from '../lib/utils/log';
+import {getEmbedGitOnSave} from '../lib/mw-embed-git-on-save';
 
 // from sb-file-uploader-hoc.jsx
 const getProjectTitleFromFilename = fileInputFilename => {
@@ -140,9 +141,12 @@ class SB3Downloader extends React.Component {
         }
 
         // Embedding git history needs the full zip in memory (the streaming path
-        // can't inject extra files), so buffer the save when a repo exists.
+        // can't inject extra files), so buffer the save when a repo exists -- but
+        // only when the repository is meant to be embedded at all. With the
+        // setting off, stream as usual: a repository sitting in the workspace
+        // must not turn every save into a buffered one.
         const {repoExists} = await import('../lib/git/browser-git');
-        if (await repoExists()) {
+        if (getEmbedGitOnSave() && await repoExists()) {
             const writable = await handle.createWritable();
             this.startedSaving();
             try {
@@ -327,10 +331,12 @@ SB3Downloader.defaultProps = {
 
 const mapStateToProps = state => ({
     fileHandle: state.scratchGui.tw.fileHandle,
-    // Wrap the VM save so the .sb3 also carries the git repo (fractch tree + .git)
-    // under GIT_EMBED_DIR while keeping the normal project.json/assets at the top level.
+    // Wrap the VM save so the .sb3 can also carry the git repo (fractch tree +
+    // .git) under GIT_EMBED_DIR while keeping project.json/assets at the top
+    // level. Opt-in via Experimental → Embed Git Repository on Save.
     saveProjectSb3: (...args) =>
         state.scratchGui.vm.saveProjectSb3(...args).then(async content => {
+            if (!getEmbedGitOnSave()) return content;
             const {embedRepoIntoSb3Blob} = await import('../lib/git/browser-git');
             return embedRepoIntoSb3Blob(content);
         }),
