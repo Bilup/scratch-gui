@@ -1,8 +1,12 @@
-/* 示例本地插件：在舞台头部显示一条消息，并输出到控制台。
+/**
+ * 示例本地插件：在舞台头部显示一条消息，并输出到控制台。
  * 说明：这是 bilup-addons 本地插件源管线的演示插件。
+ *
+ * @param {object} api addon 运行时注入的公共 API
+ * @param {object} api.addon addon 句柄（tab / settings / self）
+ * @param {object} api.console 控制台
  */
-
-export default async function ({addon, console}) {
+export default function ({addon, console}) {
     // 读取用户在设置页里配置的消息
     const message = addon.settings.get('message');
 
@@ -19,5 +23,5 @@ export default async function ({addon, console}) {
         order: 1
     });
 
-    console.log(`[Bilup Sample] ${message}`);
+    console.log(`[Bilup 示例插件] ${message}`);
 }

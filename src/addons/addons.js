@@ -79,7 +79,8 @@ const addons = [
     'project-size-display',
     'merge-operators',
     // Bilup 本地插件源（位于 bilup-addons/ 目录，由 pull.js 一并处理）
-    'bilup-sample'
+    'bilup-sample',
+    'quick-export-assets'
 ];
 
 const newAddons = [
@@ -87,7 +88,9 @@ const newAddons = [
     'green-flag-order',
     'remove-extension-button',
     'tab-styles',
-    'merge-operators'
+    'merge-operators',
+    // Bilup 本地插件：新上架，会打上 "new" 徽章
+    'quick-export-assets'
 ];
 
 // eslint-disable-next-line import/no-commonjs
