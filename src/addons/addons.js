@@ -79,7 +79,8 @@ const addons = [
     'project-size-display',
     'merge-operators',
     // Bilup 本地插件源（位于 bilup-addons/ 目录，由 pull.js 一并处理）
-    'bilup-sample'
+    'bilup-sample',
+    'quick-export-assets'
 ];
 
 const newAddons = [
