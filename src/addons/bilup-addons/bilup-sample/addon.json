@@ -1,6 +1,6 @@
 {
-    "name": "Bilup Sample",
-    "description": "A sample local plugin demonstrating the bilup-addons pipeline. Shows a message in the stage header and logs it to console.",
+    "name": "Bilup 示例插件",
+    "description": "bilup-addons 本地插件管线的示例插件：在舞台头部显示一条可配置的消息，并把同样的内容输出到控制台。",
     "credits": [
         {
             "name": "Bilup"
@@ -18,8 +18,8 @@
         {
             "id": "message",
             "type": "string",
-            "default": "Hello from Bilup Sample!",
-            "name": "Message"
+            "default": "来自 Bilup 示例插件的问候！",
+            "name": "显示文字"
         }
     ],
     "tags": [
