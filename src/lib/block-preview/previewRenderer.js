@@ -25,10 +25,12 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 const BLOCK_ROW_INSET = 6;
 
 /**
- * How many rendered previews to keep for reuse.
+ * How many rendered previews to keep for reuse. The find bar builds one preview per row, and a
+ * project can easily have more block types than the old limit held, which made every reopen of
+ * the dropdown rebuild the whole list from scratch.
  * @type {number}
  */
-const CACHE_LIMIT = 64;
+const CACHE_LIMIT = 192;
 
 /**
  * Rendered previews, keyed by {@link getPreviewKey} or {@link getWorkspacePreviewKey},
@@ -122,8 +124,7 @@ const getPreviewKey = blockInstance => {
  * Gets a key describing exactly what a preview of an existing block will look like. Unlike
  * {@link getPreviewKey} this describes the text the block currently reads as, which is all that
  * changes its appearance once the block itself exists.
- * @param {Array<object>} blocks The blocks that go into the preview, as returned by
- *   {@link collectVisibleParts}.
+ * @param {Array<object>} blocks The blocks that go into the preview, the block itself first.
  * @param {string} theme The theme the preview was rendered with.
  * @returns {string} The cache key.
  */
@@ -187,10 +188,12 @@ const clearPreviewCache = () => {
 /**
  * Refreshes {@link themeSignature} and drops the cached previews when the block colours changed
  * since the last render. Called by every entry point so that a cache consumer never serves
- * previews rendered with the previous theme.
+ * previews rendered with the previous theme. Inside a batch the signature was already checked
+ * when the batch started, and a batch builds many previews.
  * @param {*} Blockly The Blockly instance.
  */
 const refreshPreviewTheme = Blockly => {
+    if (batchDepth > 0) return;
     const signature = getThemeSignature(Blockly);
     if (signature !== themeSignature) {
         themeSignature = signature;
@@ -262,104 +265,78 @@ const stripBlockIds = element => {
 const SIGNATURE_INPUT = 'custom_block';
 
 /**
- * Collects the blocks that make up how `rootBlock` reads: the block itself, the literal inputs and
- * reporters plugged into its inputs, and the signature of a define block. Statements stacked
- * above, below or inside it belong to a script rather than to the block, so they are left out and
- * a preview shows a single block instead of a whole script.
- * @param {*} rootBlock The block to describe.
- * @param {*} Blockly The Blockly instance, used for its connection type constants.
- * @returns {Array<object>} The blocks that are part of the preview, root first.
+ * Removes the parts of a block's XML that do not belong to the block itself: everything stacked
+ * above or below it, the bodies of its loops and conditions, and the blocks plugged into its
+ * inputs. What is left is the block as it reads on its own — its dropdowns and its signature
+ * intact, every input slot empty.
+ *
+ * A row stands for one block, so it shows that block rather than whatever expression a user
+ * happened to type into it. The filled-in values are still searchable through the value rows the
+ * find bar indexes separately, and keeping the preview flat keeps it narrow enough to read.
+ * @param {Element} element The block element to trim.
  */
-const collectVisibleParts = (rootBlock, Blockly) => {
-    const parts = [rootBlock];
-    const nextStatement = (Blockly && Blockly.NEXT_STATEMENT) || 3;
+const stripScriptElements = element => {
+    for (let i = element.childNodes.length - 1; i >= 0; i--) {
+        const child = element.childNodes[i];
+        if (!child || child.nodeType !== 1) continue;
+        const tag = child.tagName ? child.tagName.toLowerCase() : '';
 
-    const walk = block => {
-        const inputList = block.inputList || [];
-        for (let i = 0; i < inputList.length; i++) {
-            const input = inputList[i];
-            if (!input.connection) continue;
-            const child = input.connection.targetBlock();
-            if (!child) continue;
-            // A body is a script of its own, the signature of a define block is not.
-            if (input.connection.type === nextStatement && input.name !== SIGNATURE_INPUT) continue;
-            parts.push(child);
-            walk(child);
-        }
-    };
-
-    walk(rootBlock);
-    return parts;
-};
-
-/**
- * Maps every block of a tree to the SVG group it is drawn in. ScratchBlocks nests connected
- * blocks inside their parent's group, so this is how the nodes belonging to a nested block are
- * told apart from the drawing of the block they sit in.
- * @param {*} rootBlock The block to map.
- * @returns {Map<SVGElement, object>} The map.
- */
-const mapNodesToBlocks = rootBlock => {
-    const map = new Map();
-    const blocks = typeof rootBlock.getDescendants === 'function' ?
-        rootBlock.getDescendants(true) :
-        [rootBlock];
-    for (let i = 0; i < blocks.length; i++) {
-        const block = blocks[i];
-        const svgRoot = typeof block.getSvgRoot === 'function' ? block.getSvgRoot() : null;
-        if (svgRoot) map.set(svgRoot, block);
-    }
-    return map;
-};
-
-/**
- * Drops the parts of a cloned block that belong to its script. A deep clone brings the whole
- * script along, because connected blocks are nested inside the block they are attached to; the
- * clone mirrors the original node for node, which is what makes the two walkable side by side.
- * @param {Node} original The original subtree.
- * @param {Node} clone The cloned subtree.
- * @param {Set<object>} visible The blocks that are part of the preview.
- * @param {Map<SVGElement, object>} nodeToBlock The block each nested group belongs to.
- */
-const pruneScriptParts = (original, clone, visible, nodeToBlock) => {
-    const originalChildren = original.childNodes;
-    // Backwards, so removing a child does not shift the indices still to be visited.
-    for (let i = originalChildren.length - 1; i >= 0; i--) {
-        const node = originalChildren[i];
-        const nodeClone = clone.childNodes[i];
-        if (!nodeClone) continue;
-        const block = nodeToBlock.get(node);
-        if (block && !visible.has(block)) {
-            clone.removeChild(nodeClone);
+        if (tag === 'next') {
+            element.removeChild(child);
             continue;
         }
-        if (node.childNodes.length) pruneScriptParts(node, nodeClone, visible, nodeToBlock);
+        if (tag === 'statement' && child.getAttribute('name') !== SIGNATURE_INPUT) {
+            element.removeChild(child);
+            continue;
+        }
+        if (tag === 'value') {
+            // The empty slot stays, the block that was plugged into it does not. Shadows are kept
+            // so an input the palette fills in still reads the way it does there.
+            for (let j = child.childNodes.length - 1; j >= 0; j--) {
+                const inner = child.childNodes[j];
+                if (inner.nodeType === 1 && inner.tagName &&
+                    inner.tagName.toLowerCase() === 'block') {
+                    child.removeChild(inner);
+                }
+            }
+            continue;
+        }
+
+        stripScriptElements(child);
     }
 };
 
 /**
- * Clones an existing block as one coherent subtree, without the script it belongs to.
- * @param {*} rootBlock The block to clone.
- * @param {Set<object>} visible The blocks that are part of the preview.
- * @returns {SVGElement|null} The clone, or null when the block has no SVG.
+ * True when a block's group already sits inside another block's group of the same list.
+ * ScratchBlocks appends a connected block's group into the group of the block it is attached to
+ * (see Blockly.BlockSvg.prototype.setParent in scratch-blocks/core/block_svg.js), so a parent and
+ * its descendants are not independent things to clone.
+ * @param {SVGElement} svgRoot The group to test.
+ * @param {Array<object>} blocks The blocks being cloned.
+ * @param {object} self The block `svgRoot` belongs to.
+ * @returns {boolean} True when cloning `self` would draw it a second time.
  */
-const cloneBlockTree = (rootBlock, visible) => {
-    const svgRoot = typeof rootBlock.getSvgRoot === 'function' ? rootBlock.getSvgRoot() : null;
-    if (!svgRoot) return null;
-
-    const clone = svgRoot.cloneNode(true);
-    pruneScriptParts(svgRoot, clone, visible, mapNodesToBlocks(rootBlock));
-    // The editor hides top level blocks that are scrolled out of view. The preview is drawn in
-    // the popup or the dropdown instead, so it has to be visible wherever the block sits.
-    if (clone.style) clone.style.display = '';
-    stripBlockIds(clone);
-    return clone;
+const isNestedInOtherBlock = (svgRoot, blocks, self) => {
+    for (let i = 0; i < blocks.length; i++) {
+        const other = blocks[i];
+        if (!other || other === self) continue;
+        const otherRoot = typeof other.getSvgRoot === 'function' ? other.getSvgRoot() : null;
+        if (otherRoot && otherRoot !== svgRoot &&
+            typeof otherRoot.contains === 'function' && otherRoot.contains(svgRoot)) {
+            return true;
+        }
+    }
+    return false;
 };
 
 /**
  * Clones each of the given blocks into a fresh group inside `container`. Used for the block types
  * the popup previews, which do not exist in the project yet. The caller owns the group until
  * {@link finishPreview} has measured it.
+ *
+ * Only the outermost blocks of the list are cloned: a connected block is already drawn inside the
+ * group of the block it is attached to, so cloning it as well would draw it twice — once in place
+ * and once wherever its own, now meaningless, transform happens to put it.
  * @param {Array<object>} blocks The blocks to clone.
  * @param {SVGElement} container The SVG element to render into.
  * @returns {{holder: SVGElement, content: SVGElement}} The unmeasured preview.
@@ -368,10 +345,18 @@ const startPreviewClone = (blocks, container) => {
     const holder = container.appendChild(createSvgElement('g'));
     const content = holder.appendChild(createSvgElement('g'));
 
+    let drawn = false;
     for (let i = 0; i < blocks.length; i++) {
         const block = blocks[i];
         const svgRoot = block && typeof block.getSvgRoot === 'function' ? block.getSvgRoot() : null;
         if (!svgRoot) continue;
+        if (isNestedInOtherBlock(svgRoot, blocks, block)) continue;
+        // Only the first of the outermost blocks is drawn. Anything after it is a block that is
+        // not part of that one's drawing, so it would land wherever its own transform points and
+        // show up as a second block in a row that stands for one. A preview is always built from
+        // a single block, so there is nothing to lose by stopping here.
+        if (drawn) continue;
+        drawn = true;
         const clone = svgRoot.cloneNode(true);
         stripBlockIds(clone);
         content.appendChild(clone);
@@ -381,22 +366,46 @@ const startPreviewClone = (blocks, container) => {
 };
 
 /**
- * Clones a block that exists in a workspace, without the script around it, into a fresh group
- * inside `container`.
- * @param {*} rootBlock The block to clone.
+ * Builds a copy of a block with the script around it and the expressions inside its inputs
+ * removed, into `container`. The copy is a real block made from the block's own XML, so its
+ * outline is drawn for exactly the inputs it ended up with instead of whatever the original
+ * happened to carry.
+ * @param {*} workspaceBlock The block to copy.
  * @param {SVGElement} container The SVG element to render into.
- * @param {Set<object>} visible The blocks that are part of the preview.
- * @returns {{holder: SVGElement, content: SVGElement}|null} The unmeasured preview, or null when
- *   the block has no SVG to clone.
+ * @param {*} Blockly The Blockly instance.
+ * @returns {{holder: SVGElement, content: SVGElement}|null} The unmeasured preview.
  */
-const startBlockClone = (rootBlock, container, visible) => {
-    const clone = cloneBlockTree(rootBlock, visible);
-    if (!clone) return null;
+const startScriptFreeCopy = (workspaceBlock, container, Blockly) => {
+    const xml = Blockly.Xml;
+    if (!xml || typeof xml.blockToDom !== 'function' || typeof xml.domToBlock !== 'function') {
+        return null;
+    }
+    const workspace = workspaceBlock.workspace;
+    if (!workspace) return null;
 
-    const holder = container.appendChild(createSvgElement('g'));
-    const content = holder.appendChild(createSvgElement('g'));
-    content.appendChild(clone);
-    return {holder, content};
+    let copy = null;
+    let draft = null;
+
+    Blockly.Events.disable();
+    try {
+        const dom = xml.blockToDom(workspaceBlock, true);
+        if (!dom) return null;
+        stripScriptElements(dom);
+        copy = xml.domToBlock(dom, workspace);
+        if (!copy) return null;
+        if (typeof copy.initSvg === 'function' && !copy.getSvgRoot()) copy.initSvg();
+        if (typeof copy.render === 'function') copy.render();
+        // The copy holds the block with its inputs emptied out, so cloning it whole is right.
+        draft = startPreviewClone([copy], container);
+    } catch (error) {
+        if (draft) container.removeChild(draft.holder);
+        return null;
+    } finally {
+        if (copy && copy.workspace) copy.dispose(false, false);
+        Blockly.Events.enable();
+    }
+
+    return draft;
 };
 
 /**
@@ -534,8 +543,9 @@ const renderPreviewBlock = (blockInstance, container, Blockly) => {
 
 /**
  * Renders a block that already exists in a workspace, reusing a cached copy when an identical
- * looking block was rendered before. Everything is read from the editor's own SVG, so the
- * preview matches the editor exactly without touching the project.
+ * looking block was rendered before. The block is rebuilt from its own XML with the script around
+ * it and the expressions plugged into its inputs removed, so a row shows the block itself and
+ * nothing that happens to surround it.
  * @param {object} workspaceBlock The Blockly block to render.
  * @param {SVGElement} container The SVG element to render the block into.
  * @param {*} Blockly The Blockly instance.
@@ -551,13 +561,18 @@ const renderWorkspaceBlockPreview = (workspaceBlock, container, Blockly) => {
 
     refreshPreviewTheme(Blockly);
 
-    const parts = collectVisibleParts(workspaceBlock, Blockly);
-    const key = getWorkspacePreviewKey(parts, themeSignature);
+    // The preview is always rebuilt from the block's own XML instead of cloned out of the editor,
+    // for two reasons. A loop or condition outline is drawn around the body it had, so a clone
+    // with the body removed would leave an empty shape the size of the original script. And a
+    // clone brings along the expressions plugged into the block's inputs, which a row that stands
+    // for a single block should not show. Only the block's own fields decide how it looks, so
+    // only those go into the cache key.
+    const key = getWorkspacePreviewKey([workspaceBlock], themeSignature);
 
     const cached = takeCachedPreview(key, container);
     if (cached) return cached;
 
-    const draft = startBlockClone(workspaceBlock, container, new Set(parts));
+    const draft = startScriptFreeCopy(workspaceBlock, container, Blockly);
     const rendered = finishPreview(draft, container);
     if (!rendered) return null;
 
@@ -571,9 +586,123 @@ if (typeof document !== 'undefined' && document.fonts && document.fonts.ready) {
     document.fonts.ready.then(clearPreviewCache).catch(() => {});
 }
 
+/**
+ * Gets a key describing what a preview built from a block's own data will look like.
+ * @param {string} blockType The block opcode.
+ * @param {object} fields The field values the block carries.
+ * @param {string} theme The theme the preview was rendered with.
+ * @returns {string} The cache key.
+ */
+const getBlockTypePreviewKey = (blockType, fields, theme) => {
+    const parts = [theme || '', 'type', blockType];
+    if (fields && typeof fields === 'object') {
+        const names = Object.keys(fields).sort();
+        for (let i = 0; i < names.length; i++) {
+            const value = fields[names[i]];
+            parts.push(names[i]);
+            if (value && typeof value === 'object' && 'value' in value) {
+                parts.push(String(value.value));
+            } else {
+                parts.push(String(value));
+            }
+        }
+    }
+    return parts.join('\u0001');
+};
+
+/**
+ * Writes field values onto a freshly created block. Values are given either bare or as the
+ * `{value, id}` records the VM stores blocks in, and a field that refuses its value keeps its
+ * default rather than costing the whole preview.
+ * @param {*} block The block to fill in.
+ * @param {object} fields The field values, keyed by field name.
+ */
+const applyFieldValues = (block, fields) => {
+    if (!block || !fields || typeof fields !== 'object') return;
+    const names = Object.keys(fields);
+    for (let i = 0; i < names.length; i++) {
+        const name = names[i];
+        const field = fields[name];
+        if (field === null || typeof field === 'undefined') continue;
+
+        let value = field;
+        if (typeof field === 'object') {
+            value = 'value' in field ? field.value : field.name;
+        }
+        if (value === null || typeof value === 'undefined') continue;
+
+        try {
+            block.setFieldValue(String(value), name);
+        } catch (error) {
+            // Unknown field, or a value the field does not accept; keep the default.
+        }
+    }
+};
+
+/**
+ * Renders a block type without needing an instance of it in the workspace. This covers the rows
+ * that have no block to clone: scripts the editor has unloaded because they are off screen, and
+ * entries that stand for a variable or a list rather than for one block in a script.
+ *
+ * The block is created through the same path the toolbox uses, so the preview matches what the
+ * palette shows, and it is disposed again as soon as its SVG has been cloned.
+ * @param {string} blockType The block opcode to render.
+ * @param {object} fields Field values to write onto the block, keyed by field name.
+ * @param {SVGElement} container The SVG element to render the block into.
+ * @param {*} Blockly The Blockly instance.
+ * @returns {object|null} The rendered block, or null when the type can not be rendered.
+ */
+const renderBlockTypePreview = (blockType, fields, container, Blockly) => {
+    if (!Blockly || !blockType || !container || typeof container.appendChild !== 'function') {
+        return null;
+    }
+    if (typeof blockType !== 'string') return null;
+    if (!Blockly.Blocks || !Object.prototype.hasOwnProperty.call(Blockly.Blocks, blockType)) {
+        return null;
+    }
+
+    const workspace = Blockly.getMainWorkspace && Blockly.getMainWorkspace();
+    if (!workspace || typeof workspace.newBlock !== 'function') return null;
+
+    refreshPreviewTheme(Blockly);
+
+    const key = getBlockTypePreviewKey(blockType, fields, themeSignature);
+    const cached = takeCachedPreview(key, container);
+    if (cached) return cached;
+
+    let block = null;
+    let draft = null;
+
+    // Building a preview must never reach the project or its undo history.
+    Blockly.Events.disable();
+    try {
+        block = workspace.newBlock(blockType);
+        applyFieldValues(block, fields);
+        if (typeof block.initSvg === 'function') block.initSvg();
+        if (typeof block.render === 'function') block.render();
+        // A block created this way only ever carries its own inputs, never a script, so every
+        // descendant belongs to the preview.
+        const parts = typeof block.getDescendants === 'function' ? block.getDescendants(false) : [block];
+        draft = startPreviewClone(parts, container);
+    } catch (error) {
+        if (draft) container.removeChild(draft.holder);
+        return null;
+    } finally {
+        if (block && block.workspace) block.dispose(false, false);
+        Blockly.Events.enable();
+    }
+
+    const rendered = finishPreview(draft, container);
+    if (!rendered) return null;
+
+    cachePreview(key, rendered);
+    return rendered;
+};
+
 export {
     renderPreviewBlock,
     renderWorkspaceBlockPreview,
+    renderBlockTypePreview,
     beginPreviewBatch,
     clearPreviewCache,
     BLOCK_ROW_INSET
