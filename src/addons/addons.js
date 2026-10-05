@@ -88,7 +88,9 @@ const newAddons = [
     'green-flag-order',
     'remove-extension-button',
     'tab-styles',
-    'merge-operators'
+    'merge-operators',
+    // Bilup 本地插件：新上架，会打上 "new" 徽章
+    'quick-export-assets'
 ];
 
 // eslint-disable-next-line import/no-commonjs

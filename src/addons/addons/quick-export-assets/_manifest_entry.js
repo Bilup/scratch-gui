@@ -4,7 +4,7 @@ const manifest = {
   "description": "在造型 / 背景 / 声音列表里右键任意素材，菜单中会多出一项“导出全部素材”，一点即可把当前目标这一类素材（全部造型、全部背景或全部声音）打包成 zip 下载。",
   "credits": [
     {
-      "name": "Bilup"
+      "name": "DL_Grass"
     }
   ],
   "userscripts": [
@@ -13,7 +13,8 @@ const manifest = {
     }
   ],
   "tags": [
-    "recommended"
+    "recommended",
+    "new"
   ],
   "editorOnly": true,
   "enabledByDefault": true,
