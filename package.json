@@ -118,7 +118,7 @@
     "scratch-parser": "github:Bilup/scratch-parser#main",
     "scratch-paint": "github:Bilup/scratch-paint#develop",
     "scratch-render": "github:Bilup/scratch-render#develop-builds",
-    "scratch-vm": "github:Bilup/scratch-vm#develop-builds",
+    "scratch-vm": "https://codeload.github.com/Bilup/scratch-vm/tar.gz/b6007ffb5b91c5d8ed8e1113518e2eba5cef0721",
     "socks-proxy-agent": "^10.0.0",
     "style-loader": "^0.23.0",
     "text-encoding": "0.7.0",
