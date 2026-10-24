@@ -14,7 +14,10 @@ const safeGetItem = key => {
 const APPEARANCE_SETTINGS = [
     {
         id: 'square-stage-corners',
-        css: '[class*="stage_section"],[class*="stage_green-flag-overlay-wrapper"]{border-radius:0 !important;}'
+        // 注意：舞台根节点的 CSS Module 类名是 stage_stage_<hash>（见 src/components/stage/stage.css
+        // 的 .stage），不是 stage_section。full-screen 时同一元素上会追加 stage_full-screen_<hash>，
+        // 前缀匹配 stage_stage 依然命中，所以全屏也一起变方。
+        css: '[class*="stage_stage"],[class*="stage_green-flag-overlay-wrapper"]{border-radius:0 !important;}'
     },
     {
         id: 'hide-delete-button',

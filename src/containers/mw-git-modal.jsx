@@ -662,6 +662,12 @@ class TWGitModal extends React.Component {
     // Kept apart from the store's error so a subsequent operation — which clears
     // the store error — also clears this one.
     setLocalError (message) {
+        // `_lastErrorShown` only guards the store-driven path, where one failure
+        // is re-reported on every state sync. A validation error is a fresh user
+        // action, and this window has no inline error bar left, so re-clicking
+        // the same button with the same mistake has to toast again — the de-dupe
+        // used to swallow it and the second click got no feedback at all.
+        this._lastErrorShown = null;
         this.setState({localError: message, error: message});
         this.showError(message);
     }
