@@ -55,6 +55,36 @@ describe('toast reducer', () => {
         expect(hidden.position).toBe('bottom-right');
     });
 
+    // The notification component keys its 3s dwell timer and its exit animation
+    // on `seq`, so that "shown again" is distinguishable from "still the same
+    // one" even when the text is identical (a retried failure re-reports the
+    // same message). If seq stops advancing, a repeated toast inherits the
+    // remainder of the previous timer and vanishes almost immediately.
+    test('bumps seq on every show, even for an identical message', () => {
+        const first = show('提交信息不能为空', 'error', 'bottom-right');
+        expect(first.seq).toBe(1);
+        const second = reducer(first, {
+            type: 'scratch-gui/SHOW_TOAST',
+            message: '提交信息不能为空',
+            toastType: 'error',
+            position: 'bottom-right'
+        });
+        expect(second.seq).toBe(2);
+        expect(second.seq).not.toBe(first.seq);
+    });
+
+    test('hiding does not bump seq (only a new showing does)', () => {
+        const shown = show('Saved');
+        const hidden = reducer(shown, {type: 'scratch-gui/HIDE_TOAST'});
+        expect(hidden.seq).toBe(shown.seq);
+    });
+
+    test('survives a state without seq instead of producing NaN', () => {
+        const legacy = {visible: false, message: null, type: 'info', position: 'top-right'};
+        const next = reducer(legacy, {type: 'scratch-gui/SHOW_TOAST', message: 'Saved'});
+        expect(next.seq).toBe(1);
+    });
+
     test('ignores unrelated actions', () => {
         const state = show('Saved');
         expect(reducer(state, {type: 'scratch-gui/SOMETHING_ELSE'})).toBe(state);

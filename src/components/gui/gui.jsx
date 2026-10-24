@@ -47,6 +47,7 @@ import CustomGalleryModal from '../../containers/custom-gallery-modal.jsx';
 import RoturLoginModal from '../mw-rotur-login-modal/rotur-login-modal.jsx';
 import {closeRoturLoginModal} from '../../reducers/modals.js';
 import SimpleDialog from '../../containers/simple-dialog.jsx';
+import InlineMessages from '../../containers/inline-messages.jsx';
 import AddonHooks from '../../addons/hooks.js';
 import NativeFindBar from '../find-bar/find-bar.jsx';
 import NativeSpotlight from '../../containers/spotlight.jsx';
@@ -965,6 +966,14 @@ const GUIComponent = props => {
             <RoturSession />
             {!isEmbedded && <RoturExtensionHost />}
             <NotificationsProvider />
+            {/* AlertTypes.INLINE 的提示（saving / saveSuccess /
+                twSaveToDiskSuccess / twCreatingRestorePoint /
+                twRestorePoint*）只有一个 UI 出口：这里 → inline-messages →
+                notification-manager → 右下角。它原先挂在 menu-bar/save-status
+                里，而那个组件的 import 在 menu-bar.jsx 被注释掉了，于是这些
+                提示只进 store、从来没人画出来（保存作品、创建还原点都静默）。
+                挂到 GUI 根上就与菜单栏布局无关，且全局只有一份。 */}
+            <InlineMessages />
             <TWSecurityManager securityManager={securityManager} />
             <TWRestorePointManager />
             <MWExtensionManagerModal />
