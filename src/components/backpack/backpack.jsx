@@ -60,7 +60,10 @@ const Backpack = ({
     searchQuery,
     onSearchChange
 }) => (
-    <div className={styles.backpackContainer}>
+    <div
+        className={styles.backpackContainer}
+        data-backpack-container
+    >
         {expanded ? (
             <div
                 className={styles.resizeHandle}

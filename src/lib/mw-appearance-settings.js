@@ -26,12 +26,19 @@ const APPEARANCE_SETTINGS = [
             'div[class*="sprite-selector_sprite-wrapper_"] div[class*="delete-button_delete-button_"]{display:none;}'
     },
     {
+        // 依赖 gui.jsx 里 palette-footer 上的 data-palette-footer / data-extension-button 标记。
+        // 旧选择器 [class*="extension-button-container"] 在积木区重构后已经不存在，设置形同虚设。
+        // 非窄屏（>900px，见 gui.css 的媒体查询）时积木搜索按钮是隐藏的，
+        // 此时整个底部按钮条只剩扩展按钮，直接连 footer 一起收掉，避免残留 1px 边框的空条。
         id: 'hide-extension-button',
-        css: '[class*="extension-button-container"]{display:none !important;}'
+        css: '[data-extension-button]{display:none !important;}' +
+            '@media only screen and (min-width: 901px){[data-palette-footer]{display:none !important;}}'
     },
     {
+        // 背包组件根节点标记见 backpack.jsx；类名兜底保留，旧代码把 backpack 误写成 uppack，
+        // 且 [class^=] 只在类名恰好排第一时才命中，所以一直没生效。
         id: 'hide-backpack',
-        css: '[class^="uppack_backpack-container"]{display:none;}'
+        css: '[data-backpack-container],[class*="backpack_backpack-container"]{display:none !important;}'
     },
     {
         id: 'unclip-palette',

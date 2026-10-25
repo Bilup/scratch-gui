@@ -1338,7 +1338,10 @@ const GUIComponent = props => {
                                                     vm={vm}
                                                 />
                                             </Box>
-                                            <Box className={styles.paletteFooter}>
+                                            <Box
+                                                className={styles.paletteFooter}
+                                                data-palette-footer
+                                            >
                                                 <button
                                                     className={classNames(
                                                         styles.paletteButton,
@@ -1354,6 +1357,7 @@ const GUIComponent = props => {
                                                 </button>
                                                 <button
                                                     className={styles.paletteButton}
+                                                    data-extension-button
                                                     title={intl.formatMessage(messages.addExtension)}
                                                     onClick={onExtensionButtonClick}
                                                 >
