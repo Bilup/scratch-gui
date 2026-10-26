@@ -22,6 +22,29 @@ const getProjectTitleFromFilename = fileInputFilename => {
 };
 
 /**
+ * Wait until the browser has actually painted. Serializing a large project
+ * blocks the main thread for hundreds of milliseconds right after the "saving"
+ * alert is dispatched, which means the alert never gets a frame to appear and
+ * saving looks like a freeze. Yielding two frames first guarantees the alert is
+ * on screen before the work starts.
+ * @returns {Promise} Resolved after the next paint.
+ */
+const afterNextPaint = () => new Promise(resolve => {
+    let settled = false;
+    const finish = () => {
+        if (settled) return;
+        settled = true;
+        resolve();
+    };
+    if (typeof requestAnimationFrame === 'function') {
+        requestAnimationFrame(() => requestAnimationFrame(finish));
+    }
+    // Animation frames do not run in a hidden tab, so a save must never wait on
+    // one forever.
+    setTimeout(finish, 100);
+});
+
+/**
  * @param {Uint8Array[]} arrays List of byte arrays
  * @returns {number} Total length of the arrays
  */
@@ -82,12 +105,13 @@ class SB3Downloader extends React.Component {
             this.props.onSaveFinished();
         }
     }
-    downloadProject () {
+    async downloadProject () {
         if (!this.props.canSaveProject) {
             return;
         }
         this.startedSaving();
-        this.props.saveProjectSb3().then(content => {
+        await afterNextPaint();
+        return this.props.saveProjectSb3().then(content => {
             this.finishedSaving();
             downloadBlob(this.props.projectFilename, content);
         })
@@ -144,29 +168,34 @@ class SB3Downloader extends React.Component {
         // can't inject extra files), so buffer the save when a repo exists -- but
         // only when the repository is meant to be embedded at all. With the
         // setting off, stream as usual: a repository sitting in the workspace
-        // must not turn every save into a buffered one.
-        const {repoExists} = await import('../lib/git/browser-git');
-        if (getEmbedGitOnSave() && await repoExists()) {
-            const writable = await handle.createWritable();
-            this.startedSaving();
-            try {
-                const blob = await this.props.saveProjectSb3();
-                await writable.write(await blob.arrayBuffer());
-                await writable.close();
-                this.finishedSaving();
-            } catch (e) {
+        // must not turn every save into a buffered one. The git toolchain is
+        // several hundred KB, so only load it once the feature is actually on.
+        if (getEmbedGitOnSave()) {
+            const {repoExists} = await import('../lib/git/browser-git');
+            if (await repoExists()) {
+                const writable = await handle.createWritable();
+                this.startedSaving();
+                await afterNextPaint();
                 try {
-                    await writable.abort();
-                } catch (abortError) {
-                    // ignore
+                    const blob = await this.props.saveProjectSb3();
+                    await writable.write(await blob.arrayBuffer());
+                    await writable.close();
+                    this.finishedSaving();
+                } catch (e) {
+                    try {
+                        await writable.abort();
+                    } catch (abortError) {
+                        // ignore
+                    }
+                    throw e;
                 }
-                throw e;
+                return;
             }
-            return;
         }
 
         const writable = await handle.createWritable();
         this.startedSaving();
+        await afterNextPaint();
 
         await new Promise((resolve, reject) => {
             // Projects can be very large, so we'll utilize JSZip's stream API to avoid having the
