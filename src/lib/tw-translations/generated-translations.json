@@ -1716,6 +1716,7 @@
     "bl.frostedGlass.target.window": "窗口",
     "bl.frostedGlass.target.alert": "弹窗通知",
     "bl.frostedGlass.target.menuBarMenu": "顶部菜单栏下拉菜单",
+    "bl.frostedGlass.target.contextMenu": "右键菜单",
     "": "",
     "mw.git.changes.staged": "已暂存的更改",
     "mw.git.changes.unstaged": "更改",
