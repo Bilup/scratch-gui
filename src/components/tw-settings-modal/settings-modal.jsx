@@ -24,10 +24,29 @@ import {STYLE_GROUPS} from '../../lib/mw-style-settings';
 import StylePreview from './style-preview.jsx';
 import MenuBarLayoutSetting from './menu-bar-layout.jsx';
 import MenuBarFeatureSettings from './menu-bar-settings.jsx';
-import {LanguagePage, ThemePage, WallpaperPage, FontsPage} from './appearance-pages.jsx';
-import LoadingScreenPage from './loading-screen-page.jsx';
-import FrostedGlassPage from './frosted-glass-page.jsx';
-import ShortcutManager from '../shortcut-manager/shortcut-manager.jsx';
+
+// ---------------------------------------------------------------------------
+// 页面级按需加载
+//
+// 设置窗口默认停在「常规」页，但下面这几页各自带着一整套编辑器：主题页挂着
+// 自定义主题编辑器 + 渐变生成器，字体页带着字体管理窗口，快捷键页带着整张
+// 快捷键表。它们原先在模块顶部静态引入，于是「打开设置」必须先下载并解析
+// 这些代码——哪怕你从来不点这些页。
+//
+// 改成 React.lazy 之后，窗口首屏只需要「常规」页的代码；某一页第一次被点开
+// 时才拉取它自己的分块。渲染位置见下方 SettingsRouter 外的 Suspense。
+// ---------------------------------------------------------------------------
+const lazyNamedPage = (loader, name) => React.lazy(() => (
+    loader().then(module => ({default: module[name]}))
+));
+
+const LanguagePage = lazyNamedPage(() => import('./appearance-pages.jsx'), 'LanguagePage');
+const ThemePage = lazyNamedPage(() => import('./appearance-pages.jsx'), 'ThemePage');
+const WallpaperPage = lazyNamedPage(() => import('./appearance-pages.jsx'), 'WallpaperPage');
+const FontsPage = lazyNamedPage(() => import('./appearance-pages.jsx'), 'FontsPage');
+const LoadingScreenPage = React.lazy(() => import('./loading-screen-page.jsx'));
+const FrostedGlassPage = React.lazy(() => import('./frosted-glass-page.jsx'));
+const ShortcutManager = React.lazy(() => import('../shortcut-manager/shortcut-manager.jsx'));
 import {takeSettingsModalInitialView} from '../../lib/settings/modal-view.js';
 
 import {Settings, Zap, Blocks, Palette, PanelTop, Bug, GitBranch, Variable,
@@ -1004,6 +1023,16 @@ StoreProjectOptions.propTypes = {
     storeThemeInProject: PropTypes.bool,
     onStoreThemeInProjectChange: PropTypes.func
 };
+
+// 按需加载的页面在首次点击时需要一帧到几十毫秒去取分块。
+// 这里给一个极轻的占位（纯 CSS 转圈），避免侧边栏旁边整块空白。
+const PageLoadingFallback = () => (
+    <Box className={styles.body}>
+        <div className={styles.pageLoading}>
+            <span className={styles.pageLoadingSpinner} />
+        </div>
+    </Box>
+);
 
 const pageConfigurations = {
     general: {
@@ -2152,11 +2181,13 @@ class SettingsModalComponent extends React.Component {
                                 id="mw.settingsModal.back"
                             />
                         </button>
-                        <SettingsRouter
-                            view={currentView}
-                            {...this.props}
-                            onStoreProjectOptions={this.handleStoreProjectOptions}
-                        />
+                        <React.Suspense fallback={<PageLoadingFallback />}>
+                            <SettingsRouter
+                                view={currentView}
+                                {...this.props}
+                                onStoreProjectOptions={this.handleStoreProjectOptions}
+                            />
+                        </React.Suspense>
                     </ModalSidebarContent>
                 </ModalSidebarLayout>
             </Modal>

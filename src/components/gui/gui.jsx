@@ -56,6 +56,7 @@ import {STAGE_SIZE_MODES, STAGE_DISPLAY_SIZES, FIXED_WIDTH, UNCONSTRAINED_NON_ST
 import {resolveStageSize} from '../../lib/utils/screen';
 import {getFindBarApi} from '../../lib/find-bar/api';
 import {setFractchModeOpener} from '../../lib/git/fractch-mode';
+import {scheduleModalPrefetch} from '../../lib/mw/prefetch-modals';
 import {Theme} from '../../lib/themes';
 
 import {BLOCKS_TAB_INDEX, COSTUMES_TAB_INDEX, SOUNDS_TAB_INDEX} from '../../reducers/editor-tab';
@@ -945,6 +946,16 @@ const GUIComponent = props => {
             updateShortcutsCallbacks(newCallbacks);
         }
     }, [onStartSelectingFileUpload, onClickPackager]);
+
+    // 设置 / 自定义扩展两个弹窗是 React.lazy 按需加载的。不预热的话，第一次
+    // 点开要先下载分块，期间 fallback 为 null，看起来就是「点了没反应」。
+    // 编辑器空闲后串行 import 一次，之后打开只剩一次微任务的开销。
+    useEffect(() => {
+        if (isEmbedded) {
+            return;
+        }
+        scheduleModalPrefetch();
+    }, [isEmbedded]);
 
     const tabClassNames = useMemo(() => ({
         tabs: styles.tabs,
