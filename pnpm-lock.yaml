@@ -115,7 +115,7 @@ importers:
         version: 2.2.0
       isomorphic-git:
         specifier: ^1.34.0
-        version: 1.44.4
+        version: 1.44.7
       js-base64:
         specifier: 2.4.9
         version: 2.4.9
@@ -256,10 +256,10 @@ importers:
         version: https://codeload.github.com/Bilup/scratch-parser/tar.gz/87a26f096e719e2204f96bfb859e10a709449e59
       scratch-render:
         specifier: github:Bilup/scratch-render#develop-builds
-        version: https://codeload.github.com/Bilup/scratch-render/tar.gz/758a414248724dc3b21a78fe0f238a60cbe2ff9a(webpack@4.47.0)
+        version: https://codeload.github.com/Bilup/scratch-render/tar.gz/25178960593a44dd2530959aa5daaf49adf7d710(webpack@4.47.0)
       scratch-vm:
         specifier: github:Bilup/scratch-vm#develop-builds
-        version: https://codeload.github.com/Bilup/scratch-vm/tar.gz/e5b1731dced450d106e21cf36fbeda4cc95d034a(@bilup/scratch-svg-renderer@https://codeload.github.com/Bilup/scratch-svg-renderer/tar.gz/cb48d4ab124c86cd355f500a4abdb41b3a560af8(scratch-render-fonts@https://codeload.github.com/Bilup/scratch-render-fonts/tar.gz/d09642667e6b3ca7cf9420cd92350ce177694ad5))(eslint@8.55.0)(webpack@4.47.0)
+        version: https://codeload.github.com/Bilup/scratch-vm/tar.gz/6fdb9e74853715a25147f9ae7abc825d001b3982(@bilup/scratch-svg-renderer@https://codeload.github.com/Bilup/scratch-svg-renderer/tar.gz/cb48d4ab124c86cd355f500a4abdb41b3a560af8(scratch-render-fonts@https://codeload.github.com/Bilup/scratch-render-fonts/tar.gz/d09642667e6b3ca7cf9420cd92350ce177694ad5))(eslint@8.55.0)(webpack@4.47.0)
       socks-proxy-agent:
         specifier: ^10.0.0
         version: 10.1.0
@@ -1076,6 +1076,9 @@ packages:
     resolution: {integrity: sha512-93zYdMES/c1D69yZiKDBj0V24vqNzB/koF26KPaagAfd3P/4gUlh3Dys5ogAK+Exi9QyzlD8x/08Zt7wIKcDcA==}
     deprecated: Use @eslint/object-schema instead
 
+  '@isaacs/nonrecursive-glob-match@1.0.2':
+    resolution: {integrity: sha512-GJPHIgPPtFl+nLhFHyF0zZoFcOFLsZWbHFFzo+Zr+PWDXJbl9hHxb2w+9SiF2fHmLgKaXIpUzQo3SbBBZ9WObw==}
+
   '@isomorphic-git/idb-keyval@3.3.2':
     resolution: {integrity: sha512-r8/AdpiS0/WJCNR/t/gsgL+M8NMVj/ek7s60uz3LmpCaTF2mEVlZJlB01ZzalgYzRLXwSPC92o+pdzjM7PN/pA==}
 
@@ -1688,8 +1691,8 @@ packages:
   aws4@1.13.2:
     resolution: {integrity: sha512-lHe62zvbTB5eEABUVi/AwVh0ZKY9rMMDhmm+eeyuuUQbQ3+J+fONVQOZyj+DdrvD4BY33uYniyRJ4UJIaSKAfw==}
 
-  axios@1.20.0:
-    resolution: {integrity: sha512-r8aOh8j9cGKpgQAqpzrUHnSIc6a59Y3Xf/cv8sy1DrHCkZHzQGEuoq1tARk6qSyDdtQGSDgpb9kFlruzPvrgwg==}
+  axios@1.21.0:
+    resolution: {integrity: sha512-YCzXMB53Q9PZBsh7yN7wtapit4WepwcHS2fP8QhGsBxSz5YtgYobV7GGlWlAJi+RxfU77GQTQi2DSLUma42EYA==}
 
   babel-code-frame@6.26.0:
     resolution: {integrity: sha512-XqYMR2dfdGMW+hd0IUZ2PwK+fGeFkOxZJ0wY+JaQAHzt1Zx8LcvpiZD2NiGkEG8qx0CfkAOr5xt76d1e8vG90g==}
@@ -1809,8 +1812,8 @@ packages:
     resolution: {integrity: sha512-5T6P4xPgpp0YDFvSWwEZ4NoE3aM4QBQXDzmVbraCkFj8zHM+mba8SyqB5DbZWyR7mYHo6Y7BdQo3MoA4m0TeQg==}
     engines: {node: '>=0.10.0'}
 
-  baseline-browser-mapping@2.11.32:
-    resolution: {integrity: sha512-UvuxFU9P3hM29LrQdwu0cD6w6/+SFr+UlB9s/knI7+O2rK9xFxKUwSDWxGdbbqQ9/V7BJ5s0NI5nQAE4uJp3gQ==}
+  baseline-browser-mapping@2.11.34:
+    resolution: {integrity: sha512-Aqr8mA1kIvyJ3UY5YAY7ib8LSo1DmDMbMnVqGPtsKW1LxaFQFwn9Eb3yvq2fUKJsRvaXjnAV7R5osqETapzNiA==}
     engines: {node: '>=6.0.0'}
     hasBin: true
 
@@ -1907,8 +1910,8 @@ packages:
   browserify-zlib@0.2.0:
     resolution: {integrity: sha512-Z942RysHXmJrhqk88FmKBVq/v5tqmSkDz7p54G/MGyjMnCFFnC79XWNbg+Vta8W6Wb2qtSZTSxIGkJrRpCFEiA==}
 
-  browserslist@4.29.4:
-    resolution: {integrity: sha512-2TcbbiwXEq+N0kD36tykpCfyyQigUXmuwNQbnPp4Xk4PX9JOqVIKjJlIDjpH7uY6tmRGoAd+apeT1p60T8wsdA==}
+  browserslist@4.29.5:
+    resolution: {integrity: sha512-khTmKu5NGYTotqcYo8Bew2k4RAE9PuXRSFRXG2lQBrCEQHyeQ/vX6gKMxfokwywBsLiXZMnHsmWMG1pnO8J7uQ==}
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
     hasBin: true
 
@@ -2634,8 +2637,8 @@ packages:
   ee-first@1.1.1:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
 
-  electron-to-chromium@1.5.464:
-    resolution: {integrity: sha512-nRa65aFge40viPAKxMKULIY8tcXKwKboJWNn4RoKwyWXJ6SP7BnrDGKUTzc64818jIciH0PK7LSF8QzZes19GA==}
+  electron-to-chromium@1.5.467:
+    resolution: {integrity: sha512-Nw9X371rtZmYcBSnEijnCDONILjs93biCZO34juC7MBOmK8E+GFnyD4T/WvyrlJkppul7oxg6TwvtKst9SODTw==}
 
   elliptic@6.6.1:
     resolution: {integrity: sha512-RaddvvMatK2LJHqFJ+YA4WysVN5Ita9E35botqIYspQ4TkRAlCicdzKOjlyv/1Za5RyTNn7di//eEV0uTAfe3g==}
@@ -3161,8 +3164,8 @@ packages:
   flush-write-stream@1.1.1:
     resolution: {integrity: sha512-3Z4XhFZ3992uIq0XOqb9AreonueSYphE6oYbpt5+3u06JWklbsPkNv3ZKkP9Bz/r+1MWCaMoSQ28P85+1Yc77w==}
 
-  follow-redirects@1.16.1:
-    resolution: {integrity: sha512-FNvFGzoMLWmE6Yj9spb/zjd7yiNCHiAW9/Tg9CXrQ8wuu32HtlJOwWO11OJafl5FfY3DxTdQ0vj42zU1kvv5jg==}
+  follow-redirects@1.16.2:
+    resolution: {integrity: sha512-/kVP2U8z596Ia0gwFrwyIeo74ta5aVmSeU1FfAUMAmcEP5EP7zydmag3SLiN64NaRKef3lxsq7i/g7ltJQDGow==}
     engines: {node: '>=4.0'}
     peerDependencies:
       debug: '*'
@@ -4075,8 +4078,8 @@ packages:
     resolution: {integrity: sha512-WhB9zCku7EGTj/HQQRz5aUQEUeoQZH2bWcltRErOpymJ4boYE6wL9Tbr23krRPSZ+C5zqNSrSw+Cc7sZZ4b7vg==}
     engines: {node: '>=0.10.0'}
 
-  isomorphic-git@1.44.4:
-    resolution: {integrity: sha512-uvbZ3b3Vi23O886dBnbreAmkdnttkMtjx6AATrE7MXJaxQg3wd91S81zFPewMk82+U+WvkrB5GjMgDmVO9ieEw==}
+  isomorphic-git@1.44.7:
+    resolution: {integrity: sha512-+E6w8KC1AZ8jZKYdBRIxvx0sMgMQVaNNd2KrAMYAAfk5Cc/is69PShp5RXjdDDzBVU16d9usBJ2ewOOYIsN/YA==}
     engines: {node: '>=14.17'}
     hasBin: true
 
@@ -4781,8 +4784,8 @@ packages:
   minimalistic-crypto-utils@1.0.1:
     resolution: {integrity: sha512-JIYlbt6g8i5jKfJ3xz7rF0LXmv2TkDxBLUkiBeZ7bAx4GnnNMr8xFpGnOxn6GhTEHx3SjRrZEoU+j04prX1ktg==}
 
-  minimatch@10.2.6:
-    resolution: {integrity: sha512-vpLQEs+VLCr1nU0BXS07maYoFwlDAH0gngQuuttxIwutDFEMHq2blX+8vpgxDdK3J1PwjCJiep77OitTZ4Ll1A==}
+  minimatch@11.0.2:
+    resolution: {integrity: sha512-pWTgz5CN3tjqyZNSK2tePlSmu9IwM41q8yn8Usdqqwe9TIHh+9dEpLLjF4uApsfPEAZY71qtSiA2B2APEr+1Yw==}
     engines: {node: 18 || 20 || >=22}
 
   minimatch@3.1.5:
@@ -5005,8 +5008,8 @@ packages:
   nth-check@2.1.1:
     resolution: {integrity: sha512-lqjrjmaOoAnWfMmBPL+XNnynZh2+swxiX3WUE0s4yEHI6m+AwrK2UZOimIRl3X/4QctVqS8AiZjFqyOGrMXb/w==}
 
-  num2fraction@1.2.2:
-    resolution: {integrity: sha512-Y1wZESM7VUThYY+4W+X4ySH2maqcA+p7UR+w8VWNWVAd6lwuXXWz/w/Cz43J/dI2I+PS6wD5N+bJUF+gjWvIqg==}
+  num2fraction@1.3.0:
+    resolution: {integrity: sha512-rclir6MW4M4Hinz/AnripNvEbz8HRxJ9Qkrtj0V8ivgEsfpxGWGbXDkfCT4IJLEWegu4pvO9qibWpeHkODkGqg==}
 
   number-is-nan@1.0.1:
     resolution: {integrity: sha512-4jbtZXNAsfZbAHiiqjLPBiCl16dES1zI4Hpzzxw61Tk+loF+sBDBKx1ICKKKwIqQ7M0mFn1TmkN7euSncWgHiQ==}
@@ -5281,6 +5284,7 @@ packages:
 
   path-dirname@1.0.2:
     resolution: {integrity: sha512-ALzNPpyNq9AqXMBjeymIjFDAkAFH06mHJH/cSBHAgU0s4vfpBn6b2nf8tiRLvagKD8RbTpq2FKTBg7cl9l3c7Q==}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
   path-exists@2.1.0:
     resolution: {integrity: sha512-yTltuKuhtNeFJKa1PiRzfLAU5182q1y4Eb4XCJ3PBqyzEDkAZRzBrKKBct682ls9reBVHf9udYLN5Nd+K1B9BQ==}
@@ -5477,8 +5481,8 @@ packages:
     resolution: {integrity: sha512-VvivMrbvd2nKkiG38qjULzlc+4Vx4wm/whI9pQD35YrARNnhxeiRktSOhSukRLFNlzg6Br/cJPet5J/u19r/mg==}
     engines: {node: '>= 0.6'}
 
-  probe-image-size@7.4.0:
-    resolution: {integrity: sha512-cdEprVtZxV+awMde9X+4jILBFYh4CARxVrQaMl4wY4YcPWbul9jntXrIW95NInBDyJwcVUP3U0T6yukN8rMBaQ==}
+  probe-image-size@7.5.0:
+    resolution: {integrity: sha512-ietdx4XPgmnzHRZOq1/KtcnsBkL4bRsBe+Szj5Tuq1/KPqDG42OspG1IhJb7vz6Z9pSzhp0J6UPnw6hujJTWoQ==}
 
   process-nextick-args@2.0.1:
     resolution: {integrity: sha512-3ouUOpQhtgrbOa17J7+uxOTpITYWaGP7/AhoR3+A+/1e9skrzelGi/dXzEYyvbxubEF6Wn2ypscTKiKJFFn1ag==}
@@ -5557,8 +5561,12 @@ packages:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
     engines: {node: '>=6'}
 
-  qs@6.16.1:
-    resolution: {integrity: sha512-5Px6J7rfHBAGUhNQ3es4YzcOdBBw0SDcVtThJml4RdnKw4tKs2epA0kPZ+K8X+WiHktT93RHVcQ/3ym5aTCgtg==}
+  qs@6.16.2:
+    resolution: {integrity: sha512-VYdnB5S7/0IeXzBacUtwNAaM6d7Y/PgYnNC7bJCI6meqA/OgnsQbZMtVW8Dt2D1PHgbHGtYmhSoEIgvt7xZ2ZA==}
+    engines: {node: '>=0.6'}
+
+  qs@6.17.0:
+    resolution: {integrity: sha512-5LK5BZ2XDHMvcUJaf0CQ5HL3aVgKbpklvByC7qLSxYkfE8COEEbJg5xCHWCTqzqi0Gs4Jn5Mv5v3R38W6edscA==}
     engines: {node: '>=0.6'}
 
   qs@6.5.5:
@@ -6056,8 +6064,8 @@ packages:
     resolution: {tarball: https://codeload.github.com/Bilup/scratch-render-fonts/tar.gz/d09642667e6b3ca7cf9420cd92350ce177694ad5}
     version: 1.0.0
 
-  scratch-render@https://codeload.github.com/Bilup/scratch-render/tar.gz/758a414248724dc3b21a78fe0f238a60cbe2ff9a:
-    resolution: {tarball: https://codeload.github.com/Bilup/scratch-render/tar.gz/758a414248724dc3b21a78fe0f238a60cbe2ff9a}
+  scratch-render@https://codeload.github.com/Bilup/scratch-render/tar.gz/25178960593a44dd2530959aa5daaf49adf7d710:
+    resolution: {tarball: https://codeload.github.com/Bilup/scratch-render/tar.gz/25178960593a44dd2530959aa5daaf49adf7d710}
     version: 0.1.0
 
   scratch-sb1-converter@0.2.7:
@@ -6069,8 +6077,8 @@ packages:
   scratch-translate-extension-languages@0.0.20191118205314:
     resolution: {integrity: sha512-r0lvpgQjPMjbhI2wROrgoXzBhCvWJdkbAqJMfl2CdNqrwBpUXqLvNNtI3VtNLPJAcp9VfxEylkU9lVZ0gvU46Q==}
 
-  scratch-vm@https://codeload.github.com/Bilup/scratch-vm/tar.gz/e5b1731dced450d106e21cf36fbeda4cc95d034a:
-    resolution: {tarball: https://codeload.github.com/Bilup/scratch-vm/tar.gz/e5b1731dced450d106e21cf36fbeda4cc95d034a}
+  scratch-vm@https://codeload.github.com/Bilup/scratch-vm/tar.gz/6fdb9e74853715a25147f9ae7abc825d001b3982:
+    resolution: {tarball: https://codeload.github.com/Bilup/scratch-vm/tar.gz/6fdb9e74853715a25147f9ae7abc825d001b3982}
     version: 2.1.46
     peerDependencies:
       '@bilup/scratch-svg-renderer': github:Bilup/scratch-svg-renderer#develop-builds
@@ -6319,8 +6327,8 @@ packages:
   sprintf-js@1.1.3:
     resolution: {integrity: sha512-Oo+0REFV59/rz3gfJNKQiBlwfHaSESl1pcGyABQsnnIfWOFt6JNj5gCog2U6MLZ//IGYD+nA8nI+mTShREReaA==}
 
-  sql.js@1.15.1:
-    resolution: {integrity: sha512-i0M/6s+lcl67Flm/1m8/AeVU5caDramlILXU/udUwpTQym2qKMSe2sJiXB5d5WXFB272aj4B2v1JbtQ93ID3Pg==}
+  sql.js@1.15.2:
+    resolution: {integrity: sha512-ZmMYFsZPZWDKIJUh3A5rdnpRV3hB/r7AijwAzSzLnfv/9CSx4obUmDtA8brAjWJWjGtUVh43nIEJ+6nl6HuOUg==}
 
   ssf@0.11.2:
     resolution: {integrity: sha512-+idbmIXoYET47hH+d7dfm2epdOMUDjqcB4648sTZ+t2JwoyBFL/insLfB/racrDmsKB3diwsDA696pZMieAC5g==}
@@ -6371,9 +6379,6 @@ packages:
 
   stream-http@2.8.3:
     resolution: {integrity: sha512-+TSkfINHDo4J+ZobQLWiMouQYB+UVYFttRA94FpEzzJ7ZdqcL4uUUQ7WkdkI4DSozGmgBUE/a47L+38PenXhUw==}
-
-  stream-parser@0.3.1:
-    resolution: {integrity: sha512-bJ/HgKq41nlKvlhccD5kaCr/P+Hu0wPNKPJOH7en+YrJu/9EgqUF+88w5Jb6KNcjOFMhfX4B2asfeAtIGuHObQ==}
 
   stream-shift@1.0.3:
     resolution: {integrity: sha512-76ORR0DO1o1hlKwTbi/DM3EXWGf3ZJYO8cXX5RJwnul2DEg2oyoZyjLNoQM8WsvZiFKCRfC1O0J7iCvie3RZmQ==}
@@ -6467,8 +6472,8 @@ packages:
   strnum@2.5.1:
     resolution: {integrity: sha512-UM4nTLWzQiDBseVxUGxN0wJzIk0UU89Qi7pKXz9qISo+lhviJikTuikBsK/oFRlpvYHvSdz0TVoLyQ+sEpYwxA==}
 
-  strtok3@10.6.2:
-    resolution: {integrity: sha512-BkdixFFUt7r7LsX6aGNPVyYMLjW+M1USLlKPNbZsrZEmLFh5tGqhdfckKo6xgsZIJqdDD0CZGkeCJJwNWQIKQA==}
+  strtok3@10.6.3:
+    resolution: {integrity: sha512-MD8mENgyXMr2mDaDfzP3RWYDSyYQxIIou7HhCiCJiBekrsoDtUG0id3vYnjDfY9ndOEbazFXe13Qw6u/1AB8ew==}
     engines: {node: '>=18'}
 
   style-loader@0.23.1:
@@ -7258,7 +7263,7 @@ snapshots:
     dependencies:
       '@babel/compat-data': 7.29.7
       '@babel/helper-validator-option': 7.29.7
-      browserslist: 4.29.4
+      browserslist: 4.29.5
       lru-cache: 5.1.1
       semver: 6.3.1
 
@@ -8023,6 +8028,8 @@ snapshots:
 
   '@humanwhocodes/object-schema@2.0.3': {}
 
+  '@isaacs/nonrecursive-glob-match@1.0.2': {}
+
   '@isomorphic-git/idb-keyval@3.3.2': {}
 
   '@isomorphic-git/lightning-fs@4.10.3':
@@ -8204,7 +8211,7 @@ snapshots:
 
   '@types/minimatch@6.0.0':
     dependencies:
-      minimatch: 10.2.6
+      minimatch: 11.0.2
 
   '@types/ms@2.1.0': {}
 
@@ -8688,10 +8695,10 @@ snapshots:
 
   autoprefixer@9.8.8:
     dependencies:
-      browserslist: 4.29.4
+      browserslist: 4.29.5
       caniuse-lite: 1.0.30001819
       normalize-range: 0.1.2
-      num2fraction: 1.2.2
+      num2fraction: 1.3.0
       picocolors: 0.2.1
       postcss: 7.0.39
       postcss-value-parser: 4.2.0
@@ -8704,9 +8711,9 @@ snapshots:
 
   aws4@1.13.2: {}
 
-  axios@1.20.0:
+  axios@1.21.0:
     dependencies:
-      follow-redirects: 1.16.1(debug@4.4.3(supports-color@6.1.0))
+      follow-redirects: 1.16.2(debug@4.4.3(supports-color@6.1.0))
       form-data: 4.0.6
       https-proxy-agent: 5.0.1
       proxy-from-env: 2.1.0
@@ -8927,7 +8934,7 @@ snapshots:
       mixin-deep: 1.3.2
       pascalcase: 0.1.1
 
-  baseline-browser-mapping@2.11.32: {}
+  baseline-browser-mapping@2.11.34: {}
 
   batch@0.6.1: {}
 
@@ -8974,7 +8981,7 @@ snapshots:
       http-errors: 2.0.1
       iconv-lite: 0.4.24
       on-finished: 2.4.2
-      qs: 6.16.1
+      qs: 6.16.2
       raw-body: 2.5.3
       type-is: 1.6.18
       unpipe: 1.0.0
@@ -9081,13 +9088,13 @@ snapshots:
     dependencies:
       pako: 1.0.11
 
-  browserslist@4.29.4:
+  browserslist@4.29.5:
     dependencies:
-      baseline-browser-mapping: 2.11.32
+      baseline-browser-mapping: 2.11.34
       caniuse-lite: 1.0.30001819
-      electron-to-chromium: 1.5.464
+      electron-to-chromium: 1.5.467
       node-releases: 2.0.60
-      update-browserslist-db: 1.3.4(browserslist@4.29.4)
+      update-browserslist-db: 1.3.4(browserslist@4.29.5)
 
   bser@2.1.2:
     dependencies:
@@ -9331,7 +9338,7 @@ snapshots:
   chromedriver@117.0.3:
     dependencies:
       '@testim/chrome-version': 1.1.4
-      axios: 1.20.0
+      axios: 1.21.0
       compare-versions: 6.1.1
       extract-zip: 2.0.1
       https-proxy-agent: 5.0.1
@@ -9523,7 +9530,7 @@ snapshots:
 
   core-js-compat@3.51.0:
     dependencies:
-      browserslist: 4.29.4
+      browserslist: 4.29.5
 
   core-js@2.6.12: {}
 
@@ -9958,7 +9965,7 @@ snapshots:
 
   ee-first@1.1.1: {}
 
-  electron-to-chromium@1.5.464: {}
+  electron-to-chromium@1.5.467: {}
 
   elliptic@6.6.1:
     dependencies:
@@ -10505,7 +10512,7 @@ snapshots:
       parseurl: 1.3.3
       path-to-regexp: 0.1.13
       proxy-addr: 2.0.8
-      qs: 6.16.1
+      qs: 6.16.2
       range-parser: 1.2.1
       safe-buffer: 5.2.1
       send: 0.19.2(supports-color@6.1.0)
@@ -10632,7 +10639,7 @@ snapshots:
   file-type@21.3.4:
     dependencies:
       '@tokenizer/inflate': 0.4.1
-      strtok3: 10.6.2
+      strtok3: 10.6.3
       token-types: 6.1.2
       uint8array-extras: 1.6.0
     transitivePeerDependencies:
@@ -10761,7 +10768,7 @@ snapshots:
       inherits: 2.0.4
       readable-stream: 2.3.8
 
-  follow-redirects@1.16.1(debug@4.4.3(supports-color@6.1.0)):
+  follow-redirects@1.16.2(debug@4.4.3(supports-color@6.1.0)):
     optionalDependencies:
       debug: 4.4.3(supports-color@6.1.0)
 
@@ -11283,7 +11290,7 @@ snapshots:
   http-proxy@1.18.1(debug@4.4.3(supports-color@6.1.0)):
     dependencies:
       eventemitter3: 4.0.7
-      follow-redirects: 1.16.1(debug@4.4.3(supports-color@6.1.0))
+      follow-redirects: 1.16.2(debug@4.4.3(supports-color@6.1.0))
       requires-port: 1.0.0
     transitivePeerDependencies:
       - debug
@@ -11714,7 +11721,7 @@ snapshots:
 
   isobject@3.0.1: {}
 
-  isomorphic-git@1.44.4:
+  isomorphic-git@1.44.7:
     dependencies:
       async-lock: 1.4.1
       clean-git-ref: 2.0.1
@@ -12150,7 +12157,7 @@ snapshots:
       seek-bzip: 2.0.0
       smol-toml: 1.9.1
       sprintf-js: 1.1.3
-      sql.js: 1.15.1
+      sql.js: 1.15.2
       turndown: 7.2.4
       typescript: 5.9.3
       yaml: 2.9.1
@@ -12212,7 +12219,7 @@ snapshots:
       make-dir: 5.1.0
       mime: 1.6.0
       needle: 3.5.0
-      probe-image-size: 7.4.0
+      probe-image-size: 7.5.0
       source-map: 0.6.1
     transitivePeerDependencies:
       - supports-color
@@ -12807,8 +12814,9 @@ snapshots:
 
   minimalistic-crypto-utils@1.0.1: {}
 
-  minimatch@10.2.6:
+  minimatch@11.0.2:
     dependencies:
+      '@isaacs/nonrecursive-glob-match': 1.0.2
       brace-expansion: 1.1.11
 
   minimatch@3.1.5:
@@ -13074,7 +13082,7 @@ snapshots:
     dependencies:
       boolbase: 1.0.0
 
-  num2fraction@1.2.2: {}
+  num2fraction@1.3.0: {}
 
   number-is-nan@1.0.1: {}
 
@@ -13577,11 +13585,10 @@ snapshots:
 
   private@0.1.8: {}
 
-  probe-image-size@7.4.0:
+  probe-image-size@7.5.0:
     dependencies:
       lodash.merge: 4.6.2
       needle: 2.9.1
-      stream-parser: 0.3.1
     transitivePeerDependencies:
       - supports-color
     optional: true
@@ -13661,7 +13668,12 @@ snapshots:
 
   punycode@2.3.1: {}
 
-  qs@6.16.1:
+  qs@6.16.2:
+    dependencies:
+      es-define-property: 1.0.1
+      side-channel: 1.1.1
+
+  qs@6.17.0:
     dependencies:
       es-define-property: 1.0.1
       side-channel: 1.1.1
@@ -14312,7 +14324,7 @@ snapshots:
     dependencies:
       base64-loader: 1.0.0
 
-  scratch-render@https://codeload.github.com/Bilup/scratch-render/tar.gz/758a414248724dc3b21a78fe0f238a60cbe2ff9a(webpack@4.47.0):
+  scratch-render@https://codeload.github.com/Bilup/scratch-render/tar.gz/25178960593a44dd2530959aa5daaf49adf7d710(webpack@4.47.0):
     dependencies:
       '@bilup/scratch-svg-renderer': https://codeload.github.com/Bilup/scratch-svg-renderer/tar.gz/cb48d4ab124c86cd355f500a4abdb41b3a560af8(scratch-render-fonts@https://codeload.github.com/Bilup/scratch-render-fonts/tar.gz/d09642667e6b3ca7cf9420cd92350ce177694ad5)
       '@turbowarp/ancient-hull.js': 0.2.13
@@ -14346,7 +14358,7 @@ snapshots:
 
   scratch-translate-extension-languages@0.0.20191118205314: {}
 
-  scratch-vm@https://codeload.github.com/Bilup/scratch-vm/tar.gz/e5b1731dced450d106e21cf36fbeda4cc95d034a(@bilup/scratch-svg-renderer@https://codeload.github.com/Bilup/scratch-svg-renderer/tar.gz/cb48d4ab124c86cd355f500a4abdb41b3a560af8(scratch-render-fonts@https://codeload.github.com/Bilup/scratch-render-fonts/tar.gz/d09642667e6b3ca7cf9420cd92350ce177694ad5))(eslint@8.55.0)(webpack@4.47.0):
+  scratch-vm@https://codeload.github.com/Bilup/scratch-vm/tar.gz/6fdb9e74853715a25147f9ae7abc825d001b3982(@bilup/scratch-svg-renderer@https://codeload.github.com/Bilup/scratch-svg-renderer/tar.gz/cb48d4ab124c86cd355f500a4abdb41b3a560af8(scratch-render-fonts@https://codeload.github.com/Bilup/scratch-render-fonts/tar.gz/d09642667e6b3ca7cf9420cd92350ce177694ad5))(eslint@8.55.0)(webpack@4.47.0):
     dependencies:
       '@bilup/scratch-svg-renderer': https://codeload.github.com/Bilup/scratch-svg-renderer/tar.gz/cb48d4ab124c86cd355f500a4abdb41b3a560af8(scratch-render-fonts@https://codeload.github.com/Bilup/scratch-render-fonts/tar.gz/d09642667e6b3ca7cf9420cd92350ce177694ad5)
       '@turbowarp/json': 0.1.2
@@ -14681,7 +14693,7 @@ snapshots:
 
   sprintf-js@1.1.3: {}
 
-  sql.js@1.15.1: {}
+  sql.js@1.15.2: {}
 
   ssf@0.11.2:
     dependencies:
@@ -14763,13 +14775,6 @@ snapshots:
       readable-stream: 2.3.8
       to-arraybuffer: 1.0.1
       xtend: 4.0.2
-
-  stream-parser@0.3.1:
-    dependencies:
-      debug: 2.6.9(supports-color@6.1.0)
-    transitivePeerDependencies:
-      - supports-color
-    optional: true
 
   stream-shift@1.0.3: {}
 
@@ -14888,7 +14893,7 @@ snapshots:
     dependencies:
       anynum: 1.0.1
 
-  strtok3@10.6.2:
+  strtok3@10.6.3:
     dependencies:
       '@tokenizer/token': 0.3.0
 
@@ -15276,9 +15281,9 @@ snapshots:
 
   upath@1.2.0: {}
 
-  update-browserslist-db@1.3.4(browserslist@4.29.4):
+  update-browserslist-db@1.3.4(browserslist@4.29.5):
     dependencies:
-      browserslist: 4.29.4
+      browserslist: 4.29.5
       escalade: 3.2.0
       picocolors: 1.1.1
 
@@ -15305,7 +15310,7 @@ snapshots:
   url@0.11.4:
     dependencies:
       punycode: 1.4.1
-      qs: 6.16.1
+      qs: 6.17.0
 
   use@3.1.1: {}
 
