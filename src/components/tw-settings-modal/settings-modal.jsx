@@ -1819,18 +1819,6 @@ class DesktopPage extends React.Component {
                     id="mw.settingsModal.desktop.cameraHelp"
                 />), 'videoinput')}
                 <BooleanSetting
-                    value={!!s.hardwareAcceleration}
-                    onChange={event => this.set('hardwareAcceleration', event.target.checked)}
-                    label={<FormattedMessage
-                        defaultMessage="Hardware acceleration (requires restart)"
-                        id="mw.settingsModal.desktop.hardwareAcceleration"
-                    />}
-                    help={<FormattedMessage
-                        defaultMessage="Uses the GPU to speed up rendering. Turn this off if you see graphical glitches or crashes on your system."
-                        id="mw.settingsModal.desktop.hardwareAccelerationHelp"
-                    />}
-                />
-                <BooleanSetting
                     value={!!s.backgroundThrottling}
                     onChange={event => this.set('backgroundThrottling', event.target.checked)}
                     label={<FormattedMessage
@@ -1878,20 +1866,6 @@ class DesktopPage extends React.Component {
                         id="mw.settingsModal.desktop.exitFullscreenOnEscapeHelp"
                     />}
                 />
-                {s.richPresenceAvailable ? (
-                    <BooleanSetting
-                        value={!!s.richPresence}
-                        onChange={event => this.set('richPresence', event.target.checked)}
-                        label={<FormattedMessage
-                            defaultMessage="Discord rich presence"
-                            id="mw.settingsModal.desktop.richPresence"
-                        />}
-                        help={<FormattedMessage
-                            defaultMessage="Shows that you are using Bilup on your Discord profile while the app is open."
-                            id="mw.settingsModal.desktop.richPresenceHelp"
-                        />}
-                    />
-                ) : null}
                 <BooleanSetting
                     value={!!s.cloudExtensions}
                     onChange={event => this.set('cloudExtensions', event.target.checked)}
