@@ -73,3 +73,78 @@
     transform-origin: top left;
     animation: bl-menu-enter 0.13s cubic-bezier(0.2, 0.9, 0.3, 1);
 }
+
+/* 5) Dropdown / SelectMenu 下拉菜单
+   src/community/components/ui/Dropdown.jsx
+   类名来自 CSS Module（Dropdown.module.css 的 menu / menu-left / menu-up），
+   用组件在菜单节点上挂的 data-mw-dropdown 钩子匹配，再靠 data-flipped 区分方向：
+   向下展开从顶部缩入，向上翻转从底部缩入；关闭时组件先置 data-closing、
+   播完退场动画（EXIT_MS=130ms）再卸载。 */
+@keyframes bl-dropdown-enter-down {
+    from {
+        opacity: 0;
+        transform: scale(0.96) translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+@keyframes bl-dropdown-enter-up {
+    from {
+        opacity: 0;
+        transform: scale(0.96) translateY(4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+:global(html:not(.no-window-animation)) :global([data-mw-dropdown]) {
+    transform-origin: top center;
+    animation: bl-dropdown-enter-down 0.13s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+:global(html:not(.no-window-animation)) :global([data-mw-dropdown][data-flipped="true"]) {
+    transform-origin: bottom center;
+    animation-name: bl-dropdown-enter-up;
+}
+
+/* 退场：组件先置 data-closing 播完动画再卸载（EXIT_MS 与下面对齐），
+   fill-mode forwards 保证动画结束到卸载之间保持隐藏。
+   缓动用 ease-in（去程的逆），比 ease-out 收得干脆。 */
+@keyframes bl-dropdown-exit-down {
+    from {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: scale(0.96) translateY(-4px);
+    }
+}
+
+@keyframes bl-dropdown-exit-up {
+    from {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: scale(0.96) translateY(4px);
+    }
+}
+
+:global(html:not(.no-window-animation)) :global([data-mw-dropdown][data-closing="true"]) {
+    animation: bl-dropdown-exit-down 0.12s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+:global(html:not(.no-window-animation)) :global([data-mw-dropdown][data-flipped="true"][data-closing="true"]) {
+    animation-name: bl-dropdown-exit-up;
+}

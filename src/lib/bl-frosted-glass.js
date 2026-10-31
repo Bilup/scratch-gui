@@ -1336,7 +1336,7 @@ const TARGETS = [
                    / .commitTypeSelect / .input / .inputSmall / .select
          shortcut-manager .keycap / .hintKey / .toolbar
          restore-point-modal .interval-selector
-         block-count .sa-complexity-score
+         project-analysis（原 block-count）.score-card / .metric-tile / .recommendation
          sprite-folders .sa-toolbar-button / .sa-file-icon
        注意 keycap 是"按键帽"—— 它是**视觉隐喻**（表示键盘按键），
        透明化后仍靠 border 保持可辨，比实色更贴合玻璃主题。 */
@@ -1351,7 +1351,9 @@ const TARGETS = [
         ${insideDescendant}[class*="shortcut-manager_hintKey"],
         ${insideDescendant}[class*="shortcut-manager_toolbar"],
         ${insideDescendant}[class*="restore-point-modal_interval-selector"],
-        ${insideDescendant}[class*="block-count_sa-complexity-score"],
+        ${insideDescendant}[class*="project-analysis_score-card"],
+        ${insideDescendant}[class*="project-analysis_metric-tile"],
+        ${insideDescendant}[class*="project-analysis_recommendation"],
         ${insideDescendant}[class*="sprite-folders_sa-toolbar-button"],
         ${insideDescendant}[class*="sprite-folders_sa-file-icon"] {
             background-color: ${cardGlass} !important;
