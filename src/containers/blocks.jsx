@@ -1210,7 +1210,8 @@ class Blocks extends React.Component {
                 Object.keys(target.blocks._blocks).length : 0;
             const key = `${target.id}|${target.isStage}|${this.props.theme.id}|` +
                 `${costumeName}|${backdropName}|${soundName}|${assetName}|` +
-                `${blocksCount}|${runtime._blockInfo.length}|${getVanillaPalette()}`;
+                `${blocksCount}|${runtime._blockInfo.length}|${this.props.locale}|` +
+                `${getVanillaPalette()}`;
             if (this._toolboxXMLCache && this._toolboxXMLCache.key === key) {
                 return this._toolboxXMLCache.xml;
             }
