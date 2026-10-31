@@ -69,7 +69,8 @@ const ModalSidebarItem = ({
     selected,
     statusDot,
     title,
-    trailingAction
+    trailingAction,
+    value
 }) => {
     const content = (
         <React.Fragment>
@@ -100,6 +101,7 @@ const ModalSidebarItem = ({
                     onClick={onClick}
                     title={title || label}
                     type="button"
+                    value={value}
                 >
                     {content}
                 </button>
@@ -113,6 +115,7 @@ const ModalSidebarItem = ({
             onClick={onClick}
             title={title || label}
             type="button"
+            value={value}
         >
             {content}
         </button>
@@ -129,7 +132,8 @@ ModalSidebarItem.propTypes = {
     selected: PropTypes.bool,
     statusDot: PropTypes.node,
     title: PropTypes.string,
-    trailingAction: PropTypes.node
+    trailingAction: PropTypes.node,
+    value: PropTypes.string
 };
 
 const ModalSidebarGroup = ({children, className}) => (

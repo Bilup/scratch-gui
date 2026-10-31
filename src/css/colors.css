@@ -9,6 +9,8 @@ $ui-modal-background: var(--ui-modal-background);
 $ui-modal-foreground: var(--ui-modal-foreground);
 $ui-modal-header-background: var(--ui-modal-header-background);
 $ui-modal-header-foreground: var(--ui-modal-header-foreground);
+/* 弹窗内的内凹小块（卡片/磁贴/空状态）底色：在当前主题的弹窗底色上叠一点前景色 */
+$ui-modal-inset: color-mix(in srgb, var(--text-primary) 6%, var(--ui-modal-background));
 
 $ui-white: var(--ui-white);
 $accent-foreground: var(--accent-foreground);

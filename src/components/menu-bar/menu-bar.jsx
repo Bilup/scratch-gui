@@ -148,7 +148,7 @@ import {
 } from '../../lib/mw/workspace-bookmarks.js';
 
 import styles from './menu-bar.css';
-import '!!style-loader!css-loader!./block-count.css';
+import blockCountStyles from './block-count-window.css';
 
 // import helpIcon from '../../lib/assets/icon--tutorials.svg';
 // import mystuffIcon from './icon--mystuff.png';
@@ -2269,10 +2269,13 @@ class MenuBar extends React.Component {
                                                 />
                                             </MenuItem>
                                         )}
-                                        {window.__bilupVariableManagerToggle && (
+                                        {(window.__mistwarpVariableManagerToggle ||
+                                            window.__bilupVariableManagerToggle) && (
                                             <MenuItem
                                                 onClick={() => {
-                                                    window.__bilupVariableManagerToggle();
+                                                    const toggle = window.__mistwarpVariableManagerToggle ||
+                                                        window.__bilupVariableManagerToggle;
+                                                    toggle();
                                                     this.props.onRequestCloseTools();
                                                 }}
                                             >
@@ -2408,9 +2411,10 @@ class MenuBar extends React.Component {
                     )}
                     {!this.props.isPlayerOnly && (
                         <button
-                            className="sa-block-count-display"
+                            className={blockCountStyles['sa-block-count-display']}
                             data-mw-item="block-count"
                             ref={this.blockCountRef}
+                            type="button"
                         />
                     )}
 
