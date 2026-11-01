@@ -41,6 +41,11 @@ const STRIP_DEFAULT_HEIGHT = STRIP_MIN_HEIGHT;
 const MIN_WORKSPACE_HEIGHT = 240;
 const ALERT_DURATION = 3000;
 const CHANGE_REFRESH_DELAY = 100;
+// 「设置 → 开启窗口动画」会给 <html> 加/删 no-window-animation 类，
+// 背包展开/收起动画跟随这个开关（见 src/components/gui/gui.jsx）。
+const BACKPACK_ANIMATION_DURATION = 300;
+const BACKPACK_ANIMATION_EASING = 'cubic-bezier(0.22, 1, 0.36, 1)';
+const COLLAPSED_HEADER_METRICS = {padding: 0, minHeight: 0, borderBottom: 0};
 
 const messages = defineMessages({
     scriptAutoName: {
@@ -128,6 +133,7 @@ class Backpack extends React.Component {
             'handleGlobalPointerMove',
             'handleSaveRequest',
             'getAddToBackpackLabel',
+            'setContainerRef',
             'setPanelRef',
             'setHandleRef',
             'handleMore',
@@ -159,6 +165,12 @@ class Backpack extends React.Component {
         this.unregisterSaver = registerBackpackSaver(this.handleSaveRequest);
         this.unmounted = false;
 
+        this.containerRef = null;
+        this.headerAnimation = null;
+        this.heightAnimationTimer = null;
+        this.collapsedHeight = null;
+        this.desiredExpanded = false;
+
         this.state = {
             blockDragActive: false,
             blockDragOutsideWorkspace: false,
@@ -170,6 +182,7 @@ class Backpack extends React.Component {
             loading: false,
             refreshing: false,
             expanded: false,
+            closing: false,
             contents: [],
             height: getBackpackHeight(STRIP_MIN_HEIGHT) || STRIP_DEFAULT_HEIGHT,
             searchQuery: '',
@@ -241,12 +254,19 @@ class Backpack extends React.Component {
         clearTimeout(this.shortcutTimer);
         clearTimeout(this.pendingBlockDropTimer);
         clearTimeout(this.alertTimer);
+        this.stopHeightAnimation();
+        this.stopHeaderAnimation();
+        this.clearHeightStyles();
+        this.setContainerRef(null);
         this.setPanelRef(null);
         this.setHandleRef(null);
     }
 
     setDropZone (name, element) {
         this.dropZones[name] = element;
+    }
+    setContainerRef (element) {
+        this.containerRef = element;
     }
     setPanelRef (element) {
         this.setDropZone('panel', element);
@@ -305,25 +325,196 @@ class Backpack extends React.Component {
             byWindow;
         return Math.max(STRIP_MIN_HEIGHT, Math.min(byWindow, byWorkspace));
     }
-    setExpanded (expanded) {
-        if (expanded === this.state.expanded) return;
-        const nextState = {expanded, renamingId: null};
-        if (expanded) {
-            const workspaceHeight = this.getWorkspaceHeight();
-            if (workspaceHeight) {
-                nextState.height = Math.min(this.state.height, this.getMaxHeight(workspaceHeight));
-            }
+    isAnimationEnabled () {
+        return !document.documentElement.classList.contains('no-window-animation');
+    }
+    getHeaderElement () {
+        return this.containerRef ? this.containerRef.querySelector('[data-backpack-header]') : null;
+    }
+    readHeaderMetrics (header) {
+        if (!header) return null;
+        const computed = window.getComputedStyle(header);
+        return {
+            padding: parseFloat(computed.paddingTop) || 0,
+            minHeight: parseFloat(computed.minHeight) || 0,
+            borderBottom: parseFloat(computed.borderBottomWidth) || 0
+        };
+    }
+    stopHeaderAnimation () {
+        if (this.headerAnimation) {
+            this.headerAnimation.cancel();
+            this.headerAnimation = null;
         }
-        this.setState(nextState, this.emitResize);
-        if (!expanded) return;
+    }
+    startHeaderAnimation (from, to) {
+        const header = this.getHeaderElement();
+        if (!header || !from || !to || typeof header.animate !== 'function') return;
+        const animation = header.animate([
+            {
+                paddingTop: `${from.padding}px`,
+                paddingBottom: `${from.padding}px`,
+                minHeight: `${from.minHeight}px`,
+                borderBottomWidth: `${from.borderBottom}px`
+            },
+            {
+                paddingTop: `${to.padding}px`,
+                paddingBottom: `${to.padding}px`,
+                minHeight: `${to.minHeight}px`,
+                borderBottomWidth: `${to.borderBottom}px`
+            }
+        ], {
+            duration: BACKPACK_ANIMATION_DURATION,
+            easing: BACKPACK_ANIMATION_EASING
+        });
+        this.headerAnimation = animation;
+        const clear = () => {
+            if (this.headerAnimation === animation) this.headerAnimation = null;
+        };
+        animation.onfinish = clear;
+        animation.oncancel = clear;
+    }
+    expandHeaderAnimation (from) {
+        this.stopHeaderAnimation();
+        this.startHeaderAnimation(from, this.readHeaderMetrics(this.getHeaderElement()));
+    }
+    stopHeightAnimation () {
+        if (this.heightAnimationTimer) {
+            clearTimeout(this.heightAnimationTimer);
+            this.heightAnimationTimer = null;
+        }
+    }
+    clearHeightStyles () {
+        const container = this.containerRef;
+        if (!container) return;
+        container.style.transition = '';
+        container.style.overflow = '';
+        container.style.height = '';
+    }
+    animateHeight (from, to, onDone) {
+        const container = this.containerRef;
+        this.stopHeightAnimation();
+        if (!container) {
+            if (onDone) onDone();
+            return;
+        }
+        container.style.transition = 'none';
+        container.style.overflow = 'hidden';
+        container.style.height = `${from}px`;
+        // 先把起始高度刷进布局，再打开 transition，避免从 auto 高度直接跳变。
+        container.getBoundingClientRect();
+        container.style.transition =
+            `height ${BACKPACK_ANIMATION_DURATION}ms ${BACKPACK_ANIMATION_EASING}`;
+        container.style.height = `${to}px`;
+
+        // 积木区由 blocks.jsx 的 ResizeObserver 跟随 CSS 过渡自动重排，
+        // 动画期间不要再逐帧派发 window resize，否则会明显卡顿。
+        this.heightAnimationTimer = setTimeout(() => {
+            this.stopHeightAnimation();
+            if (onDone) onDone();
+        }, BACKPACK_ANIMATION_DURATION + 30);
+    }
+    getCollapsedHeight () {
+        if (this.collapsedHeight) return this.collapsedHeight;
+        const metrics = this.readHeaderMetrics(this.getHeaderElement());
+        return metrics ? Math.max(0, metrics.minHeight - (metrics.padding * 2)) : 0;
+    }
+    openBackpack () {
+        const workspaceHeight = this.getWorkspaceHeight();
+        const heightPatch = workspaceHeight ?
+            {height: Math.min(this.state.height, this.getMaxHeight(workspaceHeight))} : null;
+
+        if (this.state.expanded) {
+            // 收起动画还没结束时又点了展开：先恢复完整 UI，再把高度撑回去。
+            const container = this.containerRef;
+            const startHeight = container ? container.getBoundingClientRect().height : 0;
+            this.stopHeightAnimation();
+            this.setState({closing: false, renamingId: null}, () => {
+                if (this.unmounted) return;
+                if (!this.isAnimationEnabled() || !this.containerRef || startHeight <= 0) {
+                    this.clearHeightStyles();
+                    this.emitResize();
+                    return;
+                }
+                this.clearHeightStyles();
+                const fullHeight = this.containerRef.getBoundingClientRect().height;
+                this.animateHeight(startHeight, fullHeight, () => {
+                    this.clearHeightStyles();
+                    this.emitResize();
+                });
+            });
+        } else {
+            const container = this.containerRef;
+            const startHeight = container ? container.getBoundingClientRect().height : 0;
+            if (startHeight > 0) this.collapsedHeight = startHeight;
+            this.stopHeightAnimation();
+            this.clearHeightStyles();
+            this.setState(Object.assign({expanded: true, renamingId: null}, heightPatch), () => {
+                if (this.unmounted) return;
+                if (!this.isAnimationEnabled() || !this.containerRef || startHeight <= 0) {
+                    this.emitResize();
+                    return;
+                }
+                const fullHeight = this.containerRef.getBoundingClientRect().height;
+                this.expandHeaderAnimation(COLLAPSED_HEADER_METRICS);
+                this.animateHeight(startHeight, fullHeight, () => {
+                    this.clearHeightStyles();
+                    this.emitResize();
+                });
+            });
+        }
+
         if (this.hasLoaded) {
             this.refreshContents();
         } else {
             this.getContents();
         }
     }
+    closeBackpack () {
+        const container = this.containerRef;
+        if (!this.isAnimationEnabled() || !container) {
+            this.stopHeightAnimation();
+            this.stopHeaderAnimation();
+            this.clearHeightStyles();
+            this.setState({expanded: false, closing: false, renamingId: null}, this.emitResize);
+            return;
+        }
+        const startHeight = container.getBoundingClientRect().height;
+        if (startHeight <= 0) {
+            this.stopHeightAnimation();
+            this.clearHeightStyles();
+            this.setState({expanded: false, closing: false, renamingId: null}, this.emitResize);
+            return;
+        }
+        const endHeight = Math.min(startHeight, this.getCollapsedHeight());
+        this.stopHeightAnimation();
+        this.stopHeaderAnimation();
+        // 先冻结当前高度，再把 UI 直接切回打开前的折叠样式（按钮、列表立即消失），
+        // 最后单独把剩下的高度缩回去。
+        container.style.transition = 'none';
+        container.style.overflow = 'hidden';
+        container.style.height = `${startHeight}px`;
+        container.getBoundingClientRect();
+        this.setState({closing: true}, () => {
+            if (this.unmounted) return;
+            this.animateHeight(startHeight, endHeight, () => {
+                this.setState({expanded: false, closing: false, renamingId: null}, () => {
+                    this.clearHeightStyles();
+                    this.emitResize();
+                });
+            });
+        });
+    }
+    setExpanded (expanded) {
+        if (expanded === this.desiredExpanded) return;
+        this.desiredExpanded = expanded;
+        if (expanded) {
+            this.openBackpack();
+        } else {
+            this.closeBackpack();
+        }
+    }
     handleToggle () {
-        this.setExpanded(!this.state.expanded);
+        this.setExpanded(!this.desiredExpanded);
     }
     handleFilterChange (filter) {
         this.setState({filter});
@@ -787,11 +978,12 @@ class Backpack extends React.Component {
                 busyId={this.state.busyId}
                 canRename={this.canRename()}
                 canToggle={Boolean(this.props.host)}
+                containerRef={this.setContainerRef}
                 contents={this.getFilteredContents()}
                 dragActive={this.isBlockDragActive()}
                 dragOver={dragOver}
                 error={this.state.error}
-                expanded={this.state.expanded}
+                expanded={this.state.expanded && !this.state.closing}
                 filter={this.state.filter}
                 handleRef={this.setHandleRef}
                 height={this.state.height}
