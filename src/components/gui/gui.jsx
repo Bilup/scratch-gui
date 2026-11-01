@@ -49,6 +49,7 @@ import {closeRoturLoginModal} from '../../reducers/modals.js';
 import SimpleDialog from '../../containers/simple-dialog.jsx';
 import InlineMessages from '../../containers/inline-messages.jsx';
 import TWVariableManager from '../../containers/tw-variable-manager.jsx';
+import TWProjectAssetsManager from '../../containers/bl-project-assets-manager.jsx';
 import AddonHooks from '../../addons/hooks.js';
 import NativeFindBar from '../find-bar/find-bar.jsx';
 import NativeSpotlight from '../../containers/spotlight.jsx';
@@ -987,6 +988,7 @@ const GUIComponent = props => {
                 挂到 GUI 根上就与菜单栏布局无关，且全局只有一份。 */}
             <InlineMessages />
             <TWVariableManager />
+            <TWProjectAssetsManager />
             <TWSecurityManager securityManager={securityManager} />
             <TWRestorePointManager />
             <MWExtensionManagerModal />

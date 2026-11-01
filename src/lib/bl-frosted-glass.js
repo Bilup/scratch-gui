@@ -324,6 +324,19 @@ const TARGETS = [
             background: transparent !important;
         }
 
+/* [D-1] 项目素材管理器 — 素材树是窗口里面积最大的一块实底（$ui-primary），
+       改为与窗口内容同源的淡玻璃；行 hover 用反极性状态色，
+       避免深色玻璃上黑叠黑、看不出悬停反馈。 */
+        [class*="project-assets-manager_tree"] {
+            background-color: ${glassTint} !important;
+            background: ${glassTint} !important;
+        }
+        [class*="project-assets-manager_folder-row"]:hover,
+        [class*="project-assets-manager_file-row"]:hover {
+            background-color: ${stateTint(0.09)} !important;
+            background: ${stateTint(0.09)} !important;
+        }
+
 /* [E] 大面积装饰色块 — 这类不是窗口底层，而是内容里的一块彩色底板
        （browser-modal 的空状态插画区：300px 高、铺 $control-primary 品牌橙 #FFAB19，
        上面压一张 <img> 插画）。

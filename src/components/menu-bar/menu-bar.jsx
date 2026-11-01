@@ -168,6 +168,7 @@ import {
     Save, ArchiveRestore, UserPen, Cloud, PackagePlus, Puzzle,
     Bookmark, GitBranch, FileCog, Bug, Database, Undo, Redo, Handshake, Wrench, Send,
     Download, AppWindow, Computer, Shield, Code, Code2, TerminalSquare, ChartColumn, ListTodo,
+    FolderOpen,
     Blocks as BlocksIcon, Menu as MenuIcon, Globe, ExternalLink, Pause, Play, HelpCircle
 } from 'lucide-react';
 
@@ -2252,7 +2253,8 @@ class MenuBar extends React.Component {
                                         />
                                     </MenuItem>
                                 </MenuSection>
-                                {window.__bilupDebuggerToggle || window.__bilupVariableManagerToggle ? (
+                                {window.__bilupDebuggerToggle || window.__bilupVariableManagerToggle ||
+                                    window.__bilupProjectAssetsManagerToggle ? (
                                     <MenuSection>
                                         {window.__bilupDebuggerToggle && (
                                             <MenuItem
@@ -2284,6 +2286,21 @@ class MenuBar extends React.Component {
                                                     defaultMessage="Variable Manager"
                                                     description="Menu bar item to toggle the variable manager"
                                                     id="tw.menuBar.variableManager"
+                                                />
+                                            </MenuItem>
+                                        )}
+                                        {window.__bilupProjectAssetsManagerToggle && (
+                                            <MenuItem
+                                                onClick={() => {
+                                                    window.__bilupProjectAssetsManagerToggle();
+                                                    this.props.onRequestCloseTools();
+                                                }}
+                                            >
+                                                <FolderOpen />
+                                                <FormattedMessage
+                                                    defaultMessage="Project Assets Manager"
+                                                    description="Menu bar item to toggle the project assets manager"
+                                                    id="tw.menuBar.projectAssets"
                                                 />
                                             </MenuItem>
                                         )}

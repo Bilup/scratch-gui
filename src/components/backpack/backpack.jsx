@@ -49,6 +49,7 @@ const Backpack = ({
     busyId,
     canRename,
     canToggle,
+    containerRef,
     contents,
     dragActive,
     dragOver,
@@ -87,6 +88,7 @@ const Backpack = ({
             })}
             // 「隐藏书包」外观设置靠这个标记隐藏组件，见 lib/mw-appearance-settings.js
             data-backpack-container
+            ref={containerRef}
         >
             {expanded ? (
                 <div
@@ -103,6 +105,7 @@ const Backpack = ({
                     [styles.dragOver]: collapsedDropZone && dragOver
                 })}
                 data-backpack-drop-zone="true"
+                data-backpack-header="true"
                 ref={expanded ? null : handleRef}
             >
                 <button
@@ -209,6 +212,7 @@ Backpack.propTypes = {
     busyId: PropTypes.string,
     canRename: PropTypes.bool,
     canToggle: PropTypes.bool,
+    containerRef: PropTypes.func,
     contents: PropTypes.arrayOf(PropTypes.shape({
         id: PropTypes.string,
         thumbnailUrl: PropTypes.string,
@@ -246,6 +250,7 @@ Backpack.propTypes = {
 Backpack.defaultProps = {
     canRename: false,
     canToggle: true,
+    containerRef: null,
     contents: [],
     dragActive: false,
     dragOver: false,
