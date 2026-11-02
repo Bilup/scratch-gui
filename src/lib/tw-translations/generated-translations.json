@@ -1334,6 +1334,11 @@
     "mw.projectAssets.refresh": "刷新",
     "mw.projectAssets.empty": "当前作品没有可导出的素材。",
     "mw.projectAssets.busy": "正在准备下载…",
+    "mw.projectAssets.fonts": "字体",
+    "mw.projectAssets.importCostumes": "向 {name} 导入造型",
+    "mw.projectAssets.importSounds": "向 {name} 导入声音",
+    "mw.projectAssets.importing": "正在导入素材…",
+    "mw.projectAssets.importFailed": "导入素材失败：{message}",
     "mw.projectAssets.error": "读取素材失败：{message}",
     "tw.menuBar.debugger": "调试器",
     "tw.menuBar.showTutorial": "显示教程",
@@ -1938,6 +1943,11 @@
     "mw.projectAssets.refresh": "Refresh",
     "mw.projectAssets.empty": "This project has no assets to export.",
     "mw.projectAssets.busy": "Preparing download…",
+    "mw.projectAssets.fonts": "Fonts",
+    "mw.projectAssets.importCostumes": "Import costumes into {name}",
+    "mw.projectAssets.importSounds": "Import sounds into {name}",
+    "mw.projectAssets.importing": "Importing assets…",
+    "mw.projectAssets.importFailed": "Failed to import assets: {message}",
     "mw.projectAssets.error": "Failed to read assets: {message}"
   }
 }

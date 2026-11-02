@@ -1,6 +1,6 @@
 import JSZip from '@turbowarp/jszip';
 import PropTypes from 'prop-types';
-import React, {useCallback, useMemo, useState} from 'react';
+import React, {useCallback, useMemo, useRef, useState} from 'react';
 import {defineMessages, injectIntl, intlShape} from 'react-intl';
 import {
     ChevronDown,
@@ -13,10 +13,13 @@ import {
     Image,
     Music,
     RefreshCw,
-    Trash2
+    Trash2,
+    Type,
+    Upload
 } from 'lucide-react';
 
 import Modal from '../../containers/windowed-modal.jsx';
+import {costumeUpload, soundUpload} from '../../lib/file-uploader.js';
 import downloadBlob from '../../lib/utils/download-blob.js';
 
 import styles from './project-assets-manager.css';
@@ -101,6 +104,26 @@ const messages = defineMessages({
         id: 'mw.projectAssets.busy',
         defaultMessage: 'Preparing download…'
     },
+    fonts: {
+        id: 'mw.projectAssets.fonts',
+        defaultMessage: 'Fonts'
+    },
+    importCostumes: {
+        id: 'mw.projectAssets.importCostumes',
+        defaultMessage: 'Import costumes into {name}'
+    },
+    importSounds: {
+        id: 'mw.projectAssets.importSounds',
+        defaultMessage: 'Import sounds into {name}'
+    },
+    importing: {
+        id: 'mw.projectAssets.importing',
+        defaultMessage: 'Importing assets…'
+    },
+    importFailed: {
+        id: 'mw.projectAssets.importFailed',
+        defaultMessage: 'Failed to import assets: {message}'
+    },
     error: {
         id: 'mw.projectAssets.error',
         defaultMessage: 'Failed to read assets: {message}'
@@ -118,7 +141,11 @@ const MIME_TYPES = {
     wav: 'audio/wav',
     mp3: 'audio/mpeg',
     ogg: 'audio/ogg',
-    js: 'text/javascript'
+    js: 'text/javascript',
+    ttf: 'font/ttf',
+    otf: 'font/otf',
+    woff: 'font/woff',
+    woff2: 'font/woff2'
 };
 
 // 文件名里不能出现的字符（Windows / macOS / Linux 取并集）+ 控制字符 + 结尾的点和空格
@@ -148,6 +175,15 @@ const toUniqueFileName = (fileName, used) => {
     used.add(unique);
     return unique;
 };
+
+const readFileAsArrayBuffer = file => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error || new Error('Failed to read file'));
+    reader.readAsArrayBuffer(file);
+});
+
+const stripFileExtension = name => String(name).replace(/\.[^.]+$/, '') || 'asset';
 
 // 自定义扩展可能是 data URL 或远程地址，只在真正下载时才读取源码
 const loadExtensionSource = async url => {
@@ -205,6 +241,7 @@ const buildAssetTree = (vm, projectTitle, intl) => {
                 targetId: target.id,
                 category,
                 item,
+                index,
                 deletable: true,
                 getData: isSound ?
                     () => asset.data :
@@ -215,6 +252,9 @@ const buildAssetTree = (vm, projectTitle, intl) => {
             id: `${category}-target:${target.id}`,
             kind: 'folder',
             name: target.isStage ? stageLabel : toSafeFileName(target.getName()),
+            targetId: target.id,
+            category,
+            importable: true,
             children
         };
     };
@@ -255,11 +295,40 @@ const buildAssetTree = (vm, projectTitle, intl) => {
         children: extensionChildren
     };
 
+    const fontsFolder = (() => {
+        const fontManager = vm && vm.runtime && vm.runtime.fontManager;
+        if (!fontManager || typeof fontManager.getFonts !== 'function') return null;
+        const customFonts = fontManager.getFonts().filter(font => !font.system && font.data);
+        if (!customFonts.length) return null;
+        const usedFontNames = new Set();
+        return {
+            id: 'fonts',
+            kind: 'folder',
+            name: intl.formatMessage(messages.fonts),
+            children: customFonts.map((font, index) => {
+                const format = String(font.format || 'ttf').toLowerCase();
+                return {
+                    id: `fonts:${index}`,
+                    kind: 'file',
+                    name: toUniqueFileName(
+                        `${toSafeFileName(font.name || 'font')}.${format}`,
+                        usedFontNames
+                    ),
+                    fileType: 'font',
+                    mime: MIME_TYPES[format] || 'application/octet-stream',
+                    getData: () => font.data
+                };
+            })
+        };
+    })();
+
     return {
         id: 'root',
         kind: 'folder',
         name: rootName,
-        children: [costumesFolder, soundsFolder, extensionsFolder]
+        children: fontsFolder ?
+            [costumesFolder, soundsFolder, extensionsFolder, fontsFolder] :
+            [costumesFolder, soundsFolder, extensionsFolder]
     };
 };
 
@@ -280,17 +349,34 @@ const countFiles = node => (node.kind === 'file' ? 1 : node.children.reduce(
 const FileTypeIcon = ({fileType}) => {
     if (fileType === 'image') return <Image className={styles.fileIcon} size={16} />;
     if (fileType === 'audio') return <Music className={styles.fileIcon} size={16} />;
+    if (fileType === 'font') return <Type className={styles.fileIcon} size={16} />;
     if (fileType === 'code') return <FileCode className={styles.fileIcon} size={16} />;
     return <FileQuestion className={styles.fileIcon} size={16} />;
 };
 
 const AssetNode = props => {
-    const {node, expanded, selected, onToggleExpand, onToggleFolder, onToggleFile} = props;
+    const {
+        node, expanded, selected, busy, draggingId, dragOverId,
+        onToggleExpand, onToggleFolder, onToggleFile, onImport,
+        onDragStartFile, onDragEndFile, onDragOverFile, onDropFile
+    } = props;
     const isFolder = node.kind === 'folder';
 
     if (!isFolder) {
+        const rowClassName = [
+            styles.fileRow,
+            node.id === draggingId ? styles.dragging : '',
+            node.id === dragOverId ? styles.dragOver : ''
+        ].filter(Boolean).join(' ');
         return (
-            <div className={styles.fileRow}>
+            <div
+                className={rowClassName}
+                draggable={Boolean(node.deletable)}
+                onDragStart={node.deletable ? event => onDragStartFile(node, event) : null}
+                onDragEnd={node.deletable ? onDragEndFile : null}
+                onDragOver={node.deletable ? event => onDragOverFile(node, event) : null}
+                onDrop={node.deletable ? event => onDropFile(node, event) : null}
+            >
                 <input
                     type="checkbox"
                     className={styles.checkbox}
@@ -342,6 +428,26 @@ const AssetNode = props => {
                 <span className={styles.fileCount}>
                     {props.intl.formatMessage(messages.fileCount, {count: fileIds.length})}
                 </span>
+                {node.importable && (
+                    <button
+                        type="button"
+                        className={styles.rowAction}
+                        title={props.intl.formatMessage(
+                            node.category === 'sounds' ? messages.importSounds : messages.importCostumes,
+                            {name: node.name}
+                        )}
+                        aria-label={props.intl.formatMessage(
+                            node.category === 'sounds' ? messages.importSounds : messages.importCostumes,
+                            {name: node.name}
+                        )}
+                        disabled={busy}
+                        onClick={() => onImport(node)}
+                    >
+                        <Upload
+                            size={14}
+                        />
+                    </button>
+                )}
             </div>
             {isOpen && (
                 <div className={styles.folderChildren}>
@@ -364,23 +470,48 @@ AssetNode.propTypes = {
         kind: PropTypes.oneOf(['folder', 'file']).isRequired,
         name: PropTypes.string.isRequired,
         fileType: PropTypes.string,
+        category: PropTypes.string,
+        deletable: PropTypes.bool,
+        importable: PropTypes.bool,
         children: PropTypes.array
     }).isRequired,
+    busy: PropTypes.bool,
+    draggingId: PropTypes.string,
+    dragOverId: PropTypes.string,
     expanded: PropTypes.instanceOf(Set).isRequired,
     selected: PropTypes.instanceOf(Set).isRequired,
     intl: intlShape,
     onToggleExpand: PropTypes.func.isRequired,
     onToggleFolder: PropTypes.func.isRequired,
-    onToggleFile: PropTypes.func.isRequired
+    onToggleFile: PropTypes.func.isRequired,
+    onImport: PropTypes.func.isRequired,
+    onDragStartFile: PropTypes.func.isRequired,
+    onDragEndFile: PropTypes.func.isRequired,
+    onDragOverFile: PropTypes.func.isRequired,
+    onDropFile: PropTypes.func.isRequired
+};
+
+AssetNode.defaultProps = {
+    busy: false,
+    draggingId: null,
+    dragOverId: null
 };
 
 const ProjectAssetsManager = props => {
     const {intl, projectTitle, vm} = props;
     const [tree, setTree] = useState(() => buildAssetTree(vm, projectTitle, intl));
-    const [expanded, setExpanded] = useState(() => new Set(['root', 'costumes', 'sounds', 'extensions']));
+    const [expanded, setExpanded] = useState(() => new Set([
+        'root', 'costumes', 'sounds', 'extensions', 'fonts'
+    ]));
     const [selected, setSelected] = useState(() => new Set());
     const [busy, setBusy] = useState(false);
+    const [importing, setImporting] = useState(false);
     const [error, setError] = useState('');
+    const [draggingId, setDraggingId] = useState(null);
+    const [dragOverId, setDragOverId] = useState(null);
+    const fileInputRef = useRef(null);
+    const importTargetRef = useRef(null);
+    const dragFileRef = useRef(null);
 
     const allFiles = useMemo(() => collectFiles(tree), [tree]);
     const selectedFiles = useMemo(
@@ -499,6 +630,130 @@ const ProjectAssetsManager = props => {
         setError('');
     };
 
+    const onDragStartFile = (file, event) => {
+        dragFileRef.current = file;
+        setDraggingId(file.id);
+        if (event.dataTransfer) {
+            event.dataTransfer.effectAllowed = 'move';
+            event.dataTransfer.setData('text/plain', file.id);
+        }
+    };
+
+    const onDragEndFile = () => {
+        dragFileRef.current = null;
+        setDraggingId(null);
+        setDragOverId(null);
+    };
+
+    const onDragOverFile = (file, event) => {
+        const dragged = dragFileRef.current;
+        if (!dragged || dragged.id === file.id ||
+            dragged.targetId !== file.targetId || dragged.category !== file.category) {
+            return;
+        }
+        event.preventDefault();
+        if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+        if (dragOverId !== file.id) setDragOverId(file.id);
+    };
+
+    const onDropFile = (file, event) => {
+        event.preventDefault();
+        const dragged = dragFileRef.current;
+        dragFileRef.current = null;
+        setDraggingId(null);
+        setDragOverId(null);
+        if (!dragged || dragged.id === file.id ||
+            dragged.targetId !== file.targetId || dragged.category !== file.category) {
+            return;
+        }
+        const target = vm.runtime.getTargetById(file.targetId);
+        if (!target) return;
+        const items = file.category === 'sounds' ? target.getSounds() : target.getCostumes();
+        const from = items.indexOf(dragged.item);
+        const to = items.indexOf(file.item);
+        if (from === -1 || to === -1 || from === to) return;
+        // 指针落在目标行的上半部分时插到它前面，下半部分时插到它后面
+        const rect = event.currentTarget.getBoundingClientRect();
+        const insertAfter = event.clientY > rect.top + (rect.height / 2);
+        let newIndex = to + (insertAfter ? 1 : 0);
+        if (from < newIndex) newIndex -= 1;
+        if (newIndex === from) return;
+        const moved = file.category === 'sounds' ?
+            vm.reorderSound(file.targetId, from, newIndex) :
+            vm.reorderCostume(file.targetId, from, newIndex);
+        if (moved) {
+            vm.runtime.requestTargetsUpdate(target);
+            vm.emitTargetsUpdate();
+            setTree(buildAssetTree(vm, projectTitle, intl));
+            setSelected(new Set());
+        }
+    };
+
+    const addCostumeFile = (buffer, fileType, name, targetId) => new Promise((resolve, reject) => {
+        costumeUpload(buffer, fileType, vm, costumes => {
+            const additions = costumes.map((costume, index) => {
+                costume.name = `${name}${index ? index + 1 : ''}`;
+                return vm.addCostume(costume.md5, costume, targetId);
+            });
+            Promise.all(additions).then(resolve, reject);
+        }, reject);
+    });
+
+    const addSoundFile = (buffer, fileType, name, targetId) => new Promise((resolve, reject) => {
+        soundUpload(buffer, fileType, vm.runtime.storage, sound => {
+            sound.name = name;
+            vm.addSound(sound, targetId).then(resolve, reject);
+        }, reject);
+    });
+
+    const startImport = node => {
+        if (busy || !node.importable) return;
+        importTargetRef.current = {targetId: node.targetId, category: node.category};
+        const input = fileInputRef.current;
+        if (!input) return;
+        input.value = null;
+        input.accept = node.category === 'sounds' ?
+            'audio/*,.wav,.mp3,.ogg,.m4a,.aac' :
+            'image/svg+xml,.svg,.png,.jpg,.jpeg,.bmp,.gif,.webp';
+        input.click();
+    };
+
+    const handleImport = async event => {
+        const files = Array.from(event.target.files || []);
+        event.target.value = null;
+        const target = importTargetRef.current;
+        if (!files.length || !target) return;
+        setBusy(true);
+        setImporting(true);
+        setError('');
+        let failed = 0;
+        let lastError = '';
+        for (const file of files) {
+            try {
+                const buffer = await readFileAsArrayBuffer(file);
+                const name = stripFileExtension(file.name);
+                if (target.category === 'sounds') {
+                    await addSoundFile(buffer, file.type, name, target.targetId);
+                } else {
+                    await addCostumeFile(buffer, file.type, name, target.targetId);
+                }
+            } catch (e) {
+                console.error('project-assets-manager: import failed', e);
+                failed += 1;
+                lastError = (e && e.message) || String(e);
+            }
+        }
+        vm.runtime.emitProjectChanged();
+        if (vm.editingTarget) vm.runtime.requestTargetsUpdate(vm.editingTarget);
+        setTree(buildAssetTree(vm, projectTitle, intl));
+        setSelected(new Set());
+        setBusy(false);
+        setImporting(false);
+        if (failed) {
+            setError(intl.formatMessage(messages.importFailed, {message: lastError}));
+        }
+    };
+
     const totalFiles = countFiles(tree);
 
     return (
@@ -566,15 +821,31 @@ const ProjectAssetsManager = props => {
 
                 {error && <div className={styles.error}>{error}</div>}
 
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    style={{display: 'none'}}
+                    onChange={handleImport}
+                />
+
                 <div className={styles.tree}>
                     {totalFiles === 0 ? (
                         <div className={styles.empty}>{intl.formatMessage(messages.empty)}</div>
                     ) : (
                         <AssetNode
+                            busy={busy}
+                            dragOverId={dragOverId}
+                            draggingId={draggingId}
                             expanded={expanded}
                             intl={intl}
                             node={tree}
                             selected={selected}
+                            onDragEndFile={onDragEndFile}
+                            onDragOverFile={onDragOverFile}
+                            onDragStartFile={onDragStartFile}
+                            onDropFile={onDropFile}
+                            onImport={startImport}
                             onToggleExpand={toggleExpand}
                             onToggleFile={toggleFile}
                             onToggleFolder={toggleFolder}
@@ -584,7 +855,9 @@ const ProjectAssetsManager = props => {
 
                 {busy && (
                     <div className={styles.footer}>
-                        <span className={styles.busy}>{intl.formatMessage(messages.busy)}</span>
+                        <span className={styles.busy}>
+                            {intl.formatMessage(importing ? messages.importing : messages.busy)}
+                        </span>
                     </div>
                 )}
             </div>
@@ -597,11 +870,26 @@ ProjectAssetsManager.propTypes = {
     onClose: PropTypes.func.isRequired,
     projectTitle: PropTypes.string,
     vm: PropTypes.shape({
+        addCostume: PropTypes.func,
+        addSound: PropTypes.func,
+        editingTarget: PropTypes.shape({
+            id: PropTypes.string
+        }),
+        emitTargetsUpdate: PropTypes.func,
         extensionManager: PropTypes.shape({
             getExtensionURLs: PropTypes.func
         }),
         getExportedCostume: PropTypes.func.isRequired,
+        reorderCostume: PropTypes.func,
+        reorderSound: PropTypes.func,
         runtime: PropTypes.shape({
+            emitProjectChanged: PropTypes.func,
+            fontManager: PropTypes.shape({
+                getFonts: PropTypes.func
+            }),
+            getTargetById: PropTypes.func,
+            requestTargetsUpdate: PropTypes.func,
+            storage: PropTypes.object,
             targets: PropTypes.array
         })
     }).isRequired
