@@ -45,7 +45,9 @@ const CHANGE_REFRESH_DELAY = 100;
 // 背包展开/收起动画跟随这个开关（见 src/components/gui/gui.jsx）。
 const BACKPACK_ANIMATION_DURATION = 300;
 const BACKPACK_ANIMATION_EASING = 'cubic-bezier(0.22, 1, 0.36, 1)';
-const COLLAPSED_HEADER_METRICS = {padding: 0, minHeight: 0, borderBottom: 0};
+// 高度动画期间给 <html> 打标记，blocks.jsx 据此降低积木区的重排频率，
+// 避免每一帧都重排整个 Blockly 工作区造成卡顿。
+const BACKPACK_ANIMATING_CLASS = 'backpack-animating';
 
 const messages = defineMessages({
     scriptAutoName: {
@@ -166,7 +168,6 @@ class Backpack extends React.Component {
         this.unmounted = false;
 
         this.containerRef = null;
-        this.headerAnimation = null;
         this.heightAnimationTimer = null;
         this.collapsedHeight = null;
         this.desiredExpanded = false;
@@ -255,7 +256,6 @@ class Backpack extends React.Component {
         clearTimeout(this.pendingBlockDropTimer);
         clearTimeout(this.alertTimer);
         this.stopHeightAnimation();
-        this.stopHeaderAnimation();
         this.clearHeightStyles();
         this.setContainerRef(null);
         this.setPanelRef(null);
@@ -340,50 +340,21 @@ class Backpack extends React.Component {
             borderBottom: parseFloat(computed.borderBottomWidth) || 0
         };
     }
-    stopHeaderAnimation () {
-        if (this.headerAnimation) {
-            this.headerAnimation.cancel();
-            this.headerAnimation = null;
-        }
-    }
-    startHeaderAnimation (from, to) {
-        const header = this.getHeaderElement();
-        if (!header || !from || !to || typeof header.animate !== 'function') return;
-        const animation = header.animate([
-            {
-                paddingTop: `${from.padding}px`,
-                paddingBottom: `${from.padding}px`,
-                minHeight: `${from.minHeight}px`,
-                borderBottomWidth: `${from.borderBottom}px`
-            },
-            {
-                paddingTop: `${to.padding}px`,
-                paddingBottom: `${to.padding}px`,
-                minHeight: `${to.minHeight}px`,
-                borderBottomWidth: `${to.borderBottom}px`
-            }
-        ], {
-            duration: BACKPACK_ANIMATION_DURATION,
-            easing: BACKPACK_ANIMATION_EASING
-        });
-        this.headerAnimation = animation;
-        const clear = () => {
-            if (this.headerAnimation === animation) this.headerAnimation = null;
-        };
-        animation.onfinish = clear;
-        animation.oncancel = clear;
-    }
-    expandHeaderAnimation (from) {
-        this.stopHeaderAnimation();
-        this.startHeaderAnimation(from, this.readHeaderMetrics(this.getHeaderElement()));
+    setAnimating (animating) {
+        // 动画期间动画一个普通的 height 过渡即可，头部尺寸直接切到目标状态，
+        // 由容器的 overflow: hidden 裁掉超出部分；不要再对 padding / min-height
+        // 这类会触发布局的属性做逐帧动画，否则每一帧都要重排整个编辑器。
+        document.documentElement.classList.toggle(BACKPACK_ANIMATING_CLASS, animating);
     }
     stopHeightAnimation () {
         if (this.heightAnimationTimer) {
             clearTimeout(this.heightAnimationTimer);
             this.heightAnimationTimer = null;
         }
+        this.setAnimating(false);
     }
     clearHeightStyles () {
+        this.setAnimating(false);
         const container = this.containerRef;
         if (!container) return;
         container.style.transition = '';
@@ -397,17 +368,23 @@ class Backpack extends React.Component {
             if (onDone) onDone();
             return;
         }
+        if (from === to) {
+            this.clearHeightStyles();
+            if (onDone) onDone();
+            return;
+        }
         container.style.transition = 'none';
         container.style.overflow = 'hidden';
         container.style.height = `${from}px`;
         // 先把起始高度刷进布局，再打开 transition，避免从 auto 高度直接跳变。
         container.getBoundingClientRect();
+        this.setAnimating(true);
         container.style.transition =
             `height ${BACKPACK_ANIMATION_DURATION}ms ${BACKPACK_ANIMATION_EASING}`;
         container.style.height = `${to}px`;
 
-        // 积木区由 blocks.jsx 的 ResizeObserver 跟随 CSS 过渡自动重排，
-        // 动画期间不要再逐帧派发 window resize，否则会明显卡顿。
+        // 积木区由 blocks.jsx 的 ResizeObserver 跟随 CSS 过渡重排；动画期间会
+        // 限制重排频率（见 handleBlocksResize），这里不再额外派发 window resize。
         this.heightAnimationTimer = setTimeout(() => {
             this.stopHeightAnimation();
             if (onDone) onDone();
@@ -455,7 +432,6 @@ class Backpack extends React.Component {
                     return;
                 }
                 const fullHeight = this.containerRef.getBoundingClientRect().height;
-                this.expandHeaderAnimation(COLLAPSED_HEADER_METRICS);
                 this.animateHeight(startHeight, fullHeight, () => {
                     this.clearHeightStyles();
                     this.emitResize();
@@ -473,7 +449,6 @@ class Backpack extends React.Component {
         const container = this.containerRef;
         if (!this.isAnimationEnabled() || !container) {
             this.stopHeightAnimation();
-            this.stopHeaderAnimation();
             this.clearHeightStyles();
             this.setState({expanded: false, closing: false, renamingId: null}, this.emitResize);
             return;
@@ -487,7 +462,6 @@ class Backpack extends React.Component {
         }
         const endHeight = Math.min(startHeight, this.getCollapsedHeight());
         this.stopHeightAnimation();
-        this.stopHeaderAnimation();
         // 先冻结当前高度，再把 UI 直接切回打开前的折叠样式（按钮、列表立即消失），
         // 最后单独把剩下的高度缩回去。
         container.style.transition = 'none';

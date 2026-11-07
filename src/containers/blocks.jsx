@@ -180,6 +180,7 @@ class Blocks extends React.Component {
         this.toolboxStateUpdateTimeout = null;
         this.workspaceVisibilityRaf = null;
         this.workspaceResizeRaf = null;
+        this.blocksResizeAnimationTimer = null;
         this.blocksResizeObserver = null;
         this.lastBlocksWidth = null;
         this.lastBlocksHeight = null;
@@ -493,6 +494,8 @@ class Blocks extends React.Component {
             window.cancelAnimationFrame(this.workspaceResizeRaf);
             this.workspaceResizeRaf = null;
         }
+        clearTimeout(this.blocksResizeAnimationTimer);
+        this.blocksResizeAnimationTimer = null;
         if (this.blocksResizeObserver) {
             this.blocksResizeObserver.disconnect();
             this.blocksResizeObserver = null;
@@ -1500,6 +1503,19 @@ class Blocks extends React.Component {
         this.lastBlocksWidth = width;
         this.lastBlocksHeight = height;
         if (this.workspaceResizeRaf) return;
+        // 背包展开/收起时高度每一帧都在变化，逐帧重排整个 Blockly 工作区
+        // （重排工具箱、滚轮、积木视图）开销很大，会造成明显卡顿。
+        // 动画期间把它节流到约 10fps，动画结束后尺寸稳定时会再补一次完整重排。
+        if (document.documentElement.classList.contains('backpack-animating')) {
+            if (this.blocksResizeAnimationTimer) return;
+            this.blocksResizeAnimationTimer = setTimeout(() => {
+                this.blocksResizeAnimationTimer = null;
+                if (!workspaceIsAlive(this)) return;
+                if (!this.props.isVisible) return;
+                this.resizeBlocksWorkspace();
+            }, 80);
+            return;
+        }
         this.workspaceResizeRaf = window.requestAnimationFrame(() => {
             this.workspaceResizeRaf = null;
             if (!workspaceIsAlive(this)) return;

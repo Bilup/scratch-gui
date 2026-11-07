@@ -14,7 +14,7 @@ export {analyzeProject};
  * @returns {object} Controller.
  */
 export default function (options) {
-    const {vm, display, getSetting, getBlockly, msg} = options;
+    const {vm, display, getSetting, getBlockly, hasMessage, msg} = options;
     let analysisWindow = null;
     let analysisRoot = null;
     let navigation = null;
@@ -57,6 +57,7 @@ export default function (options) {
             .center()
             .show();
         ReactDOM.render(React.createElement(ProjectAnalysis, {
+            hasMessage,
             msg,
             onShowScript: showScript,
             vm

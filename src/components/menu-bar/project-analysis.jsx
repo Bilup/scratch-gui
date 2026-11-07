@@ -42,9 +42,40 @@ const CATEGORY_COLORS = {
 
 const KNOWN_CATEGORIES = new Set(Object.keys(CATEGORY_COLORS));
 
-const categoryLabel = (category, msg) => (
-    KNOWN_CATEGORIES.has(category) ? msg(`category-${category}`) : humanizeOpcode(category)
-);
+// 积木 opcode 的分类前缀与翻译键并不总是一致（例如运算积木的前缀是 operator）
+const CATEGORY_ALIASES = {
+    operator: 'operators'
+};
+
+// 脚本帽子积木的标题，按 opcode 精确翻译；未收录的仍然使用 humanizeOpcode 的结果
+const SCRIPT_LABEL_KEYS = {
+    event_whenflagclicked: 'script-flag',
+    event_whenkeypressed: 'script-key',
+    event_whenthisspriteclicked: 'script-sprite-clicked',
+    event_whenstageclicked: 'script-stage-clicked',
+    event_whenbroadcastreceived: 'script-broadcast',
+    control_start_as_clone: 'script-clone',
+    procedures_definition: 'script-custom-block'
+};
+
+const scriptLabel = (script, msg) => {
+    const key = SCRIPT_LABEL_KEYS[script.opcode];
+    return key ? msg(key) : script.label;
+};
+
+// 扩展分类的 opcode 前缀大小写、空格都可能不同，统一规范化后再查翻译
+const normalizeCategory = category => category.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+const categoryLabel = (category, msg, hasMessage) => {
+    const id = CATEGORY_ALIASES[category] || category;
+    const exactKey = `category-${id}`;
+    if (hasMessage ? hasMessage(exactKey) : KNOWN_CATEGORIES.has(id)) return msg(exactKey);
+
+    const normalizedKey = `category-${normalizeCategory(id)}`;
+    if (normalizedKey !== exactKey && hasMessage && hasMessage(normalizedKey)) return msg(normalizedKey);
+
+    return humanizeOpcode(category);
+};
 
 const levelFor = score => {
     if (score >= 60) return {id: 'high', label: 'level-high'};
@@ -109,7 +140,7 @@ SectionHeading.propTypes = {
     icon: PropTypes.elementType.isRequired
 };
 
-const ProjectAnalysis = ({msg, onShowScript, vm}) => {
+const ProjectAnalysis = ({hasMessage, msg, onShowScript, vm}) => {
     const [metrics, setMetrics] = React.useState(() => analyzeProject(vm.runtime));
     const [section, setSection] = React.useState('overview');
 
@@ -211,7 +242,7 @@ const ProjectAnalysis = ({msg, onShowScript, vm}) => {
                                         key={category}
                                     >
                                         <span className={styles.barLabel}>
-                                            {categoryLabel(category, msg)}
+                                            {categoryLabel(category, msg, hasMessage)}
                                         </span>
                                         <span className={styles.barTrack}>
                                             <span
@@ -260,7 +291,7 @@ const ProjectAnalysis = ({msg, onShowScript, vm}) => {
                                 </span>
                                 <span className={styles.rowMain}>
                                     <strong>{script.targetName}</strong>
-                                    <small>{script.label}</small>
+                                    <small>{scriptLabel(script, msg)}</small>
                                 </span>
                                 <span className={styles.chip}>
                                     {msg('blocks-value', {count: script.length})}
@@ -486,6 +517,7 @@ const ProjectAnalysis = ({msg, onShowScript, vm}) => {
 };
 
 ProjectAnalysis.propTypes = {
+    hasMessage: PropTypes.func,
     msg: PropTypes.func.isRequired,
     onShowScript: PropTypes.func.isRequired,
     vm: PropTypes.shape({
