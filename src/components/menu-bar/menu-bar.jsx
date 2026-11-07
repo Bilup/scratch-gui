@@ -322,6 +322,13 @@ const addonMessage = (intl, addonId) => (id, values) => {
         defaultMessage
     }, values);
 };
+// 动态键（如扩展分类）在语言包中可能不存在，需要先判断再决定是否使用翻译
+const addonHasMessage = (intl, addonId) => id => {
+    const key = `${addonId}/${id}`;
+    const locale = intl && intl.locale ? intl.locale.toLowerCase() : 'en';
+    const localeMessages = ADDON_L10N[locale];
+    return Boolean((localeMessages && localeMessages[key]) || addonEnglish[key]);
+};
 
 class MenuBar extends React.Component {
     constructor(props) {
@@ -416,6 +423,7 @@ class MenuBar extends React.Component {
                 display: this.blockCountRef.current,
                 getSetting: getMenuBarSetting,
                 getBlockly: this.ensureScratchBlocks,
+                hasMessage: addonHasMessage(this.props.intl, 'block-count'),
                 msg: addonMessage(this.props.intl, 'block-count')
             });
         }

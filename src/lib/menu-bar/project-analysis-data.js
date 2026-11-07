@@ -120,6 +120,7 @@ const analyzeProject = runtime => {
             const script = {
                 ...shape,
                 id: rootId,
+                opcode: root.opcode,
                 targetId: target.id,
                 targetName,
                 label: humanizeOpcode(root.opcode),
