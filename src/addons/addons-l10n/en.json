@@ -907,5 +907,12 @@
   "resize-selected-item/position": "Position",
   "resize-selected-item/direction": "Direction",
   "resize-selected-item/@name": "Resize selected item",
-  "resize-selected-item/@description": "Adds a button to the paint editor to resize selected items with precise width, height, and position values."
+  "resize-selected-item/@description": "Adds a button to the paint editor to resize selected items with precise width, height, and position values.",
+  "simple-project-analyzer/export-title": "{name} export result",
+  "background/background-align-left": "Left",
+  "background/background-align-center": "Center",
+  "background/background-align-right": "Right",
+  "background/background-align-top": "Top",
+  "background/background-align-bottom": "Bottom",
+  "project-size-display/error": "Error"
 }

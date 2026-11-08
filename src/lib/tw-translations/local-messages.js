@@ -103,7 +103,72 @@ const localMessages = {
         'mw.variableManager.itemCount': '{count, plural, one {# item} other {# items}}',
         'mw.variableManager.addFirstItem': 'Add the first item',
         'mw.variableManager.sectionsAria': 'Variable Manager sections',
-        'mw.variableManager.filterScopeAria': 'Filter by scope'
+        'mw.variableManager.filterScopeAria': 'Filter by scope',
+
+        // 连接弹窗、已加载扩展列表
+        'gui.connection.auto-scanning.updatePeripheralPrompt':
+            "If you don't see your device, you may need to update it to work with Scratch.",
+        'gui.connection.scanning.updatePeripheralPrompt':
+            "If you don't see your device, you may need to update it to work with Scratch.",
+        'gui.connection.updatePeripheral.updateMicroBitFirmware':
+            'Please visit this link to update your micro:bit firmware: {microBitFirmwareLink}',
+        'gui.loadedExtensions.blockCount': '{count, plural, one {block} other {blocks}}',
+        'gui.loadedExtensions.header': 'Loaded Extensions',
+        'gui.loadedExtensions.noExtensions': 'No extensions loaded',
+
+        // 项目元数据、项目主题弹窗
+        'mw.projectMeta.refreshing': 'Refreshing...',
+        'mw.projectThemeModal.title': 'Custom Theme',
+        'mw.projectThemeModal.prompt': 'This project has a custom theme. Would you like to apply it?',
+        'mw.projectThemeModal.doNotAskAgain': 'Do not ask again',
+        'mw.projectThemeModal.cancel': 'Keep current theme',
+        'mw.projectThemeModal.apply': 'Apply theme',
+
+        // 设置窗口、样式预览
+        'mw.settingsModal.back': 'Back',
+        'mw.stylePreview.code': 'Code',
+        'mw.stylePreview.preview': 'Preview',
+        'mw.stylePreview.window': 'Window',
+        'tw.settingsModal.storeThemeInProjectHelp':
+            'If enabled, the current Bilup theme will also be saved with the project settings.',
+        'tw.settingsModal.unsafeOptimisations': 'Unsafe Optimisations',
+        'tw.settingsModal.unsafeOptimisationsHelp':
+            'Enables optimisations that may break some projects. Use with caution!',
+
+        // 弹窗、下载提示、扩展、字体、菜单栏等
+        'tw.alertOk': 'OK',
+        'tw.browserModal.desktopTitle': 'System is not supported',
+        'tw.browserModal.desktopSettings': 'Open Desktop Settings',
+        'tw.browserModal.webgl1':
+            '{APP_NAME} requires WebGL, however your computer does not seem to support it. ' +
+            'This is often a temporary error that can be fixed by restarting your computer.',
+        'tw.customExtensionModal.url': 'URL',
+        'tw.customThemes.customTheme': 'Custom theme',
+        'tw.customThemes.gradientBuilder.enterNameFirst': 'Please enter a theme name first',
+        'tw.customThemes.loadGradientInfo.failed': 'Could not load gradient information for this theme',
+        'tw.download.file':
+            'The project wants to download a file to your computer. ' +
+            'It will be saved as {name} in your downloads folder.',
+        'tw.download.danger': 'This file has not been reviewed by the {APP_NAME} developers.',
+        'tw.download.executable':
+            'This is an executable file format that may contain malicious code if you run it.',
+        'tw.extension.faceSensing.name': 'Face Sensing',
+        'tw.extension.faceSensing.description': 'Sense faces with the camera.',
+        'tw.extensionManager.noExtensionsLoaded': 'No extensions loaded',
+        'tw.fonts.searching': 'Searching…',
+        'tw.invalidProject.zipCorruption':
+            'This error often means that the file was corrupted, possibly due to a faulty storage device, ' +
+            'power outage, or unplugging a USB drive without ejecting. ' +
+            'Try {usingSb3fix} as it can fix this type of error.',
+        'tw.invalidProject.sb3fix': 'using sb3fix to recover your project',
+        'tw.menuBar.moreMenu': 'More',
+        'tw.viewCounter.viewsLabel': 'Views',
+        'tw.viewCounter.views': '{count, number} {count, plural, one {view} other {views}}',
+
+        // 毛玻璃效果目标
+        'bl.frostedGlass.target.notification': 'Notification',
+        'bl.frostedGlass.target.toast': 'Toast',
+        'bl.frostedGlass.target.popover': 'Popover / Panels'
     },
     'zh-cn': {
         'gui.backpack.searchPlaceholder': '搜索书包……',
@@ -196,7 +261,59 @@ const localMessages = {
         'mw.variableManager.itemCount': '{count, plural, other {# 项}}',
         'mw.variableManager.addFirstItem': '添加第一项',
         'mw.variableManager.sectionsAria': '变量管理器分区',
-        'mw.variableManager.filterScopeAria': '按适用范围筛选'
+        'mw.variableManager.filterScopeAria': '按适用范围筛选',
+
+        // 连接弹窗、已加载扩展列表
+        'gui.connection.auto-scanning.updatePeripheralPrompt': '如果看不到你的设备，可能需要更新设备才能在 Scratch 中使用。',
+        'gui.connection.scanning.updatePeripheralPrompt': '如果看不到你的设备，可能需要更新设备才能在 Scratch 中使用。',
+        'gui.connection.updatePeripheral.updateMicroBitFirmware': '请访问此链接更新 micro:bit 固件：{microBitFirmwareLink}',
+        'gui.loadedExtensions.blockCount': '{count, plural, other {# 个积木}}',
+        'gui.loadedExtensions.header': '已加载的扩展',
+        'gui.loadedExtensions.noExtensions': '未加载任何扩展',
+
+        // 项目元数据、项目主题弹窗
+        'mw.projectMeta.refreshing': '刷新中……',
+        'mw.projectThemeModal.title': '自定义主题',
+        'mw.projectThemeModal.prompt': '该作品带有自定义主题，要应用吗？',
+        'mw.projectThemeModal.doNotAskAgain': '不再询问',
+        'mw.projectThemeModal.cancel': '保留当前主题',
+        'mw.projectThemeModal.apply': '应用主题',
+
+        // 设置窗口、样式预览
+        'mw.settingsModal.back': '返回',
+        'mw.stylePreview.code': '代码',
+        'mw.stylePreview.preview': '预览',
+        'mw.stylePreview.window': '窗口',
+        'tw.settingsModal.storeThemeInProjectHelp': '启用后，当前 Bilup 主题也会随作品设置一起保存。',
+        'tw.settingsModal.unsafeOptimisations': '不安全优化',
+        'tw.settingsModal.unsafeOptimisationsHelp': '启用可能使部分作品出错的优化，请谨慎使用！',
+
+        // 弹窗、下载提示、扩展、字体、菜单栏等
+        'tw.alertOk': '确定',
+        'tw.browserModal.desktopTitle': '系统不受支持',
+        'tw.browserModal.desktopSettings': '打开桌面端设置',
+        'tw.browserModal.webgl1': '{APP_NAME} 需要 WebGL，但你的电脑似乎不支持。这通常是临时错误，重启电脑后可能解决。',
+        'tw.customExtensionModal.url': 'URL',
+        'tw.customThemes.customTheme': '自定义主题',
+        'tw.customThemes.gradientBuilder.enterNameFirst': '请先输入主题名称',
+        'tw.customThemes.loadGradientInfo.failed': '无法加载该主题的渐变信息',
+        'tw.download.file': '该作品想要下载文件到你的电脑，文件将保存为 {name}，存放在下载文件夹中。',
+        'tw.download.danger': '该文件尚未经过 {APP_NAME} 开发者审核。',
+        'tw.download.executable': '这是可执行文件格式，运行后可能包含恶意代码。',
+        'tw.extension.faceSensing.name': '人脸识别',
+        'tw.extension.faceSensing.description': '用摄像头识别人脸。',
+        'tw.extensionManager.noExtensionsLoaded': '未加载任何扩展',
+        'tw.fonts.searching': '搜索中……',
+        'tw.invalidProject.zipCorruption': '此错误通常意味着文件已损坏，可能是存储设备故障、断电，或在未弹出的情况下拔出 U 盘所致。试试{usingSb3fix}，它可以修复此类错误。',
+        'tw.invalidProject.sb3fix': '使用 sb3fix 恢复作品',
+        'tw.menuBar.moreMenu': '更多',
+        'tw.viewCounter.viewsLabel': '浏览量',
+        'tw.viewCounter.views': '{count, number} {count, plural, other {次浏览}}',
+
+        // 毛玻璃效果目标
+        'bl.frostedGlass.target.notification': '消息通知',
+        'bl.frostedGlass.target.toast': '轻提示',
+        'bl.frostedGlass.target.popover': '浮层面板'
     }
 };
 
