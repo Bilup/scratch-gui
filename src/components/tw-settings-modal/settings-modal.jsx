@@ -597,6 +597,15 @@ const createBooleanSetting = (key, definition) => {
     return SettingComponent;
 };
 
+// 这里传进来的文案有两种形态：
+//   1. defineMessages 的描述符 `{id, defaultMessage}`（settings-modal 自己的 settingDefinitions）；
+//   2. 只有 id 字符串（lib/debugger/settings.js 的 DEFINITIONS 就是纯 id）。
+// 第 2 种没有英文兜底文案，某个语种缺条目时 formatMessage 会把 id 原样吐到界面上，
+// 表现就是「设置项标题显示成一串 mw.xxx」。所以下面统一收敛成描述符再格式化。
+const toMessageDescriptor = message => (
+    typeof message === 'string' ? {id: message, defaultMessage: message} : message
+);
+
 class DebuggerBooleanSetting extends React.Component {
     constructor (props) {
         super(props);
@@ -610,8 +619,8 @@ class DebuggerBooleanSetting extends React.Component {
     }
     render () {
         const {intl, label, help} = this.props;
-        const translatedLabel = intl.formatMessage({id: label, defaultMessage: label});
-        const translatedHelp = help ? intl.formatMessage({id: help, defaultMessage: help}) : undefined;
+        const translatedLabel = intl.formatMessage(toMessageDescriptor(label));
+        const translatedHelp = help ? intl.formatMessage(toMessageDescriptor(help)) : undefined;
         return (
             <BooleanSetting
                 value={this.state.value}
@@ -625,8 +634,14 @@ class DebuggerBooleanSetting extends React.Component {
 
 DebuggerBooleanSetting.propTypes = {
     settingId: PropTypes.string.isRequired,
-    label: PropTypes.string.isRequired,
-    help: PropTypes.string,
+    label: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.shape({id: PropTypes.string.isRequired})
+    ]).isRequired,
+    help: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.shape({id: PropTypes.string.isRequired})
+    ]),
     intl: intlShape.isRequired
 };
 
@@ -1142,16 +1157,16 @@ const pageConfigurations = {
                         component: DebuggerBooleanSetting,
                         props: () => ({
                             settingId: 'stage_pause_button',
-                            label: settingDefinitions.showPauseButton.label.id,
-                            help: settingDefinitions.showPauseButton.help.id
+                            label: settingDefinitions.showPauseButton.label,
+                            help: settingDefinitions.showPauseButton.help
                         })
                     },
                     {
                         component: DebuggerBooleanSetting,
                         props: () => ({
                             settingId: 'stage_step_button',
-                            label: settingDefinitions.showStepButton.label.id,
-                            help: settingDefinitions.showStepButton.help.id
+                            label: settingDefinitions.showStepButton.label,
+                            help: settingDefinitions.showStepButton.help
                         })
                     },
                     {

@@ -23,21 +23,24 @@ import {setTheme} from '../../reducers/theme.js';
 import {applyTheme} from '../../lib/themes/themePersistance.js';
 import {onSettingsChanged} from '../../lib/menu-bar/settings.js';
 
+// 每个菜单项的可显示名称。这里刻意存完整描述符（id + 英文 defaultMessage）而不是裸 id：
+// 裸 id 只能靠 `defaultMessage: id` 兜底，某个语种缺条目时会把 `mw.menuBar.xxx` 原样显示出来
+// （`mw.menuBar.addons` 曾经就是这样漏翻的）。带上英文文案后，任何语种缺条目都会退回英文。
 const LABELS = {
-    'file': 'mw.menuBar.file',
-    'bookmarks': 'mw.menuBar.bookmarks',
-    'edit': 'mw.menuBar.edit',
-    'tools': 'mw.menuBar.tools',
-    'mode': 'mw.menuBar.mode',
-    'block-count': 'mw.menuBar.blockCount',
-    'media-recorder': 'mw.settings.menuBar.videoRecorder',
-    'save-status': 'mw.menuBar.saveStatus',
-    'addons': 'mw.menuBar.addons',
-    'settings': 'mw.menuBar.settings',
-    'about': 'mw.menuBar.about',
-    'project-title': 'mw.menuBar.projectTitle',
-    'rotur-account': 'mw.menuBar.roturAccount',
-    'collab-presence': 'mw.menuBar.collabPresence'
+    'file': {id: 'mw.menuBar.file', defaultMessage: 'File'},
+    'bookmarks': {id: 'mw.menuBar.bookmarks', defaultMessage: 'Bookmarks'},
+    'edit': {id: 'mw.menuBar.edit', defaultMessage: 'Edit'},
+    'tools': {id: 'mw.menuBar.tools', defaultMessage: 'Tools'},
+    'mode': {id: 'mw.menuBar.mode', defaultMessage: 'Mode'},
+    'block-count': {id: 'mw.menuBar.blockCount', defaultMessage: 'Block Count'},
+    'media-recorder': {id: 'mw.settings.menuBar.videoRecorder', defaultMessage: 'Video Recorder'},
+    'save-status': {id: 'mw.menuBar.saveStatus', defaultMessage: 'Save Status'},
+    'addons': {id: 'mw.menuBar.addons', defaultMessage: 'Addons'},
+    'settings': {id: 'mw.menuBar.settings', defaultMessage: 'Settings'},
+    'about': {id: 'mw.menuBar.about', defaultMessage: 'About'},
+    'project-title': {id: 'mw.menuBar.projectTitle', defaultMessage: 'Project Title'},
+    'rotur-account': {id: 'mw.menuBar.roturAccount', defaultMessage: 'Bilup Accounts Profile'},
+    'collab-presence': {id: 'mw.menuBar.collabPresence', defaultMessage: 'Collaboration Presence'}
 };
 
 const ALIGN_OPTIONS = [
@@ -148,8 +151,8 @@ class UnwrappedMenuBarLayoutSetting extends React.Component {
     renderRow (zoneId, id, draggable) {
         const {intl} = this.props;
         const visible = !this.state.hidden.includes(id);
-        const labelId = LABELS[id];
-        const label = labelId ? intl.formatMessage({id: labelId, defaultMessage: labelId}) : id;
+        const labelDescriptor = LABELS[id];
+        const label = labelDescriptor ? intl.formatMessage(labelDescriptor) : id;
         const canHide = !ALWAYS_SHOW.includes(id);
         return (
             <div
@@ -242,14 +245,14 @@ class UnwrappedMenuBarLayoutSetting extends React.Component {
                     />
                 </div>
                 {[
-                    {labelId: 'mw.settingsModal.leftMenus', zones: ['left']},
-                    {labelId: 'mw.settingsModal.topRightButtons', zones: ['right']}
+                    {id: 'mw.settingsModal.leftMenus', defaultMessage: 'Left Menus', zones: ['left']},
+                    {id: 'mw.settingsModal.topRightButtons', defaultMessage: 'Top Right Buttons', zones: ['right']}
                 ].map(section => {
                     if (this.sectionRowCount(section) === 0) return null;
                     return (
-                        <div key={section.labelId}>
+                        <div key={section.id}>
                             <div className={styles.menuBarZoneLabel}>
-                                {intl.formatMessage({id: section.labelId, defaultMessage: section.labelId})}
+                                {intl.formatMessage({id: section.id, defaultMessage: section.defaultMessage})}
                             </div>
                             {section.zones.map(zoneId => this.renderZone(zoneId))}
                         </div>
