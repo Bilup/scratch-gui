@@ -313,7 +313,47 @@ const localMessages = {
         // 毛玻璃效果目标
         'bl.frostedGlass.target.notification': '消息通知',
         'bl.frostedGlass.target.toast': '轻提示',
-        'bl.frostedGlass.target.popover': '浮层面板'
+        'bl.frostedGlass.target.popover': '浮层面板',
+
+        // ------------------------------------------------------------------
+        // 上游 zh-cn 漏翻（值还是英文）或整条缺失的中文补丁。
+        // 这些 id 的英文由 @bilup/scratch-l10n 或组件里的 defaultMessage 提供，
+        // 所以这里**只写中文**，不重复英文，免得把上游英文文案钉死在本仓库。
+        // 新增条目请一并扩充 test/unit/lib/i18n-local-messages.test.js 的键集断言。
+        // ------------------------------------------------------------------
+
+        // 外接设备固件更新流程（micro:bit 等）
+        'gui.connection.auto-scanning.updatePeripheralButton': '更新我的设备',
+        'gui.connection.scanning.updatePeripheralButton': '更新我的设备',
+        'gui.connection.updatePeripheral.microBitConnect': '请用 USB 线将 {extensionName} 连接到这台设备。',
+        'gui.connection.updatePeripheral.pressUpdate': '点击「开始更新」，等待更新完成。',
+        'gui.connection.updatePeripheral.progress': '正在更新 {progressPercentage}%',
+        'gui.connection.updatePeripheral.updateSuccessful': '更新成功！',
+        'gui.connection.updatePeripheral.updateFailed': '更新失败。',
+        'gui.connection.updatePeripheral.goBackButton': '返回',
+        'gui.connection.updatePeripheral.updateNowButton': '开始更新',
+        'gui.connection.updatePeripheral.updateAgainButton': '重试',
+        'gui.connection.updatePeripheral.doNotDisconnect': '更新完成前，请不要离开或刷新 Scratch，也不要断开 {extensionName}。',
+
+        // 菜单栏模式切换
+        'gui.menuBar.modeMenu': '模式',
+        'gui.menuBar.normalMode': '普通模式',
+        'gui.menuBar.caturdayMode': '猫猫模式',
+
+        // WebGL 不支持提示
+        'tw.browserModal.webglDesktop': '你也可以试试在桌面端设置里打开「硬件加速」选项：',
+        'tw.browserModal.webglBrowser': '请使用较新版本的 Chrome、Firefox 或 Safari，并确保显卡驱动已更新。你也可以试试在浏览器设置里打开「图形加速」或「硬件加速」选项。',
+
+        // 字体兜底分类
+        'tw.fonts.fallback.sansSerif': '无衬线体',
+        'tw.fonts.fallback.serif': '衬线体',
+        'tw.fonts.fallback.handwriting': '手写体',
+        'tw.fonts.fallback.marker': '马克笔',
+        'tw.fonts.fallback.curly': '花体',
+        'tw.fonts.fallback.pixel': '像素体',
+
+        // 扩展加载状态
+        'tw.extension.patching.name': '补丁中'
     }
 };
 

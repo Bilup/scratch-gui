@@ -39,10 +39,15 @@ describe('本地新增文案', () => {
         expect(messages['zh-cn']).toBeUndefined();
     });
 
-    test('中英文键集合一致', () => {
+    test('英文键都必须在中文里有对应条目', () => {
+        // 中英成对维护是默认要求；但允许「只有中文」的条目：
+        // 上游 zh-cn 漏翻时（值仍是英文）我们只补中文，英文由 l10n 包或组件的
+        // defaultMessage 提供，不该在本仓库里重复一份英文。反过来（只有英文、
+        // 中文缺失）是不允许的——那会让中文界面回退成英文。
         const zhKeys = Object.keys(localMessages['zh-cn']).sort();
         const enKeys = Object.keys(localMessages.en).sort();
-        expect(zhKeys).toEqual(enKeys);
+        const missingInZh = enKeys.filter(key => !zhKeys.includes(key));
+        expect(missingInZh).toEqual([]);
     });
 
     test('每条文案都是合法的 ICU 消息（含占位符的复数）', () => {
