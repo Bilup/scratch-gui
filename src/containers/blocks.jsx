@@ -100,6 +100,30 @@ const DroppableBlocks = DropAreaHOC([
 const DEFERRED_WORKSPACE_LOAD_MIN_BLOCKS = 40;
 
 /**
+ * Whether any block in the project has no registered block definition.
+ *
+ * The deferred loader builds each script asynchronously and, if building one
+ * throws (an opcode the editor does not know, e.g. an extension that failed to
+ * load), it disposes the blocks it already created. That disposal runs with
+ * Blockly events enabled, so the VM receives deletes for ids that still exist
+ * in the project and the real blocks are destroyed. Such a project must go
+ * through the synchronous XML loader instead: it can only fail on the view and
+ * never deletes anything from the VM.
+ * @param {object} ScratchBlocks The scratch-blocks module.
+ * @param {object} blocks scratch-vm block descriptions, keyed by block id.
+ * @returns {boolean} True when a block type is missing.
+ */
+const hasUndefinedBlockType = (ScratchBlocks, blocks) => {
+    if (!ScratchBlocks || !ScratchBlocks.Blocks || !blocks) return false;
+    for (const id in blocks) {
+        if (!Object.prototype.hasOwnProperty.call(blocks, id)) continue;
+        const opcode = blocks[id] && blocks[id].opcode;
+        if (!opcode || !ScratchBlocks.Blocks[opcode]) return true;
+    }
+    return false;
+};
+
+/**
  * Returns true when the workspace is mounted, alive, and not disposed.
  * Every method that touches this.workspace MUST gate on this check to
  * prevent crashes when the workspace has been destroyed asynchronously
@@ -1264,7 +1288,18 @@ class Blocks extends React.Component {
             0 : DEFERRED_WORKSPACE_LOAD_MIN_BLOCKS;
         const useDeferredLoad = !!this.ScratchBlocks.Xml.clearWorkspaceAndLoadFromXmlDeferred &&
             (blockCount >= minDeferredBlocks ||
-                Object.keys(this.workspace.blockDB_ || {}).length >= minDeferredBlocks);
+                Object.keys(this.workspace.blockDB_ || {}).length >= minDeferredBlocks) &&
+            // A block the loader cannot build would make it throw part-way
+            // through a script, and its cleanup deletes the already created
+            // blocks from the VM. Keep the project intact by loading such
+            // projects synchronously instead.
+            !hasUndefinedBlockType(this.ScratchBlocks, hasDescs ? data.blocks.blocks : null);
+        // The block descriptions are handed over separately; only the header
+        // (variables / comments / frames) goes through XML then. When the VM
+        // does not provide descriptions, the deferred loader must get the full
+        // XML instead: headerXml contains no blocks, so using it would clear
+        // the workspace and load nothing back.
+        const workspaceXml = hasDescs ? (data.headerXml || data.xml) : data.xml;
         // Re-apply the workspace layout once the (possibly asynchronous) load
         // finishes. The container may have been resized (stage zoom, tab switch,
         // window resize) while the blocks were loading, which would otherwise
@@ -1299,7 +1334,7 @@ class Blocks extends React.Component {
         };
         try {
             if (useDeferredLoad) {
-                const headerDom = this.ScratchBlocks.Xml.textToDom(data.headerXml || data.xml);
+                const headerDom = this.ScratchBlocks.Xml.textToDom(workspaceXml);
                 this.deferredWorkspaceLoad = this.ScratchBlocks.Xml.clearWorkspaceAndLoadFromXmlDeferred(
                     headerDom,
                     this.workspace,
