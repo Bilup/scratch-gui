@@ -1,5 +1,6 @@
 import {getVanillaPalette} from './mw-vanilla-palette';
 import {getItem as getStorageItem, setItem as setStorageItem} from './utils/safe-storage.js';
+import {applyCatBlocksToLoadedBlockly} from './mw-cat-blocks.js';
 
 let _ScratchBlocks = null;
 
@@ -45,6 +46,12 @@ const load = () => {
         .then(m => {
             _ScratchBlocks = m.default;
             applyScriptLazyLoading(isScriptLazyLoadingEnabled());
+
+            try {
+                applyCatBlocksToLoadedBlockly();
+            } catch (e) {
+                // ignore
+            }
 
             try {
                 const operatorUtils = _ScratchBlocks.ScratchBlocks && _ScratchBlocks.ScratchBlocks.OperatorUtils;

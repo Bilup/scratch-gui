@@ -147,6 +147,35 @@ ModalSidebarGroup.propTypes = {
     className: PropTypes.string
 };
 
+/**
+ * A sidebar group whose heading is always collapsible. Owns its
+ * collapsed state so every window gets the same behaviour with no
+ * per-consumer toggle boilerplate.
+ * @returns {React.ReactElement} The collapsible group.
+ */
+const ModalSidebarCollapsibleGroup = ({children, className, defaultCollapsed = false, label}) => {
+    const [collapsed, setCollapsed] = React.useState(defaultCollapsed);
+    const handleToggle = React.useCallback(() => setCollapsed(prevCollapsed => !prevCollapsed), []);
+    return (
+        <ModalSidebarGroup className={className}>
+            <ModalSidebarGroupHeader
+                collapsed={collapsed}
+                collapsible
+                label={label}
+                onClick={handleToggle}
+            />
+            {!collapsed && children}
+        </ModalSidebarGroup>
+    );
+};
+
+ModalSidebarCollapsibleGroup.propTypes = {
+    children: PropTypes.node,
+    className: PropTypes.string,
+    defaultCollapsed: PropTypes.bool,
+    label: PropTypes.node
+};
+
 const ModalSidebarGroupHeader = ({
     children,
     collapsed,
@@ -242,6 +271,7 @@ ModalSidebarContent.propTypes = {
 export {
     ModalSidebar,
     ModalSidebarAccount,
+    ModalSidebarCollapsibleGroup,
     ModalSidebarContent,
     ModalSidebarFooter,
     ModalSidebarGroup,

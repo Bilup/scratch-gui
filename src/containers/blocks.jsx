@@ -49,6 +49,7 @@ import AddonHooks from '../addons/hooks.js';
 import LoadScratchBlocksHOC from '../lib/components/tw-load-scratch-blocks-hoc.jsx';
 import {offsetToPosition} from '../lib/backpack/code-payload.js';
 import {gentlyRequestPersistentStorage} from '../lib/utils/storage-request.js';
+import {CAT_BLOCKS_CHANGED, initCatBlocks} from '../lib/mw-cat-blocks.js';
 import CollaborationService from '../lib/collaboration/index.js';
 import LazyScratchBlocks from '../lib/tw-lazy-scratch-blocks';
 
@@ -184,6 +185,7 @@ class Blocks extends React.Component {
         this.setFlyoutWidth = this.setFlyoutWidth.bind(this);
 
         this.handleAddonSettingChanged = this.handleAddonSettingChanged.bind(this);
+        this.handleCatBlocksChanged = this.handleCatBlocksChanged.bind(this);
         this.handleVanillaPaletteChanged = this.handleVanillaPaletteChanged.bind(this);
         this.applyPaletteResizeEnabledState = this.applyPaletteResizeEnabledState.bind(this);
         this.updateBlockColors = this.updateBlockColors.bind(this);
@@ -212,9 +214,11 @@ class Blocks extends React.Component {
     }
     componentDidMount () {
         SettingsStore.addEventListener('setting-changed', this.handleAddonSettingChanged);
+        window.addEventListener(CAT_BLOCKS_CHANGED, this.handleCatBlocksChanged);
         window.addEventListener(VANILLA_PALETTE_CHANGED, this.handleVanillaPaletteChanged);
 
         this.ScratchBlocks = VMScratchBlocks(this.props.vm, this.props.useCatBlocks);
+        initCatBlocks();
         this.ScratchBlocks.prompt = this.handlePromptStart;
         this.ScratchBlocks.statusButtonCallback = this.handleConnectionModalStart;
         this.ScratchBlocks.recordSoundCallback = this.handleOpenSoundRecorder;
@@ -502,6 +506,7 @@ class Blocks extends React.Component {
     }
     componentWillUnmount () {
         SettingsStore.removeEventListener('setting-changed', this.handleAddonSettingChanged);
+        window.removeEventListener(CAT_BLOCKS_CHANGED, this.handleCatBlocksChanged);
         window.removeEventListener(VANILLA_PALETTE_CHANGED, this.handleVanillaPaletteChanged);
         this.detachVM();
         this.unmounted = true;
@@ -685,6 +690,35 @@ class Blocks extends React.Component {
         if (toolboxXML) {
             this.props.updateToolboxState(toolboxXML);
         }
+    }
+
+    handleCatBlocksChanged () {
+        // Cat hats change block shapes, so rebuild the flyout like the old addon did.
+        try {
+            this.props.vm.emitWorkspaceUpdate();
+        } catch (e) {
+            // ignore
+        }
+        try {
+            const workspace = this.workspace || this.ScratchBlocks.getMainWorkspace();
+            const flyout = workspace && workspace.getFlyout && workspace.getFlyout();
+            if (workspace && flyout) {
+                this.ScratchBlocks.Events.disable();
+                const flyoutWorkspace = flyout.getWorkspace();
+                this.ScratchBlocks.Xml.clearWorkspaceAndLoadFromXml(
+                    this.ScratchBlocks.Xml.workspaceToDom(flyoutWorkspace),
+                    flyoutWorkspace
+                );
+                if (workspace.getToolbox() && workspace.getToolbox().refreshSelection) {
+                    workspace.getToolbox().refreshSelection();
+                }
+                workspace.toolboxRefreshEnabled_ = true;
+                this.ScratchBlocks.Events.enable();
+            }
+        } catch (e) {
+            // ignore
+        }
+        initCatBlocks();
     }
 
     handleAddonSettingChanged (e) {
