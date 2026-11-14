@@ -1470,6 +1470,7 @@ class MenuBar extends React.Component {
             this.ensureScratchBlocks().then(ScratchBlocks => {
                 const workspace = ScratchBlocks.getMainWorkspace();
                 if (workspace) {
+                    this.materializeBeforeUndoRedo(workspace);
                     workspace.undo(false);
                     this.updateUndoRedoState();
                 }
@@ -1481,10 +1482,21 @@ class MenuBar extends React.Component {
             this.ensureScratchBlocks().then(ScratchBlocks => {
                 const workspace = ScratchBlocks.getMainWorkspace();
                 if (workspace) {
+                    this.materializeBeforeUndoRedo(workspace);
                     workspace.undo(true);
                     this.updateUndoRedoState();
                 }
             });
+        }
+    }
+    // Undo and redo look blocks up by id. Blocks in scripts the lazy loader has
+    // not rendered do not exist yet, so the event would be skipped silently and
+    // the VM would drift away from what is on screen. Render everything first.
+    materializeBeforeUndoRedo(workspace) {
+        if (workspace.getUnloadedBlockCount &&
+            workspace.getUnloadedBlockCount() > 0 &&
+            workspace.materializeAllScripts) {
+            workspace.materializeAllScripts();
         }
     }
     updateUndoRedoState() {
