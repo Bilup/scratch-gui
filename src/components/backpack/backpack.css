@@ -84,7 +84,9 @@
 }
 
 .header-icon {
-    color: $accent-foreground;
+    /* 头部底色是 $ui-white，不是强调色，不能用 accent-foreground（它是"压在强调色上的文字色"，
+       浅色主题下默认强调色是浅色 → 算出来是白色，图标就白底白图看不见了）。跟标签同样用前景色。 */
+    color: $text-primary;
     flex-shrink: 0;
 }
 

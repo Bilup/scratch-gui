@@ -236,7 +236,9 @@
 
 .row-icon[data-kind="cloud"],
 .detail-icon[data-kind="cloud"] {
-    color: $accent-foreground;
+    /* accent-foreground 是"压在强调色底上的文字色"，用在普通行底色上浅色主题会变白 → 隐形；
+       这里与同组 [data-kind] 的写法一致，取强调色本身。 */
+    color: $looks-secondary;
 }
 
 .row-content {
@@ -285,7 +287,8 @@
 
 .row-monitor {
     flex: 0 0 auto;
-    color: $accent-foreground;
+    /* 同上：这是"监视器已显示"的 Eye 图标，必须在普通行底色上也看得见 */
+    color: $looks-secondary;
 }
 
 .detail {
