@@ -254,7 +254,9 @@
 }
 
 .good-note .recommendation-icon {
-    color: $accent-foreground;
+    /* 底色是 $ui-modal-inset（跟随主题），accent-foreground 是"压在强调色底上的文字色"，
+       浅色主题下算出来是白色 → 图标看不见。这里要的是强调色本身。 */
+    color: $looks-secondary;
 }
 
 .list {
