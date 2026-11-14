@@ -145,6 +145,7 @@ class Backpack extends React.Component {
         this.dropZones = {panel: null, handle: null};
         this.lastPointer = {x: null, y: null};
         this.resizeSession = null;
+        this.filteredCache = null;
         this.contentsRequest = null;
         this.loadAllContents = false;
         this.hasLoaded = false;
@@ -940,10 +941,21 @@ class Backpack extends React.Component {
         if (value.trim() && (this.state.moreToLoad || this.contentsRequest)) this.getContents(true);
     }
     getFilteredContents () {
-        const byType = this.state.filter === 'all' ?
-            this.state.contents :
-            this.state.contents.filter(item => item.type === this.state.filter);
-        return filterBackpackContents(byType, this.state.searchQuery);
+        // 必须缓存：这段逻辑在 render 期间调用，每次都会新建数组（filter/sort 都返回
+        // 新引用），BackpackItems 随之重建 N 个 <BackpackItem> element。下游虽然靠
+        // connect / PureComponent 的浅比较兜住了元素级 props，但数组本身每次都是新的，
+        // 容器任意一次 setState（拖拽、busy、重命名、搜索）都要白跑一遍 N 项的 diff。
+        // 项数越多越明显。
+        const {contents, filter, searchQuery} = this.state;
+        const cache = this.filteredCache;
+        if (cache && cache.contents === contents && cache.filter === filter &&
+            cache.searchQuery === searchQuery) {
+            return cache.result;
+        }
+        const byType = filter === 'all' ? contents : contents.filter(item => item.type === filter);
+        const result = filterBackpackContents(byType, searchQuery);
+        this.filteredCache = {contents, filter, searchQuery, result};
+        return result;
     }
     render () {
         const dragOver = this.state.blockDragOverBackpack;

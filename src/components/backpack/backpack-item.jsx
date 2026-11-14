@@ -64,7 +64,15 @@ const getDisplayName = (item, intl) => {
 
 const stopEvent = e => e.stopPropagation();
 
-class BackpackItem extends React.Component {
+// 背包列表按项数线性渲染（见 components/backpack/backpack-controls.jsx 的
+// BackpackItems），容器（containers/backpack.jsx）在拖拽、busy、重命名、搜索等
+// 任意 setState 时都会重建整列 element。用 PureComponent 兜住：只要这一项的
+// item / busy / renaming 等 props 没变（其余回调都是 bindAll 出来的稳定引用），
+// 就不重渲染，更不会重建它下面那套 ContextMenu / MenuItem 元素。
+// 注意：这里刻意不用 React.memo 包裹 default export —— 单测通过
+// wrapper.find('BackpackItem').instance() 直接调实例方法，memo 会让 instance()
+// 变成 null。
+class BackpackItem extends React.PureComponent {
     constructor (props) {
         super(props);
         bindAll(this, [
