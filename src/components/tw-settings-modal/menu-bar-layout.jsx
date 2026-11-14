@@ -1,10 +1,10 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import bindAll from 'lodash.bindall';
-import {FormattedMessage, injectIntl, intlShape} from 'react-intl';
+import {defineMessages, FormattedMessage, injectIntl, intlShape} from 'react-intl';
 import {connect} from 'react-redux';
 import classNames from 'classnames';
-import {AlignLeft, AlignCenter, GripVertical} from 'lucide-react';
+import {AlignLeft, AlignCenter, ChevronDown, ChevronUp, GripVertical} from 'lucide-react';
 import FancyCheckbox from '../tw-fancy-checkbox/checkbox.jsx';
 import styles from './settings-modal.css';
 import {
@@ -13,6 +13,7 @@ import {
     getZoneDisplayOrder,
     getZoneExtras,
     setZoneOrder,
+    moveMenuItem,
     getHidden,
     setHidden,
     getPresentOrderedIds,
@@ -22,6 +23,11 @@ import {Theme} from '../../lib/themes/index.js';
 import {setTheme} from '../../reducers/theme.js';
 import {applyTheme} from '../../lib/themes/themePersistance.js';
 import {onSettingsChanged} from '../../lib/menu-bar/settings.js';
+
+const messages = defineMessages({
+    moveUp: {defaultMessage: 'Move {item} up', id: 'mw.settings.menuBar.moveUp'},
+    moveDown: {defaultMessage: 'Move {item} down', id: 'mw.settings.menuBar.moveDown'}
+});
 
 // 每个菜单项的可显示名称。这里刻意存完整描述符（id + 英文 defaultMessage）而不是裸 id：
 // 裸 id 只能靠 `defaultMessage: id` 兜底，某个语种缺条目时会把 `mw.menuBar.xxx` 原样显示出来
@@ -72,7 +78,7 @@ const isVisibleItem = id => !id.startsWith('__');
 class UnwrappedMenuBarLayoutSetting extends React.Component {
     constructor (props) {
         super(props);
-        bindAll(this, ['handleDragEnd', 'handleDragOver', 'handleAlignChange', 'persistAppearance']);
+        bindAll(this, ['handleDragEnd', 'handleDragOver', 'handleAlignChange', 'handleMove', 'persistAppearance']);
         const present = getPresentOrderedIds();
         this.state = {
             present,
@@ -115,7 +121,15 @@ class UnwrappedMenuBarLayoutSetting extends React.Component {
         };
     }
     handleDragStart (zoneId, id) {
-        return () => this.setState({dragId: id, dragZone: zoneId});
+        return e => {
+            try {
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', id);
+            } catch (err) {
+                // ignore
+            }
+            this.setState({dragId: id, dragZone: zoneId});
+        };
     }
     handleDragEnd () {
         this.setState({dragId: null, dragZone: null});
@@ -148,29 +162,61 @@ class UnwrappedMenuBarLayoutSetting extends React.Component {
             this.props.onChangeTheme(this.props.theme.set('menuBarAlign', id));
         };
     }
+    handleMove (zoneId, id, direction) {
+        return () => {
+            const order = moveMenuItem(this.state.orders[zoneId], id, direction);
+            setZoneOrder(zoneId, order);
+            this.setState(prev => ({orders: {...prev.orders, [zoneId]: order}}), this.persistAppearance);
+        };
+    }
     renderRow (zoneId, id, draggable) {
         const {intl} = this.props;
         const visible = !this.state.hidden.includes(id);
         const labelDescriptor = LABELS[id];
         const label = labelDescriptor ? intl.formatMessage(labelDescriptor) : id;
         const canHide = !ALWAYS_SHOW.includes(id);
+        const order = draggable ? (this.state.orders[zoneId] || []) : [];
+        const index = order.indexOf(id);
         return (
             <div
                 key={id}
                 className={styles.menuBarRow}
-                draggable={draggable}
-                onDragStart={draggable ? this.handleDragStart(zoneId, id) : null}
-                onDragEnd={draggable ? this.handleDragEnd : null}
                 onDragOver={draggable ? this.handleDragOver : null}
                 onDrop={draggable ? this.handleDrop(zoneId, id) : null}
             >
                 {draggable && (
-                    <GripVertical
+                    <span
                         className={styles.menuBarGrip}
-                        size={16}
-                    />
+                        draggable
+                        onDragEnd={this.handleDragEnd}
+                        onDragStart={this.handleDragStart(zoneId, id)}
+                    >
+                        <GripVertical size={16} />
+                    </span>
                 )}
                 <span className={styles.menuBarRowLabel}>{label}</span>
+                {draggable && (
+                    <span className={styles.menuBarMoveButtons}>
+                        <button
+                            aria-label={intl.formatMessage(messages.moveUp, {item: label})}
+                            className={styles.menuBarMoveButton}
+                            disabled={index <= 0}
+                            type="button"
+                            onClick={this.handleMove(zoneId, id, -1)}
+                        >
+                            <ChevronUp size={16} />
+                        </button>
+                        <button
+                            aria-label={intl.formatMessage(messages.moveDown, {item: label})}
+                            className={styles.menuBarMoveButton}
+                            disabled={index < 0 || index >= order.length - 1}
+                            type="button"
+                            onClick={this.handleMove(zoneId, id, 1)}
+                        >
+                            <ChevronDown size={16} />
+                        </button>
+                    </span>
+                )}
                 <FancyCheckbox
                     className={styles.checkbox}
                     checked={canHide ? visible : true}

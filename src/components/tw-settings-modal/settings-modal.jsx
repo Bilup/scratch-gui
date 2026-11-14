@@ -11,15 +11,15 @@ import BufferedInputHOC from '../forms/buffered-input-hoc.jsx';
 import DocumentationLink from '../tw-documentation-link/documentation-link.jsx';
 import {
     ModalSidebar,
+    ModalSidebarCollapsibleGroup,
     ModalSidebarContent,
-    ModalSidebarGroup,
-    ModalSidebarGroupHeader,
     ModalSidebarItem,
     ModalSidebarLayout
 } from '../modal-sidebar/modal-sidebar.jsx';
 import styles from './settings-modal.css';
 import helpIcon from './help-icon.svg';
 import {APP_NAME} from '../../lib/constants/brand.js';
+import isScratchDesktop from '../../lib/utils/isScratchDesktop';
 import {STYLE_GROUPS} from '../../lib/mw-style-settings';
 import StylePreview from './style-preview.jsx';
 import MenuBarLayoutSetting from './menu-bar-layout.jsx';
@@ -44,24 +44,23 @@ const LanguagePage = lazyNamedPage(() => import('./appearance-pages.jsx'), 'Lang
 const ThemePage = lazyNamedPage(() => import('./appearance-pages.jsx'), 'ThemePage');
 const WallpaperPage = lazyNamedPage(() => import('./appearance-pages.jsx'), 'WallpaperPage');
 const FontsPage = lazyNamedPage(() => import('./appearance-pages.jsx'), 'FontsPage');
+const ColorThemePage = lazyNamedPage(() => import('./color-theme-page.jsx'), 'ColorThemePage');
+const CustomThemesPage = React.lazy(() => import('./custom-themes-page.jsx'));
+const VersionControlPage = React.lazy(() => import('./pages/version-control-page.jsx'));
+const AutosavePage = React.lazy(() => import('./pages/autosave-page.jsx'));
+const VariableManagerPage = React.lazy(() => import('./pages/variable-manager-page.jsx'));
+const DesktopPage = React.lazy(() => import('./pages/desktop-page.jsx'));
 const LoadingScreenPage = React.lazy(() => import('./loading-screen-page.jsx'));
 const FrostedGlassPage = React.lazy(() => import('./frosted-glass-page.jsx'));
 const ShortcutManager = React.lazy(() => import('../shortcut-manager/shortcut-manager.jsx'));
 import {takeSettingsModalInitialView} from '../../lib/settings/modal-view.js';
+import {getSettingsSidebarGroups} from './settings-navigation.js';
+import {searchSettingsPages} from './settings-search.js';
 
-import {Settings, Zap, Blocks, Palette, PanelTop, Bug, GitBranch, Variable,
-    Globe, SunMoon, Wallpaper, Type, Monitor, Keyboard, ChevronLeft,
-    Hourglass, Droplets} from 'lucide-react';
-import {connect} from 'react-redux';
+import {ChevronLeft, Search} from 'lucide-react';
 
 import {DEFINITIONS as DEBUGGER_SETTINGS, getSetting as getDebuggerSetting,
     setSetting as setDebuggerSetting} from '../../lib/debugger/settings.js';
-import {DEFINITIONS as VARIABLE_MANAGER_SETTINGS, getSetting as getVariableManagerSetting,
-    setSetting as setVariableManagerSetting} from '../../lib/variable-manager/settings.js';
-import {
-    getAuthorName, getAuthorEmail, setAuthorName, setAuthorEmail,
-    getDefaultBranch, setDefaultBranch
-} from '../../lib/git/config.js';
 
 const BufferedInput = BufferedInputHOC(Input);
 
@@ -80,6 +79,16 @@ const messages = defineMessages({
         defaultMessage: 'Settings sections',
         description: 'Aria label for the settings sidebar',
         id: 'mw.settings.ariaLabel'
+    },
+    search: {
+        defaultMessage: 'Search settings',
+        description: 'Placeholder for the search box at the top of the settings window sidebar',
+        id: 'mw.settingsModal.search'
+    },
+    noResults: {
+        defaultMessage: 'No settings match',
+        description: 'Shown in the settings window sidebar when a search finds nothing',
+        id: 'mw.settingsModal.noResults'
     },
     desktopSystemDefault: {
         defaultMessage: 'System default',
@@ -239,7 +248,7 @@ class UnwrappedSetting extends React.Component {
         return (
             <div
                 className={classNames(styles.setting, {
-                    [styles.active]: this.props.active
+                    [styles.active]: active
                 })}
             >
                 <div className={styles.label}>
@@ -383,6 +392,19 @@ const settingDefinitions = {
             id: 'tw.settingsModal.disableCompilerHelp'
         },
         slug: 'disable-compiler'
+    },
+    disableCloudVariables: {
+        label: {
+            defaultMessage: 'Disable Cloud Variables',
+            description: 'Disable Cloud Variables setting',
+            id: 'mw.settingsModal.disableCloudVariables'
+        },
+        help: {
+            // eslint-disable-next-line max-len
+            defaultMessage: 'Disables cloud variables by default. Projects keep their cloud variables, but they will not connect until this setting is turned off.',
+            description: 'Disable Cloud Variables help',
+            id: 'mw.settingsModal.disableCloudVariablesHelp'
+        }
     },
     warpTimer: {
         label: {
@@ -620,7 +642,7 @@ class DebuggerBooleanSetting extends React.Component {
     render () {
         const {intl, label, help} = this.props;
         const translatedLabel = intl.formatMessage(toMessageDescriptor(label));
-        const translatedHelp = help ? intl.formatMessage(toMessageDescriptor(help)) : undefined;
+        const translatedHelp = help ? intl.formatMessage(toMessageDescriptor(help)) : null;
         return (
             <BooleanSetting
                 value={this.state.value}
@@ -664,6 +686,7 @@ const HideBackpack = createBooleanSetting('HideBackpack', settingDefinitions.hid
 const HideOperatorArrows = createBooleanSetting('HideOperatorArrows', settingDefinitions.hideOperatorArrows);
 const UnclipPalette = createBooleanSetting('UnclipPalette', settingDefinitions.unclipPalette);
 const VanillaPalette = createBooleanSetting('VanillaPalette', settingDefinitions.vanillaPalette);
+const DisableCloudVariables = createBooleanSetting('DisableCloudVariables', settingDefinitions.disableCloudVariables);
 
 const DisableCompiler = props => (
     <BooleanSetting
@@ -944,32 +967,33 @@ CustomStageSize.propTypes = {
 const CloudVariableServer = props => {
     const {intl} = props;
     return (
-    <Setting
-        primary={
-            <div className={classNames(styles.label, styles['cloud-variable-server'])}>
+        <Setting
+            primary={
+                <div className={classNames(styles.label, styles['cloud-variable-server'])}>
+                    <FormattedMessage
+                        defaultMessage="Cloud Variable Server"
+                        description="Cloud Variable Server setting"
+                        id="tw.settingsModal.cloudVariableServer"
+                    />
+                    <BufferedInput
+                        value={props.cloudVariableServer}
+                        onSubmit={props.onCloudVariableServerChange}
+                        className={styles['cloud-variable-server-input']}
+                        type="text"
+                        placeholder={intl.formatMessage(messages.cloudServerPlaceholder)}
+                    />
+                </div>
+            }
+            help={
                 <FormattedMessage
-                    defaultMessage="Cloud Variable Server"
-                    description="Cloud Variable Server setting"
-                    id="tw.settingsModal.cloudVariableServer"
+                    // eslint-disable-next-line max-len
+                    defaultMessage="Changes the server used for cloud variables. The URL must start with ws:// or wss://."
+                    description="Cloud Variable Server setting help"
+                    id="tw.settingsModal.cloudVariableServerHelp"
                 />
-                <BufferedInput
-                    value={props.cloudVariableServer}
-                    onSubmit={props.onCloudVariableServerChange}
-                    className={styles['cloud-variable-server-input']}
-                    type="text"
-                    placeholder={intl.formatMessage(messages.cloudServerPlaceholder)}
-                />
-            </div>
-        }
-        help={
-            <FormattedMessage
-                // eslint-disable-next-line max-len
-                defaultMessage="Changes the server used for cloud variables. The URL must start with ws:// or wss://."
-                description="Cloud Variable Server setting help"
-                id="tw.settingsModal.cloudVariableServerHelp"
-            />
-        }
-    />);
+            }
+        />
+    );
 };
 
 CloudVariableServer.propTypes = {
@@ -1116,6 +1140,14 @@ const pageConfigurations = {
                             value: props.disableCompiler,
                             onChange: props.onDisableCompilerChange
                         })
+                    },
+                    {
+                        component: DisableCloudVariables,
+                        props: props => ({
+                            value: props.disableCloudVariables,
+                            onChange: props.onDisableCloudVariablesChange
+                        }),
+                        condition: () => !isScratchDesktop()
                     }
                 ]
             },
@@ -1286,22 +1318,6 @@ const pageConfigurations = {
                                 'show_sound_count',
                                 'show_complexity_score',
                                 'show_media_recorder'
-                            ]
-                        })
-                    }
-                ]
-            },
-            {
-                headerMessage: 'headerAutosave',
-                settings: [
-                    {
-                        component: MenuBarFeatureSettings,
-                        props: () => ({
-                            ids: [
-                                'autosave_enabled',
-                                'autosave_interval',
-                                'autosave_notifications',
-                                'autosave_only_when_changed'
                             ]
                         })
                     }
@@ -1478,435 +1494,6 @@ UnwrappedDebuggerPage.propTypes = {
 
 const DebuggerPage = injectIntl(UnwrappedDebuggerPage);
 
-const TextSetting = ({label, help, value, onSubmit, placeholder}) => (
-    <div className={styles.setting}>
-        <div className={styles.textSettingLabel}>{label}</div>
-        <BufferedInput
-            className={styles.textInput}
-            type="text"
-            value={value}
-            placeholder={placeholder}
-            onSubmit={onSubmit}
-        />
-        {help && <p className={styles.detail}>{help}</p>}
-    </div>
-);
-TextSetting.propTypes = {
-    label: PropTypes.node,
-    help: PropTypes.node,
-    value: PropTypes.string,
-    onSubmit: PropTypes.func.isRequired,
-    placeholder: PropTypes.string
-};
-
-class UnwrappedVersionControlPage extends React.Component {
-    constructor (props) {
-        super(props);
-        bindAll(this, [
-            'handleNameChange',
-            'handleEmailChange',
-            'handleBranchChange'
-        ]);
-        this.state = {
-            authorName: getAuthorName(),
-            authorEmail: getAuthorEmail(),
-            defaultBranch: getDefaultBranch()
-        };
-    }
-    handleNameChange (value) {
-        setAuthorName(value);
-        this.setState({authorName: getAuthorName()});
-    }
-    handleEmailChange (value) {
-        setAuthorEmail(value);
-        this.setState({authorEmail: getAuthorEmail()});
-    }
-    handleBranchChange (value) {
-        setDefaultBranch(value);
-        this.setState({defaultBranch: getDefaultBranch()});
-    }
-    render () {
-        const {intl} = this.props;
-        return (
-            <Box className={styles.body}>
-                <Header>{intl.formatMessage(messages.headerVersionControl)}</Header>
-                <TextSetting
-                    label={<FormattedMessage
-                        defaultMessage="Author name"
-                        id="mw.settings.vc.authorName"
-                    />}
-                    help={<FormattedMessage
-                        // eslint-disable-next-line max-len
-                        defaultMessage="Used as the commit author and as your username when pushing to private repositories."
-                        id="mw.settings.vc.authorNameHelp"
-                    />}
-                    value={this.state.authorName}
-                    onSubmit={this.handleNameChange}
-                    placeholder={intl.formatMessage({
-                        id: 'mw.settings.vc.authorNamePlaceholder',
-                        defaultMessage: 'User'
-                    })}
-                />
-                <TextSetting
-                    label={<FormattedMessage
-                        defaultMessage="Author email"
-                        id="mw.settings.vc.authorEmail"
-                    />}
-                    help={<FormattedMessage
-                        defaultMessage="Recorded as the email address on each commit you make."
-                        id="mw.settings.vc.authorEmailHelp"
-                    />}
-                    value={this.state.authorEmail}
-                    onSubmit={this.handleEmailChange}
-                    placeholder={intl.formatMessage(messages.authorEmailPlaceholder)}
-                />
-                <TextSetting
-                    label={<FormattedMessage
-                        defaultMessage="Default branch name"
-                        id="mw.settings.vc.defaultBranch"
-                    />}
-                    help={<FormattedMessage
-                        defaultMessage="Branch created when a new repository is initialized."
-                        id="mw.settings.vc.defaultBranchHelp"
-                    />}
-                    value={this.state.defaultBranch}
-                    onSubmit={this.handleBranchChange}
-                    placeholder={intl.formatMessage(messages.defaultBranchPlaceholder)}
-                />
-            </Box>
-        );
-    }
-}
-UnwrappedVersionControlPage.propTypes = {
-    intl: intlShape.isRequired
-};
-const VersionControlPage = injectIntl(UnwrappedVersionControlPage);
-
-class VmSetting extends React.Component {
-    constructor (props) {
-        super(props);
-        bindAll(this, ['handleBooleanChange', 'handleSelectChange', 'handleNumberChange']);
-        this.state = {value: getVariableManagerSetting(props.definition.id)};
-    }
-    commit (value) {
-        setVariableManagerSetting(this.props.definition.id, value);
-        this.setState({value: getVariableManagerSetting(this.props.definition.id)});
-    }
-    handleBooleanChange (e) {
-        this.commit(e.target.checked);
-    }
-    handleSelectChange (e) {
-        this.commit(e.target.value);
-    }
-    handleNumberChange (value) {
-        this.commit(value);
-    }
-    render () {
-        const {definition, intl} = this.props;
-        const {value} = this.state;
-        const translatedLabel = intl.formatMessage({id: definition.label, defaultMessage: definition.label});
-        const translatedHelp = definition.help ? intl.formatMessage({id: definition.help, defaultMessage: definition.help}) : undefined;
-        if (definition.type === 'boolean') {
-            return (
-                <BooleanSetting
-                    value={value}
-                    onChange={this.handleBooleanChange}
-                    label={translatedLabel}
-                    help={translatedHelp}
-                />
-            );
-        }
-        if (definition.type === 'select') {
-            return (
-                <Setting
-                    help={translatedHelp}
-                    primary={
-                        <div className={styles.label}>
-                            <span className={styles.settingText}>{translatedLabel}</span>
-                            <select
-                                className={styles.select}
-                                value={value}
-                                onChange={this.handleSelectChange}
-                            >
-                                {definition.options.map(option => (
-                                    <option
-                                        key={option.value}
-                                        value={option.value}
-                                    >
-                                        {intl.formatMessage({id: option.label, defaultMessage: option.label})}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                    }
-                />
-            );
-        }
-        return (
-            <Setting
-                help={translatedHelp}
-                primary={
-                    <div className={styles.label}>
-                        <span className={styles.settingText}>{translatedLabel}</span>
-                        <BufferedInput
-                            className={styles.numberInput}
-                            type="number"
-                            value={value}
-                            min={definition.min}
-                            max={definition.max}
-                            step={definition.step}
-                            onSubmit={this.handleNumberChange}
-                        />
-                    </div>
-                }
-            />
-        );
-    }
-}
-VmSetting.propTypes = {
-    definition: PropTypes.shape({
-        id: PropTypes.string.isRequired,
-        type: PropTypes.string.isRequired,
-        label: PropTypes.string,
-        help: PropTypes.string,
-        min: PropTypes.number,
-        max: PropTypes.number,
-        step: PropTypes.number,
-        options: PropTypes.array
-    }).isRequired,
-    intl: intlShape.isRequired
-};
-
-const UnwrappedVariableManagerPage = ({intl}) => (
-    <Box className={styles.body}>
-        <Header>{intl.formatMessage(messages.headerVariableManager)}</Header>
-        {VARIABLE_MANAGER_SETTINGS.map(definition => (
-            <VmSetting
-                key={definition.id}
-                definition={definition}
-                intl={intl}
-            />
-        ))}
-    </Box>
-);
-UnwrappedVariableManagerPage.propTypes = {
-    intl: intlShape.isRequired
-};
-const VariableManagerPage = injectIntl(UnwrappedVariableManagerPage);
-
-const DesktopSelectSetting = ({label, help, value, options, onChange}) => (
-    <Setting
-        help={help}
-        primary={
-            <div className={styles.label}>
-                <span className={styles.settingText}>{label}</span>
-                <select
-                    className={styles.select}
-                    value={value}
-                    onChange={onChange}
-                >
-                    {options.map(option => (
-                        <option
-                            key={option.value}
-                            value={option.value}
-                        >
-                            {option.label}
-                        </option>
-                    ))}
-                </select>
-            </div>
-        }
-    />
-);
-DesktopSelectSetting.propTypes = {
-    label: PropTypes.node,
-    help: PropTypes.node,
-    value: PropTypes.string,
-    options: PropTypes.arrayOf(PropTypes.shape({
-        value: PropTypes.string,
-        label: PropTypes.node
-    })),
-    onChange: PropTypes.func
-};
-
-class DesktopPage extends React.Component {
-    constructor (props) {
-        super(props);
-        this.state = {
-            settings: null,
-            devices: []
-        };
-    }
-
-    componentDidMount () {
-        try {
-            this.setState({settings: window.EditorPreload.getDesktopSettings()});
-        } catch (e) {
-            this.setState({settings: null});
-        }
-        if (navigator.mediaDevices && typeof navigator.mediaDevices.enumerateDevices === 'function') {
-            navigator.mediaDevices.enumerateDevices()
-                .then(devices => this.setState({devices}))
-                .catch(() => {});
-        }
-    }
-
-    set (key, value) {
-        this.setState(prevState => ({
-            settings: {
-                ...prevState.settings,
-                [key]: value
-            }
-        }));
-        const result = window.EditorPreload.setDesktopSetting(key, value);
-        if (result && typeof result.catch === 'function') {
-            result.catch(error => console.error('Failed to set desktop setting:', key, error));
-        }
-    }
-
-    renderDeviceSelect (key, label, help, kind) {
-        const {intl} = this.props;
-        const devices = this.state.devices.filter(device => device.kind === kind);
-        return (
-            <DesktopSelectSetting
-                label={label}
-                help={help}
-                value={this.state.settings[key] || ''}
-                options={[
-                    {
-                        value: '',
-                        label: intl.formatMessage(messages.desktopSystemDefault)
-                    },
-                    ...devices.map(device => ({
-                        value: device.deviceId,
-                        label: device.label || device.deviceId
-                    }))
-                ]}
-                onChange={e => this.set(key, e.target.value || null)}
-            />
-        );
-    }
-
-    render () {
-        const s = this.state.settings;
-        const {intl} = this.props;
-        if (!s) {
-            return null;
-        }
-        return (
-            <Box className={styles.pageContent}>
-                {s.updateCheckerAllowed ? (
-                    <DesktopSelectSetting
-                        label={<FormattedMessage
-                            defaultMessage="Update notifications"
-                            id="mw.settingsModal.desktop.updateChecker"
-                        />}
-                        help={<FormattedMessage
-                            defaultMessage="Controls which app updates you are notified about. Security updates only shows the most important releases; Never disables the update check entirely."
-                            id="mw.settingsModal.desktop.updateCheckerHelp"
-                        />}
-                        value={s.updateChecker}
-                        options={[
-                            {value: 'unstable',
-                                label: intl.formatMessage(messages.desktopUpdateAll)},
-                            {value: 'stable',
-                                label: intl.formatMessage(messages.desktopUpdateStable)},
-                            {value: 'security',
-                                label: intl.formatMessage(messages.desktopUpdateSecurity)},
-                            {value: 'never',
-                                label: intl.formatMessage(messages.desktopUpdateNever)}
-                        ]}
-                        onChange={e => this.set('updateChecker', e.target.value)}
-                    />
-                ) : null}
-                {this.renderDeviceSelect('microphone', (<FormattedMessage
-                    defaultMessage="Microphone"
-                    id="mw.settingsModal.desktop.microphone"
-                />), (<FormattedMessage
-                    defaultMessage="The input device projects use to record audio, such as the microphone extension."
-                    id="mw.settingsModal.desktop.microphoneHelp"
-                />), 'audioinput')}
-                {this.renderDeviceSelect('camera', (<FormattedMessage
-                    defaultMessage="Camera"
-                    id="mw.settingsModal.desktop.camera"
-                />), (<FormattedMessage
-                    defaultMessage="The camera projects use for video sensing."
-                    id="mw.settingsModal.desktop.cameraHelp"
-                />), 'videoinput')}
-                <BooleanSetting
-                    value={!!s.backgroundThrottling}
-                    onChange={event => this.set('backgroundThrottling', event.target.checked)}
-                    label={<FormattedMessage
-                        defaultMessage="Pause when the window is not visible"
-                        id="mw.settingsModal.desktop.backgroundThrottling"
-                    />}
-                    help={<FormattedMessage
-                        defaultMessage="Slows down projects while the window is hidden or minimized to save power. Disable this if projects need to keep running in the background."
-                        id="mw.settingsModal.desktop.backgroundThrottlingHelp"
-                    />}
-                />
-                <BooleanSetting
-                    value={!!s.bypassCORS}
-                    onChange={event => this.set('bypassCORS', event.target.checked)}
-                    label={<FormattedMessage
-                        defaultMessage="Allow projects to access any website (requires restart, dangerous)"
-                        id="mw.settingsModal.desktop.bypassCORS"
-                    />}
-                    help={<FormattedMessage
-                        defaultMessage="Lets projects fetch data from websites that would normally block them. Only enable this for projects you trust, as it removes a security protection."
-                        id="mw.settingsModal.desktop.bypassCORSHelp"
-                    />}
-                />
-                <BooleanSetting
-                    value={!!s.spellchecker}
-                    onChange={event => this.set('spellchecker', event.target.checked)}
-                    label={<FormattedMessage
-                        defaultMessage="Spellchecker (requires restart)"
-                        id="mw.settingsModal.desktop.spellchecker"
-                    />}
-                    help={<FormattedMessage
-                        defaultMessage="Underlines misspelled words in text fields like the ask block prompt and costume names."
-                        id="mw.settingsModal.desktop.spellcheckerHelp"
-                    />}
-                />
-                <BooleanSetting
-                    value={!!s.exitFullscreenOnEscape}
-                    onChange={event => this.set('exitFullscreenOnEscape', event.target.checked)}
-                    label={<FormattedMessage
-                        defaultMessage="Exit fullscreen when escape is pressed"
-                        id="mw.settingsModal.desktop.exitFullscreenOnEscape"
-                    />}
-                    help={<FormattedMessage
-                        defaultMessage="Lets the Escape key leave fullscreen mode. Disable this if your project uses Escape for its own controls."
-                        id="mw.settingsModal.desktop.exitFullscreenOnEscapeHelp"
-                    />}
-                />
-                <BooleanSetting
-                    value={!!s.cloudExtensions}
-                    onChange={event => this.set('cloudExtensions', event.target.checked)}
-                    label={<FormattedMessage
-                        defaultMessage="Load extensions from the cloud"
-                        id="mw.settingsModal.desktop.cloudExtensions"
-                    />}
-                    help={<FormattedMessage
-                        defaultMessage="Loads extensions from the internet when possible, falling back to local copies when offline or unreachable."
-                        id="mw.settingsModal.desktop.cloudExtensionsHelp"
-                    />}
-                />
-                <button
-                    className={styles.button}
-                    onClick={() => window.EditorPreload.openUserData()}
-                >
-                    <FormattedMessage
-                        defaultMessage="Open user data folder"
-                        id="mw.settingsModal.desktop.openUserData"
-                    />
-                </button>
-            </Box>
-        );
-    }
-}
-
 const SettingsRouter = ({view, ...handlers}) => {
     switch (view) {
     case 'general':
@@ -1916,6 +1503,12 @@ const SettingsRouter = ({view, ...handlers}) => {
     case 'shortcuts':
         return <ShortcutManager />;
     case 'theme':
+        return <ColorThemePage />;
+    case 'customThemes':
+        return <CustomThemesPage {...handlers} />;
+    case 'appearance':
+        return <StylesPage {...handlers} />;
+    case 'blocks':
         return <ThemePage />;
     case 'wallpaper':
         return <WallpaperPage />;
@@ -1929,12 +1522,12 @@ const SettingsRouter = ({view, ...handlers}) => {
         return <DebuggerPage {...handlers} />;
     case 'versionControl':
         return <VersionControlPage {...handlers} />;
+    case 'autosave':
+        return <AutosavePage {...handlers} />;
     case 'variableManager':
         return <VariableManagerPage {...handlers} />;
     case 'editor':
         return <EditorPage {...handlers} />;
-    case 'styles':
-        return <StylesPage {...handlers} />;
     case 'menuBar':
         return <MenuBarPage {...handlers} />;
     case 'desktop':
@@ -1957,14 +1550,15 @@ class SettingsModalComponent extends React.Component {
         bindAll(this, [
             'handleNavigate',
             'handleStoreProjectOptions',
-            'handleToggleGroup',
+            'handleSearchChange',
+            'handleSearchKeyDown',
             'handleMobileBack'
         ]);
 
         this.state = {
             currentView: takeSettingsModalInitialView() || 'general',
-            collapsedGroups: {},
-            mobileView: 'list'
+            mobileView: 'list',
+            searchQuery: ''
         };
     }
 
@@ -1972,17 +1566,26 @@ class SettingsModalComponent extends React.Component {
         this.setState({currentView: category, mobileView: 'content'});
     }
 
-    handleMobileBack () {
-        this.setState({mobileView: 'list'});
+    handleSearchChange (e) {
+        this.setState({searchQuery: e.target.value});
     }
 
-    handleToggleGroup (groupId) {
-        this.setState(prevState => ({
-            collapsedGroups: {
-                ...prevState.collapsedGroups,
-                [groupId]: !prevState.collapsedGroups[groupId]
-            }
-        }));
+    handleSearchKeyDown (e) {
+        if (e.key !== 'Enter') return;
+        const sidebarGroups = getSettingsSidebarGroups(
+            this.props.intl,
+            typeof window.EditorPreload !== 'undefined'
+        );
+        const pages = sidebarGroups.reduce((all, group) => all.concat(group.items), []);
+        const [firstResult] = searchSettingsPages(pages, this.state.searchQuery);
+        if (firstResult) {
+            e.preventDefault();
+            this.handleNavigate(firstResult.id);
+        }
+    }
+
+    handleMobileBack () {
+        this.setState({mobileView: 'list'});
     }
 
     handleStoreProjectOptions () {
@@ -1993,133 +1596,13 @@ class SettingsModalComponent extends React.Component {
         const {intl} = this.props;
         const {currentView} = this.state;
 
-        const sidebarGroups = [
-            {
-                id: 'general',
-                label: intl.formatMessage({id: 'mw.settings.groupGeneral', defaultMessage: 'General'}),
-                items: [
-                    {
-                        id: 'general',
-                        label: intl.formatMessage({id: 'mw.settings.general', defaultMessage: 'General'}),
-                        icon: Settings
-                    },
-                    {
-                        id: 'language',
-                        label: intl.formatMessage({id: 'gui.menuBar.language', defaultMessage: 'Language'}),
-                        icon: Globe
-                    },
-                    {
-                        id: 'shortcuts',
-                        label: intl.formatMessage({
-                            id: 'tw.menuBar.keyboardShortcuts',
-                            defaultMessage: 'Keyboard Shortcuts'
-                        }),
-                        icon: Keyboard
-                    }
-                ]
-            },
-            {
-                id: 'appearance',
-                label: intl.formatMessage({id: 'mw.settings.groupAppearance', defaultMessage: 'Appearance'}),
-                items: [
-                    {
-                        id: 'theme',
-                        label: intl.formatMessage({id: 'tw.menuBar.theme', defaultMessage: 'Theme'}),
-                        icon: SunMoon
-                    },
-                    {
-                        id: 'wallpaper',
-                        label: intl.formatMessage({id: 'tw.menuBar.wallpaper', defaultMessage: 'Wallpaper'}),
-                        icon: Wallpaper
-                    },
-                    {
-                        id: 'fonts',
-                        label: intl.formatMessage({id: 'tw.menuBar.fonts', defaultMessage: 'Fonts'}),
-                        icon: Type
-                    },
-                    {
-                        id: 'frostedGlass',
-                        label: intl.formatMessage({id: 'bl.frostedGlass.pageTitle', defaultMessage: 'Frosted Glass'}),
-                        icon: Droplets
-                    },
-                    {
-                        id: 'editor',
-                        label: intl.formatMessage({id: 'mw.settings.editor', defaultMessage: 'Editor'}),
-                        icon: Blocks
-                    },
-                    {
-                        id: 'styles',
-                        label: intl.formatMessage({id: 'mw.settings.styles', defaultMessage: 'Styles'}),
-                        icon: Palette
-                    },
-                    {
-                        id: 'menuBar',
-                        label: intl.formatMessage({id: 'mw.settings.menuBar', defaultMessage: 'Menu Bar'}),
-                        icon: PanelTop
-                    },
-                    {
-                        id: 'loadingScreen',
-                        label: intl.formatMessage({
-                            id: 'mw.settings.loadingScreen',
-                            defaultMessage: 'Loading Screen'
-                        }),
-                        icon: Hourglass
-                    }
-                ]
-            },
-            {
-                id: 'tools',
-                label: intl.formatMessage({id: 'mw.settings.groupTools', defaultMessage: 'Tools'}),
-                items: [
-                    {
-                        id: 'versionControl',
-                        label: intl.formatMessage({
-                            id: 'mw.settings.versionControl',
-                            defaultMessage: 'Version Control'
-                        }),
-                        icon: GitBranch
-                    },
-                    {
-                        id: 'variableManager',
-                        label: intl.formatMessage({
-                            id: 'mw.settings.variableManager',
-                            defaultMessage: 'Variable Manager'
-                        }),
-                        icon: Variable
-                    },
-                    {
-                        id: 'debugger',
-                        label: intl.formatMessage({id: 'mw.settings.debugger', defaultMessage: 'Debugger'}),
-                        icon: Bug
-                    }
-                ]
-            },
-            {
-                id: 'advanced',
-                label: intl.formatMessage({id: 'mw.settings.groupAdvanced', defaultMessage: 'Advanced'}),
-                items: [
-                    {
-                        id: 'experimental',
-                        label: intl.formatMessage({id: 'mw.settings.experimental', defaultMessage: 'Experimental'}),
-                        icon: Zap
-                    }
-                ]
-            }
-        ];
-
-        if (typeof window.EditorPreload !== 'undefined') {
-            sidebarGroups.splice(sidebarGroups.length - 1, 0, {
-                id: 'desktop',
-                label: intl.formatMessage({id: 'mw.settings.groupDesktop', defaultMessage: 'Desktop'}),
-                items: [
-                    {
-                        id: 'desktop',
-                        label: intl.formatMessage({id: 'mw.settings.desktop', defaultMessage: 'Desktop'}),
-                        icon: Monitor
-                    }
-                ]
-            });
-        }
+        const sidebarGroups = getSettingsSidebarGroups(
+            intl,
+            typeof window.EditorPreload !== 'undefined'
+        );
+        const pages = sidebarGroups.reduce((all, group) => all.concat(group.items), []);
+        const searchResults = this.state.searchQuery.trim() ?
+            searchSettingsPages(pages, this.state.searchQuery) : null;
 
         return (
             <Modal
@@ -2133,30 +1616,59 @@ class SettingsModalComponent extends React.Component {
                 <ModalSidebarLayout mobileView={this.state.mobileView}>
                     <ModalSidebar
                         ariaLabel={intl.formatMessage(messages.settingsSectionsAria)}
+                        header={
+                            <div className={styles.sidebarSearch}>
+                                <Search
+                                    aria-hidden="true"
+                                    className={styles.sidebarSearchIcon}
+                                    size={15}
+                                />
+                                <input
+                                    aria-label={intl.formatMessage(messages.search)}
+                                    className={styles.sidebarSearchInput}
+                                    placeholder={intl.formatMessage(messages.search)}
+                                    type="search"
+                                    value={this.state.searchQuery}
+                                    onChange={this.handleSearchChange}
+                                    onKeyDown={this.handleSearchKeyDown}
+                                />
+                            </div>
+                        }
                         width="wide"
                     >
-                        {sidebarGroups.map(group => {
-                            const collapsed = !!this.state.collapsedGroups[group.id];
-                            return (
-                                <ModalSidebarGroup key={group.id}>
-                                    <ModalSidebarGroupHeader
-                                        collapsible
-                                        collapsed={collapsed}
-                                        label={group.label}
-                                        onClick={() => this.handleToggleGroup(group.id)}
+                        {searchResults ? (
+                            searchResults.length > 0 ? searchResults.map(result => (
+                                <ModalSidebarItem
+                                    key={result.id}
+                                    icon={result.icon}
+                                    label={result.label}
+                                    selected={currentView === result.id}
+                                    onClick={() => this.handleNavigate(result.id)}
+                                />
+                            )) : (
+                                <p
+                                    className={styles.sidebarNoResults}
+                                    role="status"
+                                >
+                                    {intl.formatMessage(messages.noResults)}
+                                </p>
+                            )
+                        ) : sidebarGroups.map(group => (
+                            <ModalSidebarCollapsibleGroup
+                                key={group.id}
+                                label={group.label}
+                            >
+                                {group.items.map(cat => (
+                                    <ModalSidebarItem
+                                        key={cat.id}
+                                        icon={cat.icon}
+                                        label={cat.label}
+                                        selected={currentView === cat.id}
+                                        onClick={() => this.handleNavigate(cat.id)}
                                     />
-                                    {!collapsed && group.items.map(cat => (
-                                        <ModalSidebarItem
-                                            key={cat.id}
-                                            icon={cat.icon}
-                                            label={cat.label}
-                                            selected={currentView === cat.id}
-                                            onClick={() => this.handleNavigate(cat.id)}
-                                        />
-                                    ))}
-                                </ModalSidebarGroup>
-                            );
-                        })}
+                                ))}
+                            </ModalSidebarCollapsibleGroup>
+                        ))}
                     </ModalSidebar>
                     <ModalSidebarContent className={styles.contentArea}>
                         <button
@@ -2205,6 +1717,8 @@ SettingsModalComponent.propTypes = {
     onWarpTimerChange: PropTypes.func,
     disableCompiler: PropTypes.bool,
     onDisableCompilerChange: PropTypes.func,
+    disableCloudVariables: PropTypes.bool,
+    onDisableCloudVariablesChange: PropTypes.func,
     caseSensitiveLists: PropTypes.bool,
     onCaseSensitiveListsChange: PropTypes.func,
     realLayerIndexes: PropTypes.bool,
