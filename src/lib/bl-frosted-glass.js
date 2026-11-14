@@ -1600,8 +1600,15 @@ const TARGETS = [
    cx(cssClasses.menu, className, …) 把 'react-contextmenu' 和 Module 类名一起挂在
    <nav> 上，所以直接命中库类名即可，不必依赖哈希后的名字。
    ScratchAddons 的动态菜单项（addons/contextmenu.js）只是往同一个 <nav> 里插
-   .sa-ctx-menu 子节点，一并被覆盖。 */
-nav.react-contextmenu {
+   .sa-ctx-menu 子节点，一并被覆盖。
+
+   必须限定 .react-contextmenu--visible：库把菜单隐藏时只写 inline
+   opacity:0 / pointer-events:none，<nav> 仍留在 DOM 里。每条 backdrop-filter
+   都会给元素建立独立合成层并让它在背后内容变化时重算模糊，若对隐藏态也生效，
+   背包这种“每一项一个菜单”的列表会按项数线性拖慢整个编辑器。
+   （隐藏态同时被 context-menu.css 的 display:none 移出渲染树，这里再加一道，
+   防止以后有人改掉那条规则又把问题带回来。） */
+nav.react-contextmenu.react-contextmenu--visible {
     background: ${glass} !important;
     background-color: ${glass} !important;
     backdrop-filter: ${glassBlur} !important;
