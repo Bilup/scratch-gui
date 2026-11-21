@@ -2315,7 +2315,8 @@ class MenuBar extends React.Component {
                                         )}
                                     </MenuSection>
                                 ) : null}
-                                {window.__bilupTodoToggle || window.__bilupSPAToggle ? (
+                                {window.__bilupTodoToggle || window.__bilupSPAToggle ||
+                                    window.RWPerformanceProfiler ? (
                                     <MenuSection>
                                         {window.__bilupSPAToggle && (
                                             <MenuItem
@@ -2329,6 +2330,26 @@ class MenuBar extends React.Component {
                                                     defaultMessage="Simple Project Analyzer"
                                                     description="Menu bar item to toggle the simple project analyzer"
                                                     id="tw.menuBar.spa"
+                                                />
+                                            </MenuItem>
+                                        )}
+                                        {window.RWPerformanceProfiler && (
+                                            <MenuItem
+                                                onClick={() => {
+                                                    if (window.RWPerformanceProfiler.isProfiling()) {
+                                                        window.RWPerformanceProfiler.stop();
+                                                    } else {
+                                                        window.RWPerformanceProfiler.start();
+                                                    }
+                                                    this.props.onRequestCloseTools();
+                                                }}
+                                            >
+                                                <Gauge />
+                                                <FormattedMessage
+                                                    defaultMessage="Performance Profiler"
+                                                    // eslint-disable-next-line max-len
+                                                    description="Menu bar item to start the performance profiler"
+                                                    id="mw.menuBar.performanceProfiler"
                                                 />
                                             </MenuItem>
                                         )}
