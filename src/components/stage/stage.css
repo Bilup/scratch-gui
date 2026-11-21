@@ -35,6 +35,13 @@
     z-index: $z-index-stage-with-color-picker;
 }
 
+/* Extensions such as Mouse Cursor set an inline cursor on the stage canvas.
+   The color picker hides the cursor through the wrapper above, so the inline
+   value must not win while picking colors. */
+.with-color-picker canvas {
+    cursor: none !important;
+}
+
 .color-picker-background {
     position: absolute;
     width: 100%;

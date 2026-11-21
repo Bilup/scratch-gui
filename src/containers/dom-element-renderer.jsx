@@ -38,7 +38,34 @@ class DOMElementRenderer extends React.Component {
 
         // Convert react style prop to dom element styling.
         if (this.props.style) {
-            this.props.domElement.style.cssText = Style.string(this.props.style);
+            const domElement = this.props.domElement;
+            // Assigning `cssText` replaces the whole style attribute, which also
+            // drops inline styles that are not controlled by props. Extensions
+            // such as Mouse Cursor set `cursor` directly on the stage canvas and
+            // React re-renders on every stage resize, fullscreen toggle, etc., so
+            // preserve those properties instead of wiping them out.
+            const newStyleText = Style.string(this.props.style);
+            const managedProperties = new Set(
+                newStyleText
+                    .split(';')
+                    .map(declaration => declaration.split(':')[0].trim().toLowerCase())
+                    .filter(Boolean)
+            );
+            const preservedProperties = [];
+            for (let i = 0; i < domElement.style.length; i++) {
+                const property = domElement.style[i];
+                if (!managedProperties.has(property)) {
+                    preservedProperties.push([
+                        property,
+                        domElement.style.getPropertyValue(property),
+                        domElement.style.getPropertyPriority(property)
+                    ]);
+                }
+            }
+            domElement.style.cssText = newStyleText;
+            for (const [property, value, priority] of preservedProperties) {
+                domElement.style.setProperty(property, value, priority);
+            }
         }
 
         return <div ref={this.setContainer} />;

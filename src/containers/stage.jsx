@@ -9,6 +9,7 @@ import {STAGE_DISPLAY_SIZES} from '../lib/constants/layout-constants';
 import {getEventXY} from '../lib/utils/touch';
 import VideoProvider from '../lib/video/video-provider';
 import {BitmapAdapter as V2BitmapAdapter} from '@bilup/scratch-svg-renderer';
+import installRendererCompatibility from '../lib/tw-renderer-compat';
 
 import StageComponent from '../components/stage/stage.jsx';
 
@@ -91,6 +92,10 @@ class Stage extends React.Component {
             // tw: handle changes to high quality pen
             this.props.vm.renderer.on('UseHighQualityRenderChanged', this.props.onHighQualityPenChanged);
         }
+
+        // tw: keep renderer behavior that third-party extensions rely on
+        installRendererCompatibility(this.renderer);
+
         this.props.vm.attachV2BitmapAdapter(new V2BitmapAdapter());
     }
     componentDidMount () {
