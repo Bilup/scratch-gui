@@ -275,37 +275,53 @@ class TWSecurityManagerComponent extends React.Component {
 
         const showModal = async (type, data) => {
             console.log('[Security Manager] showModal called for type:', type);
-            console.log('[Security Manager] showModal creating new Promise...');
             
             // 添加超时机制，防止无限等待
             const TIMEOUT_MS = 60000; // 60秒超时
             
-            const result = await new Promise((resolve, reject) => {
-                console.log('[Security Manager] Promise executor running, calling setState');
-                
-                // 设置超时
-                const timeoutId = setTimeout(() => {
-                    console.error('[Security Manager] Modal timeout after', TIMEOUT_MS, 'ms');
-                    reject(new Error('Modal timeout'));
-                }, TIMEOUT_MS);
-                
-                this.setState(oldState => ({
-                    type,
-                    data: data || {},
-                    callback: (value) => {
-                        clearTimeout(timeoutId);
+            let settled = false;
+            let timeoutId = null;
+            try {
+                const result = await new Promise(resolve => {
+                    const settle = value => {
+                        if (settled) return;
+                        settled = true;
+                        if (timeoutId !== null) clearTimeout(timeoutId);
+                        // The `settled` flag makes a late click a no-op; deliberately
+                        // not touching this.state here (the lock release below is what
+                        // clears the prompt).
                         resolve(value);
-                    },
-                    modalCount: oldState.modalCount + 1
-                }), () => {
-                    console.log('[Security Manager] setState callback fired');
+                    };
+
+                    // Treat an unanswered prompt as a denial instead of rejecting.
+                    // Rejecting propagated out of canLoadExtensionFromProject() and
+                    // failed the whole project load, which turned "the user did not
+                    // answer" into "this project cannot be opened". Denying only
+                    // skips the extension, so the project still loads.
+                    timeoutId = setTimeout(() => {
+                        console.warn('[Security Manager] Security prompt timed out, denying:', type);
+                        settle(false);
+                    }, TIMEOUT_MS);
+
+                    this.setState(oldState => ({
+                        type,
+                        data: data || {},
+                        callback: settle,
+                        modalCount: oldState.modalCount + 1
+                    }), () => {
+                        console.log('[Security Manager] setState callback fired');
+                    });
                 });
-                console.log('[Security Manager] setState called');
-            });
-            
-            console.log('[Security Manager] Modal resolved with result:', result);
-            releaseLock();
-            return result;
+
+                console.log('[Security Manager] Modal resolved with result:', result);
+                return result;
+            } finally {
+                // Always hand the lock back, including when setState or the modal
+                // itself throws. A leaked lock leaves every later prompt waiting in
+                // acquireModalLock() forever, which would freeze the next project
+                // load the same way a never-settling extension does.
+                releaseLock();
+            }
         };
 
         return {
@@ -315,33 +331,37 @@ class TWSecurityManagerComponent extends React.Component {
     }
 
     handleAllowed () {
-        console.log('[Security Manager] handleAllowed called, callback:', this.state.callback);
-        this.state.callback(true);
+        const callback = this.state.callback;
+        console.log('[Security Manager] handleAllowed called, callback:', Boolean(callback));
+        if (callback) callback(true);
     }
 
     handleDenied () {
-        console.log('[Security Manager] handleDenied called, callback:', this.state.callback);
-        this.state.callback(false);
+        const callback = this.state.callback;
+        console.log('[Security Manager] handleDenied called, callback:', Boolean(callback));
+        if (callback) callback(false);
     }
 
     handleLoadAll () {
         this.props.vm.runtime._mwProjectTrusted = true;
-        this.state.callback(true);
+        const callback = this.state.callback;
+        if (callback) callback(true);
     }
 
     handleProjectLoading ({stage}) {
         if (stage !== 'building') return;
-        // Keep the verdict the load path declared instead of resetting it.
-        // A project the user opened from their own computer (or one they own on
-        // the platform) is trusted by provenance: loadProject() was called with
-        // mwCanTrustProject, which is what canTrustLoadedProject() reads.
-        // Resetting it to false here made canLoadExtensionFromProject() ask once
-        // per unofficial extension, behind a loading overlay that hides the
-        // prompt; each unanswered prompt burned the modal timeout, so a project
-        // with a few extensions sat on "Adding sprites …" until the 60s timeout
-        // failed the whole load, and the extensions were handed to the sandbox
-        // where data: URL scripts never finish loading. Projects with no verdict
-        // to keep are unaffected.
+        // Recompute the verdict for THIS load. canTrustLoadedProject() only
+        // returns true when the load path declared trust (mwCanTrustProject),
+        // when the project is one the user owns on the platform, or when it was
+        // served from loopback. A file picked from disk is deliberately NOT in
+        // that set: it came from outside the editor, so its extensions have to
+        // go through the prompt (see sb-file-uploader-hoc).
+        //
+        // The prompt itself is rendered in the always-on-top window tier, which
+        // sits above the loading overlay, so asking during a load is visible. A
+        // prompt that never gets answered is treated as a denial rather than a
+        // load failure (see showModal), so worst case the extension is skipped
+        // and the rest of the project still opens.
         this.props.vm.runtime._mwProjectTrusted = canTrustLoadedProject(this.props.vm);
         extensionsTrustedByUser.clear();
         customExtensionUrls.clear();
@@ -639,6 +659,7 @@ const ConnectedSecurityManagerComponent = connect(
 
 export {
     ConnectedSecurityManagerComponent as default,
+    TWSecurityManagerComponent,
     manuallyTrustExtension,
     markExtensionAsCustom,
     isCustomExtensionUrl,

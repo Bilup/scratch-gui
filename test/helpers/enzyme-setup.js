@@ -1,7 +1,20 @@
 import Enzyme from 'enzyme';
 import Adapter from 'enzyme-adapter-react-16';
+import {TextDecoder, TextEncoder} from 'util';
 
 Enzyme.configure({adapter: new Adapter()});
+
+// jest 21's jsdom exposes neither TextDecoder nor TextEncoder, but several
+// modules build one at module scope (tw-security-manager-modal/data-url.jsx), so
+// they have to exist before any test module is required.
+if (typeof global.TextDecoder === 'undefined') {
+    global.TextDecoder = TextDecoder;
+    if (typeof window !== 'undefined') window.TextDecoder = TextDecoder;
+}
+if (typeof global.TextEncoder === 'undefined') {
+    global.TextEncoder = TextEncoder;
+    if (typeof window !== 'undefined') window.TextEncoder = TextEncoder;
+}
 
 // jest 21's bundled jsdom does not expose localStorage. Many modules read it
 // directly (addon settings, GUI prefs, ...), so provide an in-memory shim

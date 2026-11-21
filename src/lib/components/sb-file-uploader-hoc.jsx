@@ -252,7 +252,15 @@ const SBFileUploaderHOC = function (WrappedComponent) {
                 // Snapshot the resolved bytes so the async handler below reads a
                 // stable value (projectData may have been reassigned for .html).
                 const loadedBytes = projectData;
-                this.props.vm.loadProject(loadedBytes, {mwCanTrustProject: true})
+                // Do not pre-trust a project that came from disk. Passing
+                // mwCanTrustProject makes the security manager set
+                // runtime._mwProjectTrusted, which short-circuits
+                // canLoadExtensionFromProject() to `true` for every extension the
+                // project declares — so a downloaded .sb3 could pull in arbitrary
+                // extension code with no prompt at all. Extensions hosted on the
+                // gallery domains stay silent (see isTrustedExtension); anything
+                // else must be confirmed, which is what the prompt is for.
+                this.props.vm.loadProject(loadedBytes)
                     .then(async () => {
                         console.log('[SBFileUploader] Step 6: VM loadProject succeeded');
                         markLoadStage('vm-load');
