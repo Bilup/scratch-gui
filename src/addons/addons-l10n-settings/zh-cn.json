@@ -518,5 +518,11 @@
   "project-size-display/@name": "项目大小显示",
   "project-size-display/@description": "在角色栏底部显示作品大小、代码数量和选中角色/舞台的大小。",
   "resize-selected-item/@name": "造型数据调整",
-  "resize-selected-item/@description": "在造型编辑器中添加一个按钮，用来调整选中素材的具体大小，位置"
+  "resize-selected-item/@description": "在造型编辑器中添加一个按钮，用来调整选中素材的具体大小，位置",
+  "performance-profiler/@name": "性能剖析",
+  "performance-profiler/@description": "30 秒性能剖析：热点积木、内存增长、线程阻塞、克隆统计",
+  "performance-profiler/@info-pp-usage": "点击工具菜单 → 性能剖析 启动，立即显示剖析进度，结束后在同一窗口展示热点积木、线程阻塞、内存趋势。",
+  "performance-profiler/@settings-name-profileDuration": "剖析时长（秒）",
+  "performance-profiler/@settings-name-sampleInterval": "采样间隔（毫秒）",
+  "performance-profiler/@settings-name-hotBlockLimit": "热点积木显示上限"
 }

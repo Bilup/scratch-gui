@@ -286,7 +286,9 @@ const localMessages = {
         'mw.settings.autosave.onlyWhenChanged': 'Only autosave changed projects',
         'mw.settings.autosave.onlyWhenChangedHelp': 'Skip autosave when nothing has changed since the last save.',
         'mw.settings.menuBar.moveUp': 'Move {item} up',
-        'mw.settings.menuBar.moveDown': 'Move {item} down'
+        'mw.settings.menuBar.moveDown': 'Move {item} down',
+
+        'mw.menuBar.performanceProfiler': 'Performance Profiler'
     },
     'zh-cn': {
         'gui.backpack.searchPlaceholder': '搜索书包……',
@@ -589,7 +591,9 @@ const localMessages = {
         'mw.settings.autosave.onlyWhenChanged': '仅保存有更改的作品',
         'mw.settings.autosave.onlyWhenChangedHelp': '如果自上次保存后没有更改，则跳过自动保存。',
         'mw.settings.menuBar.moveUp': '将{item}上移',
-        'mw.settings.menuBar.moveDown': '将{item}下移'
+        'mw.settings.menuBar.moveDown': '将{item}下移',
+
+        'mw.menuBar.performanceProfiler': '性能剖析'
     }
 };
 
