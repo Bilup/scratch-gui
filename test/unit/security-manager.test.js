@@ -1,17 +1,16 @@
 import {webcrypto} from 'crypto';
-import {TextEncoder} from 'util';
 import {
     canTrustLoadedProject,
     isLocalProjectUrl,
     isOwnedPlatformProject,
     isPlatformTrustedExtension,
     isTrustedExtension,
-    manuallyTrustExtension
+    manuallyTrustExtension,
+    TWSecurityManagerComponent
 } from '../../src/containers/tw-security-manager.jsx';
 import {rememberPlatformProject} from '../../src/lib/community/publish.js';
 
 Object.defineProperty(global, 'crypto', {value: webcrypto, configurable: true});
-Object.defineProperty(global, 'TextEncoder', {value: TextEncoder, configurable: true});
 
 test('only official or explicitly trusted extensions run unsandboxed', () => {
     const custom = 'https://example.com/extension.js';
@@ -58,4 +57,39 @@ test('platform projects trust only hashes approved by the server', async () => {
     expect(isTrustedExtension('https://extensions.mistium.com/featured/example.js')).toBe(true);
     window.history.replaceState(null, '', '/editor');
     rememberPlatformProject(null);
+});
+
+const makeManager = ({projectTrusted}) => {
+    const vm = {
+        runtime: {_mwProjectTrusted: projectTrusted},
+        on: jest.fn(),
+        off: jest.fn(),
+        extensionManager: {securityManager: {}}
+    };
+    const manager = new TWSecurityManagerComponent({vm});
+    const showModal = jest.fn(() => Promise.resolve(true));
+    manager.acquireModalLock = jest.fn(() => Promise.resolve({showModal, releaseLock: jest.fn()}));
+    return {manager, showModal, vm};
+};
+
+test('an untrusted project has to ask before an unofficial extension loads', async () => {
+    const {manager, showModal} = makeManager({projectTrusted: false});
+
+    expect(await manager.canLoadExtensionFromProject('https://untrusted.example.org/ext.js')).toBe(true);
+    expect(showModal).toHaveBeenCalledTimes(1);
+    expect(showModal.mock.calls[0][0]).toBe('LoadExtension');
+});
+
+test('a trusted project loads unofficial extensions without asking', async () => {
+    const {manager, showModal} = makeManager({projectTrusted: true});
+
+    expect(await manager.canLoadExtensionFromProject('https://untrusted.example.org/ext.js')).toBe(true);
+    expect(showModal).not.toHaveBeenCalled();
+});
+
+test('gallery extensions never ask, trusted project or not', async () => {
+    const {manager, showModal} = makeManager({projectTrusted: false});
+
+    expect(await manager.canLoadExtensionFromProject('https://extensions.bilup.org/example.js')).toBe(true);
+    expect(showModal).not.toHaveBeenCalled();
 });
