@@ -36,8 +36,7 @@ class FrostedGlassPage extends React.Component {
             'handleEdgeHighlightChange',
             'handleLowPowerChange',
             'handleTargetChange',
-            'handlePreset',
-            'handleResetDefaults'
+            'handlePreset'
         ]);
         // 兼容 legacy 设置：缺省字段按默认值补全
         const saved = getFrostedGlassSettings() || DEFAULT_SETTINGS;
@@ -133,18 +132,6 @@ class FrostedGlassPage extends React.Component {
         });
     }
 
-    handleResetDefaults () {
-        this.applyAndSave({
-            enabled: DEFAULT_SETTINGS.enabled,
-            blurRadius: DEFAULT_SETTINGS.blurRadius,
-            opacity: DEFAULT_SETTINGS.opacity,
-            themeBoost: DEFAULT_SETTINGS.themeBoost,
-            saturation: DEFAULT_SETTINGS.saturation,
-            edgeHighlight: DEFAULT_SETTINGS.edgeHighlight,
-            targets: DEFAULT_SETTINGS.targets
-        });
-    }
-
     isTargetChecked (targetId) {
         return this.state.targets === null || this.state.targets.includes(targetId);
     }
@@ -222,15 +209,6 @@ class FrostedGlassPage extends React.Component {
                                 <FormattedMessage
                                     id="bl.frostedGlass.preset.rich"
                                     defaultMessage="Rich"
-                                />
-                            </button>
-                            <button
-                                className={styles.button}
-                                onClick={this.handleResetDefaults}
-                            >
-                                <FormattedMessage
-                                    id="bl.frostedGlass.resetDefaults"
-                                    defaultMessage="Reset Defaults"
                                 />
                             </button>
                         </div>

@@ -1026,7 +1026,13 @@ const TARGET_CSS = {
        mw-fractch-workspace 的选中行。
        ⚠ .status-bar 是**整条**通栏元素（不是按钮），一并纳入。
        ⚠ gui .palette-footer（"添加扩展"方块按钮）**不在**此列 —— 用户要求它保持原样，
-         见 [U-1b] 的豁免说明。 */
+         见 [U-1b] 的豁免说明。
+       ⚠ 属性子串选择器会连**容器**一起命中：[class*="settings-modal_button"] 同时匹配
+         settings-modal_buttonRow_<hash>（"button" 只是前缀），于是毛玻璃设置页
+         "轻盈/标准/浓郁/恢复默认"那一整行被打上品牌色，按钮右侧多出一截实色长条。
+         所以这一族必须用 :not() 把 *Row / *-row 容器排除掉 —— 逐个模块核对过：
+         settings-modal .buttonRow、webgl-modal .buttonRow、username-modal .buttonRow、
+         telemetry-modal .button-row 都属于这种"局部类名是按钮类名前缀"的容器。 */
         [class*="modal-content"], .modal-window-content, .addon-window-content [class*="prompt_ok-button"],
         [class*="modal-content"], .modal-window-content, .addon-window-content [class*="record-modal_ok-button"],
         [class*="modal-content"], .modal-window-content, .addon-window-content [class*="slider-prompt_ok-button"],
@@ -1040,14 +1046,14 @@ const TARGET_CSS = {
         [class*="modal-content"], .modal-window-content, .addon-window-content [class*="extension-manager-modal_confirm-ok-button"],
         [class*="modal-content"], .modal-window-content, .addon-window-content [class*="custom-procedures_ok-button"],
         [class*="modal-content"], .modal-window-content, .addon-window-content [class*="custom-extension-modal_load-button"],
-        [class*="modal-content"], .modal-window-content, .addon-window-content [class*="settings-modal_button"],
+        [class*="modal-content"], .modal-window-content, .addon-window-content [class*="settings-modal_button"]:not([class*="settings-modal_buttonRow"]):not([class*="settings-modal_button-row"]),
         [class*="modal-content"], .modal-window-content, .addon-window-content [class*="invalid-project-modal_button"],
         [class*="modal-content"], .modal-window-content, .addon-window-content [class*="unknown-platform-modal_button"],
         [class*="modal-content"], .modal-window-content, .addon-window-content [class*="fonts-modal_button"],
         [class*="modal-content"], .modal-window-content, .addon-window-content [class*="rotur-login-modal_primary"],
         [class*="modal-content"], .modal-window-content, .addon-window-content [class*="rotur-login-modal_feature-icon"],
-        [class*="modal-content"], .modal-window-content, .addon-window-content [class*="webgl-modal_button"],
-        [class*="modal-content"], .modal-window-content, .addon-window-content [class*="telemetry-modal_button"],
+        [class*="modal-content"], .modal-window-content, .addon-window-content [class*="webgl-modal_button"]:not([class*="webgl-modal_buttonRow"]):not([class*="webgl-modal_button-row"]),
+        [class*="modal-content"], .modal-window-content, .addon-window-content [class*="telemetry-modal_button"]:not([class*="telemetry-modal_buttonRow"]):not([class*="telemetry-modal_button-row"]),
         [class*="modal-content"], .modal-window-content, .addon-window-content [class*="question_question-submit-button"],
         [class*="modal-content"], .modal-window-content, .addon-window-content [class*="media-recorder_primary-button"],
         [class*="modal-content"], .modal-window-content, .addon-window-content [class*="settings-menu_reset-button"],
@@ -1116,7 +1122,7 @@ const TARGET_CSS = {
         [class*="modal-content"], .modal-window-content, .addon-window-content [class*="extension-manager-modal_confirm-ok-button"]:hover,
         [class*="modal-content"], .modal-window-content, .addon-window-content [class*="custom-procedures_ok-button"]:hover,
         [class*="modal-content"], .modal-window-content, .addon-window-content [class*="custom-extension-modal_load-button"]:hover,
-        [class*="modal-content"], .modal-window-content, .addon-window-content [class*="settings-modal_button"]:hover,
+        [class*="modal-content"], .modal-window-content, .addon-window-content [class*="settings-modal_button"]:not([class*="settings-modal_buttonRow"]):not([class*="settings-modal_button-row"]):hover,
         [class*="modal-content"], .modal-window-content, .addon-window-content [class*="invalid-project-modal_button"]:hover,
         [class*="modal-content"], .modal-window-content, .addon-window-content [class*="unknown-platform-modal_button"]:hover,
         [class*="modal-content"], .modal-window-content, .addon-window-content [class*="fonts-modal_button"]:hover,
