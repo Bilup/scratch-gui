@@ -39,6 +39,8 @@ import TWRestorePointManager from '../../containers/tw-restore-point-manager.jsx
 import TWUnknownPlatformModal from '../../containers/tw-unknown-platform-modal.jsx';
 import TWInvalidProjectModal from '../../containers/tw-invalid-project-modal.jsx';
 import MWExtensionManagerModal from '../../containers/mw-extension-manager-modal.jsx';
+import VisualExtensionEditor from '../../containers/visual-extension-editor-modal.jsx';
+import VisualAddonEditor from '../../containers/visual-addon-editor-modal.jsx';
 import MWHelpModal from '../../containers/mw-help-modal.jsx';
 import MWProjectThemeModal from '../../containers/mw-project-theme-modal.jsx';
 import RoturSession from '../../containers/rotur-session.jsx';
@@ -995,6 +997,8 @@ const GUIComponent = props => {
             <MWExtensionManagerModal />
             <MWHelpModal />
             <MWProjectThemeModal />
+            <VisualExtensionEditor />
+            <VisualAddonEditor />
             {usernameModalVisible && (
                 <React.Suspense fallback={null}>
                     <TWUsernameModal visible={usernameModalVisible} />
