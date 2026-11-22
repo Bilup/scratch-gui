@@ -65,6 +65,14 @@ export default function (options) {
     };
 
     const updateDisplay = () => {
+        // Counting every block walks the whole project (~45ms on 20000 blocks).
+        // Never do that while a block is being dragged: the drag is the one
+        // moment the user notices a hitch. Retry once it lands.
+        if (document.querySelector('.blocklyDragging')) {
+            clearTimeout(refreshTimer);
+            refreshTimer = setTimeout(updateDisplay, 500);
+            return;
+        }
         const metrics = analyzeProject(vm.runtime);
         if (display) {
             const parts = [];

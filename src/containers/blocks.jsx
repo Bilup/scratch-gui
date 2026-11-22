@@ -515,6 +515,7 @@ class Blocks extends React.Component {
         this.detachVM();
         this.unmounted = true;
         this.cancelDeferredWorkspaceLoad();
+        this.resumeToolboxRefresh();
         // Guard: workspace may not have been created if componentDidMount
         // threw before ScratchBlocks.inject() completed.
         if (this.workspace) {
@@ -522,6 +523,7 @@ class Blocks extends React.Component {
         }
         clearTimeout(this.toolboxUpdateTimeout);
         clearTimeout(this.toolboxStateUpdateTimeout);
+        clearTimeout(this.toolboxRefreshResumeTimeout);
         window.cancelAnimationFrame(this.workspaceVisibilityRaf);
         if (this.workspaceResizeRaf) {
             window.cancelAnimationFrame(this.workspaceResizeRaf);
@@ -1125,6 +1127,44 @@ class Blocks extends React.Component {
         }
     }
 
+    // Rendering the flyout means creating every block of every category, which
+    // costs a few hundred milliseconds on a toolbox with many extension
+    // categories. The workspace loader wraps its work in
+    // setToolboxRefreshEnabled(false/true), and re-enabling renders the entire
+    // flyout — but the toolbox is rebuilt for the new target a moment later
+    // anyway, so that render is pure waste (measured: 310ms of a 700ms switch).
+    // Swallow refreshes for the duration of the load.
+    suspendToolboxRefresh () {
+        const workspace = this.workspace;
+        if (!workspace) return;
+        if (!this.suspendedRefreshNoop) {
+            this.suspendedRefreshNoop = () => {};
+        }
+        if (this.suspendedRefreshWorkspace !== workspace) {
+            this.resumeToolboxRefresh();
+            this.suspendedRefreshOriginal = workspace.refreshToolboxSelection_;
+            this.suspendedRefreshWorkspace = workspace;
+        }
+        workspace.refreshToolboxSelection_ = this.suspendedRefreshNoop;
+        clearTimeout(this.toolboxRefreshResumeTimeout);
+        // Safety net: never leave the toolbox unable to refresh.
+        this.toolboxRefreshResumeTimeout = setTimeout(() => {
+            this.resumeToolboxRefresh();
+        }, 3000);
+    }
+
+    resumeToolboxRefresh () {
+        clearTimeout(this.toolboxRefreshResumeTimeout);
+        this.toolboxRefreshResumeTimeout = null;
+        const workspace = this.suspendedRefreshWorkspace;
+        if (!workspace) return;
+        if (workspace.refreshToolboxSelection_ === this.suspendedRefreshNoop) {
+            workspace.refreshToolboxSelection_ = this.suspendedRefreshOriginal;
+        }
+        this.suspendedRefreshOriginal = null;
+        this.suspendedRefreshWorkspace = null;
+    }
+
     updateToolbox () {
         this.toolboxUpdateTimeout = false;
 
@@ -1141,6 +1181,7 @@ class Blocks extends React.Component {
         // In order to catch any changes that mutate the toolbox during "normal runtime"
         // (variable changes/etc), re-enable toolbox refresh.
         // Using the setter function will rerender the entire toolbox which we just rendered.
+        clearTimeout(this.toolboxRefreshResumeTimeout);
         this.workspace.toolboxRefreshEnabled_ = true;
 
         const currentCategoryPos = this.workspace.toolbox_.getCategoryPositionById(categoryId);
@@ -1396,6 +1437,7 @@ class Blocks extends React.Component {
         // Remove and reattach the workspace listener (but allow flyout events)
         if (!workspaceIsAlive(this)) return;
         this.cancelDeferredWorkspaceLoad();
+        this.suspendToolboxRefresh();
         this.workspace.removeChangeListener(this.props.vm.blockListener);
 
         // The VM hands over blocks as plain descriptions to avoid the cost of
@@ -1428,6 +1470,7 @@ class Blocks extends React.Component {
         // window resize) while the blocks were loading, which would otherwise
         // leave the blocks area misaligned or clipped.
         const relayoutAfterLoad = () => {
+            this.resumeToolboxRefresh();
             window.requestAnimationFrame(() => {
                 if (!workspaceIsAlive(this)) return;
                 if (!this.props.isVisible) return;
@@ -1635,6 +1678,16 @@ class Blocks extends React.Component {
             const svg = this.workspace.getParentSvg && this.workspace.getParentSvg();
             const container = svg ? svg.parentNode : null;
             if (container && container.offsetWidth > 0 && container.offsetHeight > 0) {
+                // svgResize re-reads layout and rewrites the SVG size. When the
+                // SVG already matches its container that is pure overhead, and
+                // resize() still repositions the toolbox, flyout and scrollbars.
+                // Switching sprites goes through here without resizing anything.
+                const svgWidth = parseFloat(svg.getAttribute('width'));
+                const svgHeight = parseFloat(svg.getAttribute('height'));
+                if (svgWidth === container.offsetWidth && svgHeight === container.offsetHeight) {
+                    this.workspace.resize();
+                    return;
+                }
                 this.ScratchBlocks.svgResize(this.workspace);
                 return;
             }

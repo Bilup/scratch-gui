@@ -13,8 +13,8 @@ export default async function ({ addon, console, msg }) {
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 
+    const textEncoder = new TextEncoder();
     function getTextBytes(text) {
-        const textEncoder = new TextEncoder();
         return textEncoder.encode(text).length;
     }
 
@@ -38,26 +38,6 @@ export default async function ({ addon, console, msg }) {
         return totalSize;
     }
 
-    function getProjectSize() {
-        try {
-            const projectJSON = vm.toJSON();
-            const jsonString = typeof projectJSON === 'string' ? projectJSON : JSON.stringify(projectJSON);
-            let totalBytes = getTextBytes(jsonString);
-
-            // 加上所有角色（含舞台）造型/声音素材的占用（跳过克隆体避免重复）
-            const targets = vm.runtime.targets || [];
-            targets.forEach(target => {
-                if (!target.isOriginal) return;
-                totalBytes += getAssetsSize(target.sprite || target);
-            });
-
-            return totalBytes;
-        } catch (e) {
-            console.warn('[Project Size Display] Failed to calculate project size:', e);
-            return 0;
-        }
-    }
-
     function getBlockCount() {
         let total = 0;
         
@@ -72,41 +52,143 @@ export default async function ({ addon, console, msg }) {
         return total;
     }
 
-    function getSelectedTargetStorageSize() {
-        if (!vm.editingTarget) return '-';
-        const target = vm.editingTarget;
+    // Serialising the whole project costs a few hundred milliseconds on a big
+    // one (20000 blocks: ~350ms, twice, because the sprite figure serialised
+    // again). Doing that 100ms after every edit turned each drag into a freeze.
+    // Instead the project is measured once, per target, and afterwards only the
+    // target being edited is re-serialised (~1/70th of the work).
+    const EXPENSIVE_REFRESH_MIN_MS = 1200;
+    let perTargetBytes = new Map();
+    let assetsBytes = 0;
+    let lastPassAt = 0;
+    let lastFullPassTargets = -1;
+    let idleHandle = null;
+    let refreshPending = false;
+    let targetWatchTimer = null;
 
-        const sprite = target.sprite || target;
-        let totalSize = getAssetsSize(sprite);
+    const isDragging = () => !!document.querySelector('.blocklyDragging');
 
-        // 加上该角色代码与元数据在项目文件中的占用（不含素材二进制，避免重复计算）
-        try {
-            const targetJSON = vm.toJSON(target.id);
-            totalSize += getTextBytes(targetJSON);
-        } catch (e) {
-            console.warn('[Project Size Display] Failed to calculate target JSON size:', e);
+    const publish = () => {
+        let projectBytes = assetsBytes;
+        perTargetBytes.forEach(bytes => { projectBytes += bytes; });
+        // project.json carries sprite names, not target ids (ids are minted on
+        // load), so the table is keyed by name.
+        const targetKey = vm.editingTarget ? vm.editingTarget.getName() : null;
+        renderNumbers({
+            projectBytes,
+            targetBytes: (targetKey && perTargetBytes.get(targetKey)) || 0
+        });
+    };
+
+    const scheduleExpensiveRefresh = (delayMs) => {
+        if (refreshPending) return;
+        refreshPending = true;
+        const run = () => {
+            idleHandle = null;
+            if (!refreshPending) return;
+            if (isDragging()) {
+                // A block is being dragged; try again once it lands.
+                if (typeof requestIdleCallback === 'function') {
+                    idleHandle = requestIdleCallback(run, {timeout: 500});
+                } else {
+                    setTimeout(run, 300);
+                }
+                return;
+            }
+            refreshPending = false;
+            refreshExpensiveNumbers();
+            publish();
+        };
+        const start = () => {
+            if (typeof requestIdleCallback === 'function') {
+                idleHandle = requestIdleCallback(run, {timeout: 2000});
+            } else {
+                idleHandle = setTimeout(run, 400);
+            }
+        };
+        if (typeof delayMs === 'number' && delayMs > 0) {
+            setTimeout(start, delayMs);
+        } else {
+            start();
         }
+    };
 
-        return totalSize > 0 ? formatFileSize(totalSize) : '-';
+    // Merge one serialised project into the per-target table. A full project
+    // string covers every target; `vm.toJSON(targetId)` covers just one, which
+    // is what makes the incremental pass cheap.
+    const absorbProjectJson = (json, reset) => {
+        const str = typeof json === 'string' ? json : JSON.stringify(json);
+        if (reset) perTargetBytes = new Map();
+        const parsed = JSON.parse(str);
+        (parsed.targets || []).forEach(target => {
+            if (!target) return;
+            const key = target.name || target.id;
+            if (!key) return;
+            let ownBytes = getTextBytes(JSON.stringify(target));
+            perTargetBytes.set(key, ownBytes);
+        });
+    };
+
+    const recomputeAssetsBytes = () => {
+        let total = 0;
+        (vm.runtime.targets || []).forEach(target => {
+            if (!target.isOriginal) return;
+            total += getAssetsSize(target.sprite || target);
+        });
+        return total;
+    };
+
+    function refreshExpensiveNumbers() {
+        const now = performance.now();
+        const originals = (vm.runtime.targets || []).filter(target => target.isOriginal);
+        // A full pass is only needed when we have never measured this project,
+        // or its set of targets changed (sprite added/removed).
+        const needsFull = perTargetBytes.size === 0 ||
+            originals.length !== lastFullPassTargets;
+        if (!needsFull && now - lastPassAt < EXPENSIVE_REFRESH_MIN_MS) return;
+
+        try {
+            if (needsFull) {
+                absorbProjectJson(vm.toJSON(), true);
+                assetsBytes = recomputeAssetsBytes();
+                lastFullPassTargets = originals.length;
+            } else if (vm.editingTarget) {
+                absorbProjectJson(vm.toJSON(vm.editingTarget.id), false);
+                assetsBytes = recomputeAssetsBytes();
+            }
+            lastPassAt = now;
+        } catch (e) {
+            console.warn('[Project Size Display] Failed to calculate project size:', e);
+        }
     }
 
-    function updateDisplay() {
+    function renderNumbers (numbers) {
         if (!sizeDisplay) return;
-
         try {
-            const blockCount = getBlockCount();
-            const projectSize = getProjectSize();
-            const targetSize = getSelectedTargetStorageSize();
-
             const blocksText = msg('blocks-count') || 'Blocks';
             const sizeText = msg('project-size') || 'Size';
-            
-            sizeDisplay.querySelector('.sa-project-size-blocks').innerText = `${blocksText}: ${blockCount}`;
-            sizeDisplay.querySelector('.sa-project-size-project').innerText = `${sizeText}: ${targetSize}/${formatFileSize(projectSize)}`;
+            const targetSize = numbers.targetBytes > 0 ? formatFileSize(numbers.targetBytes) : '-';
+            const projectSize = numbers.projectBytes > 0 ? formatFileSize(numbers.projectBytes) : '-';
+            sizeDisplay.querySelector('.sa-project-size-blocks').innerText =
+                `${blocksText}: ${getBlockCount()}`;
+            sizeDisplay.querySelector('.sa-project-size-project').innerText =
+                `${sizeText}: ${targetSize}/${projectSize}`;
         } catch (e) {
             console.error('[Project Size Display] Error updating display:', e);
             sizeDisplay.innerText = msg('error');
         }
+    }
+
+    function updateDisplay() {
+        if (!sizeDisplay) return;
+        try {
+            const blocksText = msg('blocks-count') || 'Blocks';
+            sizeDisplay.querySelector('.sa-project-size-blocks').innerText =
+                `${blocksText}: ${getBlockCount()}`;
+        } catch (e) {
+            // ignore
+        }
+        scheduleExpensiveRefresh(0);
     }
 
     async function init() {
@@ -153,10 +235,25 @@ export default async function ({ addon, console, msg }) {
             handler = async () => {
                 if (isLoading) return;
                 clearTimeout(debounce);
-                debounce = setTimeout(updateDisplay, 100);
+                // Editing fires PROJECT_CHANGED in bursts; wait until the burst
+                // is over, then let the expensive part run when the main thread
+                // is idle instead of cutting into the next interaction.
+                debounce = setTimeout(updateDisplay, 600);
             };
             vm.on("PROJECT_CHANGED", handler);
             vm.runtime.on("PROJECT_LOADED", onProjectLoaded);
+
+            // Switching sprites needs no new measurement: every target already
+            // has a size in the table, so repainting is free. A cheap poll is
+            // enough to notice the selection change.
+            clearInterval(targetWatchTimer);
+            let watchedTargetId = vm.editingTarget ? vm.editingTarget.id : null;
+            targetWatchTimer = setInterval(() => {
+                const id = vm.editingTarget ? vm.editingTarget.id : null;
+                if (id === watchedTargetId) return;
+                watchedTargetId = id;
+                if (perTargetBytes.size) publish();
+            }, 400);
             
             if (addon.tab.redux) {
                 addon.tab.redux.addEventListener("statechanged", (e) => {
