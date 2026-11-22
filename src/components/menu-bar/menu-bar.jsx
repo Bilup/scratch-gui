@@ -1480,10 +1480,14 @@ class MenuBar extends React.Component {
             });
         }
     }
-    // Undo and redo look blocks up by id. Blocks in scripts the lazy loader has
-    // not rendered do not exist yet, so the event would be skipped silently and
-    // the VM would drift away from what is on screen. Render everything first.
+    // Undo and redo look blocks up by id, so scripts the lazy loader has not
+    // rendered would be skipped and the VM would drift. Scratch-blocks now
+    // renders just the scripts the events touch itself; only an older build
+    // without that entry point needs the whole workspace materialized here.
     materializeBeforeUndoRedo(workspace) {
+        if (typeof workspace.materializeScriptsForEvents === 'function') {
+            return;
+        }
         if (workspace.getUnloadedBlockCount &&
             workspace.getUnloadedBlockCount() > 0 &&
             workspace.materializeAllScripts) {

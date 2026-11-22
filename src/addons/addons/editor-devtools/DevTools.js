@@ -290,6 +290,18 @@ export default class DevTools {
         // The blocks moved, so the scrollbars and cached geometry are stale.
         workspace.resizeContents();
 
+        // Tidying leaves every script rendered. Put the ones far from the
+        // viewport back to placeholders now, or scrolling stays at a handful of
+        // frames per second until the loader's unload delay expires. The blocks
+        // were just moved, so give the queued move events time to reach the VM
+        // first: the unload decision is made from those positions.
+        if (workspace.releaseOffscreenScripts) {
+            const target = workspace;
+            setTimeout(() => {
+                if (target.releaseOffscreenScripts) target.releaseOffscreenScripts();
+            }, 100);
+        }
+
         setTimeout(() => {
             // Locate unused local variables...
             const workspace = this.getWorkspace();
