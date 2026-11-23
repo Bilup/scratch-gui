@@ -1507,9 +1507,21 @@ const TARGET_CSS = {
 }`,
     "menu-bar-menu": 
 `
-[class*="menu-bar-menu"] [class*="menu_menu"] {
-    background: var(--fg-glass-overlay);
-    background-color: var(--fg-glass-overlay);
+/* 顶部菜单栏下拉面板。
+   ！选择器必须限定成 .menu-bar-menu 的**直接子级** ul：类名是 CSS Module 哈希，
+   原来的后代选择器 [class*="menu_menu"] 是子串匹配，会把 menu_menu-item /
+   menu_menu-section 等所有子节点一起命中 —— 等于每个菜单项又铺了一层深色底，
+   叠在面板底上后整块远比周围背景暗（看起来"把菜单栏周围的颜色盖住了"）；
+   而菜单项是直角盒子，还会压住面板的圆角，底角就变成方角。
+   只给面板本身上一层很淡的玻璃底（card 档）+ 模糊：菜单栏 / 编辑器底色直接透出，
+   描边与圆角仍由 menu.css 的 ::before 渐变环提供。
+   子菜单面板（.submenu > ul.menu）同样只命中 ul 一层，不能用后代选择器。 */
+[class*="menu-bar-menu"] > [class*="menu_menu"],
+[class*="menu-bar-menu"] [class*="submenu"] > [class*="menu_menu"] {
+    background: var(--fg-glass-overlay-card);
+    background-color: var(--fg-glass-overlay-card);
+    backdrop-filter: var(--fg-filter-overlay);
+    -webkit-backdrop-filter: var(--fg-filter-overlay);
 }
 [class*="menu-bar-menu"] [class*="menu_menu"] [class*="menu-item"]:hover,
 [class*="menu-bar-menu"] [class*="menu_menu"] [class*="menu-item"].active,
