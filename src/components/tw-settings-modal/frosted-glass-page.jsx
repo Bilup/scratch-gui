@@ -12,6 +12,7 @@ import React from 'react';
 import {FormattedMessage, intlShape, injectIntl} from 'react-intl';
 import bindAll from 'lodash.bindall';
 import Box from '../box/box.jsx';
+import FancyCheckbox from '../tw-fancy-checkbox/checkbox.jsx';
 import styles from './settings-modal.css';
 
 import {
@@ -160,8 +161,7 @@ class FrostedGlassPage extends React.Component {
                 <div className={styles.setting}>
                     <div className={styles.label}>
                         <label>
-                            <input
-                                type="checkbox"
+                            <FancyCheckbox
                                 checked={enabled}
                                 onChange={this.handleEnabledChange}
                                 className={styles.checkbox}
@@ -317,8 +317,7 @@ class FrostedGlassPage extends React.Component {
                         <div className={styles.setting}>
                             <div className={styles.label}>
                                 <label>
-                                    <input
-                                        type="checkbox"
+                                    <FancyCheckbox
                                         checked={edgeHighlight}
                                         onChange={this.handleEdgeHighlightChange}
                                         className={styles.checkbox}
@@ -335,8 +334,7 @@ class FrostedGlassPage extends React.Component {
                         <div className={styles.setting}>
                             <div className={styles.label}>
                                 <label>
-                                    <input
-                                        type="checkbox"
+                                    <FancyCheckbox
                                         checked={lowPower}
                                         onChange={this.handleLowPowerChange}
                                         className={styles.checkbox}
@@ -365,8 +363,7 @@ class FrostedGlassPage extends React.Component {
                             </div>
                             <div className={styles.label}>
                                 <label>
-                                    <input
-                                        type="checkbox"
+                                    <FancyCheckbox
                                         checked={this.isTargetChecked('window')}
                                         onChange={e => this.handleTargetChange('window', e.target.checked)}
                                         className={styles.checkbox}
@@ -379,8 +376,7 @@ class FrostedGlassPage extends React.Component {
                             </div>
                             <div className={styles.label}>
                                 <label>
-                                    <input
-                                        type="checkbox"
+                                    <FancyCheckbox
                                         checked={this.isTargetChecked('alert')}
                                         onChange={e => this.handleTargetChange('alert', e.target.checked)}
                                         className={styles.checkbox}
@@ -393,8 +389,7 @@ class FrostedGlassPage extends React.Component {
                             </div>
                             <div className={styles.label}>
                                 <label>
-                                    <input
-                                        type="checkbox"
+                                    <FancyCheckbox
                                         checked={this.isTargetChecked('notification')}
                                         onChange={e => this.handleTargetChange('notification', e.target.checked)}
                                         className={styles.checkbox}
@@ -407,8 +402,7 @@ class FrostedGlassPage extends React.Component {
                             </div>
                             <div className={styles.label}>
                                 <label>
-                                    <input
-                                        type="checkbox"
+                                    <FancyCheckbox
                                         checked={this.isTargetChecked('toast')}
                                         onChange={e => this.handleTargetChange('toast', e.target.checked)}
                                         className={styles.checkbox}
@@ -421,8 +415,7 @@ class FrostedGlassPage extends React.Component {
                             </div>
                             <div className={styles.label}>
                                 <label>
-                                    <input
-                                        type="checkbox"
+                                    <FancyCheckbox
                                         checked={this.isTargetChecked('menu-bar-menu')}
                                         onChange={e => this.handleTargetChange('menu-bar-menu', e.target.checked)}
                                         className={styles.checkbox}
@@ -435,8 +428,7 @@ class FrostedGlassPage extends React.Component {
                             </div>
                             <div className={styles.label}>
                                 <label>
-                                    <input
-                                        type="checkbox"
+                                    <FancyCheckbox
                                         checked={this.isTargetChecked('context-menu')}
                                         onChange={e => this.handleTargetChange('context-menu', e.target.checked)}
                                         className={styles.checkbox}
@@ -449,8 +441,7 @@ class FrostedGlassPage extends React.Component {
                             </div>
                             <div className={styles.label}>
                                 <label>
-                                    <input
-                                        type="checkbox"
+                                    <FancyCheckbox
                                         checked={this.isTargetChecked('popover')}
                                         onChange={e => this.handleTargetChange('popover', e.target.checked)}
                                         className={styles.checkbox}
