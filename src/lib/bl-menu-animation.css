@@ -26,8 +26,22 @@
     }
 }
 
-/* react-contextmenu 的显隐完全依赖 inline style 上的 opacity + transition，
-   所以对它只做 transform 动画，绝不碰 opacity。 */
+/* react-contextmenu 的显隐依赖 inline style 上的 opacity + transition，
+   但隐藏态被 context-menu.css 用 display:none 移出了渲染树（性能需要），
+   于是元素从 display:none 切到可见时，库写上的 opacity 过渡来不及产生起始帧，
+   菜单会"秒现"、看不到淡入。所以这里补一个显式的透明度动画来保证入场可见；
+   动画只在播放期间覆盖 inline opacity，结束后仍由库的 inline opacity:1 接管。
+   缩放动画单独延迟，见下。 */
+@keyframes bl-menu-fade-enter {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
 @keyframes bl-menu-scale-enter {
     from {
         transform: scale(0.94);
@@ -45,11 +59,14 @@
 
    45ms 的延迟是必需的：该库靠 getBoundingClientRect() 决定菜单是否会超出视口、
    要不要向上/向左翻转，而 rect 会把 transform 一起算进去。延迟到它测量（2 个
-   RAF，约 32ms）之后再起动画（fill-mode 默认 none，延迟期间不施加任何变换），
-   测量就不会被缩放干扰，翻转位置与实际尺寸一致。 */
+   RAF，约 32ms）之后再起缩放动画（fill-mode 默认 none，延迟期间不施加任何变换），
+   测量就不会被缩放干扰，翻转位置与实际尺寸一致。
+   透明度淡入不参与 rect 测量，所以不加延迟、立刻开始。 */
 :global(html:not(.no-window-animation)) :global(nav.react-contextmenu.react-contextmenu--visible) {
     transform-origin: top left;
-    animation: bl-menu-scale-enter 0.13s cubic-bezier(0.2, 0.9, 0.3, 1) 0.045s;
+    animation:
+        bl-menu-fade-enter 0.13s cubic-bezier(0.2, 0.9, 0.3, 1),
+        bl-menu-scale-enter 0.13s cubic-bezier(0.2, 0.9, 0.3, 1) 0.045s;
 }
 
 /* 2) scratch-blocks 原生右键菜单（Blockly.ContextMenu）

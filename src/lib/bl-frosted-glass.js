@@ -90,6 +90,16 @@ const TARGET_CSS = {
                 backdrop-filter: var(--fg-filter) !important;
                 -webkit-backdrop-filter: var(--fg-filter) !important;
             }
+            /* 动画期间的临时替身：window-manager.js 在打开 / 关闭 / 最大化 /
+               还原动画开始时给窗口挂上 .bl-window-animating，动画结束再摘掉。
+               缩放动画的每一帧都会让浏览器按新尺寸重新执行一次背景模糊，这是
+               毛玻璃窗口开关卡顿的直接原因；这里用更实的玻璃底代替模糊，让动画
+               纯走合成器、保持顺滑，动画结束后立刻恢复真实模糊。 */
+            [class*="addon-window"]:not([class*="addon-window-"]).bl-window-animating {
+                background-color: var(--fg-glass) !important;
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
+            }
             /* addon 窗口标题栏 — 也有不透明背景（window-manager.js 内联 var(--ui-primary)），
                需透明化让毛玻璃透过。
                ⚠ 特异性必须是 (0,2,0)：window-theme 的 macOS / Windows 10 样式会声明
@@ -121,30 +131,29 @@ const TARGET_CSS = {
         /* React Modal 的遮罩层 — 原为 rgba(0,0,0,0.5) 一类深色实幕，
            会整体压暗背景，使毛玻璃"透出来的是黑"而不是编辑器界面。
            改为极淡的透视纱，让背景保留可辨识度（深色主题下略深一点保证文字对比）。
-           注意：仅命中 overlay，不碰 modal-content 自身。 */
+           注意：仅命中 overlay，不碰 modal-content 自身。
+           ⚠ 性能：overlay 是铺满整个视口的固定层，给它加 backdrop-filter 等于
+           在编辑器/舞台之上再挂一层「整屏模糊」。舞台每帧重绘都要重算一次全屏
+           模糊，而视觉收益几乎为零（真正需要磨砂的是弹窗面板本身，它自带
+           backdrop-filter）。所以这里只保留压暗的纱层，不再做模糊。 */
         [class*="modal-overlay"],
         .ReactModal__Overlay {
             background-color: var(--fg-overlay-dim) !important;
-            backdrop-filter: blur(var(--fg-blur-soft)) !important;
-            -webkit-backdrop-filter: blur(var(--fg-blur-soft)) !important;
         }
-        /* 窗口内容区 — 由"实色面板"改为"自承载的淡玻璃层"。
-           为什么不能只铺 background-color：window-theme 皮肤（macOS / Windows 10）
-           会给 .addon-window-content 铺 var(--ui-modal-background) 实色并带 !important，
-           若这里只改色不加模糊，内容区就是一层"半透明白板"——背景被压住，
-           看起来仍是纯色窗口，达不到"没有纯色窗口"的目标。
-           所以这里同时补上自己的 backdrop-filter：
-             · 外层 .addon-window 的 blur 负责模糊"编辑器背景"
-             · 内容区自己的 blur 负责模糊"标题栏 + 已透出的背景"，让面板边缘更柔
-           模糊取 blurSoft（满值的一半），避免与外层叠加后糊成一片。
-           同上：必须是 (0,2,0)，否则会被 window-theme 的
-           [.addon-window-content { background: var(--ui-modal-background) !important; }]
-           （注入在 <body> 末尾、同特异性）覆盖成纯色，内容区毛玻璃同样失效。 */
+        /* 窗口内容区 — 实色面板 → 淡玻璃层。
+           背景色必须继续用 (0,2,0) 特异性覆盖 window-theme 皮肤铺的
+           var(--ui-modal-background) 实色，否则内容区仍是纯色窗口。
+           ⚠ 性能：这里**不再**给内容区加 backdrop-filter。
+           内容区在 .addon-window 内部，窗口外层已经对"编辑器背景"做过模糊；
+           内容区自己的模糊只是把一张已经模糊过的图再糊一遍，观感几乎无差别，
+           却让每个窗口多出一整块与窗口同尺寸的 GPU 模糊层。
+           打开窗口时这些层要一起创建、一起逐帧重算 —— 这是窗口打开卡顿的主要来源。
+           所以内容区只保留淡玻璃底色与发丝线，模糊统一由外层 .addon-window 承担。 */
         [class*="addon-window"][class*="addon-window-content"] {
             background-color: var(--fg-glass-tint) !important;
             box-shadow: var(--fg-hairline) !important;
-            backdrop-filter: var(--fg-filter-soft) !important;
-            -webkit-backdrop-filter: var(--fg-filter-soft) !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
         }
         /* WindowedModal 内容容器 — 退为透明，玻璃面板已由 .addon-window-content 承担 */
         .modal-window-content {
@@ -258,13 +267,13 @@ const TARGET_CSS = {
        品牌色（如 connection-modal 的绿色标题栏 #0B8E69），不是 --ui-* 变量，
        所以前面的 r/g/b 主题色规则完全没碰到它，它会以纯品牌色保留下来。
        这里不清除品牌色（那会丢掉窗口的类别识别），而是改成半透明的同色玻璃：
-       用 color-mix 把品牌色与透明混合到 alpha 档位，再补上模糊。
+       用 color-mix 把品牌色与透明混合到 alpha 档位。
+       标题栏位于窗口/弹窗面板内部，面板本身已经承担模糊，这里不再重复叠加
+       backdrop-filter（嵌套模糊只会多出一层全尺寸 GPU 层，观感无差别）。
        这样既保留"这是设备连接窗口"的颜色语义，又不再是纯色块。
        覆盖已知的分类色标题栏：connection-modal。 */
         [class*="connection-modal_header"] {
             background-color: color-mix(in srgb, var(--pen-tertiary, #0B8E69) var(--fg-brand-pct), transparent) !important;
-            backdrop-filter: var(--fg-filter-soft) !important;
-            -webkit-backdrop-filter: var(--fg-filter-soft) !important;
         }
 
 /* [D] 具体窗口组件的根容器实底 — 逐个 modal 的顶层容器铺了
@@ -622,11 +631,9 @@ const TARGET_CSS = {
        皮肤在 <body> 末尾，同特异性下后置优先，所以必须靠特异性赢）。
        ③ 插件自己的类名逐个列举，统一透明化/玻璃化。
        ⚠ 排除 .addon-window-btn（窗控按钮）：macos 皮肤用它做红黄绿三个圆点，
-         那是设计意图；windows10 皮肤按钮本来透明。都不能玻璃化。 */
-        [class*="addon-window"]:not([class*="addon-window-"]) {
-            backdrop-filter: var(--fg-filter) !important;
-            -webkit-backdrop-filter: var(--fg-filter) !important;
-        }
+         那是设计意图；windows10 皮肤按钮本来透明。都不能玻璃化。
+       ⚠ 窗口本体的 backdrop-filter 已由文件开头的「窗口主体」规则统一声明，
+         这里不再重复一遍（重复声明会让每次样式重算多做一次无谓匹配）。 */
         [class*="addon-window"][class*="addon-window-header"] {
             background-color: var(--fg-glass-card) !important;
             background: var(--fg-glass-card) !important;
@@ -637,8 +644,9 @@ const TARGET_CSS = {
             background-color: var(--fg-glass-tint) !important;
             background: var(--fg-glass-tint) !important;
             box-shadow: var(--fg-hairline) !important;
-            backdrop-filter: var(--fg-filter-soft) !important;
-            -webkit-backdrop-filter: var(--fg-filter-soft) !important;
+            /* 模糊由外层 .addon-window 承担，内容区不再嵌套 backdrop-filter */
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
         }
         /* window-theme 皮肤在 .addon-window-title 上不动背景，只动排版，无需处理。
            但皮肤把 .addon-window 的 border-radius / box-shadow 也改了 —— 那是外观
@@ -669,8 +677,6 @@ const TARGET_CSS = {
             background: color-mix(in srgb, var(--looks-secondary, #4c97ff) var(--fg-brand-pct), transparent) !important;
             background-color: color-mix(in srgb, var(--looks-secondary, #4c97ff) var(--fg-brand-pct), transparent) !important;
             border-color: color-mix(in srgb, var(--looks-secondary, #4c97ff) var(--fg-brand-pct), transparent) !important;
-            backdrop-filter: var(--fg-filter) !important;
-            -webkit-backdrop-filter: var(--fg-filter) !important;
         }
         .sa-calculator .calc-btn-equals {
             background: color-mix(in srgb, var(--motion-primary, #4c97ff) var(--fg-brand-pct), transparent) !important;
@@ -1078,8 +1084,8 @@ const TARGET_CSS = {
         [class*="modal-content"], .modal-window-content, .addon-window-content [class*="cloud-variable-badge_selected"] {
             background-color: color-mix(in srgb, var(--looks-secondary, #4c97ff) var(--fg-brand-pct), transparent) !important;
             background: color-mix(in srgb, var(--looks-secondary, #4c97ff) var(--fg-brand-pct), transparent) !important;
-            backdrop-filter: var(--fg-filter) !important;
-            -webkit-backdrop-filter: var(--fg-filter) !important;
+            /* 面板/行块内部不再叠 backdrop-filter：底色已足以表现"玻璃色"，
+               嵌套模糊会为每个元素多建一层全尺寸合成层，是打开窗口卡顿的主因 */
         }
         /* ⚠ 上面两处**必须**用双属性选择器，单属性会过度命中：
              · fractch-workspace：.file 是**每一行**文件（不只选中行），
@@ -1105,6 +1111,7 @@ const TARGET_CSS = {
         [class*="stage-selector"][class*="is-selected"][class*="stage-selector_header"] {
             background-color: color-mix(in srgb, var(--looks-secondary, #4c97ff) var(--fg-brand-pct), transparent) !important;
             background: color-mix(in srgb, var(--looks-secondary, #4c97ff) var(--fg-brand-pct), transparent) !important;
+            /* 这一处不在窗口/弹窗内（编辑器本体），没有外层模糊可借，保留自身模糊 */
             backdrop-filter: var(--fg-filter) !important;
             -webkit-backdrop-filter: var(--fg-filter) !important;
         }
@@ -1147,8 +1154,6 @@ const TARGET_CSS = {
         [class*="modal-content"], .modal-window-content, .addon-window-content [class*="collaboration-modal_hostBadge"] {
             background-color: color-mix(in srgb, var(--motion-primary, #4c97ff) var(--fg-brand-pct), transparent) !important;
             background: color-mix(in srgb, var(--motion-primary, #4c97ff) var(--fg-brand-pct), transparent) !important;
-            backdrop-filter: var(--fg-filter) !important;
-            -webkit-backdrop-filter: var(--fg-filter) !important;
         }
 
 /* [U-2b] $data-primary 系（"即将推出"徽标、分享按钮、标签激活态） */
@@ -1159,8 +1164,6 @@ const TARGET_CSS = {
         [class*="modal-content"], .modal-window-content, .addon-window-content [class*="action-menu_coming-soon-tooltip"] {
             background-color: color-mix(in srgb, var(--data-primary, #ff8c1a) var(--fg-brand-pct), transparent) !important;
             background: color-mix(in srgb, var(--data-primary, #ff8c1a) var(--fg-brand-pct), transparent) !important;
-            backdrop-filter: var(--fg-filter) !important;
-            -webkit-backdrop-filter: var(--fg-filter) !important;
         }
 
 /* [U-2c] $pen-primary 系（绿色：混音、扩展库图标底、菜单栏 remix） */
@@ -1169,8 +1172,6 @@ const TARGET_CSS = {
         [class*="modal-content"], .modal-window-content, .addon-window-content [class*="library-item_library-item-inset-image-container"] {
             background-color: color-mix(in srgb, var(--pen-primary, #0fbd8c) var(--fg-brand-pct), transparent) !important;
             background: color-mix(in srgb, var(--pen-primary, #0fbd8c) var(--fg-brand-pct), transparent) !important;
-            backdrop-filter: var(--fg-filter) !important;
-            -webkit-backdrop-filter: var(--fg-filter) !important;
         }
 
 /* [U-2d] $extensions-primary 系（绿色：卡片导航钮、提示气泡） */
@@ -1181,8 +1182,6 @@ const TARGET_CSS = {
         [class*="modal-content"], .modal-window-content, .addon-window-content [class*="project-input_tooltip"] {
             background-color: color-mix(in srgb, var(--extensions-primary, #0fbd8c) var(--fg-brand-pct), transparent) !important;
             background: color-mix(in srgb, var(--extensions-primary, #0fbd8c) var(--fg-brand-pct), transparent) !important;
-            backdrop-filter: var(--fg-filter) !important;
-            -webkit-backdrop-filter: var(--fg-filter) !important;
         }
 
 /* [U-2e] 独立装饰色块（browser-modal 空状态插画区已在 [E] 组处理，这里是同族的
@@ -1195,8 +1194,6 @@ const TARGET_CSS = {
         [class*="modal-content"], .modal-window-content, .addon-window-content [class*="browser-modal_desktop-settings-inner"] {
             background-color: color-mix(in srgb, var(--looks-secondary, #4c97ff) var(--fg-brand-pct-soft), transparent) !important;
             background: color-mix(in srgb, var(--looks-secondary, #4c97ff) var(--fg-brand-pct-soft), transparent) !important;
-            backdrop-filter: var(--fg-filter) !important;
-            -webkit-backdrop-filter: var(--fg-filter) !important;
         }
 
 /* [U-3] 插件窗口里的品牌色（与 [J] 组同源，覆盖面扩到品牌色）
