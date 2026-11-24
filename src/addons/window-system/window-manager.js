@@ -224,6 +224,8 @@ class AddonWindow {
         this.onMove = options.onMove || (() => {});
         
         this._animTimer = null; // Track pending animation timeout
+        this._openRaf1 = null; // First RAF of the deferred open animation
+        this._openRaf2 = null; // Second RAF that actually starts the transition
         this.element = null;
         this.headerElement = null;
         this.contentElement = null;
@@ -263,7 +265,6 @@ class AddonWindow {
             display: none;
             flex-direction: column;
             overflow: hidden;
-            transition: none !important;
         `;
 
         this.element.addEventListener('pointerdown', () => this.bringToFront());
@@ -830,13 +831,111 @@ class AddonWindow {
         this.element.style.zIndex = this.zIndex;
     }
     
-    show () {
-        // Cancel any pending animation timer
-        if (this._animTimer) {
-            clearTimeout(this._animTimer);
-            this._animTimer = null;
-        }
+    /**
+     * Whether this window currently paints a backdrop blur (frosted glass).
+     * Scaling such an element forces the browser to re-run the blur at a new
+     * scale on every frame of the animation, which is the main source of
+     * stutter when a frosted-glass window opens or closes. In that case the
+     * caller should animate opacity only — the blur result stays valid and the
+     * animation stays on the compositor.
+     * A backdrop-filter without blur (e.g. saturate() in low-power mode) is
+     * cheap enough, so the scale animation is kept there.
+     * @returns {boolean} True when the window's backdrop-filter blurs.
+     */
+    hasBackdropBlur () {
+        if (!this.element) return false;
+        // The element may live in a popup document; always resolve styles from
+        // the view that owns it (also avoids a cross-document getComputedStyle).
+        const view = (this.element.ownerDocument && this.element.ownerDocument.defaultView) || window;
+        const computed = view.getComputedStyle(this.element);
+        const filter = computed.backdropFilter || computed.webkitBackdropFilter || '';
+        return /\bblur\(/.test(filter);
+    }
 
+    /**
+     * Temporarily swaps the window's real backdrop blur for a flat glass tint
+     * while an animation is playing (see `.bl-window-animating` in
+     * bl-frosted-glass.js). The scale/transform animation then stays fully on
+     * the compositor instead of re-running the blur every frame, so the
+     * animation is preserved AND smooth. The blur comes back as soon as the
+     * animation finishes.
+     * @param {boolean} suppressed Whether the blur should be suppressed.
+     */
+    setBlurSuppressed (suppressed) {
+        if (!this.element || !this.element.classList) return;
+        this.element.classList.toggle('bl-window-animating', !!suppressed);
+    }
+
+    _suppressBlurWhileAnimating () {
+        if (this.hasBackdropBlur()) {
+            this.setBlurSuppressed(true);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Cancel a deferred open animation that has not started its transition yet.
+     * Without this, a window hidden/destroyed within the first two frames would
+     * still get its opacity set to 1 by the pending frame callback.
+     */
+    _cancelOpenAnimation () {
+        if (this._openRaf1) {
+            window.cancelAnimationFrame(this._openRaf1);
+            this._openRaf1 = null;
+        }
+        if (this._openRaf2) {
+            window.cancelAnimationFrame(this._openRaf2);
+            this._openRaf2 = null;
+        }
+    }
+
+    /**
+     * Start the open (fade + scale) animation.
+     *
+     * The transition is deliberately started from the second animation frame:
+     * an element that was `display: none` cannot start a CSS transition in the
+     * very frame it first becomes rendered, which is why the previous
+     * reflow-based implementation silently skipped the animation. Letting the
+     * browser paint the initial (opacity 0) state for one frame first makes the
+     * transition reliable.
+     */
+    _startOpenAnimation () {
+        this._cancelOpenAnimation();
+
+        const element = this.element;
+        this._suppressBlurWhileAnimating();
+        element.style.willChange = 'transform, opacity';
+        element.style.transition = 'none';
+        element.style.opacity = '0';
+        element.style.transform = 'scale(0.92)';
+
+        this._openRaf1 = window.requestAnimationFrame(() => {
+            this._openRaf1 = null;
+            this._openRaf2 = window.requestAnimationFrame(() => {
+                this._openRaf2 = null;
+                // The window may have been hidden or destroyed while waiting
+                // for the animation to start.
+                if (!this.element || this.isDestroying || !this.isVisible) {
+                    return;
+                }
+                element.style.transition = 'opacity 0.2s ease-out, transform 0.2s ease-out';
+                element.style.opacity = '1';
+                element.style.transform = 'scale(1)';
+
+                this._animTimer = setTimeout(() => {
+                    this._animTimer = null;
+                    this.setBlurSuppressed(false);
+                    if (this.element && this.element.style) {
+                        this.element.style.transition = 'none';
+                        this.element.style.willChange = '';
+                    }
+                }, 220);
+            });
+        });
+    }
+
+    show () {
         activeWindows.set(this.id, this);
         const wasVisible = this.isVisible;
         this.isVisible = true;
@@ -847,7 +946,7 @@ class AddonWindow {
 
         // A show() while the window is maximized can happen after the
         // maximize/restore animation was interrupted (its _animTimer was
-        // cleared above). End any residual transform and re-assert the
+        // cleared below). End any residual transform and re-assert the
         // maximized layout so the window still fills the whole screen.
         if (this.isMaximized) {
             this._finishMaximizeRestoreAnimation();
@@ -863,32 +962,31 @@ class AddonWindow {
             this.element.style.height = '100vh';
         }
 
-        if (!wasVisible) {
-            this.bringToFront();
-            if (WindowManager.getAnimationsEnabled()) {
-                // Set initial hidden state. Only transform + opacity are animated,
-                // which are compositor-friendly and do not trigger layout on old devices.
-                this.element.style.willChange = 'transform, opacity';
-                this.element.style.opacity = '0';
-                this.element.style.transform = 'scale(0.92)';
-                this.element.style.transition = 'opacity 0.2s ease-out, transform 0.2s ease-out';
+        if (wasVisible) {
+            // Repeated show() calls (WindowedModal calls it on every update)
+            // must not restart or interrupt the open animation, nor clear its
+            // cleanup timer.
+            return this;
+        }
 
-                // Force browser to apply initial state before animating
-                // eslint-disable-next-line no-unused-expressions
-                this.element.offsetHeight;
+        // Becoming visible: cancel a pending hide/close cleanup timer.
+        if (this._animTimer) {
+            clearTimeout(this._animTimer);
+            this._animTimer = null;
+        }
 
-                // Kick off the animation
-                this.element.style.opacity = '1';
-                this.element.style.transform = 'scale(1)';
+        this.bringToFront();
 
-                this._animTimer = setTimeout(() => {
-                    this._animTimer = null;
-                    if (this.element && this.element.style) {
-                        this.element.style.transition = 'none';
-                        this.element.style.willChange = '';
-                    }
-                }, 220);
-            }
+        if (WindowManager.getAnimationsEnabled()) {
+            // Only transform + opacity are animated, which are compositor-friendly
+            // and do not trigger layout on old devices.
+            // A blurred window normally re-runs its backdrop blur at every scale
+            // step. Keep the full open animation but swap the blur for a flat
+            // glass tint for its duration (`.bl-window-animating`), so the
+            // animation stays smooth and the blur is restored right after.
+            this._startOpenAnimation();
+        } else {
+            this.setBlurSuppressed(false);
         }
         return this;
     }
@@ -907,10 +1005,14 @@ class AddonWindow {
             clearTimeout(this._animTimer);
             this._animTimer = null;
         }
+        // A hide() right after show() must not let the deferred open animation
+        // re-show the window.
+        this._cancelOpenAnimation();
 
         if (!this.isVisible) {
             this.element.style.display = 'none';
             this.element.style.transition = 'none';
+            this.setBlurSuppressed(false);
             return this;
         }
 
@@ -919,6 +1021,7 @@ class AddonWindow {
         if (!WindowManager.getAnimationsEnabled()) {
             this.element.style.display = 'none';
             this.element.style.transition = 'none';
+            this.setBlurSuppressed(false);
             return this;
         }
 
@@ -928,7 +1031,10 @@ class AddonWindow {
         this.element.style.transition = 'none';
         // eslint-disable-next-line no-unused-expressions
         this.element.offsetHeight;
-        // Now set the animated transition (transform + opacity only, compositor-friendly)
+        // Now set the animated transition (transform + opacity only, compositor-friendly).
+        // Swap the backdrop blur for a flat tint while the scale animation plays,
+        // otherwise every frame would re-run the blur (same reason as show()).
+        this._suppressBlurWhileAnimating();
         this.element.style.willChange = 'transform, opacity';
         this.element.style.transition = 'opacity 0.18s ease-in, transform 0.18s ease-in';
         // eslint-disable-next-line no-unused-expressions
@@ -938,6 +1044,7 @@ class AddonWindow {
 
         this._animTimer = setTimeout(() => {
             this._animTimer = null;
+            this.setBlurSuppressed(false);
             if (this.element && this.element.style) {
                 this.element.style.display = 'none';
                 this.element.style.transition = 'none';
@@ -963,6 +1070,8 @@ class AddonWindow {
             clearTimeout(this._animTimer);
             this._animTimer = null;
         }
+        // Cancel a deferred open animation (the window is about to be removed).
+        this._cancelOpenAnimation();
 
         // Cancel any pending drag/resize RAF
         if (this._dragRaf) {
@@ -982,6 +1091,16 @@ class AddonWindow {
         // callback is already invoked here, so it must NOT be invoked again
         // after the closing animation.
         if (callOnClose && this.onClose() === false) {
+            // Destroy was vetoed: the element stays on screen, so undo any blur
+            // suppression and finish an interrupted open animation, otherwise
+            // the window could stay invisible at opacity 0.
+            this.setBlurSuppressed(false);
+            if (this.isVisible) {
+                this.element.style.opacity = '1';
+                this.element.style.transform = '';
+                this.element.style.willChange = '';
+                this.element.style.transition = 'none';
+            }
             return this;
         }
 
@@ -1003,6 +1122,9 @@ class AddonWindow {
             this.element.style.transition = 'none';
             // eslint-disable-next-line no-unused-expressions
             this.element.offsetHeight;
+            // Fade + scale out, with the backdrop blur swapped for a flat tint
+            // so the scale doesn't re-run the blur on every frame.
+            this._suppressBlurWhileAnimating();
             this.element.style.willChange = 'transform, opacity';
             this.element.style.transition = 'opacity 0.18s ease-in, transform 0.18s ease-in';
             // eslint-disable-next-line no-unused-expressions
@@ -1041,10 +1163,20 @@ class AddonWindow {
             clearTimeout(this._animTimer);
             this._animTimer = null;
         }
+        // Cancel a deferred open animation so its pending frame callback cannot
+        // re-show the window after we jump to the final state below.
+        this._cancelOpenAnimation();
         // End any in-flight maximize/restore transform animation
         this._finishMaximizeRestoreAnimation();
         if (enabled) {
-            // Animations re-enabled: just clear any leftover intermediate styles
+            // Animations re-enabled: finish any interrupted open animation so a
+            // window that was still at opacity 0 doesn't stay invisible.
+            this.setBlurSuppressed(false);
+            if (this.isVisible && !this.isDestroying) {
+                this.element.style.opacity = '1';
+                this.element.style.transform = '';
+                this.element.style.willChange = '';
+            }
             this.element.style.transition = 'none';
             return;
         }
@@ -1110,6 +1242,17 @@ class AddonWindow {
      * @param {object} toRect actual layout rect the element will occupy
      */
     _animateMaximizeRestore (fromRect, toRect) {
+        // Maximizing/restoring animates a door-sized transform over the whole
+        // window. With a backdrop blur this is by far the worst case (full-screen
+        // blur re-run every frame), and swapping the blur for a flat tint would
+        // flash a translucent sheet for the whole transition. Just snap to the
+        // target geometry in that case — the open/close animation that users
+        // notice is preserved by the blur suppression used in show()/hide().
+        if (this.hasBackdropBlur()) {
+            this._finishMaximizeRestoreAnimation();
+            return;
+        }
+
         const sx = fromRect.width / toRect.width;
         const sy = fromRect.height / toRect.height;
         const tx = fromRect.x - toRect.x;
@@ -1128,6 +1271,7 @@ class AddonWindow {
 
     _finishMaximizeRestoreAnimation () {
         this._animTimer = null;
+        this.setBlurSuppressed(false);
         if (this.element && this.element.style) {
             this.element.style.transition = 'none';
             this.element.style.willChange = '';
