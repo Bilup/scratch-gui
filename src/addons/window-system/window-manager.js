@@ -1243,15 +1243,12 @@ class AddonWindow {
      */
     _animateMaximizeRestore (fromRect, toRect) {
         // Maximizing/restoring animates a door-sized transform over the whole
-        // window. With a backdrop blur this is by far the worst case (full-screen
-        // blur re-run every frame), and swapping the blur for a flat tint would
-        // flash a translucent sheet for the whole transition. Just snap to the
-        // target geometry in that case — the open/close animation that users
-        // notice is preserved by the blur suppression used in show()/hide().
-        if (this.hasBackdropBlur()) {
-            this._finishMaximizeRestoreAnimation();
-            return;
-        }
+        // window, so with a backdrop blur every frame would re-run a full-screen
+        // blur. Swap the blur for a flat glass tint for the duration
+        // (`.bl-window-animating`), exactly like show()/hide(), so the animation
+        // is still played and stays on the compositor; the blur is restored by
+        // _finishMaximizeRestoreAnimation().
+        this._suppressBlurWhileAnimating();
 
         const sx = fromRect.width / toRect.width;
         const sy = fromRect.height / toRect.height;
