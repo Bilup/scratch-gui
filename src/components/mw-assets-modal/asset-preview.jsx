@@ -1,27 +1,100 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import bindAll from 'lodash.bindall';
 import {FormattedMessage} from 'react-intl';
-import {Download, FileQuestion, MousePointerClick, Trash2} from 'lucide-react';
+import {
+    Download,
+    File,
+    FileQuestion,
+    MousePointerClick,
+    Pencil,
+    Trash2
+} from 'lucide-react';
 import {formatBytes} from '../../lib/utils/bytes';
 import styles from './assets-modal.css';
 
-class AssetPreview extends React.Component {
-    constructor (props) {
-        super(props);
-        bindAll(this, ['handleExport', 'handleDelete']);
+const AssetPreview = props => {
+    const {preview} = props;
+
+    if (!preview) {
+        return (
+            <div className={styles.preview}>
+                <div className={styles.previewNone}>
+                    <MousePointerClick size={28} />
+                    <FormattedMessage
+                        defaultMessage="Select a file to preview it"
+                        description="Shown when no custom asset is selected"
+                        id="mw.assets.noSelection"
+                    />
+                </div>
+            </div>
+        );
     }
 
-    handleExport () {
-        this.props.onExport(this.props.preview.index);
+    if (preview.multiple) {
+        return (
+            <div className={styles.preview}>
+                <div className={styles.previewHeader}>
+                    <span className={styles.previewTitle}>
+                        <FormattedMessage
+                            defaultMessage="{count} items selected"
+                            description="Preview header when several custom assets are selected"
+                            id="mw.assets.multiSelection"
+                            values={{count: preview.count}}
+                        />
+                    </span>
+                    <span className={styles.previewSubtitle}>
+                        {formatBytes(preview.totalSize)}
+                    </span>
+                </div>
+
+                <div className={styles.multiList}>
+                    {preview.items.map((item, index) => (
+                        <div
+                            key={`${item.name}:${index}`}
+                            className={styles.multiItem}
+                            title={item.name}
+                        >
+                            <File
+                                className={styles.multiIcon}
+                                size={15}
+                            />
+                            <span className={styles.multiName}>{item.name}</span>
+                            <span className={styles.multiMeta}>{formatBytes(item.size)}</span>
+                        </div>
+                    ))}
+                </div>
+
+                <div className={styles.previewButtons}>
+                    <button
+                        type="button"
+                        className={styles.previewButton}
+                        onClick={props.onExport}
+                    >
+                        <Download size={15} />
+                        <FormattedMessage
+                            defaultMessage="Export"
+                            description="Button to download custom assets"
+                            id="mw.assets.exportPreview"
+                        />
+                    </button>
+                    <button
+                        type="button"
+                        className={`${styles.previewButton} ${styles.previewButtonDanger}`}
+                        onClick={props.onDelete}
+                    >
+                        <Trash2 size={15} />
+                        <FormattedMessage
+                            defaultMessage="Delete"
+                            description="Button to delete custom assets"
+                            id="mw.assets.deletePreview"
+                        />
+                    </button>
+                </div>
+            </div>
+        );
     }
 
-    handleDelete () {
-        this.props.onDelete(this.props.preview.index);
-    }
-
-    renderMedia () {
-        const {preview} = this.props;
+    const renderMedia = () => {
         if (preview.kind === 'image') {
             return (
                 <img
@@ -55,30 +128,23 @@ class AssetPreview extends React.Component {
                 />
             </div>
         );
-    }
+    };
 
-    render () {
-        const {preview} = this.props;
+    return (
+        <div className={styles.preview}>
+            <div className={styles.previewHeader}>
+                <span
+                    className={styles.previewTitle}
+                    title={preview.name}
+                >
+                    {preview.name.substring(preview.name.lastIndexOf('/') + 1)}
+                </span>
+                <span className={styles.previewBadge}>{preview.dataFormat.toUpperCase()}</span>
+            </div>
 
-        if (!preview) {
-            return (
-                <div className={styles.preview}>
-                    <div className={styles.previewNone}>
-                        <MousePointerClick size={28} />
-                        <FormattedMessage
-                            defaultMessage="Select a file to preview it"
-                            description="Shown when no custom asset is selected"
-                            id="mw.assets.noSelection"
-                        />
-                    </div>
-                </div>
-            );
-        }
-
-        return (
-            <div className={styles.preview}>
+            <div className={styles.previewBody}>
                 <div className={styles.previewMedia}>
-                    {this.renderMedia()}
+                    {renderMedia()}
                 </div>
 
                 <dl className={styles.metadata}>
@@ -128,47 +194,66 @@ class AssetPreview extends React.Component {
                         {preview.md5}
                     </dd>
                 </dl>
-
-                <div className={styles.previewButtons}>
-                    <button
-                        className={styles.previewButton}
-                        onClick={this.handleExport}
-                    >
-                        <Download size={15} />
-                        <FormattedMessage
-                            defaultMessage="Export"
-                            description="Button to download a custom asset"
-                            id="mw.assets.export"
-                        />
-                    </button>
-                    <button
-                        className={styles.previewButton}
-                        onClick={this.handleDelete}
-                    >
-                        <Trash2 size={15} />
-                        <FormattedMessage
-                            defaultMessage="Delete"
-                            description="Button to delete a custom asset"
-                            id="mw.assets.deleteButton"
-                        />
-                    </button>
-                </div>
             </div>
-        );
-    }
-}
+
+            <div className={styles.previewButtons}>
+                <button
+                    type="button"
+                    className={styles.previewButton}
+                    onClick={props.onRename}
+                >
+                    <Pencil size={15} />
+                    <FormattedMessage
+                        defaultMessage="Rename"
+                        description="Button to rename a custom asset"
+                        id="mw.assets.renameButton"
+                    />
+                </button>
+                <button
+                    type="button"
+                    className={styles.previewButton}
+                    onClick={props.onExport}
+                >
+                    <Download size={15} />
+                    <FormattedMessage
+                        defaultMessage="Export"
+                        description="Button to download custom assets"
+                        id="mw.assets.exportPreview"
+                    />
+                </button>
+                <button
+                    type="button"
+                    className={`${styles.previewButton} ${styles.previewButtonDanger}`}
+                    onClick={props.onDelete}
+                >
+                    <Trash2 size={15} />
+                    <FormattedMessage
+                        defaultMessage="Delete"
+                        description="Button to delete custom assets"
+                        id="mw.assets.deletePreview"
+                    />
+                </button>
+            </div>
+        </div>
+    );
+};
 
 AssetPreview.propTypes = {
     preview: PropTypes.shape({
-        index: PropTypes.number.isRequired,
-        name: PropTypes.string.isRequired,
-        dataFormat: PropTypes.string.isRequired,
-        size: PropTypes.number.isRequired,
-        md5: PropTypes.string.isRequired,
-        kind: PropTypes.oneOf(['image', 'audio', 'text', 'none']).isRequired,
+        multiple: PropTypes.bool,
+        count: PropTypes.number,
+        totalSize: PropTypes.number,
+        items: PropTypes.array,
+        index: PropTypes.number,
+        name: PropTypes.string,
+        dataFormat: PropTypes.string,
+        size: PropTypes.number,
+        md5: PropTypes.string,
+        kind: PropTypes.oneOf(['image', 'audio', 'text', 'none']),
         url: PropTypes.string,
         text: PropTypes.string
     }),
+    onRename: PropTypes.func.isRequired,
     onExport: PropTypes.func.isRequired,
     onDelete: PropTypes.func.isRequired
 };
