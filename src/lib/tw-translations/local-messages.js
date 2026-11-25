@@ -652,6 +652,37 @@ const localMessages = {
         'mw.assets.metaChecksum': 'MD5 校验值',
         'mw.assets.renameButton': '重命名',
 
+        // 项目素材管理器（components/project-assets-manager）
+        'mw.projectAssets.back': '后退',
+        'mw.projectAssets.forward': '前进',
+        'mw.projectAssets.up': '上一级',
+        'mw.projectAssets.searchPlaceholder': '搜索素材',
+        'mw.projectAssets.clearSearch': '清除搜索',
+        'mw.projectAssets.itemCount': '{folders} 个文件夹 · {files} 个文件',
+        'mw.projectAssets.resultCount': '{count} 个结果',
+        'mw.projectAssets.searchResults': '搜索结果',
+        'mw.projectAssets.selectedItems': '已选择 {count} 项',
+        'mw.projectAssets.downloadItem': '下载',
+        'mw.projectAssets.deleteItem': '删除',
+        'mw.projectAssets.openFolder': '打开',
+        'mw.projectAssets.downloadFolder': '下载文件夹',
+        'mw.projectAssets.selectAll': '全选',
+        'mw.projectAssets.columnName': '名称',
+        'mw.projectAssets.columnLocation': '位置',
+        'mw.projectAssets.columnType': '类型',
+        'mw.projectAssets.folderType': '文件夹',
+        'mw.projectAssets.fileTypeImage': '图片',
+        'mw.projectAssets.fileTypeAudio': '声音',
+        'mw.projectAssets.fileTypeFont': '字体',
+        'mw.projectAssets.fileTypeCode': '代码',
+        'mw.projectAssets.fileTypeFile': '文件',
+        'mw.projectAssets.detailsView': '详细视图',
+        'mw.projectAssets.gridView': '网格视图',
+        'mw.projectAssets.emptyFolder': '这个文件夹是空的。',
+        'mw.projectAssets.emptyHint': '导入造型或声音，或者把整个项目下载为 zip 文件。',
+        'mw.projectAssets.noSearchResults': '没有匹配的素材。',
+        'mw.projectAssets.importHere': '导入素材',
+
         'mw.menuBar.performanceProfiler': '性能剖析'
     }
 };

@@ -90,16 +90,6 @@ const TARGET_CSS = {
                 backdrop-filter: var(--fg-filter) !important;
                 -webkit-backdrop-filter: var(--fg-filter) !important;
             }
-            /* 动画期间的临时替身：window-manager.js 在打开 / 关闭 / 最大化 /
-               还原动画开始时给窗口挂上 .bl-window-animating，动画结束再摘掉。
-               缩放动画的每一帧都会让浏览器按新尺寸重新执行一次背景模糊，这是
-               毛玻璃窗口开关卡顿的直接原因；这里用更实的玻璃底代替模糊，让动画
-               纯走合成器、保持顺滑，动画结束后立刻恢复真实模糊。 */
-            [class*="addon-window"]:not([class*="addon-window-"]).bl-window-animating {
-                background-color: var(--fg-glass) !important;
-                backdrop-filter: none !important;
-                -webkit-backdrop-filter: none !important;
-            }
             /* addon 窗口标题栏 — 也有不透明背景（window-manager.js 内联 var(--ui-primary)），
                需透明化让毛玻璃透过。
                ⚠ 特异性必须是 (0,2,0)：window-theme 的 macOS / Windows 10 样式会声明
