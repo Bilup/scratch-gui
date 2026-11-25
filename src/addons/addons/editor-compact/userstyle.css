@@ -1,6 +1,9 @@
 /* Full page */
 [class*="gui_body-wrapper"] {
-  height: calc(100% - 2rem);
+  /* body-wrapper is a flex child of page-wrapper; let flex compute the height
+     instead of assuming the menu bar is exactly 2rem */
+  height: auto;
+  min-height: 0;
 }
 .sa-body-editor,
 .sa-body-editor * {
@@ -41,6 +44,8 @@
 }
 
 [class*="gui_menu-bar-position"][class*="menu-bar_menu-bar"][class*="box_box"],
+[class*="gui_menu-bar-position"],
+[class*="menu-bar_menu-bar_"],
 [class*="menu-bar_menu-bar-item"] {
   height: 2rem;
 }
@@ -215,14 +220,25 @@ button[class*="action-menu_more-button"] {
 }
 
 /* Project player */
+.sa-body-editor [class*="stage-wrapper_offset-controls"] [class*="stage-wrapper_stage-canvas-wrapper"] {
+  /* Vanilla reserves 44px ($stage-menu-height) for the stage header */
+  padding-top: 2rem;
+}
 .sa-body-editor [class*="stage-header_stage-menu-wrapper_"]:not([class*="stage-wrapper_full-screen"] *) {
   padding-top: 0.25rem;
   padding-bottom: 0.25rem;
   height: 2rem;
 }
+.sa-body-editor [class*="stage-header_stage-menu-wrapper_"]:not([class*="stage-wrapper_full-screen"] *) [class*="controls_controls-container"],
+.sa-body-editor [class*="stage-header_stage-size-row_"],
+.sa-body-editor [class*="stage-header_stage-size-toggle-group_"],
+.sa-body-editor [class*="stage-header_fullscreen-buttons-row_"] {
+  align-items: center;
+}
 .sa-body-editor [class*="green-flag_green-flag_"]:not([class*="stage-wrapper_full-screen"] *),
 .sa-body-editor .pause-btn:not([class*="stage-wrapper_full-screen"] *),
 .sa-body-editor [class*="stop-all_stop-all_"]:not([class*="stage-wrapper_full-screen"] *),
+.sa-body-editor [class*="stage-controls_debugger-btn_"]:not([class*="stage-wrapper_full-screen"] *),
 .sa-body-editor [class*="stage-header_stage-button_"]:not([class*="stage-wrapper_full-screen"] *) {
   padding: 0.25rem;
   width: 1.5rem;
@@ -259,24 +275,51 @@ button[class*="action-menu_more-button"] {
 /* Tabs area */
 [class*="gui_tab-list"] {
   height: 2rem;
+  min-height: 2rem;
+  width: 100% !important;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding-left: 0.25rem;
+  overflow: visible;
 }
 [class*="gui_tab_"] {
-  padding-left: 1rem;
-  padding-right: 1rem;
+  height: 1.5rem;
+  top: 0;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
   border-radius: 0.5rem 0.5rem 0 0;
 }
 [class*="gui_tab_"] > img {
   display: none;
 }
 
+/* Find bar shares the tab row; keep it on the same line and vertically centered */
+.mw-native-find-bar-container {
+  align-self: center;
+  max-width: 240px;
+}
 .sa-find-bar {
   align-self: center;
+  height: 1.5rem;
+  margin: 0 0.5rem;
+  flex-wrap: nowrap;
 }
-.sa-find-wrapper {
-  height: 20px;
+.sa-find-wrapper,
+.sa-find-dropdown-out {
+  height: 1.5rem;
 }
 .sa-find-dropdown-out {
   margin-top: 0;
+}
+.sa-find-input {
+  height: 1.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.7rem;
+}
+/* The generic gui_tabs input rule above would remove the space reserved for the magnifier icon */
+[class*="gui_tabs"] input.sa-find-input {
+  padding: 0 3.75rem 0 2.4rem;
 }
 
 /* Code tab */
@@ -388,12 +431,14 @@ body:not(.sa-columns-enabled) [class*="gui_tab-panel"] [class*="gui_extension-bu
   margin-top: 0.5rem;
 }
 [class*="paint-editor_bitmap-button_"] {
-  padding: 0 0.25rem;
+  padding: 0 0.5rem;
+  height: 1.5rem;
+  min-height: 1.5rem;
 }
 [class*="paint-editor_bitmap-button-icon_"] {
   align-self: center;
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1rem;
+  height: 1rem;
 }
 .sa-paintEditorZoomControls-wrapper {
   height: auto !important;
