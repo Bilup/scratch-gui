@@ -6,285 +6,682 @@
 }
 
 .body {
+    position: relative;
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
     height: 100%;
     min-height: 0;
-    box-sizing: border-box;
-    padding: 1rem 1.25rem;
     background: $ui-modal-background;
     color: $text-primary;
-}
-
-.toolbar {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    flex-shrink: 0;
-}
-
-.summary {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    flex: 1;
-}
-
-.summary strong {
+    font-size: 0.8125rem;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 0.95rem;
 }
 
-.summary-text {
-    margin-top: 0.15rem;
-    color: $text-primary-transparent;
-    font-size: 0.75rem;
-}
+/* ------------------------------------------------------------------ */
+/* 顶部导航                                                            */
+/* ------------------------------------------------------------------ */
 
-.actions {
+.nav-bar {
     display: flex;
     align-items: center;
     gap: 0.5rem;
     flex-shrink: 0;
+    padding: 0.55rem 0.75rem;
+    border-bottom: 1px solid $ui-black-transparent;
+}
+
+.nav-buttons {
+    display: flex;
+    gap: 0.125rem;
 }
 
 .icon-button {
-    display: inline-grid;
-    place-items: center;
-    width: 2rem;
-    height: 2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
     padding: 0;
-    border: 1px solid transparent;
+    border: none;
     border-radius: 6px;
     background: transparent;
     color: $text-primary;
     cursor: pointer;
+    transition: background 0.12s ease, opacity 0.12s ease;
 }
 
-.icon-button:hover {
-    background: $ui-tertiary;
+.icon-button:hover:not(:disabled) {
+    background: $ui-black-transparent;
 }
 
-.primary-button,
-.secondary-button {
+.icon-button:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.breadcrumbs {
+    display: flex;
+    align-items: center;
+    gap: 0.125rem;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.breadcrumbs::-webkit-scrollbar {
+    display: none;
+}
+
+.crumb {
     display: inline-flex;
     align-items: center;
-    gap: 0.375rem;
-    height: 2rem;
-    padding: 0 0.75rem;
-    border: 1px solid $motion-primary;
+    max-width: 180px;
+    padding: 0.25rem 0.5rem;
+    border: none;
     border-radius: 6px;
-    background: $motion-primary;
-    color: $ui-white;
-    font-size: 0.8125rem;
-    font-weight: 600;
+    background: transparent;
+    color: $text-primary;
+    font: inherit;
+    cursor: pointer;
     white-space: nowrap;
+}
+
+.crumb:hover {
+    background: $ui-black-transparent;
+}
+
+.crumb-active {
+    font-weight: bold;
+}
+
+.crumb-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.breadcrumb-separator {
+    flex-shrink: 0;
+    color: $text-primary-transparent;
+}
+
+.search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 0 1 220px;
+    min-width: 130px;
+}
+
+.search-icon {
+    position: absolute;
+    left: 0.55rem;
+    color: $text-primary-transparent;
+    pointer-events: none;
+}
+
+.search-input {
+    width: 100%;
+    height: 30px;
+    padding: 0 1.75rem 0 1.85rem;
+    border: 1px solid $ui-black-transparent;
+    border-radius: 6px;
+    background: $input-background;
+    color: $text-primary;
+    font: inherit;
+    outline: none;
+}
+
+.search-input:focus {
+    border-color: $motion-primary;
+}
+
+.search-input::placeholder {
+    color: $text-primary-transparent;
+}
+
+.search-clear {
+    position: absolute;
+    right: 0.3rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: $text-primary-transparent;
     cursor: pointer;
 }
 
-.secondary-button {
-    border-color: $ui-black-transparent;
-    background: $ui-primary;
+.search-clear:hover {
+    background: $ui-black-transparent;
     color: $text-primary;
 }
 
-.secondary-button:hover {
-    background: $ui-tertiary;
+/* ------------------------------------------------------------------ */
+/* 操作栏                                                              */
+/* ------------------------------------------------------------------ */
+
+.action-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-shrink: 0;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid $ui-black-transparent;
 }
 
-.primary-button:hover {
+.primary-button,
+.secondary-button,
+.danger-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    height: 30px;
+    padding: 0 0.7rem;
+    border-radius: 6px;
+    font: inherit;
+    font-weight: bold;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background 0.12s ease;
+}
+
+.primary-button {
+    border: 1px solid $motion-primary;
+    background: $motion-primary;
+    color: $ui-white;
+}
+
+.primary-button:hover:not(:disabled) {
     background: color-mix(in srgb, $motion-primary 85%, black);
+}
+
+.secondary-button {
+    border: 1px solid $ui-black-transparent;
+    background: transparent;
+    color: $text-primary;
+}
+
+.secondary-button:hover:not(:disabled) {
+    background: $ui-black-transparent;
+}
+
+.danger-button {
+    border: 1px solid $ui-black-transparent;
+    background: transparent;
+    color: $status-danger;
+}
+
+.danger-button:hover:not(:disabled) {
+    background: color-mix(in srgb, $status-danger 12%, transparent);
 }
 
 .primary-button:disabled,
 .secondary-button:disabled,
 .danger-button:disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: default;
 }
 
-.error {
-    flex-shrink: 0;
-    padding: 0.5rem 0.75rem;
-    border-radius: 6px;
-    background: color-mix(in srgb, #e74c3c 18%, transparent);
-    color: $text-primary;
-    font-size: 0.8125rem;
+.toolbar-spacer {
+    flex: 1 1 auto;
 }
 
-.tree {
-    flex: 1;
-    min-height: 0;
-    padding: 0.5rem;
-    overflow: auto;
+.file-input {
+    display: none;
+}
+
+.view-toggle {
+    display: flex;
+    gap: 2px;
+    padding: 2px;
     border: 1px solid $ui-black-transparent;
-    border-radius: 0.5rem;
-    background: $ui-primary;
+    border-radius: 6px;
 }
 
-.empty {
-    padding: 1.5rem;
-    color: $text-primary-transparent;
-    text-align: center;
-    font-size: 0.85rem;
-}
-
-.folder {
-    border-radius: 0.25rem;
-}
-
-.folder-row {
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    min-height: 1.9rem;
-    padding: 0.15rem 0.35rem;
-    border-radius: 0.25rem;
-}
-
-.folder-row:hover {
-    background: $ui-black-transparent;
-}
-
-.folder-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    padding: 0;
-    border: 0;
-    background: none;
-    color: $text-primary;
-    line-height: 1;
-    cursor: pointer;
-}
-
-.checkbox {
-    flex-shrink: 0;
-    margin: 0;
-    cursor: pointer;
-}
-
-.folder-icon,
-.file-icon {
-    flex-shrink: 0;
-}
-
-.folder-name {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-weight: 700;
-}
-
-.file-count {
-    flex-shrink: 0;
-    margin-left: auto;
-    color: $text-primary-transparent;
-    font-size: 0.7rem;
-}
-
-.danger-button {
+.view-button {
     display: inline-flex;
     align-items: center;
-    gap: 0.375rem;
-    height: 2rem;
-    padding: 0 0.75rem;
-    border: 1px solid $ui-black-transparent;
-    border-radius: 6px;
-    background: $ui-primary;
-    color: #d93025;
-    font-size: 0.8125rem;
-    font-weight: 600;
-    white-space: nowrap;
-    cursor: pointer;
-}
-
-.danger-button:hover {
-    background: color-mix(in srgb, #d93025 14%, transparent);
-}
-
-.folder-children {
-    margin-left: 0.6rem;
-    padding-left: 0.9rem;
-    border-left: 1px solid $ui-black-transparent;
-}
-
-.file-row {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    min-height: 1.75rem;
-    padding: 0.1rem 0.35rem;
-    border-radius: 0.25rem;
-}
-
-.file-row:hover {
-    background: $ui-black-transparent;
-}
-
-.file-row[draggable="true"] {
-    cursor: grab;
-}
-
-.file-row[draggable="true"]:active {
-    cursor: grabbing;
-}
-
-.file-row.dragging {
-    opacity: 0.45;
-}
-
-.file-row.drag-over {
-    background: $looks-transparent;
-    box-shadow: inset 0 0 0 1px $looks-secondary;
-}
-
-.file-name {
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 0.85rem;
-}
-
-.row-action {
-    display: inline-grid;
-    place-items: center;
-    width: 1.5rem;
-    height: 1.5rem;
+    justify-content: center;
+    width: 26px;
+    height: 24px;
     padding: 0;
-    border: 0;
+    border: none;
     border-radius: 4px;
     background: transparent;
     color: $text-primary-transparent;
     cursor: pointer;
 }
 
-.row-action:hover:not(:disabled) {
+.view-button:hover {
     background: $ui-black-transparent;
+}
+
+.view-button-active {
+    background: color-mix(in srgb, $motion-primary 16%, transparent);
+    color: $motion-primary;
+}
+
+.error {
+    flex-shrink: 0;
+    margin: 0 0.75rem;
+    padding: 0.45rem 0.7rem;
+    border-radius: 6px;
+    background: color-mix(in srgb, $status-danger 16%, transparent);
+    color: $text-primary;
+    font-size: 0.78rem;
+}
+
+/* ------------------------------------------------------------------ */
+/* 主体：侧边导航 + 文件列表                                           */
+/* ------------------------------------------------------------------ */
+
+.main {
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 0;
+    gap: 0.75rem;
+    padding: 0.75rem;
+}
+
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 190px;
+    min-width: 150px;
+    padding: 0.3rem;
+    border: 1px solid $ui-black-transparent;
+    border-radius: 8px;
+    background: $ui-modal-inset;
+    overflow: auto;
+}
+
+.tree-row {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    min-height: 27px;
+    padding: 0.1rem 0.35rem;
+    border-radius: 5px;
+    cursor: default;
+    user-select: none;
+}
+
+.tree-row:hover {
+    background: $ui-black-transparent;
+}
+
+.tree-row-selected,
+.tree-row-selected:hover {
+    background: color-mix(in srgb, $motion-primary 20%, transparent);
+}
+
+.tree-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: $text-primary-transparent;
+    cursor: pointer;
+}
+
+.tree-toggle:hover {
     color: $text-primary;
 }
 
-.row-action:disabled {
-    opacity: 0.3;
-    cursor: default;
+.tree-toggle-placeholder {
+    display: inline-block;
+    flex-shrink: 0;
+    width: 16px;
 }
 
-.footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
+.tree-icon {
+    flex-shrink: 0;
+    color: $motion-primary;
+}
+
+.tree-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.78rem;
+}
+
+.tree-count {
     flex-shrink: 0;
     color: $text-primary-transparent;
+    font-size: 0.68rem;
+}
+
+.list-panel {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-width: 0;
+    border: 1px solid $ui-black-transparent;
+    border-radius: 8px;
+    background: $ui-modal-background;
+    overflow: hidden;
+}
+
+/* 列标题 */
+
+.header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 84px;
+    align-items: center;
+    gap: 0.35rem;
+    flex-shrink: 0;
+    padding: 0.35rem 0.6rem;
+    border-bottom: 1px solid $ui-black-transparent;
+    background: $ui-modal-inset;
+}
+
+.header-searching {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr) 84px;
+}
+
+.header-cell,
+.header-cell-static {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0;
+    overflow: hidden;
+    border: none;
+    background: transparent;
+    color: $text-primary-transparent;
+    font: inherit;
+    font-size: 0.72rem;
+    font-weight: bold;
+    letter-spacing: 0.02em;
+    text-align: left;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.header-cell {
+    cursor: pointer;
+}
+
+.header-cell:hover {
+    color: $text-primary;
+}
+
+.sort-icon {
+    flex-shrink: 0;
+}
+
+/* 列表视图 */
+
+.scroll-area {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 0.25rem;
+    overflow: auto;
+    outline: none;
+}
+
+.row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 84px;
+    align-items: center;
+    gap: 0.35rem;
+    min-height: 30px;
+    padding: 0.15rem 0.45rem;
+    border-radius: 5px;
+    cursor: default;
+    user-select: none;
+}
+
+.row-searching {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr) 84px;
+}
+
+.folder-row:hover,
+.file-row:hover {
+    background: $ui-black-transparent;
+}
+
+.row-selected,
+.row-selected:hover {
+    background: color-mix(in srgb, $motion-primary 20%, transparent);
+}
+
+.row[draggable="true"] {
+    cursor: grab;
+}
+
+.row[draggable="true"]:active {
+    cursor: grabbing;
+}
+
+.dragging {
+    opacity: 0.45;
+}
+
+.drag-over {
+    outline: 2px dashed $motion-primary;
+    outline-offset: -2px;
+}
+
+.name-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-width: 0;
+}
+
+.file-icon {
+    flex-shrink: 0;
+    color: $text-primary-transparent;
+}
+
+.row-icon {
+    flex-shrink: 0;
+}
+
+.folder-icon {
+    color: $motion-primary;
+}
+
+.name-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.location-cell {
+    overflow: hidden;
+    color: $text-primary-transparent;
+    font-size: 0.75rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.type-cell {
+    overflow: hidden;
+    color: $text-primary-transparent;
+    font-size: 0.75rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 网格视图 */
+
+.grid {
+    display: grid;
+    flex: 1 1 auto;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    grid-auto-rows: min-content;
+    gap: 0.5rem;
+    align-content: start;
+    min-height: 0;
+    padding: 0.6rem;
+    overflow: auto;
+    outline: none;
+}
+
+.tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    min-width: 0;
+    padding: 0.6rem 0.4rem;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    cursor: default;
+    text-align: center;
+    user-select: none;
+}
+
+.tile:hover {
+    background: $ui-black-transparent;
+}
+
+.tile-selected,
+.tile-selected:hover {
+    border-color: color-mix(in srgb, $motion-primary 40%, transparent);
+    background: color-mix(in srgb, $motion-primary 20%, transparent);
+}
+
+.tile-icon {
+    flex-shrink: 0;
+}
+
+.tile-folder .tile-icon {
+    color: $motion-primary;
+}
+
+.tile-name {
+    display: -webkit-box;
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 0.75rem;
+    line-height: 1.2;
+    word-break: break-word;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.tile-meta {
+    color: $text-primary-transparent;
+    font-size: 0.68rem;
+}
+
+/* 空状态 */
+
+.empty {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    min-height: 100%;
+    padding: 1.5rem 1rem;
+    color: $text-primary-transparent;
+    text-align: center;
+}
+
+.empty-icon {
+    opacity: 0.7;
+}
+
+.empty-title {
+    color: $text-primary;
+    font-weight: bold;
+}
+
+.empty-hint {
+    max-width: 260px;
     font-size: 0.75rem;
 }
 
-.busy {
+/* ------------------------------------------------------------------ */
+/* 状态栏与右键菜单                                                    */
+/* ------------------------------------------------------------------ */
+
+.status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
     flex-shrink: 0;
+    padding: 0.4rem 0.85rem;
+    border-top: 1px solid $ui-black-transparent;
+    color: $text-primary-transparent;
+    font-size: 0.72rem;
+}
+
+.menu-backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+}
+
+.context-menu {
+    position: absolute;
+    z-index: 21;
+    display: flex;
+    flex-direction: column;
+    width: 216px;
+    padding: 5px;
+    border: 1px solid $ui-black-transparent;
+    border-radius: 8px;
+    background: $ui-white;
+    box-shadow: 0 6px 20px $shadow;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    width: 100%;
+    height: 30px;
+    padding: 0 0.5rem;
+    border: none;
+    border-radius: 5px;
+    background: transparent;
     color: $text-primary;
+    font: inherit;
+    text-align: left;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.menu-item:hover {
+    background: $looks-secondary;
+    color: $ui-white;
+}
+
+.menu-item-danger:hover {
+    background: $error-primary;
+    color: $ui-white;
+}
+
+.menu-separator {
+    height: 1px;
+    margin: 4px 2px;
+    background: $ui-black-transparent;
+}
+
+@media (max-width: 720px) {
+    .sidebar {
+        flex-basis: 158px;
+        min-width: 132px;
+    }
 }

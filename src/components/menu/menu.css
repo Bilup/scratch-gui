@@ -23,6 +23,26 @@
     transform: scale(1) translateY(0);
 }
 
+@keyframes menuOpenEnter {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* 打开时的入场动画必须用 animation 而不是只依赖 .menu -> .menuOpen 的 transition：
+   下拉菜单在打开时才插入 DOM，首次打开（页面刚加载、主线程繁忙时）元素插入与
+   class 切换可能落在同一帧，浏览器拿不到变化前的计算样式，transition 不会产生
+   起始帧，菜单会直接"秒现"。animation 只要 class 加上就一定从头播放。 */
+:global(html:not(.no-window-animation)) .menuOpen {
+    animation: menuOpenEnter 0.2s ease;
+}
+
 .menu:not(.submenu)::before {
     content: "";
     position: absolute;
