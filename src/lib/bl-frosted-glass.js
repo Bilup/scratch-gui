@@ -295,15 +295,27 @@ const TARGET_CSS = {
             background: transparent !important;
         }
 
-/* [D-1] 项目素材管理器 — 素材树是窗口里面积最大的一块实底（$ui-primary），
-       改为与窗口内容同源的淡玻璃；行 hover 用反极性状态色，
-       避免深色玻璃上黑叠黑、看不出悬停反馈。 */
-        [class*="project-assets-manager_tree"] {
+/* [D-1] 项目素材管理器 / 素材库 — 侧栏与列表面板统一成同一档玻璃底。
+       旧规则写的是 [class*="project-assets-manager_tree"]，组件早已把类名改成
+       sidebar / tree-row，于是该选择器只匹配到 tree-row / tree-toggle，
+       把树的**每一行**都刷成了 glassTint —— 面板不透明、行却各有底色，
+       正是"深浅不一致"的来源。这里改为：
+         · 侧栏（原 $ui-modal-inset 实色）→ 与 list-panel 相同的 glass；
+         · 素材库的同级 preview 面板、内嵌媒体井同理；
+         · 行 hover 用反极性状态色，避免深色玻璃上黑叠黑、看不出悬停反馈。 */
+        [class*="project-assets-manager_sidebar"],
+        [class*="assets-modal_preview_"] {
+            background-color: var(--fg-glass) !important;
+            background: var(--fg-glass) !important;
+        }
+        [class*="assets-modal_preview-media_"],
+        [class*="assets-modal_multi-list_"] {
             background-color: var(--fg-glass-tint) !important;
             background: var(--fg-glass-tint) !important;
         }
-        [class*="project-assets-manager_folder-row"]:hover,
-        [class*="project-assets-manager_file-row"]:hover {
+        [class*="project-assets-manager_tree-row_"]:hover,
+        [class*="project-assets-manager_folder-row_"]:hover,
+        [class*="project-assets-manager_file-row_"]:hover {
             background-color: var(--fg-hover) !important;
             background: var(--fg-hover) !important;
         }
@@ -1332,6 +1344,7 @@ const TARGET_CSS = {
         :is([class*="modal-content"], .modal-window-content, .addon-window-content) [class*="project-analysis_score-card"],
         :is([class*="modal-content"], .modal-window-content, .addon-window-content) [class*="project-analysis_metric-tile"],
         :is([class*="modal-content"], .modal-window-content, .addon-window-content) [class*="project-analysis_recommendation"],
+        :is([class*="modal-content"], .modal-window-content, .addon-window-content) [class*="project-analysis_empty-state"],
         :is([class*="modal-content"], .modal-window-content, .addon-window-content) [class*="sprite-folders_sa-toolbar-button"],
         :is([class*="modal-content"], .modal-window-content, .addon-window-content) [class*="sprite-folders_sa-file-icon"] {
             background-color: var(--fg-glass-card) !important;

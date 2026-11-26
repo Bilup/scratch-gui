@@ -24,6 +24,30 @@ const css = `
   scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
 }
 
+/* Dragging a window must not repaint its (large) content every frame.
+   Two things made the library windows feel stuck under the cursor:
+   1) the frosted-glass backdrop-filter has to re-blur everything behind the
+      window on every pointermove;
+   2) the big content tree keeps being hit-tested / re-styled for :hover.
+   While dragging we drop the blur for a solid backing, stop hit-testing the
+   content and let the window move as a composited layer, then restore. */
+body .addon-window.mw-window-dragging {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: var(--ui-modal-background, #ffffff) !important;
+  will-change: transform;
+}
+
+body .addon-window.mw-window-dragging .addon-window-content {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+body .addon-window.mw-window-dragging .addon-window-content,
+body .addon-window.mw-window-dragging .addon-window-content * {
+  pointer-events: none !important;
+}
+
 .addon-window-content::-webkit-scrollbar {
   width: 12px;
   height: 12px;
@@ -487,6 +511,15 @@ class AddonWindow {
                 y: e.clientY - currentY
             };
 
+            // Drag with a compositor-only transform instead of left/top, so a
+            // big window (library grids) is just moved, not re-painted.
+            this._dragStartX = currentX;
+            this._dragStartY = currentY;
+            this.element.style.transition = 'none';
+            this.element.style.transform = '';
+            this._startDragAnimations();
+            this.element.classList.add('mw-window-dragging');
+
             try {
                 this.headerElement.setPointerCapture(e.pointerId);
             } catch (err) {
@@ -501,6 +534,68 @@ class AddonWindow {
         });
     }
     
+    // Moving by rewriting inline styles invalidates the style of the whole
+    // window subtree. For a library window (hundreds of cards) that costs
+    // 8-25ms per frame, so the window keeps lagging behind the cursor even
+    // when it is composited. Instead we drive two paused additive animations
+    // (x and y) and only move their currentTime: the compositor does the rest
+    // and no style recalculation happens per frame.
+    _startDragAnimations () {
+        this._cancelDragAnimations();
+        this._dragAnimMax = 10000;
+        try {
+            const max = this._dragAnimMax;
+            const ax = this.element.animate(
+                [
+                    {transform: `translate3d(${-max}px, 0px, 0px)`},
+                    {transform: `translate3d(${max}px, 0px, 0px)`}
+                ],
+                {duration: max * 2, fill: 'both', easing: 'linear'}
+            );
+            const ay = this.element.animate(
+                [
+                    {transform: `translate3d(0px, ${-max}px, 0px)`},
+                    {transform: `translate3d(0px, ${max}px, 0px)`}
+                ],
+                {duration: max * 2, fill: 'both', easing: 'linear'}
+            );
+            ay.effect.composite = 'add';
+            if (ay.effect.composite !== 'add') {
+                ax.cancel();
+                ay.cancel();
+                return;
+            }
+            ax.pause();
+            ay.pause();
+            ax.currentTime = max;
+            ay.currentTime = max;
+            this._dragAnims = {ax, ay};
+        } catch (err) {
+            this._cancelDragAnimations();
+        }
+    }
+
+    _setDragOffset (dx, dy) {
+        if (this._dragAnims) {
+            const max = this._dragAnimMax;
+            this._dragAnims.ax.currentTime = max + dx;
+            this._dragAnims.ay.currentTime = max + dy;
+        } else {
+            this.element.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
+        }
+    }
+
+    _cancelDragAnimations () {
+        if (!this._dragAnims) return;
+        try {
+            this._dragAnims.ax.cancel();
+            this._dragAnims.ay.cancel();
+        } catch (err) {
+            // element already gone
+        }
+        this._dragAnims = null;
+    }
+
     handleDrag = e => {
         if (!this.isDragging) return;
         if (this.dragPointerId !== null && e.pointerId !== this.dragPointerId) return;
@@ -528,8 +623,7 @@ class AddonWindow {
                     this._pendingDragPos = null;
                     this.x = pos.x;
                     this.y = pos.y;
-                    this.element.style.left = `${pos.x}px`;
-                    this.element.style.top = `${pos.y}px`;
+                    this._setDragOffset(pos.x - this._dragStartX, pos.y - this._dragStartY);
                     this.onMove(pos.x, pos.y);
                 }
             });
@@ -550,9 +644,15 @@ class AddonWindow {
             this._pendingDragPos = null;
             this.x = pos.x;
             this.y = pos.y;
-            this.element.style.left = `${pos.x}px`;
-            this.element.style.top = `${pos.y}px`;
             this.onMove(pos.x, pos.y);
+        }
+        // Commit the transform back into left/top, then restore the blurred look.
+        if (this.element) {
+            this.element.style.left = `${this.x}px`;
+            this.element.style.top = `${this.y}px`;
+            this._cancelDragAnimations();
+            this.element.style.transform = '';
+            this.element.classList.remove('mw-window-dragging');
         }
         if (this.dragPointerId !== null) {
             try {
