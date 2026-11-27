@@ -226,8 +226,15 @@ const TARGET_CSS = {
             （modal_headerItemTitle / ItemClose 含 "modal_headerItem"，一条即覆盖）
          2. modal-sidebar_header / telemetry-modal_header 等其它组件里
             恰好含 "modal_header" 子串的类名。
-       最终只命中 modal.css 那个 header 容器本身。 */
-        [class*="modal_header"]:not([class*="modal_headerItem"]):not([class*="modal_headerImage"]):not([class*="modal-sidebar_"]):not([class*="telemetry-modal_"]) {
+         3. *-header-actions（如 restore-point-modal_header-actions）只是标题栏
+            里包按钮的 flex 容器，本身没有底色。若被铺 cardGlass，容器会被两个
+            按钮完全盖住，只在 0.2rem 的 gap 处露出一条深色竖缝，看起来像按钮
+            之间多了一道突兀的色带。
+         4. settings-modal_header（设置窗里的**分节标题行**："特色""主题色""布局"…，
+            结构是"标题 + 右侧虚线"）。它只是恰好含 "modal_header" 子串，并不是窗口
+            标题栏。被铺 cardGlass 后，整条分节头会变成一条 32px 高的加深色带，
+            虚线夹在色带正中——就是"横线上下的底色和周围不一致"的来源。 */
+        [class*="modal_header"]:not([class*="modal_headerItem"]):not([class*="modal_headerImage"]):not([class*="modal-sidebar_"]):not([class*="telemetry-modal_"]):not([class*="header-actions"]):not([class*="headerActions"]):not([class*="settings-modal_header"]) {
             background-color: var(--fg-glass-card) !important;
         }
         /* modal.css 的 .body（modal_body_<hash>）— 由各 modal 自己铺 $ui-modal-background。
@@ -377,10 +384,23 @@ const TARGET_CSS = {
            铺一层淡玻璃底维持层次感；深色下 alpha 已整体提升，淡底同样更暗保证可读。
            这里用 glass 而非 cardGlass：卡片之上还叠着内容区的 glassTint，
            若卡片也用 cardGlass，两层相加仍偏淡、卡片边界看不出来。 */
-        [class*="modal-content"], .modal-window-content, .addon-window-content [class*="card"],
-            [class*="modal-content"], .modal-window-content, .addon-window-content [class*="panel"],
-            [class*="modal-content"], .modal-window-content, .addon-window-content [class*="tile"] {
+        [class*="modal-content"], .modal-window-content, .addon-window-content [class*="card"]:where(:not(svg)),
+            [class*="modal-content"], .modal-window-content, .addon-window-content [class*="panel"]:where(:not(svg)),
+            [class*="modal-content"], .modal-window-content, .addon-window-content [class*="tile"]:where(:not(svg)) {
             background-color: var(--fg-glass) !important;
+        }
+        /* ⚠ :where(:not(svg)) 不是洁癖，是必须：设置窗"主题"页的三张卡片里，图标是 lucide 的
+           <svg class="settings-modal_theme-card-icon_xxx">。类名含 "card" → 被上面这条
+           卡片上色规则命中，于是每个图标背后都多出一个 --fg-glass 色块（40% 黑），
+           表现为"logo 底下有一块更深的方块"。svg 是图形不是表面，永远不该被铺底色；
+           （用 :where() 包住排除条件是为了不抬高本规则特异性，否则会压过下面
+            针对具体部件的规则——见 [W] 的同类教训。）
+           同理 .theme-card-preview（卡片里的预览小图底）也会被命中：源样式铺的是
+           $ui-tertiary（深色 #2e2e2e，比卡片 #111 更亮一档），这里改铺反极性的
+           状态叠加色 --fg-hover，才和源样式同极性（深色下略亮、浅色下略暗），
+           并且不会与卡片本身再叠成双层加深。 */
+        :is([class*="modal-content"], .modal-window-content, .addon-window-content) [class*="settings-modal_theme-card-preview"] {
+            background-color: var(--fg-hover) !important;
         }
         /* ---- [W] 去叠色：上色只作用于"最外层"的卡片本体，内部子部件不再重复上色 ----
            为什么必须要这一步：CSS Module 编译出的类名是 文件名_local_哈希，
@@ -475,12 +495,18 @@ const TARGET_CSS = {
             background-color: transparent !important;
         }
         /* [G] 设置窗口里的大块行/编辑区（菜单栏编排行、主题快照、自定义主题编辑器、
-           字体行、样式/对齐选择卡、分段/切换轨道）— 玻璃化而非实底 */
-        [class*="modal-content"], .modal-window-content, .addon-window-content [class*="settings-modal_menu-bar-row"],
+           字体行、样式/对齐选择卡、分段/切换轨道）— 玻璃化而非实底
+           ⚠ [class*="..."] 是"包含匹配"，会连带命中同族里后缀不同的子元素。实际踩到两个：
+             settings-modal_menu-bar-row  →  menu-bar-row-label（行内文字容器）
+             settings-modal_style-option  →  style-option-label（样式卡片的文字容器）
+           这两个子元素原本都没有背景，被误铺 --fg-glass 后又在整行底色上叠了一层深色，
+           于是"文字所在的那一条"比行的上下留白明显更深（用户反馈的"文字底部颜色"问题）。
+           用 :not() 排除掉，只保留真正需要玻璃化的那一层。 */
+        [class*="modal-content"], .modal-window-content, .addon-window-content [class*="settings-modal_menu-bar-row"]:not([class*="menu-bar-row-label"]),
         [class*="modal-content"], .modal-window-content, .addon-window-content [class*="settings-modal_ct-snapshot"],
         [class*="modal-content"], .modal-window-content, .addon-window-content [class*="settings-modal_custom-themes-editor"],
         [class*="modal-content"], .modal-window-content, .addon-window-content [class*="settings-modal_font-row"],
-        [class*="modal-content"], .modal-window-content, .addon-window-content [class*="settings-modal_style-option"],
+        [class*="modal-content"], .modal-window-content, .addon-window-content [class*="settings-modal_style-option"]:not([class*="style-option-label"]),
         [class*="modal-content"], .modal-window-content, .addon-window-content [class*="settings-modal_align-option"],
         [class*="modal-content"], .modal-window-content, .addon-window-content [class*="settings-modal_ct-tabs"],
         [class*="modal-content"], .modal-window-content, .addon-window-content [class*="settings-modal_ct-mode-switch"] {
@@ -1297,6 +1323,7 @@ const TARGET_CSS = {
          project-theme-modal .secondaryButton
          custom-gallery-modal .cancel-button
          simple-dialog .cancelButton
+         project-analysis .refresh-button（复杂度分析侧栏的「刷新」，源样式铺 $ui-primary）
        ⚠ 这些源样式 hover 换的是更深的 **中性** token（$ui-secondary /
          $ui-secondary-hover），不是品牌色。按 [U-1h] 的既有教训，
          hover 不能换 token 否则会"玻璃 → 实心"跳变；这里统一
@@ -1305,7 +1332,8 @@ const TARGET_CSS = {
         :is([class*="modal-content"], .modal-window-content, .addon-window-content) [class*="secondaryButton"],
         :is([class*="modal-content"], .modal-window-content, .addon-window-content) [class*="cancel-button"],
         :is([class*="modal-content"], .modal-window-content, .addon-window-content) [class*="cancelButton"],
-        :is([class*="modal-content"], .modal-window-content, .addon-window-content) [class*="confirm-cancel-button"] {
+        :is([class*="modal-content"], .modal-window-content, .addon-window-content) [class*="confirm-cancel-button"],
+        :is([class*="modal-content"], .modal-window-content, .addon-window-content) [class*="project-analysis_refresh-button"] {
             background-color: var(--fg-glass-card) !important;
             background: var(--fg-glass-card) !important;
         }
@@ -1313,7 +1341,8 @@ const TARGET_CSS = {
         :is([class*="modal-content"], .modal-window-content, .addon-window-content) [class*="secondaryButton"]:hover,
         :is([class*="modal-content"], .modal-window-content, .addon-window-content) [class*="cancel-button"]:hover,
         :is([class*="modal-content"], .modal-window-content, .addon-window-content) [class*="cancelButton"]:hover,
-        :is([class*="modal-content"], .modal-window-content, .addon-window-content) [class*="confirm-cancel-button"]:hover {
+        :is([class*="modal-content"], .modal-window-content, .addon-window-content) [class*="confirm-cancel-button"]:hover,
+        :is([class*="modal-content"], .modal-window-content, .addon-window-content) [class*="project-analysis_refresh-button"]:hover {
             background-color: var(--fg-active) !important;
             background: var(--fg-active) !important;
         }
@@ -1362,6 +1391,46 @@ const TARGET_CSS = {
            git-modal_chipActive 覆盖），这里只需保证非选中态是玻璃，不重复。
            .select / .input / .inputSmall 是原生表单控件，已被 [H] 的
            input/select 规则覆盖（它们是 <select>/<input> 本身）。 */
+
+/* [V-D] 分节虚线 —— "标题 + 一条横贯到右侧的虚线"这种分节头
+         tw-settings-modal .divider / shortcut-manager .sectionDivider /
+         mw-project-metadata .divider
+       源样式三处完全一致：border-top: 1px dashed $ui-tertiary（深色主题下是
+       实色 rgb(46,46,46)）。玻璃窗的背景不是常量：窗口左半段压在编辑器深底上
+       （几乎纯黑的玻璃），右半段透出舞台的青绿色，于是同一条虚线"一半消失、
+       一半显成突兀的深色横条"。
+       修法：把颜色换成与窗口底色**反极性**的半透明线（--fg-divider）——
+       它的对比度只取决于玻璃底色的明度，不再取决于底下透出来的是什么，
+       两种背景上粗细/浓淡一致，整条线连续可辨。 */
+        :is([class*="modal-content"], .modal-window-content, .addon-window-content) [class*="settings-modal_divider"],
+        :is([class*="modal-content"], .modal-window-content, .addon-window-content) [class*="shortcut-manager_sectionDivider"],
+        :is([class*="modal-content"], .modal-window-content, .addon-window-content) [class*="project-metadata-modal_divider"] {
+            border-top-color: var(--fg-divider) !important;
+        }
+        /* 同一种"实色分隔线"的另一种写法：项目信息里逐行列表的
+           border-bottom: 1px solid $ui-tertiary（.largest-row），毛病一模一样，一并换掉。 */
+        :is([class*="modal-content"], .modal-window-content, .addon-window-content) [class*="project-metadata-modal_largest-row"] {
+            border-bottom-color: var(--fg-divider) !important;
+        }
+
+/* [V-E] 项目复杂度分析窗里的"中性小单元" —— 源样式一律铺 $ui-tertiary
+       （深色主题下是实色 #2e2e2e）：
+         .empty-icon      空状态里那块图标底
+         .empty-meta span "1 个造型"之类的胶囊
+         .row-icon        列表行的图标底
+         .chip            行内计数胶囊
+       在玻璃窗里它们就是"不透明的小色块"（用户截图里的图标方块与胶囊）。
+       注意层级：前三者都嵌在 .empty-state / .row 里（本身已是玻璃底），
+       若再铺一层 glassCard 会叠成更深的实色；而源样式 $ui-tertiary 本来就比
+       面板的 $ui-modal-inset **亮一档**。所以这里统一用反极性的状态叠加色
+       --fg-hover：深色下比面板略亮、浅色下略暗，与源样式同极性且不叠实。 */
+        :is([class*="modal-content"], .modal-window-content, .addon-window-content) [class*="project-analysis_empty-icon"],
+        :is([class*="modal-content"], .modal-window-content, .addon-window-content) [class*="project-analysis_empty-meta"] span,
+        :is([class*="modal-content"], .modal-window-content, .addon-window-content) [class*="project-analysis_row-icon"],
+        :is([class*="modal-content"], .modal-window-content, .addon-window-content) [class*="project-analysis_chip"] {
+            background-color: var(--fg-hover) !important;
+            background: var(--fg-hover) !important;
+        }
 
 /* [X] 调试器窗口（src/components/tw-debugger）—— 此前**唯一一个零覆盖**的插件窗口。
        ⚠ 它和别的窗口不一样：CSS 是用 style-loader + css-loader 加载的（见 debugger.jsx
@@ -1733,6 +1802,10 @@ const buildRootVars = (settings, {r, g, b}) => {
     --fg-hover: rgba(${ir}, ${ig}, ${ib}, 0.09);
     --fg-active: rgba(${ir}, ${ig}, ${ib}, 0.15);
     --fg-hover-strong: rgba(${ir}, ${ig}, ${ib}, 0.25);
+    /* 分节虚线（标题右侧那条 1px dashed）：与窗口底色反极性的半透明线。
+       源样式用的是实色 $ui-tertiary，在玻璃窗上会随背景明暗忽隐忽现，
+       详见 [V-D] 的说明。 */
+    --fg-divider: rgba(${ir}, ${ig}, ${ib}, 0.22);
     --fg-hairline: ${edge};
     --fg-overlay-dim: rgba(${r}, ${g}, ${b}, ${isDark ? 0.18 : 0.06});
     --fg-brand-pct: ${Math.round(aLarge * 100)}%;

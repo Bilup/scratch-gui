@@ -24,14 +24,13 @@ const css = `
   scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
 }
 
-/* Dragging: movement itself is fully composited (see _startDragAnimations),
-   so the window can keep its frosted-glass look. The only things we change
-   are: soften the backdrop blur to half radius (--fg-filter-soft) to leave
-   headroom on weak GPUs, and stop hit-testing the big content tree so hover
-   states do not restyle hundreds of cards while the cursor sweeps. */
+/* Dragging keeps the window's appearance untouched: the movement is fully
+   composited (see _startDragAnimations), so no per-frame style work runs and
+   the frosted glass stays exactly as it is (same blur radius, same tint).
+   The only extras are non-visual: promote the window to its own layer and
+   stop hit-testing the big content tree, so hover states do not restyle
+   hundreds of cards while the cursor sweeps across them. */
 body .addon-window.mw-window-dragging {
-  backdrop-filter: var(--fg-filter-soft, none) !important;
-  -webkit-backdrop-filter: var(--fg-filter-soft, none) !important;
   will-change: transform;
 }
 
