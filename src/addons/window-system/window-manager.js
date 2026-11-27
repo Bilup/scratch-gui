@@ -24,23 +24,15 @@ const css = `
   scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
 }
 
-/* Dragging a window must not repaint its (large) content every frame.
-   Two things made the library windows feel stuck under the cursor:
-   1) the frosted-glass backdrop-filter has to re-blur everything behind the
-      window on every pointermove;
-   2) the big content tree keeps being hit-tested / re-styled for :hover.
-   While dragging we drop the blur for a solid backing, stop hit-testing the
-   content and let the window move as a composited layer, then restore. */
+/* Dragging: movement itself is fully composited (see _startDragAnimations),
+   so the window can keep its frosted-glass look. The only things we change
+   are: soften the backdrop blur to half radius (--fg-filter-soft) to leave
+   headroom on weak GPUs, and stop hit-testing the big content tree so hover
+   states do not restyle hundreds of cards while the cursor sweeps. */
 body .addon-window.mw-window-dragging {
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  background: var(--ui-modal-background, #ffffff) !important;
+  backdrop-filter: var(--fg-filter-soft, none) !important;
+  -webkit-backdrop-filter: var(--fg-filter-soft, none) !important;
   will-change: transform;
-}
-
-body .addon-window.mw-window-dragging .addon-window-content {
-  background: transparent !important;
-  box-shadow: none !important;
 }
 
 body .addon-window.mw-window-dragging .addon-window-content,
