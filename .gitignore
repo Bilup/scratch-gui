@@ -34,3 +34,6 @@ bun.lock
 /temp
 
 .trae
+
+# Windows 保留名（`babel -o /dev/null` 之类会在这里写出真实文件，且常规方式删不掉）
+nul

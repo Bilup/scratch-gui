@@ -10,19 +10,39 @@ import {setAppElement} from 'react-modal';
     if (window.__mwGlobalErrorHandlerInstalled) return;
     window.__mwGlobalErrorHandlerInstalled = true;
 
-    const handleError = (type, detail) => {
-        // 不拦截已知会被 React 错误边界处理的渲染错误
-        if (detail && detail.preventBubbling) return;
-        // eslint-disable-next-line no-console
-        console.error(`[Bilup] Unhandled ${type}`, detail && detail.error ? detail.error : detail);
+    // 有些库/沙箱会 throw 一个普通对象（甚至空对象 {}），直接打印出来只有一个
+    // "Object"，什么都没留下。这里补上序列化结果，至少能看出内容。
+    const describeReason = reason => {
+        if (!reason || typeof reason !== 'object' || reason instanceof Error) return reason;
+        try {
+            return {reason, json: JSON.stringify(reason)};
+        } catch (e) {
+            return reason;
+        }
     };
 
     window.addEventListener('error', event => {
-        handleError('error', {error: event.error});
+        // ErrorEvent 的 message/filename/lineno/colno 是唯一可靠线索：
+        // 跨域脚本错误、以及浏览器/库自己派发的 error 事件都可能没有 error 对象，
+        // 只看 event.error 会把信息全部丢掉（之前就是只打了一个 Object）。
+        const location = {
+            message: event.message,
+            source: event.filename,
+            line: event.lineno,
+            column: event.colno
+        };
+        if (event.error) {
+            // eslint-disable-next-line no-console
+            console.error('[Bilup] Unhandled error', event.error, location);
+        } else {
+            // eslint-disable-next-line no-console
+            console.error('[Bilup] Unhandled error', location);
+        }
     });
 
     window.addEventListener('unhandledrejection', event => {
-        handleError('rejection', {error: event.reason});
+        // eslint-disable-next-line no-console
+        console.error('[Bilup] Unhandled rejection', describeReason(event.reason));
         // 阻止默认的 console 噪声，但保留事件本身
         event.preventDefault();
     });

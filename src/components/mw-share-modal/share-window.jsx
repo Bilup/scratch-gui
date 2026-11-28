@@ -16,7 +16,6 @@ const messages = defineMessages({
     remix: {id: 'mw.share.remix', defaultMessage: 'Remix'},
     update: {id: 'mw.share.update', defaultMessage: 'Update'},
     save: {id: 'mw.share.save', defaultMessage: 'Save'},
-    checkStorage: {id: 'mw.share.checkStorage', defaultMessage: 'Check project storage'},
     uploadAgreement: {id: 'mw.share.uploadAgreement', defaultMessage: 'Upload agreement v{version}'},
     cancel: {id: 'mw.share.cancel', defaultMessage: 'Cancel'},
     accepting: {id: 'mw.share.accepting', defaultMessage: 'Accepting…'},
@@ -167,14 +166,6 @@ class ShareWindow extends React.Component {
         return (
             <div className={styles.errorPanel}>
                 <div className={styles.error}>{this.state.error}</div>
-                {this.state.errorCode === 'project_too_large' && (
-                    <button
-                        className={styles.reviewStorage}
-                        onClick={this.props.onReviewStorage}
-                    >
-                        {this.props.intl.formatMessage(messages.checkStorage)}
-                    </button>
-                )}
             </div>
         );
     }
@@ -353,7 +344,6 @@ ShareWindow.propTypes = {
     initialTitle: PropTypes.string,
     action: PropTypes.oneOf(['save', 'remix', 'update']),
     onClose: PropTypes.func.isRequired,
-    onReviewStorage: PropTypes.func.isRequired,
     onPublished: PropTypes.func.isRequired
 };
 

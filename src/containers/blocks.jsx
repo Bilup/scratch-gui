@@ -1990,8 +1990,8 @@ Blocks.defaultProps = {
 
 const mapStateToProps = state => ({
     anyModalVisible: (
-        // `modals` stores some non-flag values (e.g. projectMetadataView), so
-        // only boolean `true` entries count as an open modal.
+        // `modals` stores some non-flag values (e.g. simpleDialogConfig, helpEntry),
+        // so only boolean `true` entries count as an open modal.
         Object.keys(state.scratchGui.modals).some(key => state.scratchGui.modals[key] === true) ||
         state.scratchGui.mode.isFullScreen
     ),
