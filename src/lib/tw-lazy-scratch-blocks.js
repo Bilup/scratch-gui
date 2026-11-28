@@ -1,6 +1,7 @@
 import {getVanillaPalette} from './mw-vanilla-palette';
 import {getItem as getStorageItem, setItem as setStorageItem} from './utils/safe-storage.js';
 import {applyCatBlocksToLoadedBlockly} from './mw-cat-blocks.js';
+import {installBlocklyContextMenuIcons} from './context-menu-icons.js';
 
 let _ScratchBlocks = null;
 
@@ -49,6 +50,12 @@ const load = () => {
 
             try {
                 applyCatBlocksToLoadedBlockly();
+            } catch (e) {
+                // ignore
+            }
+
+            try {
+                installBlocklyContextMenuIcons(_ScratchBlocks);
             } catch (e) {
                 // ignore
             }

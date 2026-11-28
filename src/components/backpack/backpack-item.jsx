@@ -286,7 +286,10 @@ class BackpackItem extends React.PureComponent {
                     />
                 </div>
                 <ContextMenu id={this.menuId}>
-                    <MenuItem onClick={this.handleInsertMenu}>
+                    <MenuItem
+                        icon="insert"
+                        onClick={this.handleInsertMenu}
+                    >
                         <FormattedMessage
                             defaultMessage="Add to current sprite"
                             description="Context menu item that adds a backpack item to the sprite being edited"
@@ -294,7 +297,10 @@ class BackpackItem extends React.PureComponent {
                         />
                     </MenuItem>
                     {canRename ? (
-                        <MenuItem onClick={this.handleRenameMenu}>
+                        <MenuItem
+                            icon="rename"
+                            onClick={this.handleRenameMenu}
+                        >
                             <FormattedMessage
                                 defaultMessage="Rename"
                                 description="Context menu item that renames a backpack item"
@@ -302,7 +308,10 @@ class BackpackItem extends React.PureComponent {
                             />
                         </MenuItem>
                     ) : null}
-                    <DangerousMenuItem onClick={this.handleDeleteMenu}>
+                    <DangerousMenuItem
+                        icon="delete"
+                        onClick={this.handleDeleteMenu}
+                    >
                         <FormattedMessage
                             defaultMessage="Delete"
                             description="Context menu item that deletes a backpack item"

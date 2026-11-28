@@ -18,6 +18,8 @@ const addBackpackItem = (ScratchBlocks, items) => {
     if (!block) return items;
     const item = {
         enabled: true,
+        // context-menu-icons 会直接采用这个 key；不给的话这一项会退化成圆点。
+        icon: 'backpack',
         text: getLabel(),
         callback: () => saveToBackpack({kind: 'script', blockId: block.id})
     };

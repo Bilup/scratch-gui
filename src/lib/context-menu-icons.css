@@ -1,0 +1,28 @@
+/* 右键菜单图标：Blockly（工作区 / 积木）与 react-contextmenu 共用一套 lucide 图标。
+ *
+ * 这里的选择器必须带 :global()，因为它们作用在 scratch-blocks 用 goog.ui.Menu
+ * 生成的 DOM 上（blocklyWidgetDiv > .blocklyContextMenu > .goog-menuitem）。
+ * 特异性刻意写成 (0,3,0)：scratch-blocks 在运行期会把自己的 css.js 注入 <head>，
+ * 注入顺序晚于本文件，两者都写 padding 时只能靠特异性取胜。
+ */
+:global(.blocklyWidgetDiv .blocklyContextMenu .goog-menuitem) {
+    padding-left: 12px;
+}
+
+:global(.blocklyWidgetDiv .blocklyContextMenu .goog-menuitem.goog-menuitem-rtl) {
+    padding-left: 7em;
+    padding-right: 12px;
+}
+
+:global(.blocklyWidgetDiv .blocklyContextMenu .goog-menuitem-content) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.icon {
+    flex: none;
+    width: 16px;
+    height: 16px;
+    color: inherit;
+}
