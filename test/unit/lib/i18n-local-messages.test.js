@@ -39,6 +39,14 @@ describe('本地新增文案', () => {
         expect(messages['zh-cn']).toBeUndefined();
     });
 
+    test('变量管理器的保存提示不会回退成英文', () => {
+        // 这条原本是写在 JSX 里的字面量，中文界面会直接露出一句英文
+        const messages = buildMessages();
+        addAdditionalTranslations(messages);
+        expect(messages['zh-cn']['mw.variableManager.valueHint']).toBe('按 Ctrl+Enter 保存。');
+        expect(messages.en['mw.variableManager.valueHint']).toBe('Press Ctrl+Enter to save.');
+    });
+
     test('英文键都必须在中文里有对应条目', () => {
         // 中英成对维护是默认要求；但允许「只有中文」的条目：
         // 上游 zh-cn 漏翻时（值仍是英文）我们只补中文，英文由 l10n 包或组件的

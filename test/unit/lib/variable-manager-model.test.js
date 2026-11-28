@@ -84,6 +84,37 @@ describe('变量管理器数据层', () => {
         expect(normalizeName('积分', false)).toBe('积分');
     });
 
+    test('引用计数：全局跨角色统计，局部只算自己角色', () => {
+        const {vm, stage, sprite} = makeVm();
+        // sprite.blocks 在测试里没有真实 Blocks 实例，直接搭出 collectVariables 读取的结构
+        const addBlock = (target, id, fields) => {
+            if (!target.blocks || !target.blocks._blocks) target.blocks = {_blocks: {}};
+            target.blocks._blocks[id] = {id, opcode: 'data_setvariableto', fields};
+        };
+        addBlock(stage, 'b1', {VARIABLE: {name: 'VARIABLE', id: 'g1', value: '我的变量'}});
+        addBlock(sprite, 'b2', {VARIABLE: {name: 'VARIABLE', id: 'g1', value: '我的变量'}});
+        addBlock(sprite, 'b3', {VARIABLE: {name: 'VARIABLE', id: 'l1', value: '局部变量'}});
+        // 同一块积木里重复引用同一个变量只算一次
+        addBlock(sprite, 'b4', {
+            A: {name: 'A', id: 'l1', value: '局部变量'},
+            B: {name: 'B', id: 'l1', value: '局部变量'}
+        });
+        const records = collectVariables(vm);
+        expect(records.find(record => record.id === 'g1').usageCount).toBe(2);
+        expect(records.find(record => record.id === 'l1').usageCount).toBe(2);
+        expect(records.find(record => record.id === 'g2').usageCount).toBe(0);
+    });
+
+    test('列表返回快照，不会跟着 VM 里的数组原地变化', () => {
+        // refreshValues 靠「快照 vs VM 里的数组」比较来发现列表被脚本改动，
+        // 一旦改成别名（不 slice），实时更新就会彻底失效
+        const {vm, stage} = makeVm();
+        const record = collectVariables(vm).find(item => item.id === 'g2');
+        stage.variables.g2.value.push('樱桃');
+        expect(record.value).toEqual(['苹果', '香蕉']);
+        expect(collectVariables(vm).find(item => item.id === 'g2').value).toEqual(['苹果', '香蕉', '樱桃']);
+    });
+
     test('监视器开关在缺少 monitor 积木时返回 false', () => {
         const {vm} = makeVm();
         const record = collectVariables(vm).find(item => item.id === 'g1');

@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react';
 import {defineMessages, injectIntl, intlShape} from 'react-intl';
 import VM from 'scratch-vm';
 import {
@@ -113,6 +113,11 @@ const messages = defineMessages({
     value: {
         id: 'mw.variableManager.value',
         defaultMessage: 'Value'
+    },
+    valueHint: {
+        id: 'mw.variableManager.valueHint',
+        defaultMessage: 'Press Ctrl+Enter to save.',
+        description: 'Hint under the value editor telling the user how to save without leaving the field'
     },
     uses: {
         id: 'mw.variableManager.uses',
@@ -329,6 +334,98 @@ const valuePreview = (record, intl) => {
     }
     const value = String(record.value);
     return value || intl.formatMessage(messages.emptyValue);
+};
+
+// 搜索文本只算一次。列表可能是几十万项，join 一次就是几毫秒；而记录对象在内容
+// 不变时会被复用（见 mergeRecords），所以 WeakMap 缓存天然跟着记录一起失效。
+const searchTextCache = new WeakMap();
+const searchTextOf = record => {
+    if (!searchTextCache.has(record)) {
+        searchTextCache.set(record, Array.isArray(record.value) ?
+            record.value.join(' ') :
+            String(record.value));
+    }
+    return searchTextCache.get(record);
+};
+
+// 结构没变就复用旧记录对象。行组件是 React.memo 的，身份稳定时一次「全量刷新」
+// 只是重新过滤一遍，不会重绘任何一行 —— 勾一个监视器也只重绘那一行。
+// 列表是快照（collectVariables 会 slice），所以按内容比较而不是按引用。
+const sameValue = (a, b) => {
+    if (a === b) return true;
+    if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+        if (a[i] !== b[i]) return false;
+    }
+    return true;
+};
+
+const sameRecord = (a, b) => (
+    a.name === b.name &&
+    a.type === b.type &&
+    a.scope === b.scope &&
+    a.targetId === b.targetId &&
+    a.targetName === b.targetName &&
+    a.isCloud === b.isCloud &&
+    a.usageCount === b.usageCount &&
+    a.monitorVisible === b.monitorVisible &&
+    // monitorAvailable 会随「积木面板是否已建出监视器积木」变化，必须参与比较，
+    // 否则第一次打开变量分类后复选框仍然是禁用的
+    a.monitorAvailable === b.monitorAvailable &&
+    sameValue(a.value, b.value)
+);
+
+const mergeRecords = (previous, next) => {
+    if (!previous.length) return next;
+    const previousById = new Map();
+    for (const record of previous) previousById.set(record.id, record);
+    let changed = previous.length !== next.length;
+    const merged = next.map(record => {
+        const old = previousById.get(record.id);
+        if (old && sameRecord(old, record)) return old;
+        changed = true;
+        return record;
+    });
+    if (changed) return merged;
+    // 顺序也可能变（改名会重排），这一层用身份比对兜住
+    for (let i = 0; i < merged.length; i++) {
+        if (merged[i] !== previous[i]) return merged;
+    }
+    return previous;
+};
+
+// 前导 + 尾随节流。TARGETS_UPDATE / workspaceUpdate 在项目运行或拖积木时是
+// 每帧一条的事件，直接全量刷新会把主线程占满；也不能用 debounce（连续事件流
+// 会无限重置尾随，界面反而一直不更新）。同 lib/components/vm-listener-hoc.jsx。
+const throttle = (fn, delay) => {
+    let timer = null;
+    let lastRun = 0;
+    let pending = null;
+    const run = args => {
+        lastRun = Date.now();
+        fn(...args);
+    };
+    return (...args) => {
+        const elapsed = Date.now() - lastRun;
+        if (elapsed >= delay) {
+            if (timer) {
+                clearTimeout(timer);
+                timer = null;
+            }
+            pending = null;
+            run(args);
+            return;
+        }
+        pending = args;
+        if (timer) return;
+        timer = setTimeout(() => {
+            timer = null;
+            if (!pending) return;
+            const nextArgs = pending;
+            pending = null;
+            run(nextArgs);
+        }, delay - elapsed);
+    };
 };
 
 const buttonClass = (variant, small) => classNames(
@@ -782,7 +879,9 @@ const DetailPanel = ({intl, onConfirm, onDelete, onMonitorChange, onRename, onVa
                         }}
                         onKeyDown={handleValueKey}
                     />
-                    <span className={styles.fieldHelp}>{'Press Ctrl+Enter to save.'}</span>
+                    <span className={styles.fieldHelp}>
+                        {intl.formatMessage(messages.valueHint)}
+                    </span>
                     <button
                         type="button"
                         className={buttonClass('Primary')}
@@ -841,6 +940,197 @@ DetailPanel.propTypes = {
     })
 };
 
+// 一行变量/列表。单独抽成 React.memo 组件：变量多的时候，勾一个监视器不应该
+// 让另外几百行跟着重绘（每行都要 formatMessage + 生成预览文本）。
+const VariableRowComponent = ({intl, onSelect, record, selected}) => {
+    const Icon = record.isCloud ? Cloud : record.type === 'list' ? List : Variable;
+    return (
+        <button
+            type="button"
+            aria-selected={selected}
+            className={selected ? styles.dataRowSelected : styles.dataRow}
+            data-var-row=""
+            role="option"
+            onClick={() => onSelect(record.id)}
+        >
+            <Icon
+                className={styles.rowIcon}
+                data-kind={record.isCloud ? 'cloud' : record.type}
+                size={17}
+            />
+            <span className={styles.rowContent}>
+                <span className={styles.rowTop}>
+                    <strong>{record.name}</strong>
+                    <span>{record.scope === 'global' ?
+                        intl.formatMessage(messages.badgeGlobal) :
+                        record.targetName}</span>
+                </span>
+                <span className={styles.rowPreview}>
+                    {valuePreview(record, intl)}
+                </span>
+            </span>
+            {record.monitorVisible && <Eye
+                className={styles.rowMonitor}
+                size={14}
+            />}
+        </button>
+    );
+};
+
+VariableRowComponent.propTypes = {
+    intl: PropTypes.shape({formatMessage: PropTypes.func.isRequired}),
+    onSelect: PropTypes.func.isRequired,
+    record: PropTypes.shape({
+        id: PropTypes.string,
+        isCloud: PropTypes.bool,
+        monitorVisible: PropTypes.bool,
+        name: PropTypes.string,
+        scope: PropTypes.string,
+        targetName: PropTypes.string,
+        type: PropTypes.string,
+        value: PropTypes.any
+    }).isRequired,
+    selected: PropTypes.bool
+};
+
+const VariableRow = React.memo(VariableRowComponent);
+
+// ---- 列表窗口化 ------------------------------------------------------------
+// 变量动辄几百上千条，全部渲染等于一次性建几千个 DOM 节点，打开面板会明显顿一下。
+// 这里只渲染可视区上下各多 OVERSCAN 行，其余用上下两块撑高占位。
+//
+// 行高在首屏提交后实测（首屏先用估值，useLayoutEffect 里量到真值立刻纠正，
+// 纠正发生在 paint 之前，所以看不到中间态）。测不到高度时（容器隐藏、jsdom）
+// 自动退回全量渲染，保证任何环境下都不会出现空白列表。
+const ROW_HEIGHT_ESTIMATE = 64;
+const VIEWPORT_ESTIMATE = 640;
+const OVERSCAN = 5;
+const VIRTUAL_MIN_ROWS = 40;
+
+// 纯函数（单独导出便于单测）：算出该渲染哪一段。
+// rowHeight <= 1 表示没量到真实行高，此时不窗口化。
+const getVisibleRange = (total, rowHeight, viewport, scrollTop) => {
+    const virtual = rowHeight > 1 && total > VIRTUAL_MIN_ROWS && (total * rowHeight) > (viewport * 1.5);
+    if (!virtual) return {end: total, start: 0, virtual: false};
+    const capacity = Math.ceil(viewport / rowHeight) + 1;
+    const maxStart = Math.max(0, total - capacity - (OVERSCAN * 2));
+    // 列表变短（过滤）时 scrollTop 可能还停在旧位置，这里钳住，避免算出空窗口
+    const start = Math.min(Math.max(0, Math.floor(scrollTop / rowHeight) - OVERSCAN), maxStart);
+    return {end: Math.min(total, start + capacity + (OVERSCAN * 2)), start, virtual: true};
+};
+
+const VariableList = ({empty, intl, onSelect, records, selectedId}) => {
+    const listRef = useRef(null);
+    const frameRef = useRef(0);
+    const [metrics, setMetrics] = useState(null);
+
+    const measure = useCallback(() => {
+        const list = listRef.current;
+        if (!list) return;
+        let rowHeight = 0;
+        const rows = list.querySelectorAll('[data-var-row]');
+        if (rows.length > 1) {
+            // 用相邻两行的原点差，margin 也一并算进去，避免累加误差
+            rowHeight = rows[1].getBoundingClientRect().top - rows[0].getBoundingClientRect().top;
+        }
+        const next = {
+            rowHeight: rowHeight > 1 ? rowHeight : 0,
+            scrollTop: list.scrollTop,
+            viewport: list.clientHeight
+        };
+        setMetrics(previous => {
+            if (previous &&
+                Math.abs(previous.rowHeight - next.rowHeight) < 0.5 &&
+                Math.abs(previous.scrollTop - next.scrollTop) < 1 &&
+                Math.abs(previous.viewport - next.viewport) < 1) {
+                return previous;
+            }
+            return next;
+        });
+    }, []);
+
+    // 每次提交后实测一次，值没变就不 setState，不会来回抖
+    useLayoutEffect(() => {
+        measure();
+    });
+
+    useEffect(() => {
+        window.addEventListener('resize', measure);
+        // 模态的高度是由 WindowedModal 直接改 style 设的，不会触发 window resize；
+        // 容器尺寸变了必须重新量，否则窗口算小了底部会留白
+        const list = listRef.current;
+        const Observer = window.ResizeObserver;
+        const observer = list && typeof Observer === 'function' ? new Observer(() => measure()) : null;
+        if (observer) observer.observe(list);
+        return () => {
+            window.removeEventListener('resize', measure);
+            if (observer) observer.disconnect();
+            if (frameRef.current) window.cancelAnimationFrame(frameRef.current);
+        };
+    }, [measure]);
+
+    const handleScroll = useCallback(event => {
+        // React 16 的合成事件是池化的，currentTarget 在回调返回后会被清空，先取出来
+        const list = event.currentTarget;
+        if (frameRef.current) return;
+        frameRef.current = window.requestAnimationFrame(() => {
+            frameRef.current = 0;
+            const scrollTop = list.scrollTop;
+            setMetrics(previous => {
+                if (previous && Math.abs(previous.scrollTop - scrollTop) < 1) return previous;
+                return {
+                    rowHeight: previous ? previous.rowHeight : 0,
+                    viewport: previous ? previous.viewport : list.clientHeight,
+                    scrollTop
+                };
+            });
+        });
+    }, []);
+
+    const total = records.length;
+    const rowHeight = metrics ? metrics.rowHeight : ROW_HEIGHT_ESTIMATE;
+    const viewport = metrics && metrics.viewport > 0 ? metrics.viewport : VIEWPORT_ESTIMATE;
+    const scrollTop = metrics ? metrics.scrollTop : 0;
+    const {virtual, start, end} = getVisibleRange(total, rowHeight, viewport, scrollTop);
+
+    return (
+        <div
+            aria-label={intl.formatMessage(messages.listAria)}
+            className={styles.dataList}
+            ref={listRef}
+            role="listbox"
+            onScroll={handleScroll}
+        >
+            {virtual && start > 0 && <div
+                aria-hidden="true"
+                style={{height: start * rowHeight}}
+            />}
+            {records.slice(start, end).map(record => (
+                <VariableRow
+                    intl={intl}
+                    key={record.id}
+                    record={record}
+                    selected={record.id === selectedId}
+                    onSelect={onSelect}
+                />
+            ))}
+            {virtual && end < total && <div
+                aria-hidden="true"
+                style={{height: (total - end) * rowHeight}}
+            />}
+            {!total && empty}
+        </div>
+    );
+};
+
+VariableList.propTypes = {
+    empty: PropTypes.node,
+    intl: PropTypes.shape({formatMessage: PropTypes.func.isRequired}),
+    onSelect: PropTypes.func.isRequired,
+    records: PropTypes.array, // eslint-disable-line react/forbid-prop-types
+    selectedId: PropTypes.string
+};
+
 const VariableManager = props => {
     const {intl, openSimpleDialog, vm} = props;
     const [workspace, setWorkspace] = useState(null);
@@ -863,32 +1153,45 @@ const VariableManager = props => {
     }), [openSimpleDialog]);
 
     const refresh = useCallback(() => {
+        const monitorBlocks = vm.runtime.monitorBlocks;
+        const monitorBlockMap = monitorBlocks && monitorBlocks._blocks;
         const next = collectVariables(vm).map(record => ({
             ...record,
-            monitorAvailable: !!(vm.runtime.monitorBlocks && vm.runtime.monitorBlocks._blocks &&
-                vm.runtime.monitorBlocks._blocks[record.id])
+            monitorAvailable: !!(monitorBlockMap && monitorBlockMap[record.id])
         }));
-        setRecords(next);
+        // 结构没变的记录沿用旧对象，否则一次刷新会让所有行重绘
+        setRecords(previous => mergeRecords(previous, next));
         setSelectedId(current => (current && next.some(record => record.id === current) ? current : null));
     }, [vm]);
 
     const refreshValues = useCallback(() => {
-        setRecords(current => current.map(record => {
-            const target = vm.runtime.getTargetById(record.targetId);
-            const variable = target && target.variables && target.variables[record.id];
-            if (!variable) return record;
-            const nextMonitorVisible = monitorVisible(vm, record.id);
-            const valueUnchanged = Array.isArray(variable.value) && Array.isArray(record.value) ?
-                variable.value.length === record.value.length &&
-                    variable.value.every((value, index) => value === record.value[index]) :
-                variable.value === record.value;
-            if (valueUnchanged && nextMonitorVisible === record.monitorVisible) return record;
-            return {
-                ...record,
-                value: Array.isArray(variable.value) ? variable.value.slice() : variable.value,
-                monitorVisible: nextMonitorVisible
-            };
-        }));
+        setRecords(current => {
+            // 目标查找一次建表：变量多的时候逐条 getTargetById（线性查找）会白扫很多遍
+            const targetsById = new Map();
+            const allTargets = vm.runtime.targets || [];
+            for (const target of allTargets) targetsById.set(target.id, target);
+
+            let changed = false;
+            const next = current.map(record => {
+                const target = targetsById.get(record.targetId);
+                const variable = target && target.variables && target.variables[record.id];
+                if (!variable) return record;
+                const nextMonitorVisible = monitorVisible(vm, record.id);
+                const valueUnchanged = Array.isArray(variable.value) && Array.isArray(record.value) ?
+                    variable.value.length === record.value.length &&
+                        variable.value.every((value, index) => value === record.value[index]) :
+                    variable.value === record.value;
+                if (valueUnchanged && nextMonitorVisible === record.monitorVisible) return record;
+                changed = true;
+                return {
+                    ...record,
+                    value: Array.isArray(variable.value) ? variable.value.slice() : variable.value,
+                    monitorVisible: nextMonitorVisible
+                };
+            });
+            // 没有任何值变化时保持原数组：默认 50ms 一跳，否则等于每秒 20 次全量重绘
+            return changed ? next : current;
+        });
     }, [vm]);
 
     useEffect(() => {
@@ -905,19 +1208,27 @@ const VariableManager = props => {
     }, [refresh]);
 
     useEffect(() => {
-        const onChange = () => refresh();
+        let disposed = false;
+        const runRefresh = () => {
+            if (!disposed) refresh();
+        };
+        // TARGETS_UPDATE / workspaceUpdate 在运行或拖积木时是每帧/每次事件的洪水，
+        // 只留前导那一次立即生效，其余合并到 120ms 后的一次尾随刷新。
+        const onChange = throttle(runRefresh, 120);
+        const onStructuralChange = () => runRefresh();
         vm.on('PROJECT_CHANGED', onChange);
         vm.on('workspaceUpdate', onChange);
-        vm.runtime.on('PROJECT_LOADED', onChange);
+        vm.runtime.on('PROJECT_LOADED', onStructuralChange);
         vm.runtime.on('TARGETS_UPDATE', onChange);
-        const removeSettingsListener = onSettingChanged(() => refresh());
+        const removeSettingsListener = onSettingChanged(() => runRefresh());
         const interval = window.setInterval(() => {
             if (getSetting('live_update')) refreshValues();
         }, Math.max(100, getSetting('update_throttle')));
         return () => {
+            disposed = true;
             vm.removeListener('PROJECT_CHANGED', onChange);
             vm.removeListener('workspaceUpdate', onChange);
-            vm.runtime.off('PROJECT_LOADED', onChange);
+            vm.runtime.off('PROJECT_LOADED', onStructuralChange);
             vm.runtime.off('TARGETS_UPDATE', onChange);
             removeSettingsListener();
             window.clearInterval(interval);
@@ -946,9 +1257,9 @@ const VariableManager = props => {
             if (filter === 'lists' && record.type !== 'list') return false;
             if (filter === 'cloud' && !record.isCloud) return false;
             if (!normalizedQuery) return true;
-            const value = Array.isArray(record.value) ? record.value.join(' ') : String(record.value);
             return record.name.toLocaleLowerCase().includes(normalizedQuery) ||
-                value.toLocaleLowerCase().includes(normalizedQuery);
+                searchTextOf(record).toLocaleLowerCase()
+                    .includes(normalizedQuery);
         });
     }, [records, scope, filter, query]);
 
@@ -956,6 +1267,8 @@ const VariableManager = props => {
         setFilter(event.currentTarget.value);
         setMobileView('content');
     };
+    // 稳定引用：行组件是 memo 的，回调每次换新就会让所有行重绘
+    const handleSelect = useCallback(id => setSelectedId(id), []);
     const handleScope = value => setScope(value);
     const handleTarget = targetId => {
         vm.setEditingTarget(targetId);
@@ -1000,8 +1313,21 @@ const VariableManager = props => {
     };
 
     const handleMonitorChange = (record, visible) => {
-        setMonitorVisible(vm, record, visible);
-        refresh();
+        // setMonitorVisible 内部 changeBlock 会同步 emitProjectChanged，
+        // 事件驱动的 refresh 可能已经先一步把这一条更新掉了，所以这里做幂等补丁，
+        // 不再额外补一次全量 refresh（那是原来「点一下卡两下」的第二个来源）。
+        const changed = setMonitorVisible(vm, record, visible);
+        if (!changed) return;
+        setRecords(current => {
+            const index = current.findIndex(item => item.id === record.id);
+            if (index < 0) return current;
+            const target = current[index];
+            const nextVisible = monitorVisible(vm, record.id);
+            if (target.monitorVisible === nextVisible) return current;
+            const next = current.slice();
+            next[index] = {...target, monitorVisible: nextVisible};
+            return next;
+        });
     };
 
     const availableWidth = Math.max(360, window.innerWidth - 32);
@@ -1156,47 +1482,8 @@ const VariableManager = props => {
                                 />
                             </div>
                             <div className={styles.workspace}>
-                                <div
-                                    className={styles.dataList}
-                                    role="listbox"
-                                    aria-label={intl.formatMessage(messages.listAria)}
-                                >
-                                    {visibleRecords.map(record => {
-                                        const Icon = record.isCloud ? Cloud : record.type === 'list' ? List : Variable;
-                                        return (
-                                            <button
-                                                type="button"
-                                                aria-selected={record.id === selectedId}
-                                                className={record.id === selectedId ?
-                                                    styles.dataRowSelected : styles.dataRow}
-                                                key={record.id}
-                                                role="option"
-                                                onClick={() => setSelectedId(record.id)}
-                                            >
-                                                <Icon
-                                                    className={styles.rowIcon}
-                                                    data-kind={record.isCloud ? 'cloud' : record.type}
-                                                    size={17}
-                                                />
-                                                <span className={styles.rowContent}>
-                                                    <span className={styles.rowTop}>
-                                                        <strong>{record.name}</strong>
-                                                        <span>{record.scope === 'global' ?
-                                                            intl.formatMessage(messages.badgeGlobal) :
-                                                            record.targetName}</span>
-                                                    </span>
-                                                    <span className={styles.rowPreview}>
-                                                        {valuePreview(record, intl)}
-                                                    </span>
-                                                </span>
-                                                {record.monitorVisible && <Eye
-                                                    className={styles.rowMonitor}
-                                                    size={14}
-                                                />}
-                                            </button>
-                                        );
-                                    })}
-                                    {!visibleRecords.length && (
+                                <VariableList
+                                    empty={(
                                         <div className={styles.emptyState}>
                                             <Database size={28} />
                                             <strong>{intl.formatMessage(messages.empty)}</strong>
@@ -1210,7 +1497,11 @@ const VariableManager = props => {
                                             </button>
                                         </div>
                                     )}
-                                </div>
+                                    intl={intl}
+                                    records={visibleRecords}
+                                    selectedId={selectedId}
+                                    onSelect={handleSelect}
+                                />
                                 {selected ? (
                                     <DetailPanel
                                         intl={intl}
@@ -1247,5 +1538,5 @@ VariableManager.propTypes = {
     vm: PropTypes.instanceOf(VM).isRequired
 };
 
-export {VariableManager, CreatePanel, DetailPanel, ListEditor, messages};
+export {VariableManager, CreatePanel, DetailPanel, ListEditor, VariableList, getVisibleRange, messages};
 export default injectIntl(VariableManager);
