@@ -234,12 +234,18 @@ const base = {
             loader: 'babel-loader',
             include: [
                 path.resolve(__dirname, 'src'),
-                // Linked scratch-vm is resolved to its real sibling path by
-                // resolve.symlinks, so the `node_modules/scratch-*/src` regex
-                // below does not match it. Include it explicitly so its modern
-                // syntax (?. / ??) gets transpiled by babel.
-                path.resolve(__dirname, '..', 'scratch-vm', 'src'),
-                path.resolve(__dirname, '..', 'scratch-paint', 'src'),
+                // Linked scratch-vm / scratch-paint are resolved to their real
+                // sibling paths by resolve.symlinks, so the `node_modules/scratch-*/src`
+                // regex below does not match them. Include them explicitly.
+                //
+                // These must be regexes, not path.resolve() strings: webpack 4
+                // compares a string `include` entry with a literal startsWith(),
+                // so a resource path that arrives with the other separator (or a
+                // different drive-letter case after a junction/realpath hop)
+                // silently skips this rule and the file dies with
+                // "no loaders are configured to process this file".
+                /[\\/]scratch-vm[\\/]src[\\/]/i,
+                /[\\/]scratch-paint[\\/]src[\\/]/i,
                 /node_modules[\\/]scratch-[^\\/]+[\\/]src/,
                 /node_modules[\\/]scratch-parser[\\/]/,
                 /node_modules[\\/]pify/,
