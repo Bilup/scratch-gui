@@ -83,7 +83,6 @@ const TWSettingsModal = React.lazy(() => import('../../containers/tw-settings-mo
 const TWCustomExtensionModal = React.lazy(() => import('../../containers/tw-custom-extension-modal.jsx'));
 const TWFontsModal = React.lazy(() => import('../../containers/tw-fonts-modal.jsx'));
 const MWAssetsModal = React.lazy(() => import('../../containers/mw-assets-modal.jsx'));
-const MWProjectMetadataModal = React.lazy(() => import('../../containers/mw-project-metadata-modal.jsx'));
 const TWDebugger = React.lazy(() => import('../../containers/tw-debugger.jsx'));
 const TWUsernameModal = React.lazy(() => import('../../containers/tw-username-modal.jsx'));
 const TelemetryModal = React.lazy(() => import('../telemetry-modal/telemetry-modal.jsx'));
@@ -919,7 +918,6 @@ const GUIComponent = props => {
         customGalleryModalVisible,
         fontsModalVisible,
         assetsModalVisible,
-        projectMetadataModalVisible,
         unknownPlatformModalVisible,
         invalidProjectModalVisible,
         gitModalVisible,
@@ -1024,11 +1022,6 @@ const GUIComponent = props => {
                     <MWAssetsModal />
                 </React.Suspense>
             )}
-            {projectMetadataModalVisible && (
-                <React.Suspense fallback={null}>
-                    <MWProjectMetadataModal />
-                </React.Suspense>
-            )}
             {unknownPlatformModalVisible && <TWUnknownPlatformModal />}
             {invalidProjectModalVisible && <TWInvalidProjectModal />}
             <React.Suspense fallback={null}>
@@ -1048,7 +1041,6 @@ const GUIComponent = props => {
         customGalleryModalVisible,
         fontsModalVisible,
         assetsModalVisible,
-        projectMetadataModalVisible,
         unknownPlatformModalVisible,
         invalidProjectModalVisible,
         gitModalVisible,
@@ -1560,7 +1552,6 @@ GUIComponent.propTypes = {
     customGalleryModalVisible: PropTypes.bool,
     fontsModalVisible: PropTypes.bool,
     assetsModalVisible: PropTypes.bool,
-    projectMetadataModalVisible: PropTypes.bool,
     unknownPlatformModalVisible: PropTypes.bool,
     invalidProjectModalVisible: PropTypes.bool,
     gitModalVisible: PropTypes.bool,

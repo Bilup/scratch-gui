@@ -6,7 +6,6 @@ import {Provider} from 'react-redux';
 import ShareWindow from '../../components/mw-share-modal/share-window.jsx';
 import IntlBridge from '../../lib/tw-use-intl.jsx';
 import WindowManager from '../../addons/window-system/window-manager';
-import {openProjectMetadataModal} from '../../reducers/modals';
 
 let shareWindow = null;
 let container = null;
@@ -68,12 +67,6 @@ const openMistWarpShareWindow = ({vm, initialTitle, initialError, action = 'save
         initialError,
         action,
         onClose: cleanup,
-        onReviewStorage: () => {
-            cleanup();
-            if (window.ReduxStore) {
-                window.ReduxStore.dispatch(openProjectMetadataModal('optimiser'));
-            }
-        },
         onPublished: result => {
             if (typeof onPublished === 'function') {
                 onPublished(result);
